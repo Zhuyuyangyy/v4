@@ -6,12 +6,12 @@ const router = useRouter()
 const loaded = ref(false)
 
 const features = [
-  { icon: '◎', title: '智能画像', desc: '通过对话深度分析，构建你的多维度学习画像', color: '#00d4ff' },
-  { icon: '▣', title: '个性化资源', desc: '文档、思维导图、习题、视频 — AI 根据你的需求生成', color: '#7c3aed' },
-  { icon: '⇲', title: '学习路径', desc: '动态规划最优学习路线，因材施教', color: '#06d6a0' },
-  { icon: '⊕', title: '智能辅导', desc: '7×24 即时答疑，多模态深度讲解', color: '#f59e0b' },
-  { icon: '◈', title: '效果评估', desc: '数据驱动的学习分析，精准定位薄弱点', color: '#f43f5e' },
-  { icon: '✦', title: '多智能体协同', desc: '多个 AI 智能体并行工作，为你生成最优质的内容', color: '#3b82f6' },
+  { image: '/shouye-background-tubiao-1.png', title: 'AI 智能推荐', desc: '基于学习行为和能力画像，为你推荐最合适的内容' },
+  { image: '/shouye-background-tubiao-2.png', title: '个性化学习', desc: '量身定制学习路径，因材施教，精准提升' },
+  { image: '/shouye-background-tubiao-3.png', title: 'AI 导师陪伴', desc: '7×24 小时在线辅导，随时解答学习问题' },
+  { image: '/shouye-background-tubiao-4.png', title: '多模态内容', desc: '视频、音频、图文、互动，多种形式激发学习' },
+  { image: '/shouye-background-tubiao-5.png', title: '学练测评一体化', desc: '学习 - 练习 - 测评 - 反馈，闭环学习更高效' },
+  { image: '/shouye-background-tubiao-6.png', title: '数据驱动成长', desc: '学习数据可视化，成长轨迹清晰可见' },
 ]
 
 const quickQuestions = [
@@ -58,17 +58,15 @@ onMounted(() => {
           </button>
           <button class="btn-ghost" @click="router.push('/profile')">
             了解平台优势
-            <span class="btn-icon">◎</span>
+            <span class="btn-icon">↗</span>
           </button>
         </div>
         
         <div :class="['hero-stats', { visible: loaded }]">
           <div v-for="(stat, i) in stats" :key="i" class="stat-item">
             <span class="stat-icon">{{ stat.icon }}</span>
-            <div class="stat-content">
-              <span class="stat-value">{{ stat.value }}</span>
-              <span class="stat-label">{{ stat.label }}</span>
-            </div>
+            <span class="stat-value">{{ stat.value }}</span>
+            <span class="stat-label">{{ stat.label }}</span>
           </div>
         </div>
       </div>
@@ -90,20 +88,24 @@ onMounted(() => {
     <!-- Features -->
     <section class="features">
       <div class="section-header reveal">
-        <h2 class="section-title">核心功能</h2>
-        <p class="section-desc">全方位个性化学习体验</p>
+        <h2 class="section-title">我们的平台优势</h2>
+        <div class="section-divider">
+          <span class="divider-dot"></span>
+          <span class="divider-line"></span>
+          <span class="divider-dot"></span>
+        </div>
       </div>
       <div class="features-grid">
         <div
           v-for="(f, i) in features"
           :key="f.title"
           :class="['feature-card reveal', `reveal-delay-${i + 1}`]"
-          :style="{ '--card-accent': f.color }"
         >
-          <div class="card-icon">{{ f.icon }}</div>
+          <div class="card-image-wrapper">
+            <img :src="f.image" :alt="f.title" class="card-image" />
+          </div>
           <h3 class="card-title">{{ f.title }}</h3>
           <p class="card-desc">{{ f.desc }}</p>
-          <div class="card-glow" />
         </div>
       </div>
     </section>
@@ -168,7 +170,7 @@ onMounted(() => {
 .hero-content {
   position: relative;
   z-index: 2;
-  max-width: 600px;
+  max-width: 650px;
 }
 
 .hero-badge {
@@ -202,13 +204,14 @@ onMounted(() => {
 
 .hero-title {
   font-family: var(--font-display);
-  font-size: clamp(48px, 7vw, 72px);
-  line-height: 1.1;
-  letter-spacing: -0.03em;
-  margin-bottom: 24px;
+  font-size: clamp(52px, 8vw, 80px);
+  line-height: 1.05;
+  letter-spacing: -0.02em;
+  margin-bottom: 28px;
   opacity: 0;
   transform: translateY(20px);
   transition: all 0.6s var(--ease-out) 0.15s;
+  color: #fff;
 }
 .hero-title.visible {
   opacity: 1;
@@ -220,20 +223,28 @@ onMounted(() => {
 }
 
 .text-gradient {
-  background: linear-gradient(135deg, #00d4ff, #7c3aed);
+  background: linear-gradient(135deg, #00d4ff 0%, #7c3aed 50%, #f472b6 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
+  background-size: 200% 200%;
+  animation: gradient-shift 4s ease infinite;
+}
+
+@keyframes gradient-shift {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
 }
 
 .hero-sub {
-  font-size: 16px;
-  color: var(--color-text-secondary);
-  line-height: 1.8;
-  margin: 0 0 40px;
+  font-size: 18px;
+  color: rgba(255, 255, 255, 0.75);
+  line-height: 1.75;
+  margin: 0 0 48px;
   opacity: 0;
   transform: translateY(20px);
   transition: all 0.6s var(--ease-out) 0.3s;
+  font-weight: 400;
 }
 .hero-sub.visible {
   opacity: 1;
@@ -256,22 +267,22 @@ onMounted(() => {
 .btn-primary {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-  padding: 14px 32px;
-  border-radius: var(--radius-md);
-  background: linear-gradient(135deg, #00d4ff, #3b82f6);
+  gap: 10px;
+  padding: 16px 40px;
+  border-radius: var(--radius-lg);
+  background: linear-gradient(135deg, #00d4ff 0%, #7c3aed 100%);
   color: #fff;
-  font-size: 15px;
+  font-size: 16px;
   font-weight: 600;
   letter-spacing: 0.5px;
   transition: all var(--duration-normal) var(--ease-out);
-  box-shadow: 0 4px 20px rgba(0, 212, 255, 0.3);
+  box-shadow: 0 4px 24px rgba(124, 58, 237, 0.4);
   border: none;
   cursor: pointer;
 }
 .btn-primary:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 30px rgba(0, 212, 255, 0.45);
+  transform: translateY(-3px);
+  box-shadow: 0 10px 40px rgba(124, 58, 237, 0.5);
 }
 
 .btn-arrow {
@@ -284,21 +295,24 @@ onMounted(() => {
 .btn-ghost {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-  padding: 14px 28px;
-  border-radius: var(--radius-md);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  color: var(--color-text-secondary);
-  font-size: 15px;
+  gap: 10px;
+  padding: 16px 36px;
+  border-radius: var(--radius-lg);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  color: rgba(255, 255, 255, 0.85);
+  font-size: 16px;
   font-weight: 500;
   transition: all var(--duration-fast) var(--ease-out);
-  background: rgba(255, 255, 255, 0.05);
+  background: rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
   cursor: pointer;
 }
 .btn-ghost:hover {
-  border-color: var(--color-accent-cyan);
-  color: var(--color-accent-cyan);
-  background: rgba(0, 212, 255, 0.06);
+  border-color: rgba(0, 212, 255, 0.6);
+  color: #00d4ff;
+  background: rgba(0, 212, 255, 0.1);
+  box-shadow: 0 0 20px rgba(0, 212, 255, 0.2);
 }
 
 .btn-icon {
@@ -309,13 +323,13 @@ onMounted(() => {
 .hero-stats {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 24px;
+  gap: 20px;
   padding: 24px 32px;
-  border-radius: var(--radius-lg);
-  background: rgba(255, 255, 255, 0.05);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: var(--radius-xl);
+  background: rgba(255, 255, 255, 0.04);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
   opacity: 0;
   transform: translateY(20px);
   transition: all 0.6s var(--ease-out) 0.6s;
@@ -327,37 +341,37 @@ onMounted(() => {
 
 .stat-item {
   display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 12px;
+  gap: 8px;
 }
 
 .stat-icon {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 40px;
-  height: 40px;
+  width: 44px;
+  height: 44px;
   border-radius: var(--radius-sm);
-  background: linear-gradient(135deg, rgba(0, 212, 255, 0.2), rgba(124, 58, 237, 0.2));
-  color: var(--color-accent-cyan);
-  font-size: 16px;
-}
-
-.stat-content {
-  display: flex;
-  flex-direction: column;
+  background: linear-gradient(135deg, rgba(0, 212, 255, 0.3), rgba(124, 58, 237, 0.3));
+  color: #00d4ff;
+  font-size: 18px;
+  box-shadow: 0 0 16px rgba(0, 212, 255, 0.3);
 }
 
 .stat-value {
   font-family: var(--font-display);
-  font-size: 20px;
+  font-size: 28px;
   font-weight: 700;
   color: #fff;
+  letter-spacing: -0.01em;
+  line-height: 1;
 }
 
 .stat-label {
   font-size: 12px;
-  color: var(--color-text-tertiary);
+  color: rgba(255, 255, 255, 0.6);
+  text-align: center;
 }
 
 /* === Particles === */
@@ -382,14 +396,14 @@ section {
 
 .section-header {
   text-align: center;
-  margin-bottom: 60px;
 }
 
 .section-title {
   font-family: var(--font-display);
-  font-size: 42px;
+  font-size: 36px;
   letter-spacing: -0.02em;
-  margin-bottom: 12px;
+  color: #fff;
+  margin-bottom: 0;
 }
 
 .section-desc {
@@ -399,75 +413,120 @@ section {
 
 /* === Features Grid === */
 .features {
-  background: var(--color-bg-secondary);
-  border-top: 1px solid var(--color-border);
-  border-bottom: 1px solid var(--color-border);
+  background-image: url('/shouye-background-2.png');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  position: relative;
+  padding: 80px 60px;
+}
+
+.section-divider {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  margin-top: 20px;
+}
+
+.divider-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #00d4ff, #7c3aed);
+  box-shadow: 0 0 12px rgba(0, 212, 255, 0.6);
+}
+
+.divider-line {
+  width: 60px;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(0, 212, 255, 0.5), transparent);
 }
 
 .features-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 24px;
-  max-width: 1100px;
-  margin: 0 auto;
+  max-width: 1200px;
+  margin: 60px auto 0;
 }
 
 .feature-card {
   position: relative;
-  padding: 36px 28px;
-  border-radius: var(--radius-lg);
-  background: var(--color-bg-card);
-  border: 1px solid var(--color-border);
+  padding: 40px 24px;
+  border-radius: var(--radius-xl);
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   overflow: hidden;
   transition: all var(--duration-normal) var(--ease-out);
 }
 
-.feature-card:hover {
-  border-color: var(--card-accent, var(--color-accent-cyan));
-  transform: translateY(-4px);
-  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3);
-}
-
-.card-glow {
+.feature-card::before {
+  content: '';
   position: absolute;
   top: 0;
   left: 0;
   right: 0;
-  height: 2px;
-  background: linear-gradient(90deg, transparent, var(--card-accent, var(--color-accent-cyan)), transparent);
-  opacity: 0;
-  transition: opacity var(--duration-normal) var(--ease-out);
+  bottom: 0;
+  background: linear-gradient(180deg, rgba(0, 212, 255, 0.03) 0%, transparent 100%);
+  pointer-events: none;
 }
 
-.feature-card:hover .card-glow {
-  opacity: 1;
+.feature-card:hover {
+  border-color: rgba(0, 212, 255, 0.4);
+  transform: translateY(-8px);
+  box-shadow: 0 20px 60px rgba(0, 212, 255, 0.15);
 }
 
-.card-icon {
+.card-image-wrapper {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 48px;
-  height: 48px;
-  font-size: 22px;
-  margin-bottom: 16px;
-  border-radius: var(--radius-md);
-  background: rgba(0, 212, 255, 0.06);
-  color: var(--card-accent, var(--color-accent-cyan));
-  line-height: 1;
+  margin-bottom: 24px;
+  position: relative;
+  z-index: 1;
+  width: 160px;
+  height: 120px;
+  margin-left: auto;
+  margin-right: auto;
+  border-radius: var(--radius-lg);
+  background: rgba(0, 212, 255, 0.08);
+  overflow: hidden;
+}
+
+.card-image {
+  width: 160px;
+  height: 120px;
+  object-fit: cover;
+  object-position: center center;
+  filter: drop-shadow(0 0 20px rgba(0, 212, 255, 0.3));
+  transition: transform var(--duration-normal) var(--ease-out);
+}
+
+.feature-card:hover .card-image {
+  transform: scale(1.05);
 }
 
 .card-title {
   font-family: var(--font-display);
-  font-size: 22px;
-  margin-bottom: 10px;
-  letter-spacing: -0.01em;
+  font-size: 18px;
+  font-weight: 600;
+  color: #fff;
+  margin-bottom: 12px;
+  text-align: center;
+  position: relative;
+  z-index: 1;
 }
 
 .card-desc {
-  color: var(--color-text-secondary);
-  font-size: 14px;
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 13px;
   line-height: 1.7;
+  text-align: center;
+  position: relative;
+  z-index: 1;
 }
 
 /* === Quick Questions === */

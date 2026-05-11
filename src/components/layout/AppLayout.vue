@@ -4,12 +4,14 @@ import { useRoute } from 'vue-router'
 const route = useRoute()
 
 const navItems = [
-  { path: '/', label: '首页', icon: '→' },
-  { path: '/resources', label: '课程体系', icon: '▣' },
-  { path: '/learning-path', label: '学习路径', icon: '⇲' },
-  { path: '/chat', label: 'AI工具', icon: '⊕' },
-  { path: '/resources', label: '资源中心', icon: '◎' },
-  { path: '/profile', label: '关于我们', icon: '◈' },
+  { path: '/', label: '欢迎', icon: '→' },
+  { path: '/chat', label: '对话', icon: '↗' },
+  { path: '/profile', label: '画像', icon: '◎' },
+  { path: '/resources', label: '资源', icon: '▣' },
+  { path: '/learning-path', label: '路径', icon: '⇲' },
+  { path: '/tutoring', label: '辅导', icon: '⊕' },
+  { path: '/evaluation', label: '评估', icon: '◈' },
+  { path: '/settings', label: '设置', icon: '⚙' },
 ]
 </script>
 
@@ -20,10 +22,7 @@ const navItems = [
       <div class="topbar-inner">
         <router-link to="/" class="topbar-brand">
           <span class="brand-icon">✦</span>
-          <div class="brand-info">
-            <span class="brand-text">启智未来</span>
-            <span class="brand-sub">AI教育科技平台</span>
-          </div>
+          <span class="brand-text">EduMind</span>
         </router-link>
 
         <nav class="topbar-nav">
@@ -33,15 +32,11 @@ const navItems = [
             :to="item.path"
             :class="['nav-item', { active: route.path === item.path }]"
           >
+            <span class="nav-icon">{{ item.icon }}</span>
             <span class="nav-label">{{ item.label }}</span>
             <span class="nav-indicator" :class="{ visible: route.path === item.path }" />
           </router-link>
         </nav>
-
-        <div class="topbar-actions">
-          <button class="btn-login">登录</button>
-          <button class="btn-try">免费体验 →</button>
-        </div>
       </div>
     </header>
 
