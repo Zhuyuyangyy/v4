@@ -1,4 +1,4 @@
-/* === Fade & Scale === */
+/* === Fade & Scale (page transitions) === */
 .fade-enter-active,
 .fade-leave-active {
   transition: opacity var(--duration-normal) var(--ease-out);
@@ -31,11 +31,11 @@
   transform: scale(0.95);
 }
 
-/* === Staggered reveal (used with animation-delay) === */
+/* === Scroll Reveal (triggered by IntersectionObserver) === */
 @keyframes reveal-up {
   from {
     opacity: 0;
-    transform: translateY(30px);
+    transform: translateY(40px);
   }
   to {
     opacity: 1;
@@ -43,21 +43,72 @@
   }
 }
 
-.reveal {
-  opacity: 0;
-  animation: reveal-up 0.6s var(--ease-out) forwards;
+@keyframes reveal-scale {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
 }
 
-.reveal-delay-1 { animation-delay: 0.1s; }
-.reveal-delay-2 { animation-delay: 0.2s; }
-.reveal-delay-3 { animation-delay: 0.3s; }
-.reveal-delay-4 { animation-delay: 0.4s; }
-.reveal-delay-5 { animation-delay: 0.5s; }
-.reveal-delay-6 { animation-delay: 0.6s; }
-.reveal-delay-7 { animation-delay: 0.7s; }
-.reveal-delay-8 { animation-delay: 0.8s; }
+@keyframes reveal-left {
+  from {
+    opacity: 0;
+    transform: translateX(-40px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
 
-/* === Glow pulse === */
+@keyframes reveal-right {
+  from {
+    opacity: 0;
+    transform: translateX(40px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.reveal {
+  opacity: 0;
+}
+
+.reveal.visible {
+  animation: reveal-up 0.7s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.reveal-scale.visible {
+  animation: reveal-scale 0.7s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.reveal-left.visible {
+  animation: reveal-left 0.7s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.reveal-right.visible {
+  animation: reveal-right 0.7s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Staggered delays */
+.reveal-delay-1 { animation-delay: 0.05s; }
+.reveal-delay-2 { animation-delay: 0.1s; }
+.reveal-delay-3 { animation-delay: 0.15s; }
+.reveal-delay-4 { animation-delay: 0.2s; }
+.reveal-delay-5 { animation-delay: 0.25s; }
+.reveal-delay-6 { animation-delay: 0.3s; }
+.reveal-delay-7 { animation-delay: 0.35s; }
+.reveal-delay-8 { animation-delay: 0.4s; }
+.reveal-delay-9 { animation-delay: 0.45s; }
+.reveal-delay-10 { animation-delay: 0.5s; }
+
+/* === Perpetual Micro-Interactions === */
 @keyframes glow-pulse {
   0%, 100% {
     box-shadow: 0 0 20px rgba(0, 212, 255, 0.2);
@@ -67,7 +118,33 @@
   }
 }
 
-/* === Scan line === */
+@keyframes float {
+  0%, 100% { transform: translateY(0) translateX(0); }
+  33% { transform: translateY(-8px) translateX(4px); }
+  66% { transform: translateY(4px) translateX(-4px); }
+}
+
+@keyframes float-slow {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-12px); }
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+@keyframes breathe {
+  0%, 100% { opacity: 0.6; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.05); }
+}
+
+@keyframes pulse-glow {
+  0%, 100% { opacity: 0.3; }
+  50% { opacity: 0.8; }
+}
+
+/* === Scan line (ambient effect) === */
 @keyframes scan-line {
   0% { transform: translateY(-100%); }
   100% { transform: translateY(100vh); }
@@ -93,27 +170,56 @@
   100% { transform: rotate(360deg); }
 }
 
-/* === Particle float === */
-@keyframes float {
-  0%, 100% { transform: translateY(0) translateX(0); }
-  33% { transform: translateY(-10px) translateX(5px); }
-  66% { transform: translateY(5px) translateX(-5px); }
-}
-
 /* === Typing cursor === */
 @keyframes blink {
   0%, 100% { opacity: 1; }
   50% { opacity: 0; }
 }
 
-/* === Shimmer for loading === */
-@keyframes shimmer {
-  0% { background-position: -200% 0; }
-  100% { background-position: 200% 0; }
-}
-
 /* === Data flow === */
 @keyframes data-flow {
   0% { stroke-dashoffset: 100; }
   100% { stroke-dashoffset: 0; }
+}
+
+/* === Pulsing ring === */
+@keyframes ring-expand {
+  0% { transform: scale(0.8); opacity: 1; }
+  100% { transform: scale(2); opacity: 0; }
+}
+
+/* === Gradient shift (for animated gradients) === */
+@keyframes gradient-shift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+/* === Smooth section enter === */
+@keyframes section-enter {
+  from {
+    opacity: 0;
+    transform: translateY(60px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* === Hero parallax scale === */
+@keyframes hero-parallax-in {
+  from {
+    transform: scale(1.1);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+/* === Spin (for loading) === */
+@keyframes spin {
+  to { transform: rotate(360deg); }
 }

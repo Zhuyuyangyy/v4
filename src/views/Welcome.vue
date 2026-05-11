@@ -2,9 +2,12 @@
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { Target, BarChart2, Map, BookOpen, ClipboardCheck, Sliders } from 'lucide-vue-next'
+import { useScrollReveal } from '@/composables/useScrollReveal'
 
 const router = useRouter()
 const loaded = ref(false)
+
+useScrollReveal(0.12)
 
 const features = [
   { image: '/shouye-background-tubiao-1.png', title: 'AI 智能推荐', desc: '基于学习行为和能力画像，为你推荐最合适的内容' },
@@ -23,10 +26,10 @@ const quickQuestions = [
 ]
 
 const stats = [
-  { value: '150万+', label: '学习者加入', icon: '◎' },
+  { value: '150万+', label: '活跃学习者', icon: '◎' },
   { value: '3000+', label: '精品课程', icon: '▣' },
   { value: '98.7%', label: '学习效果提升', icon: '⇲' },
-  { value: '1000+', label: '合作院校机构', icon: '⊕' },
+  { value: '1000+', label: '合作机构', icon: '⊕' },
 ]
 
 const learningSteps = [
@@ -166,12 +169,12 @@ onMounted(() => {
       <div class="lp-bg-planet-ring"></div>
       
       <div class="lp-card">
-        <div class="lp-header">
+        <div class="lp-header reveal">
           <h2 class="lp-title">个性化学习路径</h2>
           <p class="lp-subtitle">从目标到掌握，步步精准</p>
           <div class="lp-divider"></div>
         </div>
-        
+
         <div class="lp-timeline">
           <div class="lp-timeline-track">
               <div class="lp-timeline-line"></div>
@@ -179,7 +182,8 @@ onMounted(() => {
                 <div
                   v-for="(step, i) in learningSteps"
                   :key="`node-${i}`"
-                  class="lp-node"
+                  :class="['lp-node reveal', `reveal-delay-${i + 1}`]"
+                  :style="{ '--node-index': i }"
                 >
                   <span class="lp-node-num">{{ step.num }}</span>
                   <span class="lp-node-title">{{ step.title }}</span>
@@ -187,27 +191,27 @@ onMounted(() => {
                 </div>
               </div>
             </div>
-          
+
           <div class="lp-icons-row">
             <div
               v-for="(step, i) in learningSteps"
               :key="`icon-${i}`"
-              class="lp-icon-wrapper"
-              :style="{ '--icon-color': step.color }"
+              :class="['lp-icon-wrapper reveal', `reveal-delay-${i + 1}`]"
+              :style="{ '--icon-color': step.color, '--node-index': i }"
             >
               <div class="lp-icon-container">
                 <div class="lp-icon-bg"></div>
-                <div class="lp-icon-ring"></div>
+                <div class="lp-icon-ring lp-ring-pulse"></div>
                 <component :is="step.icon" class="lp-icon" stroke-width="1.5" />
               </div>
             </div>
           </div>
-          
+
           <div class="lp-desc-row">
             <div
               v-for="(step, i) in learningSteps"
               :key="`desc-${i}`"
-              class="lp-desc"
+              :class="['lp-desc reveal', `reveal-delay-${i + 1}`]"
               v-html="step.desc"
             ></div>
           </div>
@@ -236,7 +240,7 @@ onMounted(() => {
     </section>
 
     <!-- Footer -->
-    <footer class="footer">
+    <footer class="footer reveal">
       <p>EduMind — Personalized Learning Multi-Agent System</p>
     </footer>
   </div>
@@ -245,6 +249,12 @@ onMounted(() => {
 <style scoped>
 .welcome {
   position: relative;
+  min-height: 100vh;
+  background-image: url('/shouye-background-2.png');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
 }
 
 /* === Hero === */
@@ -261,6 +271,15 @@ onMounted(() => {
   background-repeat: no-repeat;
 }
 
+.hero::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, transparent 60%, rgba(7, 7, 13, 0.6) 100%);
+  pointer-events: none;
+  z-index: 1;
+}
+
 .hero-bg-glow {
   position: absolute;
   top: 20%;
@@ -270,6 +289,7 @@ onMounted(() => {
   height: 600px;
   background: radial-gradient(ellipse, rgba(0, 212, 255, 0.08), transparent 70%);
   pointer-events: none;
+  animation: pulse-glow 4s ease-in-out infinite;
 }
 
 .hero-content {
@@ -426,15 +446,16 @@ onMounted(() => {
 
 /* === Hero Stats === */
 .hero-stats {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 20px;
-  padding: 24px 32px;
-  border-radius: var(--radius-xl);
-  background: rgba(255, 255, 255, 0.04);
-  backdrop-filter: blur(24px);
-  -webkit-backdrop-filter: blur(24px);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  gap: 32px;
+  padding: 28px 40px;
+  border-radius: 20px;
+  background: rgba(10, 20, 40, 0.6);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
   opacity: 0;
   transform: translateY(20px);
   transition: all 0.6s var(--ease-out) 0.6s;
@@ -448,35 +469,40 @@ onMounted(() => {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 8px;
+  gap: 12px;
 }
 
 .stat-icon {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 44px;
-  height: 44px;
-  border-radius: var(--radius-sm);
-  background: linear-gradient(135deg, rgba(0, 212, 255, 0.3), rgba(124, 58, 237, 0.3));
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, rgba(0, 212, 255, 0.2), rgba(124, 58, 237, 0.2));
   color: #00d4ff;
-  font-size: 18px;
-  box-shadow: 0 0 16px rgba(0, 212, 255, 0.3);
+  font-size: 20px;
+  box-shadow: 
+    0 0 20px rgba(0, 212, 255, 0.3),
+    inset 0 0 15px rgba(0, 212, 255, 0.1);
 }
 
 .stat-value {
-  font-family: var(--font-display);
-  font-size: 28px;
-  font-weight: 700;
+  font-family: 'SF Pro Display', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-size: 34px;
+  font-weight: 600;
   color: #fff;
-  letter-spacing: -0.01em;
+  letter-spacing: -0.03em;
   line-height: 1;
+  text-shadow: 0 0 25px rgba(0, 212, 255, 0.6);
 }
 
 .stat-label {
-  font-size: 12px;
-  color: rgba(255, 255, 255, 0.6);
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.7);
   text-align: center;
+  letter-spacing: 0.05em;
+  font-weight: 500;
 }
 
 /* === Particles === */
@@ -522,8 +548,21 @@ section {
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
+  background-attachment: fixed;
   position: relative;
   padding: 80px 60px;
+}
+
+.features::before {
+  content: '';
+  position: absolute;
+  top: -80px;
+  left: 0;
+  right: 0;
+  height: 80px;
+  background: linear-gradient(to bottom, transparent, rgba(0, 0, 0, 0.3));
+  pointer-events: none;
+  z-index: 1;
 }
 
 .section-divider {
@@ -579,10 +618,37 @@ section {
   pointer-events: none;
 }
 
+.feature-card::after {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(circle at 50% 50%, rgba(0, 212, 255, 0.03) 0%, transparent 50%);
+  opacity: 0;
+  transition: opacity 0.6s var(--ease-out);
+  pointer-events: none;
+}
+
 .feature-card:hover {
   border-color: rgba(0, 212, 255, 0.4);
   transform: translateY(-8px);
   box-shadow: 0 20px 60px rgba(0, 212, 255, 0.15);
+}
+
+.feature-card:hover::after {
+  opacity: 1;
+  animation: gradient-rotate 3s linear infinite;
+}
+
+.feature-card:nth-child(odd) .card-image-wrapper {
+  animation: float-slow 6s ease-in-out infinite;
+}
+
+.feature-card:nth-child(even) .card-image-wrapper {
+  animation: float-slow 6s ease-in-out infinite;
+  animation-delay: -3s;
 }
 
 .card-image-wrapper {
@@ -711,139 +777,17 @@ section {
   position: relative;
   min-height: 600px;
   padding: 80px 60px;
-  background: #030612;
+  background: transparent;
   overflow: hidden;
 }
 
-.lp-bg-stars {
-  position: absolute;
-  inset: 0;
-  z-index: 0;
-  pointer-events: none;
-  opacity: 0.5;
-  background-image: 
-    radial-gradient(1.5px 1.5px at 10% 20%, #ffffff, rgba(0,0,0,0)),
-    radial-gradient(2px 2px at 30% 60%, rgba(255,255,255,0.8), rgba(0,0,0,0)),
-    radial-gradient(1px 1px at 80% 40%, #ffffff, rgba(0,0,0,0)),
-    radial-gradient(1.5px 1.5px at 60% 80%, rgba(255,255,255,0.6), rgba(0,0,0,0));
-  background-size: 250px 250px;
-}
-
-.lp-bg-line-1 {
-  position: absolute;
-  top: 25%;
-  left: 33%;
-  width: 800px;
-  height: 1px;
-  background: linear-gradient(to right, transparent, rgba(64, 158, 255, 0.2), transparent);
-  transform: rotate(-12deg);
-  filter: blur(1px);
-}
-
-.lp-bg-line-2 {
-  position: absolute;
-  top: 33%;
-  right: 25%;
-  width: 500px;
-  height: 2px;
-  background: linear-gradient(to right, transparent, rgba(156, 39, 176, 0.1), transparent);
-  transform: rotate(-12deg);
-  filter: blur(2px);
-}
-
-.lp-bg-grid {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  height: 45vh;
-  z-index: 0;
-  pointer-events: none;
-  overflow: hidden;
-}
-
-.lp-bg-grid::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background-image: 
-    linear-gradient(rgba(47, 128, 237, 0.15) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(47, 128, 237, 0.15) 1px, transparent 1px);
-  background-size: 60px 60px;
-  transform: perspective(800px) rotateX(72deg) scale(2.5) translateY(50px);
-  transform-origin: bottom center;
-  mask-image: linear-gradient(to top, rgba(0,0,0,1) 10%, transparent 80%);
-  -webkit-mask-image: linear-gradient(to top, rgba(0,0,0,1) 10%, transparent 80%);
-}
-
-.lp-bg-planet-large {
-  position: absolute;
-  bottom: -120px;
-  left: -120px;
-  width: 500px;
-  height: 500px;
-  z-index: 0;
-  pointer-events: none;
-}
-
-.lp-bg-planet-large::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  border-radius: 50%;
-  background: radial-gradient(circle at 75% 25%, #0f1c3a 0%, #030612 60%);
-  box-shadow: 
-    inset -30px 30px 60px rgba(100, 180, 255, 0.15), 
-    inset 0 0 20px rgba(255,255,255,0.02), 
-    0 0 120px rgba(10, 30, 80, 0.6);
-}
-
-.lp-bg-planet-large::after {
-  content: '';
-  position: absolute;
-  inset: -2px;
-  border-radius: 50%;
-  border: 1px solid rgba(47, 128, 237, 0.3);
-  filter: blur(2px);
-}
-
+.lp-bg-stars,
+.lp-bg-line-1,
+.lp-bg-line-2,
+.lp-bg-grid,
+.lp-bg-planet-large,
 .lp-bg-planet-ring {
-  position: absolute;
-  top: 60px;
-  right: 80px;
-  width: 240px;
-  height: 240px;
-  z-index: 0;
-  pointer-events: none;
-  opacity: 0.8;
-}
-
-.lp-bg-planet-ring::before {
-  content: '';
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  width: 64px;
-  height: 64px;
-  transform: translate(-50%, -50%);
-  border-radius: 50%;
-  background: radial-gradient(circle at 30% 30%, #4a5d85, #0a1128);
-  box-shadow: 
-    inset -4px -4px 10px rgba(0,0,0,0.8), 
-    0 0 20px rgba(100, 150, 255, 0.4);
-}
-
-.lp-bg-planet-ring::after {
-  content: '';
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  width: 220px;
-  height: 60px;
-  transform: translate(-50%, -50%) rotateX(75deg);
-  border-radius: 50%;
-  border-top: 1px solid rgba(100, 181, 246, 0.4);
-  border-bottom: 1px solid rgba(100, 181, 246, 0.4);
+  display: none;
 }
 
 .lp-card {
@@ -851,13 +795,13 @@ section {
   z-index: 10;
   max-width: 1140px;
   margin: 0 auto;
-  background: rgba(10, 16, 36, 0.6);
-  backdrop-filter: blur(24px);
-  -webkit-backdrop-filter: blur(24px);
+  background: rgba(10, 16, 36, 0.3);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
   border-radius: 24px;
   padding: 40px 56px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
 }
 
 .lp-header {
@@ -906,8 +850,15 @@ section {
   right: calc(100% / 12);
   height: 3px;
   background: linear-gradient(to right, #00d2ff, #009dff, #3859ff, #7e3aff, #c42bff, #ff2a9d);
+  background-size: 200% 100%;
   border-radius: 3px;
   box-shadow: 0 0 15px rgba(126, 58, 255, 0.4);
+  animation: line-gradient-shift 4s ease-in-out infinite;
+}
+
+@keyframes line-gradient-shift {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
 }
 
 .lp-timeline-nodes {
@@ -965,6 +916,13 @@ section {
   gap: 12px;
   position: relative;
   width: 68px;
+  animation: icon-float 4s ease-in-out infinite;
+  animation-delay: calc(var(--node-index, 0) * 0.3s);
+}
+
+@keyframes icon-float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
 }
 
 .lp-icon-container {
@@ -992,12 +950,19 @@ section {
   height: 68px;
   border-radius: 50%;
   border: 2px solid var(--icon-color);
-  box-shadow: 
-    0 0 12px var(--icon-color), 
-    0 0 25px color-mix(in srgb, var(--icon-color) 35%, transparent),
-    inset 0 0 10px color-mix(in srgb, var(--icon-color) 25%, transparent);
+  box-shadow: 0 0 12px var(--icon-color), 0 0 30px color-mix(in srgb, var(--icon-color) 30%, transparent);
   transition: all 0.3s ease;
 }
+
+.lp-ring-pulse {
+  animation: icon-ring-pulse 3s ease-in-out infinite;
+  animation-delay: calc(var(--node-index, 0) * 0.3s);
+}
+
+	@keyframes icon-ring-pulse {
+	  0%, 100% { opacity: 0.6; }
+	  50% { opacity: 1; }
+	}
 
 .lp-icon-wrapper:hover .lp-icon-ring {
   transform: scale(1.05);

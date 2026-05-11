@@ -1,25 +1,40 @@
 # Claude Code 前端开发 Skills 介绍
 
 > 本文档介绍在当前项目中安装的所有前端开发相关 Skills，帮助你了解每个 Skill 的用途、用法和核心规则。
+>
+> **💡 调用方式**：在对话中直接输入 `/skill-name` 即可激活对应 Skill，例如 `/frontend-design`。
 
 ---
 
 ## 已安装 Skills 列表
 
-| # | Skill 名称 | 来源 | 安装量 | 类别 |
-|---|-----------|------|--------|------|
-| 1 | **frontend-design** | anthropics/skills | 391.4K+ | 设计质量 |
-| 2 | **design-taste-frontend** | leonxlnx/taste-skill | 49.4K+ | 设计品味 |
-| 3 | **ui-ux-pro-max** | nextlevelbuilder | 155.9K+ | UI/UX 设计系统 |
-| 4 | **web-design-guidelines** | vercel-labs/agent-skills | 308.8K+ | 设计审查 |
-| 5 | **vercel-react-best-practices** | vercel-labs/agent-skills | 386.5K+ | React 性能优化 |
-| 6 | **nextjs-app-router-patterns** | wshobson/agents | 16.8K+ | Next.js 框架 |
-| 7 | **accessibility** | addyosmani/web-quality-skills | 21.5K+ | 无障碍 |
-| 8 | **canvas-design** | anthropics/skills | 51.1K+ | 视觉艺术 |
+| # | Skill 名称 | 调用命令 | 来源 | 安装量 | 类别 |
+|---|-----------|---------|------|--------|------|
+| 1 | **frontend-design** | `/frontend-design` | anthropics/skills | 391.4K+ | 设计质量 |
+| 2 | **design-taste-frontend** | `/design-taste-frontend` | leonxlnx/taste-skill | 49.4K+ | 设计品味 |
+| 3 | **ui-ux-pro-max** | `/ui-ux-pro-max` | nextlevelbuilder | 155.9K+ | UI/UX 设计系统 |
+| 4 | **web-design-guidelines** | `/web-design-guidelines` | vercel-labs/agent-skills | 308.8K+ | 设计审查 |
+| 5 | **vercel-react-best-practices** | `/vercel-react-best-practices` | vercel-labs/agent-skills | 386.5K+ | React 性能优化 |
+| 6 | **nextjs-app-router-patterns** | `/nextjs-app-router-patterns` | wshobson/agents | 16.8K+ | Next.js 框架 |
+| 7 | **accessibility** | `/accessibility` | addyosmani/web-quality-skills | 21.5K+ | 无障碍 |
+| 8 | **canvas-design** | `/canvas-design` | anthropics/skills | 51.1K+ | 视觉艺术 |
+
+## 快速参考（常用需求 → 对应 Skill）
+
+| 需求 | 调用的 Skill |
+|------|------------|
+| **让页面更有高级感 / 增加动画效果** | `/design-taste-frontend`（调节动效强度）+ `/ui-ux-pro-max`（动画规范 §7） |
+| **新建页面 / 组件 / 落地页** | `/frontend-design`（生成独特、非 AI 感的设计） |
+| **选择配色方案 / 字体搭配 / 设计风格** | `/ui-ux-pro-max`（内置 161 种配色 + 57 种字体搭配） |
+| **审查现有 UI 质量 / 设计审计** | `/web-design-guidelines` |
+| **检查无障碍问题（WCAG）** | `/accessibility` |
+| **React / Next.js 性能优化** | `/vercel-react-best-practices` |
+| **Next.js App Router 开发** | `/nextjs-app-router-patterns` |
+| **创建海报 / 艺术作品输出** | `/canvas-design` |
 
 ---
 
-## 1. frontend-design（官方核心推荐）
+## 1. frontend-design（官方核心推荐）— 调用: `/frontend-design`
 
 ### 基本信息
 - **来源**: anthropics/skills
@@ -51,7 +66,7 @@
 
 ---
 
-## 2. design-taste-frontend（设计品味调节器）
+## 2. design-taste-frontend（设计品味调节器）— 调用: `/design-taste-frontend`
 
 ### 基本信息
 - **来源**: leonxlnx/taste-skill
@@ -101,7 +116,7 @@
 
 ---
 
-## 3. web-design-guidelines（Vercel 设计规范审查）
+## 3. web-design-guidelines（Vercel 设计规范审查）— 调用: `/web-design-guidelines`
 
 ### 基本信息
 - **来源**: vercel-labs/agent-skills
@@ -141,7 +156,7 @@
 
 ---
 
-## 4. canvas-design（画布艺术设计）
+## 4. canvas-design（画布艺术设计）— 调用: `/canvas-design`
 
 ### 基本信息
 - **来源**: anthropics/skills
@@ -180,7 +195,7 @@
 
 ---
 
-## 5. ui-ux-pro-max（UI/UX 设计系统大全）
+## 5. ui-ux-pro-max（UI/UX 设计系统大全）— 调用: `/ui-ux-pro-max`
 
 ### 基本信息
 - **来源**: nextlevelbuilder/ui-ux-pro-max-skill
@@ -193,11 +208,11 @@
 ### 使用方法
 ```bash
 # 生成完整设计系统（推荐）
-python3 .agents/skills/ui-ux-pro-max/scripts/search.py "fintech dashboard dark" --design-system
+python3 .claude/skills/ui-ux-pro-max/scripts/search.py "fintech dashboard dark" --design-system
 
 # 搜索特定领域
-python3 .agents/skills/ui-ux-pro-max/scripts/search.py "glassmorphism dark" --domain style
-python3 .agents/skills/ui-ux-pro-max/scripts/search.py "sans serif modern" --domain typography
+python3 .claude/skills/ui-ux-pro-max/scripts/search.py "glassmorphism dark" --domain style
+python3 .claude/skills/ui-ux-pro-max/scripts/search.py "sans serif modern" --domain typography
 ```
 
 支持 10 个技术栈：React、Next.js、Vue、Svelte、SwiftUI、React Native、Flutter、Tailwind、shadcn/ui、HTML/CSS。
@@ -220,10 +235,10 @@ python3 .agents/skills/ui-ux-pro-max/scripts/search.py "sans serif modern" --dom
 ### 特色功能：设计系统持久化
 ```bash
 # 生成设计系统并保存为 MASTER.md
-python3 .agents/skills/ui-ux-pro-max/scripts/search.py "saas analytics" --design-system --persist -p "MyProject"
+python3 .claude/skills/ui-ux-pro-max/scripts/search.py "saas analytics" --design-system --persist -p "MyProject"
 
 # 为特定页面生成覆盖规则
-python3 .agents/skills/ui-ux-pro-max/scripts/search.py "dashboard" --design-system --persist -p "MyProject" --page "dashboard"
+python3 .claude/skills/ui-ux-pro-max/scripts/search.py "dashboard" --design-system --persist -p "MyProject" --page "dashboard"
 ```
 生成的文件结构：
 ```
@@ -235,7 +250,7 @@ design-system/
 
 ---
 
-## 6. vercel-react-best-practices（Vercel React 性能优化）
+## 6. vercel-react-best-practices（Vercel React 性能优化）— 调用: `/vercel-react-best-practices`
 
 ### 基本信息
 - **来源**: vercel-labs/agent-skills
@@ -270,7 +285,7 @@ const [user, posts] = await Promise.all([getUser(), getPosts()]);
 
 ---
 
-## 7. accessibility（Web 无障碍标准指南）
+## 7. accessibility（Web 无障碍标准指南）— 调用: `/accessibility`
 
 ### 基本信息
 - **来源**: addyosmani/web-quality-skills（Google 工程师 Addy Osmani）
@@ -329,7 +344,7 @@ const [user, posts] = await Promise.all([getUser(), getPosts()]);
 
 ---
 
-## 8. nextjs-app-router-patterns（Next.js App Router 模式）
+## 8. nextjs-app-router-patterns（Next.js App Router 模式）— 调用: `/nextjs-app-router-patterns`
 
 ### 基本信息
 - **来源**: wshobson/agents
@@ -453,4 +468,4 @@ npx skills add vercel-labs/agent-skills@vercel-react-best-practices
 npx skills add wshobson/agents@nextjs-app-router-patterns
 ```
 
-安装位置：`.agents/skills/` 目录，并在 `.claude/skills/` 中创建了符号链接。
+安装位置：`.claude/skills/` 目录。
