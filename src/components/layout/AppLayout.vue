@@ -1,38 +1,54 @@
 <script setup lang="ts">
 import { useRoute } from 'vue-router'
+import { useScrollReveal } from '@/composables/useScrollReveal'
+import {
+  Home,
+  MessageCircle,
+  User,
+  BookOpen,
+  Map,
+  GraduationCap,
+  BarChart3,
+  Settings,
+  Sparkles,
+} from 'lucide-vue-next'
 
 const route = useRoute()
+useScrollReveal(0.12)
 
 const navItems = [
-  { path: '/', label: '欢迎', icon: '→' },
-  { path: '/chat', label: '对话', icon: '↗' },
-  { path: '/profile', label: '画像', icon: '◎' },
-  { path: '/resources', label: '资源', icon: '▣' },
-  { path: '/learning-path', label: '路径', icon: '⇲' },
-  { path: '/tutoring', label: '辅导', icon: '⊕' },
-  { path: '/evaluation', label: '评估', icon: '◈' },
-  { path: '/settings', label: '设置', icon: '⚙' },
+  { path: '/', label: '欢迎', icon: Home },
+  { path: '/chat', label: '对话', icon: MessageCircle },
+  { path: '/profile', label: '画像', icon: User },
+  { path: '/resources', label: '资源', icon: BookOpen },
+  { path: '/learning-path', label: '路径', icon: Map },
+  { path: '/tutoring', label: '辅导', icon: GraduationCap },
+  { path: '/evaluation', label: '评估', icon: BarChart3 },
+  { path: '/settings', label: '设置', icon: Settings },
 ]
 </script>
 
 <template>
   <div class="layout">
     <!-- Top Navigation Bar -->
-    <header class="topbar">
+    <header class="topbar" role="banner">
       <div class="topbar-inner">
-        <router-link to="/" class="topbar-brand">
-          <span class="brand-icon">✦</span>
+        <router-link to="/" class="topbar-brand" aria-label="EduMind 首页">
+          <span class="brand-icon">
+            <Sparkles :size="18" stroke-width="1.5" />
+          </span>
           <span class="brand-text">EduMind</span>
         </router-link>
 
-        <nav class="topbar-nav">
+        <nav class="topbar-nav" aria-label="主导航">
           <router-link
             v-for="item in navItems"
             :key="item.path"
             :to="item.path"
             :class="['nav-item', { active: route.path === item.path }]"
+            :aria-current="route.path === item.path ? 'page' : undefined"
           >
-            <span class="nav-icon">{{ item.icon }}</span>
+            <component :is="item.icon" :size="16" stroke-width="1.5" class="nav-icon-svg" aria-hidden="true" />
             <span class="nav-label">{{ item.label }}</span>
             <span class="nav-indicator" :class="{ visible: route.path === item.path }" />
           </router-link>
@@ -41,7 +57,7 @@ const navItems = [
     </header>
 
     <!-- Main Content -->
-    <main class="main-content">
+    <main class="main-content" id="main-content">
       <router-view v-slot="{ Component }">
         <transition name="fade" mode="out-in">
           <component :is="Component" />
@@ -79,15 +95,22 @@ const navItems = [
   height: 100%;
   display: flex;
   align-items: center;
-  padding: 0 40px;
-  gap: 40px;
+  padding: 0 24px;
+  gap: 32px;
+}
+
+@media (min-width: 1024px) {
+  .topbar-inner {
+    padding: 0 40px;
+    gap: 40px;
+  }
 }
 
 /* === Brand === */
 .topbar-brand {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
   text-decoration: none;
   flex-shrink: 0;
 }
@@ -96,18 +119,12 @@ const navItems = [
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 36px;
-  height: 36px;
+  width: 34px;
+  height: 34px;
   border-radius: 8px;
   background: linear-gradient(135deg, #00d4ff, #7c3aed);
   color: #fff;
-  font-size: 16px;
   box-shadow: 0 0 20px rgba(0, 212, 255, 0.4);
-}
-
-.brand-info {
-  display: flex;
-  flex-direction: column;
 }
 
 .brand-text {
@@ -116,12 +133,6 @@ const navItems = [
   font-weight: 600;
   color: #fff;
   letter-spacing: 0.5px;
-}
-
-.brand-sub {
-  font-size: 11px;
-  color: var(--color-text-tertiary);
-  letter-spacing: 1px;
 }
 
 /* === Nav === */
@@ -141,15 +152,23 @@ const navItems = [
   display: flex;
   align-items: center;
   gap: 6px;
-  padding: 10px 20px;
+  padding: 8px 14px;
+  min-height: 44px;
   border-radius: var(--radius-sm);
   color: var(--color-text-secondary);
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 500;
   text-decoration: none;
   transition: all var(--duration-fast) var(--ease-out);
   position: relative;
   white-space: nowrap;
+}
+
+@media (min-width: 1024px) {
+  .nav-item {
+    padding: 10px 20px;
+    font-size: 14px;
+  }
 }
 
 .nav-item:hover {
@@ -162,8 +181,16 @@ const navItems = [
   background: rgba(0, 212, 255, 0.1);
 }
 
+.nav-icon-svg {
+  flex-shrink: 0;
+  transition: transform var(--duration-fast) var(--ease-out);
+}
+
+.nav-item:hover .nav-icon-svg {
+  transform: scale(1.1);
+}
+
 .nav-label {
-  font-size: 14px;
   letter-spacing: 0.3px;
 }
 
@@ -182,50 +209,6 @@ const navItems = [
 
 .nav-indicator.visible {
   transform: translateX(-50%) scaleX(1);
-}
-
-/* === Topbar Actions === */
-.topbar-actions {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-}
-
-.btn-login {
-  padding: 10px 24px;
-  border-radius: var(--radius-md);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  background: transparent;
-  color: var(--color-text-secondary);
-  font-size: 14px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all var(--duration-fast) var(--ease-out);
-}
-
-.btn-login:hover {
-  border-color: var(--color-accent-cyan);
-  color: var(--color-accent-cyan);
-}
-
-.btn-try {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 10px 24px;
-  border-radius: var(--radius-md);
-  background: linear-gradient(135deg, #00d4ff, #7c3aed);
-  color: #fff;
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all var(--duration-normal) var(--ease-out);
-  box-shadow: 0 4px 20px rgba(0, 212, 255, 0.3);
-}
-
-.btn-try:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 24px rgba(0, 212, 255, 0.4);
 }
 
 /* === Main Content === */
