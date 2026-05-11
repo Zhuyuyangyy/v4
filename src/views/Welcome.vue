@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
+import { Target, BarChart2, Map, BookOpen, ClipboardCheck, Sliders } from 'lucide-vue-next'
 
 const router = useRouter()
 const loaded = ref(false)
@@ -26,6 +27,51 @@ const stats = [
   { value: '3000+', label: '精品课程', icon: '▣' },
   { value: '98.7%', label: '学习效果提升', icon: '⇲' },
   { value: '1000+', label: '合作院校机构', icon: '⊕' },
+]
+
+const learningSteps = [
+  {
+    num: "01",
+    title: "目标设定",
+    color: "#00d2ff",
+    icon: Target,
+    desc: "明确目标，制定计划"
+  },
+  {
+    num: "02",
+    title: "能力评估",
+    color: "#009dff",
+    icon: BarChart2,
+    desc: "多维测评，定位短板"
+  },
+  {
+    num: "03",
+    title: "路径规划",
+    color: "#3859ff",
+    icon: Map,
+    desc: "AI推荐，最优路径"
+  },
+  {
+    num: "04",
+    title: "学习执行",
+    color: "#7e3aff",
+    icon: BookOpen,
+    desc: "沉浸学习，掌握知识"
+  },
+  {
+    num: "05",
+    title: "阶段测评",
+    color: "#c42bff",
+    icon: ClipboardCheck,
+    desc: "阶段测评，查漏补缺"
+  },
+  {
+    num: "06",
+    title: "调整优化",
+    color: "#ff2a9d",
+    icon: Sliders,
+    desc: "数据驱动，动态调整"
+  }
 ]
 
 onMounted(() => {
@@ -106,6 +152,65 @@ onMounted(() => {
           </div>
           <h3 class="card-title">{{ f.title }}</h3>
           <p class="card-desc">{{ f.desc }}</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Learning Path -->
+    <section class="learning-path">
+      <div class="lp-bg-stars"></div>
+      <div class="lp-bg-line-1"></div>
+      <div class="lp-bg-line-2"></div>
+      <div class="lp-bg-grid"></div>
+      <div class="lp-bg-planet-large"></div>
+      <div class="lp-bg-planet-ring"></div>
+      
+      <div class="lp-card">
+        <div class="lp-header">
+          <h2 class="lp-title">个性化学习路径</h2>
+          <p class="lp-subtitle">从目标到掌握，步步精准</p>
+          <div class="lp-divider"></div>
+        </div>
+        
+        <div class="lp-timeline">
+          <div class="lp-timeline-track">
+              <div class="lp-timeline-line"></div>
+              <div class="lp-timeline-nodes">
+                <div
+                  v-for="(step, i) in learningSteps"
+                  :key="`node-${i}`"
+                  class="lp-node"
+                >
+                  <span class="lp-node-num">{{ step.num }}</span>
+                  <span class="lp-node-title">{{ step.title }}</span>
+                  <div class="lp-node-dot" :style="{ '--dot-color': step.color }"></div>
+                </div>
+              </div>
+            </div>
+          
+          <div class="lp-icons-row">
+            <div
+              v-for="(step, i) in learningSteps"
+              :key="`icon-${i}`"
+              class="lp-icon-wrapper"
+              :style="{ '--icon-color': step.color }"
+            >
+              <div class="lp-icon-container">
+                <div class="lp-icon-bg"></div>
+                <div class="lp-icon-ring"></div>
+                <component :is="step.icon" class="lp-icon" stroke-width="1.5" />
+              </div>
+            </div>
+          </div>
+          
+          <div class="lp-desc-row">
+            <div
+              v-for="(step, i) in learningSteps"
+              :key="`desc-${i}`"
+              class="lp-desc"
+              v-html="step.desc"
+            ></div>
+          </div>
         </div>
       </div>
     </section>
@@ -599,6 +704,335 @@ section {
   font-size: 13px;
   font-family: var(--font-mono);
   letter-spacing: 1px;
+}
+
+/* === Learning Path === */
+.learning-path {
+  position: relative;
+  min-height: 600px;
+  padding: 80px 60px;
+  background: #030612;
+  overflow: hidden;
+}
+
+.lp-bg-stars {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0.5;
+  background-image: 
+    radial-gradient(1.5px 1.5px at 10% 20%, #ffffff, rgba(0,0,0,0)),
+    radial-gradient(2px 2px at 30% 60%, rgba(255,255,255,0.8), rgba(0,0,0,0)),
+    radial-gradient(1px 1px at 80% 40%, #ffffff, rgba(0,0,0,0)),
+    radial-gradient(1.5px 1.5px at 60% 80%, rgba(255,255,255,0.6), rgba(0,0,0,0));
+  background-size: 250px 250px;
+}
+
+.lp-bg-line-1 {
+  position: absolute;
+  top: 25%;
+  left: 33%;
+  width: 800px;
+  height: 1px;
+  background: linear-gradient(to right, transparent, rgba(64, 158, 255, 0.2), transparent);
+  transform: rotate(-12deg);
+  filter: blur(1px);
+}
+
+.lp-bg-line-2 {
+  position: absolute;
+  top: 33%;
+  right: 25%;
+  width: 500px;
+  height: 2px;
+  background: linear-gradient(to right, transparent, rgba(156, 39, 176, 0.1), transparent);
+  transform: rotate(-12deg);
+  filter: blur(2px);
+}
+
+.lp-bg-grid {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 45vh;
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.lp-bg-grid::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: 
+    linear-gradient(rgba(47, 128, 237, 0.15) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(47, 128, 237, 0.15) 1px, transparent 1px);
+  background-size: 60px 60px;
+  transform: perspective(800px) rotateX(72deg) scale(2.5) translateY(50px);
+  transform-origin: bottom center;
+  mask-image: linear-gradient(to top, rgba(0,0,0,1) 10%, transparent 80%);
+  -webkit-mask-image: linear-gradient(to top, rgba(0,0,0,1) 10%, transparent 80%);
+}
+
+.lp-bg-planet-large {
+  position: absolute;
+  bottom: -120px;
+  left: -120px;
+  width: 500px;
+  height: 500px;
+  z-index: 0;
+  pointer-events: none;
+}
+
+.lp-bg-planet-large::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: radial-gradient(circle at 75% 25%, #0f1c3a 0%, #030612 60%);
+  box-shadow: 
+    inset -30px 30px 60px rgba(100, 180, 255, 0.15), 
+    inset 0 0 20px rgba(255,255,255,0.02), 
+    0 0 120px rgba(10, 30, 80, 0.6);
+}
+
+.lp-bg-planet-large::after {
+  content: '';
+  position: absolute;
+  inset: -2px;
+  border-radius: 50%;
+  border: 1px solid rgba(47, 128, 237, 0.3);
+  filter: blur(2px);
+}
+
+.lp-bg-planet-ring {
+  position: absolute;
+  top: 60px;
+  right: 80px;
+  width: 240px;
+  height: 240px;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0.8;
+}
+
+.lp-bg-planet-ring::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 64px;
+  height: 64px;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  background: radial-gradient(circle at 30% 30%, #4a5d85, #0a1128);
+  box-shadow: 
+    inset -4px -4px 10px rgba(0,0,0,0.8), 
+    0 0 20px rgba(100, 150, 255, 0.4);
+}
+
+.lp-bg-planet-ring::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 220px;
+  height: 60px;
+  transform: translate(-50%, -50%) rotateX(75deg);
+  border-radius: 50%;
+  border-top: 1px solid rgba(100, 181, 246, 0.4);
+  border-bottom: 1px solid rgba(100, 181, 246, 0.4);
+}
+
+.lp-card {
+  position: relative;
+  z-index: 10;
+  max-width: 1140px;
+  margin: 0 auto;
+  background: rgba(10, 16, 36, 0.6);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border-radius: 24px;
+  padding: 40px 56px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.6);
+}
+
+.lp-header {
+  text-align: left;
+  margin-bottom: 40px;
+}
+
+.lp-title {
+  font-family: var(--font-display);
+  font-size: 32px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: #f0f6ff;
+  margin: 0 0 10px;
+}
+
+.lp-subtitle {
+  font-size: 14px;
+  color: #7b8c9e;
+  letter-spacing: 0.15em;
+  font-weight: 300;
+  margin: 0 0 16px;
+}
+
+.lp-divider {
+  width: 50px;
+  height: 3px;
+  border-radius: 3px;
+  background: linear-gradient(to right, #00d2ff, #7e3aff);
+}
+
+.lp-timeline {
+  overflow-x: auto;
+  padding-bottom: 16px;
+}
+
+.lp-timeline-track {
+  position: relative;
+  min-width: 900px;
+}
+
+.lp-timeline-line {
+  position: absolute;
+  top: 100px;
+  left: calc(100% / 12);
+  right: calc(100% / 12);
+  height: 3px;
+  background: linear-gradient(to right, #00d2ff, #009dff, #3859ff, #7e3aff, #c42bff, #ff2a9d);
+  border-radius: 3px;
+  box-shadow: 0 0 15px rgba(126, 58, 255, 0.4);
+}
+
+.lp-timeline-nodes {
+  display: flex;
+  justify-content: space-between;
+  padding: 0 calc(100% / 12);
+}
+
+.lp-node {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  position: relative;
+}
+
+.lp-node-num {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--dot-color, #00d2ff);
+}
+
+.lp-node-title {
+  font-size: 14px;
+  font-weight: 500;
+  color: #e2e8f0;
+  letter-spacing: 0.05em;
+}
+
+.lp-node-dot {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #fff;
+  border: 3px solid var(--dot-color);
+  box-shadow: 
+    0 0 15px var(--dot-color), 
+    0 0 30px color-mix(in srgb, var(--dot-color) 40%, transparent),
+    inset 0 0 2px rgba(0,0,0,0.1);
+  position: relative;
+  z-index: 1;
+}
+
+.lp-icons-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 0 8.333%;
+  margin-top: 20px;
+}
+
+.lp-icon-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  position: relative;
+  width: 68px;
+}
+
+.lp-icon-container {
+  position: relative;
+  width: 68px;
+  height: 68px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.lp-icon-bg {
+  position: absolute;
+  width: 68px;
+  height: 68px;
+  border-radius: 50%;
+  background: rgba(10, 16, 36, 0.9);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+.lp-icon-ring {
+  position: absolute;
+  width: 68px;
+  height: 68px;
+  border-radius: 50%;
+  border: 2px solid var(--icon-color);
+  box-shadow: 
+    0 0 12px var(--icon-color), 
+    0 0 25px color-mix(in srgb, var(--icon-color) 35%, transparent),
+    inset 0 0 10px color-mix(in srgb, var(--icon-color) 25%, transparent);
+  transition: all 0.3s ease;
+}
+
+.lp-icon-wrapper:hover .lp-icon-ring {
+  transform: scale(1.05);
+}
+
+.lp-icon {
+  position: relative;
+  width: 24px;
+  height: 24px;
+  color: var(--icon-color);
+  filter: drop-shadow(0 0 8px var(--icon-color));
+  transition: all 0.3s ease;
+  z-index: 1;
+}
+
+.lp-icon-wrapper:hover .lp-icon {
+  transform: scale(1.1);
+}
+
+.lp-desc-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 0 8.333%;
+  margin-top: 6px;
+}
+
+.lp-desc {
+  width: 68px;
+  text-align: center;
+  font-size: 11px;
+  color: #7b8c9e;
+  line-height: 1.6;
+  letter-spacing: 0.01em;
+  font-weight: 400;
+  white-space: nowrap;
 }
 
 /* === Responsive === */
