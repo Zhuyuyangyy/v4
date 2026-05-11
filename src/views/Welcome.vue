@@ -93,7 +93,7 @@ onMounted(() => {
           AI × 教育 让学习更高效
         </div>
         <h1 :class="['hero-title', { visible: loaded }]">
-          <span class="title-line">探索知识宇宙</span>
+          <span class="title-line">A I 知识宇宙</span>
           <span class="title-line">成就<span class="text-gradient">无限可能</span></span>
         </h1>
         <p :class="['hero-sub', { visible: loaded }]">
