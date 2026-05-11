@@ -22,6 +22,10 @@ import {
   Search,
   Plus,
   Star,
+  Bot,
+  Brain,
+  Layers,
+  Zap,
 } from 'lucide-vue-next'
 
 interface Message {
@@ -55,7 +59,7 @@ const inputText = ref('')
 const isStreaming = ref(false)
 const streamContent = ref('')
 const chatEndRef = ref<HTMLElement | null>(null)
-const showAgentPanel = ref(true)
+const showAgentPanel = ref(false)
 const selectedPreset = ref('')
 
 const agents = ref<AgentNode[]>([
@@ -160,7 +164,7 @@ function sendMessage() {
   scrollToBottom()
 
   runAgentPipeline(
-    '好的，我已经分析了你的需求。根据你的问题，我建议从基础概念开始，逐步深入实践。\n\n**关键要点：**\n\n1. **理解核心原理** — 先掌握基本概念和理论基础\n2. **动手实践** — 通过实际项目巩固所学知识\n3. **持续反馈** — 定期自测，查漏补缺\n\n> 学习是一个循序渐进的过程，不要急于求成。每天坚持学习，效果会越来越好。\n\n我已经为你准备了相关的学习资源，包括入门指南、知识图谱和自测习题。你可以从这些资源开始，遇到问题随时问我！',
+    '好的，我已经分析了你的需求。根据你的问题，我建议从基础概念开始，逐步深入实践。\n\n**关键要点：**\n\n1. **理解核心原理** — 先掌握基本概念和理论基础\n2. **动手实践** — 通过实际项目巩固所学知识\n3. **持续反馈** — 定期自测，查漏补缺\n\n> 学习是一个循序渐进的过程，不要急于求成。每天坚持学习，效果会越来越好。\n\n我已经为你准备了相关的学习资源，包括入门指南、知识图谱和自测习题。',
     ['继续深入讲解这部分', '给我一个代码示例', '推荐相关学习资源', '有哪些常见的坑？']
   )
 }
@@ -186,7 +190,7 @@ function getResourceIcon(type: string) {
 
 function formatContent(content: string) {
   return content
-    .replace(/```(\w*)\n([\s\S]*?)```/g, '<pre class="code-block"><code>$2</code></pre>')
+    .replace(/```(\w*)\n([\s\S]*?)```/g, '<pre class="cb"><code>$2</code></pre>')
     .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
     .replace(/> (.*?)(\n|$)/g, '<blockquote>$1</blockquote>')
     .replace(/\n/g, '<br/>')
@@ -197,202 +201,175 @@ onMounted(scrollToBottom)
 
 <template>
   <div class="chat">
-    <!-- Agent Orchestration Bar -->
-    <div class="agent-bar">
-      <div class="agent-bar-inner">
-        <div class="agent-flow">
-          <div
-            v-for="(a, i) in agents"
-            :key="a.name"
-            :class="['agent-step', a.status]"
-            :style="{ '--accent': a.color }"
-          >
-            <div class="step-indicator">
-              <component :is="a.icon" v-if="a.status !== 'done'" :size="14" stroke-width="1.5" class="step-svg" />
-              <span v-else class="step-check">✓</span>
-              <div v-if="a.status === 'active'" class="step-pulse" />
+    <!-- Agent Pipeline Bar -->
+    <div class="pipeline-bar">
+      <div class="pipeline-flow">
+        <div
+          v-for="(a, i) in agents"
+          :key="a.name"
+          :class="['pipeline-node', a.status]"
+          :style="{ '--node-color': a.color }"
+        >
+          <div class="node-indicator">
+            <div class="node-ring">
+              <component :is="a.icon" v-if="a.status !== 'done'" :size="14" stroke-width="1.5" />
+              <span v-else class="node-check">✓</span>
             </div>
-            <div class="step-info">
-              <span class="step-name">{{ a.name }}</span>
-            </div>
-            <div v-if="i < agents.length - 1" class="step-connector">
-              <div v-if="a.status === 'done'" class="connector-fill" />
-            </div>
+            <div v-if="a.status === 'active'" class="node-pulse" />
+          </div>
+          <div class="node-label">{{ a.name }}</div>
+          <div v-if="i < agents.length - 1" class="node-connector">
+            <div :class="['connector-track', { filled: a.status === 'done' }]" />
           </div>
         </div>
-        <button
-          class="agent-toggle"
-          @click="showAgentPanel = !showAgentPanel"
-          :aria-label="showAgentPanel ? '收起智能体详情' : '展开智能体详情'"
-          :aria-expanded="showAgentPanel"
-        >
-          <span>{{ showAgentPanel ? '收起' : '详情' }}</span>
-          <ChevronDown :size="14" :class="['toggle-arrow', { open: showAgentPanel }]" />
-        </button>
       </div>
+      <button class="pipeline-toggle" @click="showAgentPanel = !showAgentPanel" :aria-expanded="showAgentPanel">
+        <Layers :size="14" stroke-width="1.5" />
+        <ChevronDown :size="12" :class="['toggle-icon', { open: showAgentPanel }]" />
+      </button>
     </div>
 
     <!-- Agent Detail Panel -->
     <transition name="slide-up">
-      <div v-if="showAgentPanel" class="agent-detail-panel" role="region" aria-label="智能体详情">
-        <div
-          v-for="a in agents"
-          :key="a.name"
-          :class="['agent-row', a.status]"
-          :style="{ '--accent': a.color }"
-        >
-          <div class="agent-row-left">
-            <span :class="['agent-badge', a.status]">
+      <div v-if="showAgentPanel" class="agent-detail">
+        <div v-for="a in agents" :key="a.name" class="agent-card" :style="{ '--accent': a.color }">
+          <div class="agent-card-left">
+            <div :class="['agent-badge', a.status]">
               <component :is="a.icon" v-if="a.status !== 'done'" :size="14" stroke-width="1.5" />
-              <span v-else>✓</span>
-            </span>
-            <div>
-              <div class="agent-row-name">{{ a.name }}</div>
-              <div class="agent-row-desc">{{ a.desc }}</div>
+              <span v-else class="badge-done">✓</span>
+            </div>
+            <div class="agent-info">
+              <span class="agent-name">{{ a.name }}</span>
+              <span class="agent-desc">{{ a.desc }}</span>
             </div>
           </div>
-          <div class="agent-row-right">
-            <span v-if="a.status === 'active'" class="status-badge working">
-              <span class="status-dot" /> 分析中...
-            </span>
-            <span v-else-if="a.status === 'done'" class="status-badge done">已完成</span>
-            <span v-else class="status-badge idle">待命中</span>
-          </div>
+          <span :class="['agent-status-tag', a.status]">
+            {{ a.status === 'active' ? '分析中...' : a.status === 'done' ? '已完成' : '待命' }}
+          </span>
         </div>
       </div>
     </transition>
 
-    <div class="chat-container">
+    <div class="chat-body">
       <!-- History Sidebar -->
-      <aside class="history-sidebar" aria-label="历史会话">
-        <div class="history-header">
-          <h3>历史会话</h3>
-          <button class="new-chat-btn" aria-label="新建会话">+ 新建</button>
-        </div>
-        <div class="history-search">
-          <Search :size="14" class="search-icon" aria-hidden="true" />
-          <input type="text" placeholder="搜索会话..." aria-label="搜索历史会话" />
-        </div>
-        <div class="history-list" role="list">
-          <button
-            v-for="s in historySessions"
-            :key="s.id"
-            :class="['history-item', { active: s.id === 1 }]"
-            role="listitem"
-          >
-            <div class="history-item-top">
-              <span class="history-category" :class="`cat-${s.id}`">
-                {{ ['ML', '数学', '算法', '数学', 'DL'][s.id - 1] }}
-              </span>
-              <span class="history-title">{{ s.title }}</span>
-            </div>
-            <span class="history-time">{{ s.time }}</span>
+      <aside class="history-sidebar">
+        <div class="sidebar-header">
+          <h3 class="sidebar-title">对话历史</h3>
+          <button class="sidebar-new">
+            <Plus :size="14" stroke-width="2" />
+            <span>新建</span>
           </button>
         </div>
-        <div class="history-footer">
-          <span class="history-storage">已使用 2.4 GB / 10 GB</span>
-          <div class="history-storage-bar">
-            <div class="history-storage-fill" style="width: 24%" />
+        <div class="sidebar-search">
+          <Search :size="14" stroke-width="1.5" class="search-icon" />
+          <input type="text" placeholder="搜索对话..." />
+        </div>
+        <div class="sidebar-list">
+          <button v-for="s in historySessions" :key="s.id" :class="['session-item', { current: s.id === 1 }]">
+            <div class="session-category" :class="`cat-${s.id}`">
+              {{ ['ML','数学','算法','数学','DL'][s.id-1] }}
+            </div>
+            <div class="session-info">
+              <span class="session-title">{{ s.title }}</span>
+              <span class="session-time">{{ s.time }}</span>
+            </div>
+          </button>
+        </div>
+        <div class="sidebar-footer">
+          <div class="storage-bar">
+            <span class="storage-text">存储 2.4 / 10 GB</span>
+            <div class="storage-track">
+              <div class="storage-fill" style="width:24%" />
+            </div>
           </div>
         </div>
       </aside>
 
       <!-- Main Chat Area -->
       <div class="chat-main">
-        <!-- Messages -->
-        <div class="messages-area" role="log" aria-label="对话消息" aria-live="polite">
-          <!-- Presets -->
-          <div v-if="messages.length === 1" class="presets-section">
-            <div class="presets-label">快速开始</div>
+        <div class="messages-container">
+          <!-- Presets (shown at start) -->
+          <div v-if="messages.length === 1" class="welcome-section">
+            <div class="welcome-header">
+              <div class="welcome-avatar">
+                <Brain :size="24" stroke-width="1.5" />
+              </div>
+              <h2 class="welcome-title">有什么我可以帮你的？</h2>
+              <p class="welcome-desc">选择以下方向开始学习，或直接输入你的问题</p>
+            </div>
             <div class="presets-grid">
-              <button
-                v-for="p in presets"
-                :key="p.label"
-                :class="['preset-card', { active: selectedPreset === p.label }]"
-                @click="usePreset(p)"
-                :aria-label="p.label"
-              >
-                <component :is="p.icon" :size="22" stroke-width="1.5" class="preset-svg" aria-hidden="true" />
+              <button v-for="p in presets" :key="p.label" class="preset-card" @click="usePreset(p)">
+                <div class="preset-icon">
+                  <component :is="p.icon" :size="20" stroke-width="1.5" />
+                </div>
                 <span class="preset-label">{{ p.label }}</span>
               </button>
             </div>
           </div>
 
-          <div v-for="msg in messages" :key="msg.id" :class="['message', msg.role]">
-            <div class="message-avatar" aria-hidden="true">
-              <span class="avatar-inner">{{ msg.role === 'assistant' ? 'AI' : 'U' }}</span>
-              <div v-if="msg.role === 'assistant'" class="avatar-ring" />
+          <!-- Messages -->
+          <div
+            v-for="msg in messages"
+            :key="msg.id"
+            :class="['message', msg.role]"
+          >
+            <div class="message-avatar">
+              <div class="avatar-content">
+                {{ msg.role === 'assistant' ? 'AI' : '你' }}
+              </div>
             </div>
             <div class="message-body">
-              <div class="message-sender">{{ msg.role === 'assistant' ? 'EduMind AI' : '你' }}</div>
+              <div class="message-sender">{{ msg.role === 'assistant' ? 'EduMind 助手' : '你' }}</div>
               <div class="message-content" v-html="formatContent(msg.content)" />
 
-              <!-- Resource cards -->
-              <div v-if="msg.resources" class="resource-strip">
-                <div
-                  v-for="r in msg.resources"
-                  :key="r.title"
-                  class="resource-chip"
-                  :style="{ '--chip-color': r.color || '#00d4ff' }"
-                  role="button"
-                  tabindex="0"
-                  :aria-label="r.title"
-                >
-                  <component :is="getResourceIcon(r.type)" :size="16" stroke-width="1.5" class="chip-svg" />
-                  <span class="chip-title">{{ r.title }}</span>
-                  <ArrowRight :size="14" class="chip-action" />
+              <!-- Resource chips -->
+              <div v-if="msg.resources" class="resource-chips">
+                <div v-for="r in msg.resources" :key="r.title" class="resource-chip" :style="{ '--chip-color': r.color || '#00d4ff' }">
+                  <component :is="getResourceIcon(r.type)" :size="14" stroke-width="1.5" />
+                  <span>{{ r.title }}</span>
+                  <ArrowRight :size="12" class="chip-arrow" />
                 </div>
               </div>
 
               <!-- Suggestions -->
               <div v-if="msg.suggestions && msg.role === 'assistant'" class="suggestions">
-                <span class="suggestions-label">继续对话 ▾</span>
-                <div class="suggestions-list">
-                  <button
-                    v-for="s in msg.suggestions"
-                    :key="s"
-                    class="suggestion-chip"
-                    @click="useSuggestion(s)"
-                  >
-                    {{ s }}
-                    <ArrowRight :size="12" class="suggestion-arrow" />
-                  </button>
-                </div>
+                <button v-for="s in msg.suggestions" :key="s" class="suggestion-chip" @click="useSuggestion(s)">
+                  {{ s }}
+                  <ArrowRight :size="11" class="suggestion-arrow" />
+                </button>
               </div>
 
+              <!-- Message Footer -->
               <div class="message-footer">
                 <span class="message-time">{{ msg.time }}</span>
                 <div v-if="msg.role === 'assistant'" class="message-actions">
-                  <button class="msg-action" aria-label="复制内容" @click="copyMessage(msg.content)">
-                    <Copy :size="14" stroke-width="1.5" />
+                  <button class="action-btn" @click="copyMessage(msg.content)">
+                    <Copy :size="13" stroke-width="1.5" />
                   </button>
-                  <button class="msg-action" aria-label="有用">
-                    <ThumbsUp :size="14" stroke-width="1.5" />
+                  <button class="action-btn">
+                    <ThumbsUp :size="13" stroke-width="1.5" />
                   </button>
-                  <button class="msg-action" aria-label="无用">
-                    <ThumbsDown :size="14" stroke-width="1.5" />
+                  <button class="action-btn">
+                    <ThumbsDown :size="13" stroke-width="1.5" />
                   </button>
-                  <button class="msg-action" aria-label="重新生成">
-                    <RefreshCw :size="14" stroke-width="1.5" />
+                  <button class="action-btn">
+                    <RefreshCw :size="13" stroke-width="1.5" />
                   </button>
                 </div>
               </div>
             </div>
           </div>
 
-          <!-- Streaming message -->
+          <!-- Streaming indicator -->
           <div v-if="isStreaming" class="message assistant">
-            <div class="message-avatar" aria-hidden="true">
-              <span class="avatar-inner">AI</span>
-              <div class="avatar-ring" />
+            <div class="message-avatar">
+              <div class="avatar-content">AI</div>
             </div>
             <div class="message-body">
-              <div class="message-sender">EduMind AI</div>
+              <div class="message-sender">EduMind 助手</div>
               <div class="message-content" v-html="formatContent(streamContent)" />
-              <div class="streaming-indicator" aria-label="AI 正在输入">
-                <span class="streaming-dot" />
-                <span class="streaming-dot" />
-                <span class="streaming-dot" />
+              <div class="typing-indicator">
+                <span class="typing-dot" /><span class="typing-dot" /><span class="typing-dot" />
               </div>
             </div>
           </div>
@@ -403,32 +380,29 @@ onMounted(scrollToBottom)
         <!-- Input Area -->
         <div class="input-area">
           <div class="input-wrapper">
-            <button class="attach-btn" aria-label="上传附件">
+            <button class="input-attach" aria-label="上传附件">
               <Paperclip :size="18" stroke-width="1.5" />
             </button>
             <input
               v-model="inputText"
               type="text"
-              class="chat-input"
+              class="input-field"
               placeholder="输入你的问题或需求..."
               @keydown.enter="sendMessage"
               :disabled="isStreaming"
-              aria-label="输入消息"
             />
+            <div class="input-commands">
+              <span class="cmd-hint">⌘K 命令</span>
+              <span class="cmd-hint">@ 提及</span>
+            </div>
             <button
-              :class="['send-btn', { active: inputText.trim() }]"
+              :class="['input-send', { active: inputText.trim() }]"
               @click="sendMessage"
               :disabled="isStreaming || !inputText.trim()"
-              :aria-label="isStreaming ? '发送中' : '发送消息'"
             >
               <Send v-if="!isStreaming" :size="16" stroke-width="2" />
               <span v-else class="sending-dots">···</span>
             </button>
-          </div>
-          <div class="input-tools">
-            <span class="tool-badge">⌘K 命令</span>
-            <span class="tool-badge">@ 提及智能体</span>
-            <span class="tool-badge">/ 选择模式</span>
           </div>
         </div>
       </div>
@@ -441,31 +415,25 @@ onMounted(scrollToBottom)
   display: flex;
   flex-direction: column;
   height: calc(100vh - var(--header-height));
+  background: transparent;
+  position: relative;
+  z-index: 1;
 }
 
-/* === Agent Orchestration Bar === */
-.agent-bar {
+/* ====================== Pipeline Bar ====================== */
+.pipeline-bar {
+  display: flex;
+  align-items: center;
+  padding: 0 32px;
+  height: 52px;
   border-bottom: 1px solid var(--color-border);
-  background: rgba(7, 7, 13, 0.9);
-  backdrop-filter: blur(16px);
+  background: rgba(7, 7, 13, 0.92);
+  backdrop-filter: blur(20px);
+  gap: 16px;
   flex-shrink: 0;
 }
 
-.agent-bar-inner {
-  display: flex;
-  align-items: center;
-  padding: 10px 20px;
-  gap: 16px;
-}
-
-@media (min-width: 1024px) {
-  .agent-bar-inner {
-    padding: 12px 24px;
-    gap: 20px;
-  }
-}
-
-.agent-flow {
+.pipeline-flow {
   display: flex;
   align-items: center;
   gap: 0;
@@ -473,20 +441,19 @@ onMounted(scrollToBottom)
   overflow-x: auto;
   scrollbar-width: none;
 }
-.agent-flow::-webkit-scrollbar { display: none; }
+.pipeline-flow::-webkit-scrollbar { display: none; }
 
-.agent-step {
+.pipeline-node {
   display: flex;
   align-items: center;
   gap: 8px;
   padding: 6px 10px;
-  border-radius: var(--radius-md);
-  transition: all var(--duration-normal) var(--ease-out);
-  position: relative;
+  border-radius: 8px;
   flex-shrink: 0;
+  transition: all 0.3s var(--ease-out);
 }
 
-.step-indicator {
+.node-indicator {
   position: relative;
   width: 28px;
   height: 28px;
@@ -495,120 +462,115 @@ onMounted(scrollToBottom)
   justify-content: center;
 }
 
-.step-svg {
+.node-ring {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.04);
   color: rgba(255, 255, 255, 0.25);
-  transition: color var(--duration-normal) var(--ease-out);
+  transition: all 0.3s var(--ease-out);
   z-index: 1;
 }
-
-.step-check {
-  font-size: 14px;
-  color: var(--color-accent-emerald);
-  z-index: 1;
+.pipeline-node.active .node-ring {
+  background: color-mix(in srgb, var(--node-color) 20%, transparent);
+  color: var(--node-color);
+  box-shadow: 0 0 16px color-mix(in srgb, var(--node-color) 30%, transparent);
+}
+.pipeline-node.done .node-ring {
+  background: color-mix(in srgb, var(--node-color) 25%, transparent);
+  color: var(--node-color);
 }
 
-.agent-step.active .step-svg,
-.agent-step.done .step-svg {
-  color: #fff;
-}
+.node-check { font-size: 13px; font-weight: 700; }
 
-.step-pulse {
+.node-pulse {
   position: absolute;
   inset: -4px;
   border-radius: 50%;
-  border: 2px solid var(--accent);
-  animation: ring-expand 1.5s ease-out infinite;
+  border: 2px solid var(--node-color);
+  animation: pulse-ring 1.5s ease-out infinite;
 }
 
-.step-name {
+@keyframes pulse-ring {
+  0% { transform: scale(0.85); opacity: 1; }
+  100% { transform: scale(1.6); opacity: 0; }
+}
+
+.node-label {
   font-size: 12px;
-  font-weight: 600;
-  color: rgba(255, 255, 255, 0.35);
-  transition: color var(--duration-normal) var(--ease-out);
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.3);
   white-space: nowrap;
+  transition: color 0.3s var(--ease-out);
 }
+.pipeline-node.active .node-label { color: var(--node-color); }
+.pipeline-node.done .node-label { color: rgba(255, 255, 255, 0.7); }
 
-@media (min-width: 1024px) {
-  .step-name { font-size: 13px; }
-}
-
-.agent-step.active .step-name,
-.agent-step.done .step-name {
-  color: #fff;
-}
-
-.step-connector {
-  width: 20px;
+.node-connector {
+  width: 24px;
   height: 2px;
-  position: relative;
-  margin: 0 2px;
+  margin: 0 4px;
   background: rgba(255, 255, 255, 0.06);
   border-radius: 1px;
   overflow: hidden;
 }
-
-.connector-fill {
+.connector-track {
   height: 100%;
-  background: var(--color-accent-cyan);
-  animation: connector-flow 0.6s var(--ease-out);
+  width: 0;
+  border-radius: 1px;
+  background: linear-gradient(90deg, var(--node-color), var(--color-accent-cyan));
+  transition: width 0.5s var(--ease-out);
 }
+.connector-track.filled { width: 100%; }
 
-@keyframes connector-flow {
-  from { width: 0; }
-  to { width: 100%; }
-}
-
-.agent-toggle {
+.pipeline-toggle {
   display: flex;
   align-items: center;
   gap: 6px;
+  padding: 6px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--color-border);
   color: var(--color-text-tertiary);
   font-size: 12px;
-  padding: 8px 12px;
-  min-height: 36px;
-  border-radius: var(--radius-sm);
-  border: 1px solid var(--color-border);
-  transition: all var(--duration-fast) var(--ease-out);
+  transition: all 0.2s var(--ease-out);
   flex-shrink: 0;
 }
-.agent-toggle:hover {
+.pipeline-toggle:hover {
+  border-color: var(--color-accent-cyan);
   color: var(--color-accent-cyan);
-  border-color: rgba(0, 212, 255, 0.3);
 }
 
-.toggle-arrow {
-  transition: transform var(--duration-fast) var(--ease-out);
-}
-.toggle-arrow.open { transform: rotate(180deg); }
+.toggle-icon { transition: transform 0.2s var(--ease-out); }
+.toggle-icon.open { transform: rotate(180deg); }
 
-/* === Agent Detail Panel === */
-.agent-detail-panel {
-  padding: 14px 20px;
+/* ====================== Agent Detail ====================== */
+.agent-detail {
+  padding: 16px 32px;
   border-bottom: 1px solid var(--color-border);
-  background: rgba(12, 12, 30, 0.8);
+  background: rgba(10, 10, 24, 0.85);
   display: flex;
   flex-direction: column;
   gap: 6px;
 }
 
-@media (min-width: 1024px) {
-  .agent-detail-panel {
-    padding: 16px 24px;
-  }
-}
-
-.agent-row {
+.agent-card {
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  padding: 8px 12px;
-  min-height: 44px;
-  border-radius: var(--radius-sm);
-  transition: background var(--duration-fast) var(--ease-out);
+  justify-content: space-between;
+  padding: 10px 14px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid transparent;
+  transition: all 0.2s var(--ease-out);
 }
-.agent-row:hover { background: rgba(255, 255, 255, 0.02); }
+.agent-card:hover {
+  border-color: color-mix(in srgb, var(--accent) 20%, transparent);
+}
 
-.agent-row-left {
+.agent-card-left {
   display: flex;
   align-items: center;
   gap: 12px;
@@ -617,7 +579,7 @@ onMounted(scrollToBottom)
 .agent-badge {
   width: 32px;
   height: 32px;
-  border-radius: var(--radius-sm);
+  border-radius: 8px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -625,184 +587,136 @@ onMounted(scrollToBottom)
   color: var(--color-text-tertiary);
   flex-shrink: 0;
 }
-.agent-badge.active {
-  background: rgba(0, 212, 255, 0.1);
-  color: var(--accent);
-  box-shadow: 0 0 12px var(--accent);
-}
-.agent-badge.done {
-  background: rgba(6, 214, 160, 0.15);
-  color: var(--color-accent-emerald);
-}
+.agent-badge.active { background: color-mix(in srgb, var(--accent) 15%, transparent); color: var(--accent); }
+.agent-badge.done { background: color-mix(in srgb, var(--accent) 15%, transparent); color: var(--accent); }
 
-.agent-row-name {
-  font-size: 13px;
-  font-weight: 500;
-}
-.agent-row-desc {
-  font-size: 11px;
-  color: var(--color-text-tertiary);
-}
+.badge-done { font-weight: 700; }
 
-.status-badge {
+.agent-info { display: flex; flex-direction: column; gap: 1px; }
+.agent-name { font-size: 13px; font-weight: 500; color: var(--color-text-primary); }
+.agent-desc { font-size: 11px; color: var(--color-text-tertiary); }
+
+.agent-status-tag {
   font-size: 11px;
   padding: 4px 12px;
-  min-height: 28px;
   border-radius: 100px;
-  display: flex;
-  align-items: center;
-  gap: 4px;
+  font-weight: 500;
 }
-.status-badge.idle { background: rgba(255,255,255,0.04); color: var(--color-text-tertiary); }
-.status-badge.working { background: rgba(0,212,255,0.1); color: var(--color-accent-cyan); }
-.status-badge.done { background: rgba(6,214,160,0.1); color: var(--color-accent-emerald); }
+.agent-status-tag.idle { background: rgba(255, 255, 255, 0.04); color: var(--color-text-tertiary); }
+.agent-status-tag.active { background: color-mix(in srgb, var(--accent) 15%, transparent); color: var(--accent); }
+.agent-status-tag.done { background: color-mix(in srgb, var(--accent) 12%, transparent); color: var(--accent); }
 
-.status-dot {
-  width: 5px;
-  height: 5px;
-  border-radius: 50%;
-  background: var(--color-accent-cyan);
-  animation: glow-pulse 1s ease-in-out infinite;
-}
-
-/* === Chat Container === */
-.chat-container {
+/* ====================== Chat Body ====================== */
+.chat-body {
   display: flex;
   flex: 1;
   overflow: hidden;
 }
 
-/* === History Sidebar === */
+/* ====================== History Sidebar ====================== */
 .history-sidebar {
-  width: 240px;
+  width: 260px;
   border-right: 1px solid var(--color-border);
   display: flex;
   flex-direction: column;
-  background: rgba(10, 10, 24, 0.5);
+  background: rgba(8, 8, 20, 0.5);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
   flex-shrink: 0;
 }
 
-@media (min-width: 1024px) {
-  .history-sidebar { width: 260px; }
-}
-
-.history-header {
+.sidebar-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 20px 16px 12px;
+  padding: 20px 20px 12px;
 }
 
-@media (min-width: 1024px) {
-  .history-header { padding: 20px 20px 12px; }
-}
-
-.history-header h3 {
-  font-size: 14px;
-  font-weight: 600;
-  letter-spacing: 0.3px;
+.sidebar-title {
+  font-family: var(--font-display);
+  font-size: 15px;
+  font-weight: 400;
   color: #fff;
+  letter-spacing: 0.3px;
 }
 
-.new-chat-btn {
-  font-size: 12px;
+.sidebar-new {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 5px 12px;
+  border-radius: 8px;
+  background: linear-gradient(135deg, rgba(0, 212, 255, 0.12), rgba(124, 58, 237, 0.12));
   color: var(--color-accent-cyan);
-  padding: 6px 14px;
-  min-height: 32px;
-  border-radius: var(--radius-sm);
-  border: 1px solid rgba(0, 212, 255, 0.2);
-  transition: all var(--duration-fast) var(--ease-out);
+  font-size: 12px;
   font-weight: 500;
+  transition: all 0.2s var(--ease-out);
 }
-.new-chat-btn:hover {
-  background: rgba(0, 212, 255, 0.1);
-  box-shadow: 0 0 12px rgba(0, 212, 255, 0.15);
+.sidebar-new:hover {
+  background: linear-gradient(135deg, rgba(0, 212, 255, 0.2), rgba(124, 58, 237, 0.2));
 }
 
-.history-search {
-  padding: 0 12px 12px;
+.sidebar-search {
+  padding: 0 16px 12px;
   position: relative;
 }
-@media (min-width: 1024px) {
-  .history-search { padding: 0 16px 12px; }
-}
-
 .search-icon {
   position: absolute;
-  left: 24px;
+  left: 26px;
   top: 50%;
   transform: translateY(-50%);
   color: var(--color-text-tertiary);
-  opacity: 0.5;
+  opacity: 0.4;
 }
-@media (min-width: 1024px) {
-  .search-icon { left: 28px; }
-}
-
-.history-search input {
+.sidebar-search input {
   width: 100%;
-  padding: 8px 12px 8px 32px;
-  min-height: 36px;
-  border-radius: var(--radius-sm);
+  padding: 8px 12px 8px 34px;
+  border-radius: 8px;
   background: rgba(255, 255, 255, 0.03);
   border: 1px solid var(--color-border);
-  font-size: 13px;
+  font-size: 12px;
   color: var(--color-text-primary);
-  transition: border-color var(--duration-fast) var(--ease-out);
+  transition: border-color 0.2s var(--ease-out);
 }
-.history-search input:focus {
-  border-color: var(--color-accent-cyan);
-  box-shadow: 0 0 12px rgba(0, 212, 255, 0.06);
-}
-.history-search input::placeholder { color: var(--color-text-tertiary); }
+.sidebar-search input:focus { border-color: var(--color-accent-cyan); }
+.sidebar-search input::placeholder { color: var(--color-text-tertiary); opacity: 0.6; }
 
-.history-list {
+.sidebar-list {
   flex: 1;
   overflow-y: auto;
-  padding: 0 8px 12px;
+  padding: 0 12px 8px;
   display: flex;
   flex-direction: column;
   gap: 2px;
 }
 
-@media (min-width: 1024px) {
-  .history-list { padding: 0 12px 12px; }
-}
-
-.history-item {
+.session-item {
   display: flex;
-  flex-direction: column;
-  gap: 6px;
-  padding: 12px;
-  min-height: 44px;
-  border-radius: var(--radius-sm);
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 8px;
   text-align: left;
-  transition: all var(--duration-fast) var(--ease-out);
   border: 1px solid transparent;
+  transition: all 0.2s var(--ease-out);
   width: 100%;
 }
-.history-item:hover {
+.session-item:hover {
   background: rgba(0, 212, 255, 0.03);
   border-color: rgba(0, 212, 255, 0.06);
 }
-.history-item.active {
+.session-item.current {
   background: rgba(0, 212, 255, 0.06);
-  border-color: rgba(0, 212, 255, 0.12);
+  border-color: rgba(0, 212, 255, 0.1);
 }
 
-.history-item-top {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.history-category {
+.session-category {
   font-size: 10px;
-  padding: 2px 8px;
-  border-radius: 4px;
-  font-weight: 600;
-  letter-spacing: 0.3px;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 6px;
   flex-shrink: 0;
+  letter-spacing: 0.5px;
 }
 .cat-1 { background: rgba(0, 212, 255, 0.12); color: #00d4ff; }
 .cat-2 { background: rgba(124, 58, 237, 0.12); color: #7c3aed; }
@@ -810,248 +724,242 @@ onMounted(scrollToBottom)
 .cat-4 { background: rgba(245, 158, 11, 0.12); color: #f59e0b; }
 .cat-5 { background: rgba(244, 63, 94, 0.12); color: #f43f5e; }
 
-.history-title {
-  font-size: 13px;
+.session-info { flex: 1; min-width: 0; }
+.session-title {
+  display: block;
+  font-size: 12px;
   font-weight: 500;
   color: var(--color-text-primary);
-  line-height: 1.4;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
+  line-height: 1.3;
+  white-space: nowrap;
   overflow: hidden;
+  text-overflow: ellipsis;
 }
-
-.history-time {
-  font-size: 11px;
+.session-time {
+  display: block;
+  font-size: 10px;
   color: var(--color-text-tertiary);
-  margin-left: auto;
+  margin-top: 2px;
 }
 
-.history-footer {
+.sidebar-footer {
   padding: 12px 16px;
   border-top: 1px solid var(--color-border);
 }
 
-@media (min-width: 1024px) {
-  .history-footer { padding: 16px 20px; }
-}
-
-.history-storage {
-  font-size: 11px;
-  color: var(--color-text-tertiary);
-}
-
-.history-storage-bar {
+.storage-bar { display: flex; flex-direction: column; gap: 6px; }
+.storage-text { font-size: 10px; color: var(--color-text-tertiary); }
+.storage-track {
   height: 3px;
   border-radius: 2px;
   background: rgba(255, 255, 255, 0.06);
-  margin-top: 6px;
   overflow: hidden;
 }
-.history-storage-fill {
+.storage-fill {
   height: 100%;
   border-radius: 2px;
   background: linear-gradient(90deg, var(--color-accent-cyan), var(--color-accent-purple));
 }
 
-/* === Main Chat === */
+/* ====================== Main Chat Area ====================== */
 .chat-main {
   flex: 1;
   display: flex;
   flex-direction: column;
   min-width: 0;
+  background: transparent;
 }
 
-.messages-area {
+.messages-container {
   flex: 1;
   overflow-y: auto;
-  padding: 20px;
+  padding: 24px 40px;
   display: flex;
   flex-direction: column;
   gap: 24px;
 }
 
-@media (min-width: 1024px) {
-  .messages-area { padding: 24px 32px; gap: 28px; }
+/* ====================== Welcome / Presets ====================== */
+.welcome-section {
+  padding: 40px 20px;
+  text-align: center;
 }
 
-/* === Presets === */
-.presets-section {
+.welcome-header {
+  margin-bottom: 32px;
+}
+
+.welcome-avatar {
+  width: 64px;
+  height: 64px;
+  border-radius: 18px;
+  margin: 0 auto 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, rgba(0, 212, 255, 0.15), rgba(124, 58, 237, 0.15));
+  color: var(--color-accent-cyan);
+  border: 1px solid rgba(0, 212, 255, 0.1);
+}
+
+.welcome-title {
+  font-family: var(--font-display);
+  font-size: 28px;
+  font-weight: 400;
+  color: #fff;
   margin-bottom: 8px;
+  line-height: 1.3;
 }
 
-.presets-label {
-  font-size: 12px;
-  color: var(--color-text-tertiary);
-  letter-spacing: 0.5px;
-  margin-bottom: 12px;
-  text-transform: uppercase;
+.welcome-desc {
+  font-size: 14px;
+  color: var(--color-text-secondary);
 }
 
 .presets-grid {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 10px;
-}
-
-@media (min-width: 768px) {
-  .presets-grid {
-    grid-template-columns: repeat(4, 1fr);
-    gap: 12px;
-  }
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  max-width: 600px;
+  margin: 0 auto;
 }
 
 .preset-card {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 8px;
-  padding: 18px 12px;
-  min-height: 80px;
-  border-radius: var(--radius-md);
+  gap: 10px;
+  padding: 20px 12px;
+  border-radius: 14px;
   background: var(--color-bg-card);
   border: 1px solid var(--color-border);
-  transition: all var(--duration-normal) var(--ease-out);
+  transition: all 0.3s var(--ease-out);
   text-align: center;
 }
 .preset-card:hover {
   border-color: var(--color-accent-cyan);
   background: rgba(0, 212, 255, 0.04);
-  transform: translateY(-2px);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
-}
-.preset-card.active {
-  border-color: var(--color-accent-cyan);
-  background: rgba(0, 212, 255, 0.08);
-  box-shadow: 0 0 20px rgba(0, 212, 255, 0.1);
+  transform: translateY(-3px);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.2);
 }
 
-.preset-svg {
+.preset-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: rgba(0, 212, 255, 0.08);
   color: var(--color-accent-cyan);
+  transition: all 0.3s var(--ease-out);
+}
+.preset-card:hover .preset-icon {
+  background: rgba(0, 212, 255, 0.15);
+  transform: scale(1.05);
 }
 
 .preset-label {
   font-size: 13px;
   font-weight: 500;
   color: var(--color-text-secondary);
+  line-height: 1.3;
 }
 
-/* === Messages === */
+/* ====================== Messages ====================== */
 .message {
   display: flex;
-  gap: 12px;
-  max-width: 820px;
-  animation: reveal-up 0.3s var(--ease-out);
+  gap: 14px;
+  max-width: 780px;
+  animation: message-in 0.3s var(--ease-out);
 }
+.message.user { margin-left: auto; flex-direction: row-reverse; }
 
-.message.user {
-  margin-left: auto;
-  flex-direction: row-reverse;
+@keyframes message-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 .message-avatar {
-  position: relative;
-  width: 36px;
-  height: 36px;
   flex-shrink: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
 }
 
-.avatar-inner {
+.avatar-content {
   width: 36px;
   height: 36px;
-  border-radius: var(--radius-sm);
+  border-radius: 10px;
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 12px;
   font-weight: 700;
   letter-spacing: 0.5px;
-  position: relative;
-  z-index: 1;
 }
-
-.message.assistant .avatar-inner {
-  background: linear-gradient(135deg, var(--color-accent-cyan), var(--color-accent-blue));
+.message.assistant .avatar-content {
+  background: linear-gradient(135deg, #00d4ff, #3b82f6);
   color: #fff;
+  box-shadow: 0 4px 12px rgba(0, 212, 255, 0.3);
 }
-
-.message.user .avatar-inner {
-  background: linear-gradient(135deg, var(--color-accent-purple), #a855f7);
+.message.user .avatar-content {
+  background: linear-gradient(135deg, #7c3aed, #a855f7);
   color: #fff;
+  box-shadow: 0 4px 12px rgba(124, 58, 237, 0.3);
 }
 
-.avatar-ring {
-  position: absolute;
-  inset: -3px;
-  border-radius: calc(var(--radius-sm) + 3px);
-  border: 1px solid rgba(0, 212, 255, 0.2);
-  animation: glow-pulse 3s ease-in-out infinite;
-}
+.message-body { flex: 1; min-width: 0; }
 
 .message-sender {
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 600;
   color: var(--color-text-tertiary);
   margin-bottom: 6px;
+  display: block;
   letter-spacing: 0.3px;
-}
-
-.message-body {
-  flex: 1;
-  min-width: 0;
 }
 
 .message-content {
   padding: 14px 18px;
-  border-radius: var(--radius-md);
+  border-radius: 12px;
   font-size: 14px;
   line-height: 1.75;
   white-space: pre-wrap;
+  color: var(--color-text-primary);
 }
-
 .message.assistant .message-content {
   background: var(--color-bg-card);
   border: 1px solid var(--color-border);
 }
-
 .message.user .message-content {
-  background: linear-gradient(135deg, rgba(0, 212, 255, 0.1), rgba(124, 58, 237, 0.1));
-  border: 1px solid rgba(0, 212, 255, 0.12);
+  background: linear-gradient(135deg, rgba(0, 212, 255, 0.08), rgba(124, 58, 237, 0.08));
+  border: 1px solid rgba(0, 212, 255, 0.1);
 }
 
-.message-content :deep(strong) {
-  color: #fff;
-  font-weight: 600;
-}
-
+.message-content :deep(strong) { color: #fff; font-weight: 600; }
 .message-content :deep(blockquote) {
-  border-left: 3px solid var(--color-accent-cyan);
+  border-left: 2px solid var(--color-accent-cyan);
   padding: 8px 16px;
   margin: 8px 0;
   background: rgba(0, 212, 255, 0.04);
-  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+  border-radius: 0 8px 8px 0;
   color: var(--color-text-secondary);
   font-style: italic;
 }
-
-.message-content :deep(.code-block) {
+.message-content :deep(.cb) {
+  display: block;
   background: rgba(0, 0, 0, 0.4);
   border: 1px solid var(--color-border);
-  border-radius: var(--radius-sm);
+  border-radius: 8px;
   padding: 16px;
   margin: 8px 0;
   overflow-x: auto;
   font-family: var(--font-mono);
-  font-size: 13px;
+  font-size: 12px;
   line-height: 1.6;
   color: var(--color-accent-cyan);
 }
 
-/* === Resource Strip === */
-.resource-strip {
+/* Resource Chips */
+.resource-chips {
   display: flex;
   gap: 8px;
   margin-top: 12px;
@@ -1061,95 +969,53 @@ onMounted(scrollToBottom)
 .resource-chip {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
   padding: 8px 12px;
-  min-height: 40px;
-  border-radius: var(--radius-sm);
-  background: rgba(255, 255, 255, 0.02);
-  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.03);
+  font-size: 12px;
+  color: var(--color-text-primary);
   cursor: pointer;
-  transition: all var(--duration-fast) var(--ease-out);
+  transition: all 0.2s var(--ease-out);
 }
 .resource-chip:hover {
   border-color: var(--chip-color);
-  background: rgba(0, 0, 0, 0.2);
-  transform: translateY(-1px);
+  background: color-mix(in srgb, var(--chip-color) 8%, transparent);
 }
+.resource-chip :first-child { color: var(--chip-color); flex-shrink: 0; }
+.chip-arrow { color: var(--color-text-tertiary); opacity: 0; transition: all 0.2s var(--ease-out); }
+.resource-chip:hover .chip-arrow { opacity: 1; color: var(--chip-color); transform: translateX(3px); }
 
-.chip-svg {
-  color: var(--chip-color);
-  flex-shrink: 0;
-}
-
-.chip-title {
-  font-size: 13px;
-  font-weight: 500;
-  white-space: nowrap;
-  color: var(--color-text-primary);
-}
-
-.chip-action {
-  color: var(--color-text-tertiary);
-  transition: transform var(--duration-fast) var(--ease-out);
-  flex-shrink: 0;
-}
-.resource-chip:hover .chip-action {
-  color: var(--chip-color);
-  transform: translateX(3px);
-}
-
-/* === Suggestions === */
-.suggestions {
-  margin-top: 12px;
-}
-
-.suggestions-label {
-  font-size: 11px;
-  color: var(--color-text-tertiary);
-  letter-spacing: 0.3px;
-  margin-bottom: 6px;
-  display: block;
-}
-
-.suggestions-list {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-}
+/* Suggestions */
+.suggestions { margin-top: 10px; }
 
 .suggestion-chip {
-  display: flex;
+  display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 8px 14px;
-  min-height: 36px;
+  padding: 7px 16px;
+  margin: 0 6px 6px 0;
   border-radius: 100px;
   background: rgba(0, 212, 255, 0.04);
-  border: 1px solid rgba(0, 212, 255, 0.12);
+  border: 1px solid rgba(0, 212, 255, 0.1);
   font-size: 12px;
   color: var(--color-text-secondary);
-  transition: all var(--duration-fast) var(--ease-out);
+  transition: all 0.2s var(--ease-out);
 }
 .suggestion-chip:hover {
   border-color: var(--color-accent-cyan);
   background: rgba(0, 212, 255, 0.08);
   color: var(--color-accent-cyan);
 }
+.suggestion-arrow { opacity: 0; transition: all 0.2s var(--ease-out); }
+.suggestion-chip:hover .suggestion-arrow { opacity: 1; transform: translateX(3px); }
 
-.suggestion-arrow {
-  opacity: 0;
-  transition: all var(--duration-fast) var(--ease-out);
-}
-.suggestion-chip:hover .suggestion-arrow {
-  opacity: 1;
-  transform: translateX(3px);
-}
-
-/* === Message Footer === */
+/* Message Footer */
 .message-footer {
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 12px;
   margin-top: 6px;
   padding: 0 4px;
 }
@@ -1162,101 +1028,83 @@ onMounted(scrollToBottom)
 
 .message-actions {
   display: flex;
-  align-items: center;
   gap: 2px;
   opacity: 0;
-  transition: opacity var(--duration-fast) var(--ease-out);
+  transition: opacity 0.2s var(--ease-out);
 }
-.message:hover .message-actions {
-  opacity: 1;
-}
+.message:hover .message-actions { opacity: 1; }
+@media (hover: none) { .message-actions { opacity: 1; } }
 
-@media (hover: none) {
-  .message-actions { opacity: 1; }
-}
-
-.msg-action {
-  width: 32px;
-  height: 32px;
+.action-btn {
+  width: 30px;
+  height: 30px;
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 4px;
+  border-radius: 6px;
   color: var(--color-text-tertiary);
-  transition: all var(--duration-fast) var(--ease-out);
+  transition: all 0.2s var(--ease-out);
 }
-.msg-action:hover {
-  color: var(--color-accent-cyan);
-  background: rgba(0, 212, 255, 0.08);
-}
+.action-btn:hover { color: var(--color-accent-cyan); background: rgba(0, 212, 255, 0.08); }
 
-/* === Streaming Indicator === */
-.streaming-indicator {
+/* Typing indicator */
+.typing-indicator {
   display: flex;
   gap: 4px;
   padding: 8px 4px 0;
-  align-items: center;
 }
-
-.streaming-dot {
+.typing-dot {
   width: 5px;
   height: 5px;
   border-radius: 50%;
   background: var(--color-accent-cyan);
-  animation: streaming-bounce 1s ease-in-out infinite;
+  animation: typing-bounce 1.2s ease-in-out infinite;
 }
-.streaming-dot:nth-child(2) { animation-delay: 0.15s; }
-.streaming-dot:nth-child(3) { animation-delay: 0.3s; }
+.typing-dot:nth-child(2) { animation-delay: 0.15s; }
+.typing-dot:nth-child(3) { animation-delay: 0.3s; }
 
-@keyframes streaming-bounce {
+@keyframes typing-bounce {
   0%, 100% { transform: translateY(0); opacity: 0.3; }
   50% { transform: translateY(-4px); opacity: 1; }
 }
 
-/* === Input === */
+/* ====================== Input Area ====================== */
 .input-area {
-  padding: 14px 16px 18px;
+  padding: 16px 24px 20px;
   border-top: 1px solid var(--color-border);
-  background: rgba(7, 7, 13, 0.8);
-  backdrop-filter: blur(12px);
-}
-
-@media (min-width: 1024px) {
-  .input-area { padding: 16px 24px 20px; }
+  background: rgba(7, 7, 13, 0.85);
+  backdrop-filter: blur(20px);
 }
 
 .input-wrapper {
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 4px 4px 4px 14px;
-  border-radius: var(--radius-lg);
+  gap: 8px;
+  padding: 6px 6px 6px 16px;
+  border-radius: 16px;
   background: var(--color-bg-elevated);
   border: 1px solid var(--color-border);
-  transition: all var(--duration-fast) var(--ease-out);
+  transition: all 0.2s var(--ease-out);
+  max-width: 800px;
+  margin: 0 auto;
 }
 .input-wrapper:focus-within {
   border-color: var(--color-accent-cyan);
-  box-shadow: 0 0 24px rgba(0, 212, 255, 0.08), inset 0 0 20px rgba(0, 212, 255, 0.02);
+  box-shadow: 0 0 20px rgba(0, 212, 255, 0.06);
 }
 
-.attach-btn {
-  padding: 8px;
-  color: var(--color-text-tertiary);
-  transition: color var(--duration-fast) var(--ease-out);
+.input-attach {
   display: flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 36px;
-  min-width: 36px;
+  padding: 6px;
+  color: var(--color-text-tertiary);
+  transition: color 0.2s var(--ease-out);
+  flex-shrink: 0;
 }
-.attach-btn:hover {
-  color: var(--color-accent-cyan);
-}
+.input-attach:hover { color: var(--color-accent-cyan); }
 
-.chat-input {
+.input-field {
   flex: 1;
-  padding: 10px 8px;
+  padding: 8px 6px;
   font-size: 14px;
   color: var(--color-text-primary);
   background: transparent;
@@ -1264,58 +1112,52 @@ onMounted(scrollToBottom)
   outline: none;
   min-height: 24px;
 }
-.chat-input::placeholder {
-  color: var(--color-text-tertiary);
+.input-field::placeholder { color: var(--color-text-tertiary); opacity: 0.6; }
+
+.input-commands {
+  display: flex;
+  gap: 4px;
+  flex-shrink: 0;
 }
 
-.send-btn {
+.cmd-hint {
+  font-size: 10px;
+  color: var(--color-text-tertiary);
+  padding: 3px 8px;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--color-border);
+  font-family: var(--font-mono);
+  opacity: 0.6;
+}
+
+.input-send {
   width: 40px;
   height: 40px;
-  border-radius: var(--radius-md);
+  border-radius: 12px;
   display: flex;
   align-items: center;
   justify-content: center;
   color: var(--color-text-tertiary);
   background: rgba(255, 255, 255, 0.04);
-  transition: all var(--duration-fast) var(--ease-out);
+  transition: all 0.2s var(--ease-out);
   flex-shrink: 0;
 }
-.send-btn.active {
+.input-send.active {
   color: #fff;
   background: linear-gradient(135deg, var(--color-accent-cyan), var(--color-accent-blue));
-  box-shadow: 0 4px 15px rgba(0, 212, 255, 0.3);
+  box-shadow: 0 4px 12px rgba(0, 212, 255, 0.3);
 }
-.send-btn:hover:not(:disabled).active {
-  transform: scale(1.05);
-}
+.input-send:hover:not(:disabled).active { transform: scale(1.05); }
+.sending-dots { letter-spacing: 3px; font-weight: 700; }
 
-.sending-dots {
-  letter-spacing: 2px;
-  font-weight: 700;
-}
-
-.input-tools {
-  display: flex;
-  gap: 6px;
-  margin-top: 10px;
-  padding: 0 2px;
-  flex-wrap: wrap;
-}
-
-.tool-badge {
-  font-size: 11px;
-  color: var(--color-text-tertiary);
-  padding: 4px 10px;
-  min-height: 26px;
-  border-radius: 4px;
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid var(--color-border);
-  font-family: var(--font-mono);
-}
-
+/* ====================== Responsive ====================== */
 @media (max-width: 768px) {
   .presets-grid { grid-template-columns: repeat(2, 1fr); }
   .history-sidebar { display: none; }
-  .messages-area { padding: 16px; }
+  .messages-container { padding: 20px 16px; }
+  .pipeline-bar { padding: 0 16px; }
+  .input-area { padding: 12px 12px 16px; }
+  .input-commands { display: none; }
 }
 </style>

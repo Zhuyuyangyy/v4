@@ -1,0 +1,202 @@
+{
+  "main": {
+    "id": "01f15a581e6fb434",
+    "type": "split",
+    "children": [
+      {
+        "id": "be94cc2f3c2b98d2",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "9170b95e66f1f60f",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "前端开发Skills介绍.md",
+                "mode": "source",
+                "source": false
+              },
+              "icon": "lucide-file",
+              "title": "前端开发Skills介绍"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "vertical"
+  },
+  "left": {
+    "id": "7f35a01df5dd157e",
+    "type": "split",
+    "children": [
+      {
+        "id": "97f9ae54c90da453",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "9ba35fa4c19324ca",
+            "type": "leaf",
+            "state": {
+              "type": "file-explorer",
+              "state": {
+                "sortOrder": "alphabetical",
+                "autoReveal": false
+              },
+              "icon": "lucide-folder-closed",
+              "title": "文件列表"
+            }
+          },
+          {
+            "id": "8b677d8d80534e35",
+            "type": "leaf",
+            "state": {
+              "type": "search",
+              "state": {
+                "query": "",
+                "matchingCase": false,
+                "explainSearch": false,
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical"
+              },
+              "icon": "lucide-search",
+              "title": "搜索"
+            }
+          },
+          {
+            "id": "4a7305c54af814f6",
+            "type": "leaf",
+            "state": {
+              "type": "bookmarks",
+              "state": {},
+              "icon": "lucide-bookmark",
+              "title": "书签"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 300
+  },
+  "right": {
+    "id": "1fd76055075c837d",
+    "type": "split",
+    "children": [
+      {
+        "id": "0de97a84cd38dcb1",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "673fde5a86ece8ea",
+            "type": "leaf",
+            "state": {
+              "type": "backlink",
+              "state": {
+                "file": "前端开发Skills介绍.md",
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical",
+                "showSearch": false,
+                "searchQuery": "",
+                "backlinkCollapsed": false,
+                "unlinkedCollapsed": true
+              },
+              "icon": "links-coming-in",
+              "title": "前端开发Skills介绍 的反向链接列表"
+            }
+          },
+          {
+            "id": "58e003b5da9d55cf",
+            "type": "leaf",
+            "state": {
+              "type": "outgoing-link",
+              "state": {
+                "file": "前端开发Skills介绍.md",
+                "linksCollapsed": false,
+                "unlinkedCollapsed": true
+              },
+              "icon": "links-going-out",
+              "title": "前端开发Skills介绍 的出链列表"
+            }
+          },
+          {
+            "id": "719cccfc76778958",
+            "type": "leaf",
+            "state": {
+              "type": "tag",
+              "state": {
+                "sortOrder": "frequency",
+                "useHierarchy": true,
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-tags",
+              "title": "标签"
+            }
+          },
+          {
+            "id": "9d76d052daecc14e",
+            "type": "leaf",
+            "state": {
+              "type": "all-properties",
+              "state": {
+                "sortOrder": "frequency",
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-archive",
+              "title": "添加笔记属性"
+            }
+          },
+          {
+            "id": "f4bca3873dcb3293",
+            "type": "leaf",
+            "state": {
+              "type": "outline",
+              "state": {
+                "file": "前端开发Skills介绍.md",
+                "followCursor": false,
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-list",
+              "title": "前端开发Skills介绍 的大纲"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 300,
+    "collapsed": true
+  },
+  "left-ribbon": {
+    "hiddenItems": {
+      "switcher:打开快速切换": false,
+      "graph:查看关系图谱": false,
+      "canvas:新建白板": false,
+      "daily-notes:打开/创建今天的日记": false,
+      "templates:插入模板": false,
+      "command-palette:打开命令面板": false,
+      "bases:新建数据库": false
+    }
+  },
+  "active": "9170b95e66f1f60f",
+  "lastOpenFiles": [
+    "public/all-background.png",
+    "dist/assets/zap-DbxmXdsh.js",
+    "dist/assets/Welcome-D-61GU_2.css",
+    "dist/assets/Tutoring-DZI8MV22.js",
+    "dist/assets/Welcome-CbP5KQx9.js",
+    "dist/assets/Tutoring-DUXGJv5b.css",
+    "dist/assets/trending-up-b9CJ2REy.js",
+    "dist/assets/thumbs-down--PTLdbJk.js",
+    "dist/assets/target-B9hrnIQ7.js",
+    "dist/assets/star-TblH17Jg.js",
+    "dist/assets/search-C_IVc7nw.js",
+    "DESIGN.md",
+    "PRODUCT.md"
+  ]
+}

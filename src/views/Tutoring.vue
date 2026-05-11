@@ -11,6 +11,9 @@ import {
   ArrowRight,
   ThumbsUp,
   ThumbsDown,
+  History,
+  Zap,
+  Lightbulb,
 } from 'lucide-vue-next'
 
 type Mode = 'qa' | 'solve' | 'explain' | 'brainstorm'
@@ -81,15 +84,7 @@ const mockAnswers: Record<Mode, (q: string) => string> = {
 2. **实际应用场景** — 了解在现实中的使用
 3. **常见误区** — 避免理解上的偏差
 
-> 学习建议：多结合实例来理解抽象概念，效果会更好。
-
-## 相关概念
-
-这个问题还与以下知识点密切相关：
-- 前置知识：需要先掌握的基础概念
-- 延伸阅读：进阶学习的方向
-
-你可以继续追问，我会为你进一步解答！`,
+> 学习建议：多结合实例来理解抽象概念，效果会更好。`,
 
   solve: (q) => `让我来逐步解析「${q}」。
 
@@ -111,16 +106,13 @@ const mockAnswers: Record<Mode, (q: string) => string> = {
 **步骤 4：答案验证**
 
 \`\`\`python
-# 示例代码
 def verify_solution():
     result = solve()
     assert check(result)
     return result
 \`\`\`
 
-> 提示：多练习同类题目可以加深理解。
-
-最终答案需要根据具体题目进行计算。建议你先自己尝试，遇到困难时再继续提问。`,
+> 提示：多练习同类题目可以加深理解。`,
 
   explain: (q) => `## 深入讲解：「${q}」
 
@@ -140,73 +132,43 @@ def verify_solution():
 **直观理解：**
 可以把它想象成一个"黑箱"，输入经过处理得到输出，关键在于理解内部的处理机制。
 
-**形式化定义：**
-在数学上，这个概念可以用以下方式表示：
-
-> 定义：若满足条件 A，则称 X 具有性质 Y。
-
-### 4. 类比说明
-
-这个概念类似于日常生活中的 ____ ，都是通过 ____ 来实现 ____ 的。
-
-### 5. 实际应用
+### 4. 实际应用
 
 在实际项目中，这个概念被广泛应用于：
 1. 数据处理流程
 2. 算法设计
-3. 系统架构
-
-希望这个讲解对你有帮助！如需深入了解某个方面，请继续提问。`,
+3. 系统架构`,
 
   brainstorm: (q) => `关于「${q}」，让我们从多个角度来拓展思考。
 
-## 🔗 关联知识
-
-### 1. 相关概念
-以下概念与你的问题密切相关：
+### 关联知识
 
 - **概念 A** — 基础前置知识
 - **概念 B** — 同一领域的不同方向
 - **概念 C** — 进阶应用方向
 
-### 2. 实际应用场景
-
-| 场景 | 应用方式 | 难度 |
-|------|---------|------|
-| 场景一 | 直接应用 | ⭐⭐ |
-| 场景二 | 组合使用 | ⭐⭐⭐ |
-| 场景三 | 创新应用 | ⭐⭐⭐⭐ |
-
-### 3. 延伸思考
+### 延伸思考
 
 **如果换个角度：**
 - 从理论角度看：...
 - 从实践角度看：...
 - 从历史发展看：...
 
-### 4. 推荐学习路径
+### 推荐学习路径
 
 1. 先掌握基础概念
 2. 完成相关练习
 3. 阅读进阶资料
-4. 动手实践项目
-
-> 📌 学习是循序渐进的过程，每一步都很重要。
-
-这样的拓展对你有帮助吗？需要深入哪个方向？`,
+4. 动手实践项目`,
 }
 
 function formatAnswer(text: string) {
   return text
-    .replace(/```(\w*)\n([\s\S]*?)```/g, '<pre class="tutor-code"><code>$2</code></pre>')
-    .replace(/### (.*?)(\n|$)/g, '<h3 class="tutor-h3">$1</h3>')
-    .replace(/## (.*?)(\n|$)/g, '<h2 class="tutor-h2">$1</h2>')
+    .replace(/```(\w*)\n([\s\S]*?)```/g, '<pre class="code-block"><code>$2</code></pre>')
+    .replace(/### (.*?)(\n|$)/g, '<h3 class="h3">$1</h3>')
+    .replace(/## (.*?)(\n|$)/g, '<h2 class="h2">$1</h2>')
     .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
     .replace(/> (.*?)(\n|$)/g, '<blockquote>$1</blockquote>')
-    .replace(/\| (.+?) \| (.+?) \| (.+?) \|/g, (m, a, b, c) => {
-      if (a.includes('---')) return ''
-      return `<div class="tutor-table-row"><span>${a}</span><span>${b}</span><span>${c}</span></div>`
-    })
     .replace(/\n/g, '<br/>')
 }
 
@@ -242,433 +204,487 @@ function askTopic(q: string) {
 </script>
 
 <template>
-  <div class="tutoring">
-    <div class="page-header reveal">
-      <h1 class="page-title">智能辅导</h1>
-      <p class="page-desc">7×24 即时答疑，多模态深度讲解，让学习事半功倍</p>
+  <div class="tutor">
+    <!-- Hero -->
+    <div class="tutor-hero">
+      <div>
+        <div class="hero-badge">智能辅导</div>
+        <h1 class="hero-title">7×24 <span class="gradient-text">即时答疑</span></h1>
+        <p class="hero-desc">多模式深度讲解，随时随地解决你的学习问题</p>
+      </div>
+      <button class="history-btn" @click="showHistory = !showHistory">
+        <History :size="16" stroke-width="1.5" />
+        <span>历史记录</span>
+        <ArrowRight v-if="!showHistory" :size="14" stroke-width="1.5" class="hist-arrow-right" />
+      </button>
     </div>
 
-    <div class="tutoring-layout">
-      <!-- Main Area -->
-      <div class="tutoring-main">
-        <!-- Mode Tabs -->
-        <div class="mode-tabs reveal reveal-delay-1">
-          <button
-            v-for="m in modes"
-            :key="m.key"
-            :class="['mode-tab', { active: currentMode === m.key }]"
-            :style="{ '--tab-color': m.color }"
-            @click="setMode(m.key)"
-          >
-            <span class="mode-tab-icon">
-              <component :is="m.icon" :size="20" stroke-width="1.5" style="color: var(--tab-color)" />
-            </span>
-            <div class="mode-tab-info">
-              <span class="mode-tab-label">{{ m.label }}</span>
-              <span class="mode-tab-desc">{{ m.desc }}</span>
-            </div>
-          </button>
-        </div>
+    <!-- History Panel -->
+    <transition name="slide-up">
+      <div v-if="showHistory" class="history-panel">
+        <button v-for="s in sessionHistory" :key="s.title" class="history-item">
+          <div class="history-icon">
+            <Lightbulb :size="14" stroke-width="1.5" />
+          </div>
+          <div class="history-info">
+            <span class="history-title">{{ s.title }}</span>
+            <span class="history-meta">{{ s.count }} 条对话 · {{ s.date }}</span>
+          </div>
+          <ChevronRightIcon :size="16" stroke-width="1.5" class="history-chevron" />
+        </button>
+      </div>
+    </transition>
 
-        <!-- Conversation -->
-        <div v-if="history.length > 0" class="qa-list">
-          <div v-for="(item, i) in history" :key="i" class="qa-pair reveal">
-            <div class="question-bubble">
-              <span class="bubble-icon bubble-q">Q</span>
-              <span class="question-text">{{ item.q }}</span>
-              <span class="bubble-time">{{ item.time }}</span>
-            </div>
-            <div class="answer-bubble">
-              <span class="bubble-icon bubble-a">A</span>
-              <div class="answer-content" v-html="formatAnswer(item.a)" />
-              <div class="answer-footer">
-                <div class="answer-feedback">
-                  <span class="feedback-label">这个回答有帮助吗？</span>
-                  <button
-                    :class="['feedback-btn', { active: item.helpful === true }]"
-                    @click="setHelpful(i, true)"
-                    aria-label="标记为有帮助"
-                  >
-                    <ThumbsUp :size="14" stroke-width="1.5" />
-                    有帮助
-                  </button>
-                  <button
-                    :class="['feedback-btn', { active: item.helpful === false }]"
-                    @click="setHelpful(i, false)"
-                    aria-label="标记为需要改进"
-                  >
-                    <ThumbsDown :size="14" stroke-width="1.5" />
-                    需要改进
-                  </button>
-                </div>
-              </div>
-            </div>
+    <!-- Mode Selector -->
+    <div class="mode-selector">
+      <button
+        v-for="m in modes"
+        :key="m.key"
+        :class="['mode-btn', { active: currentMode === m.key }]"
+        :style="{ '--m-clr': m.color }"
+        @click="setMode(m.key)"
+      >
+        <div class="mode-btn-icon">
+          <component :is="m.icon" :size="18" stroke-width="1.5" />
+        </div>
+        <div class="mode-btn-text">
+          <span class="mode-btn-label">{{ m.label }}</span>
+          <span class="mode-btn-desc">{{ m.desc }}</span>
+        </div>
+        <div v-if="currentMode === m.key" class="mode-active-indicator" />
+      </button>
+    </div>
+
+    <!-- Conversation Area -->
+    <div v-if="history.length > 0" class="conversation">
+      <div v-for="(item, i) in history" :key="i" class="qa-pair">
+        <!-- Question -->
+        <div class="question-bubble">
+          <div class="bubble-avatar q-avatar">Q</div>
+          <div class="bubble-content">
+            <p>{{ item.q }}</p>
+            <span class="bubble-time">{{ item.time }}</span>
           </div>
         </div>
 
-        <!-- Enhanced Empty State -->
-        <div v-else class="empty-state">
-          <div class="empty-graphic">
-            <component :is="modes.find(m => m.key === currentMode)?.icon" :size="36" stroke-width="1" class="empty-icon" />
-            <div class="empty-ring" />
-          </div>
-          <h3>{{ modes.find(m => m.key === currentMode)?.label }}</h3>
-          <p>{{ modes.find(m => m.key === currentMode)?.desc }}</p>
-
-          <div class="topic-browse">
-            <div
-              v-for="cat in topicCategories"
-              :key="cat.label"
-              class="topic-group"
-              :style="{ '--group-color': cat.color }"
-            >
-              <div class="topic-group-header">
-                <span class="topic-group-icon">
-                  <component :is="cat.icon" :size="16" stroke-width="1.5" style="color: var(--group-color)" />
-                </span>
-                <span class="topic-group-label">{{ cat.label }}</span>
-              </div>
-              <div class="topic-items">
-                <button
-                  v-for="q in cat.questions"
-                  :key="q"
-                  class="topic-item"
-                  @click="askTopic(q)"
-                >
-                  <span>{{ q }}</span>
-                  <span class="topic-arrow">→</span>
-                </button>
-              </div>
+        <!-- Answer -->
+        <div class="answer-bubble">
+          <div class="bubble-avatar a-avatar">A</div>
+          <div class="bubble-content">
+            <div class="answer-body" v-html="formatAnswer(item.a)" />
+            <div class="answer-footer">
+              <button :class="['feedback-btn', { active: item.helpful === true }]" @click="setHelpful(i, true)">
+                <ThumbsUp :size="14" stroke-width="1.5" />
+              </button>
+              <button :class="['feedback-btn', { active: item.helpful === false }]" @click="setHelpful(i, false)">
+                <ThumbsDown :size="14" stroke-width="1.5" />
+              </button>
             </div>
           </div>
         </div>
+      </div>
+    </div>
 
-        <!-- Input -->
-        <div class="tutoring-input">
-          <div class="input-mode-badge">
-            {{ modes.find(m => m.key === currentMode)?.label }} 模式
+    <!-- Empty State -->
+    <div v-else class="empty-state">
+      <div class="empty-mode-icon">
+        <component :is="modes.find(m => m.key === currentMode)?.icon" :size="36" stroke-width="1" />
+      </div>
+      <h3 class="empty-title">{{ modes.find(m => m.key === currentMode)?.label }}</h3>
+      <p class="empty-desc">{{ modes.find(m => m.key === currentMode)?.desc }}</p>
+
+      <div class="topic-grid">
+        <div v-for="cat in topicCategories" :key="cat.label" class="topic-group" :style="{ '--t-clr': cat.color }">
+          <div class="topic-header">
+            <component :is="cat.icon" :size="15" stroke-width="1.5" />
+            <span>{{ cat.label }}</span>
           </div>
-          <div class="input-row">
-            <input
-              v-model="question"
-              type="text"
-              :placeholder="`在${modes.find(m => m.key === currentMode)?.label}模式下输入你的问题...`"
-              @keydown.enter="askQuestion"
-            />
-            <button class="ask-btn" @click="askQuestion" :disabled="!question.trim()">
-              <span>提问</span>
-              <span class="ask-arrow">→</span>
+          <div class="topic-list">
+            <button v-for="q in cat.questions" :key="q" class="topic-btn" @click="askTopic(q)">
+              <span>{{ q }}</span>
+              <ArrowRight :size="13" stroke-width="1.5" class="topic-btn-arrow" />
             </button>
           </div>
         </div>
       </div>
+    </div>
 
-      <!-- Sidebar -->
-      <aside class="tutoring-sidebar">
-        <div class="sidebar-card modes-quick">
-          <h3>切换模式</h3>
-          <div class="mode-list">
-            <button
-              v-for="m in modes"
-              :key="m.key"
-              :class="['mode-item', { active: currentMode === m.key }]"
-              :style="{ '--mode-color': m.color }"
-              @click="setMode(m.key)"
-            >
-              <span :class="['mode-item-icon', { active: currentMode === m.key }]">
-                <component :is="m.icon" :size="16" stroke-width="1.5" />
-              </span>
-              <div class="mode-item-info">
-                <span class="mode-item-label">{{ m.label }}</span>
-                <span class="mode-item-desc">{{ m.desc }}</span>
-              </div>
-            </button>
-          </div>
-        </div>
-
-        <div class="sidebar-card sessions-card">
-          <div class="sessions-header">
-            <h3>历史记录</h3>
-            <button class="sessions-toggle" @click="showHistory = !showHistory">
-              {{ showHistory ? '收起' : '展开' }}
-              <span :class="['sessions-arrow', { open: showHistory }]">▾</span>
-            </button>
-          </div>
-          <transition name="slide-up">
-            <div v-if="showHistory" class="session-list">
-              <button
-                v-for="s in sessionHistory"
-                :key="s.title"
-                class="session-item"
-              >
-                <div class="session-info">
-                  <span class="session-title">{{ s.title }}</span>
-                  <span class="session-meta">{{ s.count }} 条对话 · {{ s.date }}</span>
-                </div>
-                <span class="session-arrow">→</span>
-              </button>
-            </div>
-          </transition>
-        </div>
-      </aside>
+    <!-- Input Area -->
+    <div class="input-section">
+      <div class="mode-indicator">{{ modes.find(m => m.key === currentMode)?.label }} 模式</div>
+      <div class="input-row">
+        <input
+          v-model="question"
+          type="text"
+          :placeholder="`在「${modes.find(m => m.key === currentMode)?.label}」模式下输入你的问题...`"
+          @keydown.enter="askQuestion"
+        />
+        <button class="ask-btn" @click="askQuestion" :disabled="!question.trim()">
+          <Zap :size="16" stroke-width="2" />
+          <span>提问</span>
+        </button>
+      </div>
     </div>
   </div>
 </template>
 
+<script lang="ts">
+import { ChevronRight as ChevronRightIcon } from 'lucide-vue-next'
+export default {
+  components: { ChevronRightIcon }
+}
+</script>
+
 <style scoped>
-.tutoring {
-  padding: 40px;
-  max-width: 1200px;
+.tutor {
+  padding: 0;
+  max-width: 1000px;
   margin: 0 auto;
-}
-
-.page-header {
-  margin-bottom: 32px;
-}
-
-.page-title {
-  font-family: var(--font-display);
-  font-size: 42px;
-  letter-spacing: -0.02em;
-  margin-bottom: 8px;
-  color: #fff;
-}
-
-.page-desc {
-  color: var(--color-text-secondary);
-  font-size: 15px;
-}
-
-.tutoring-layout {
-  display: flex;
-  gap: 24px;
-  min-height: 70vh;
-}
-
-.tutoring-main {
-  flex: 1;
   display: flex;
   flex-direction: column;
-  min-width: 0;
+  min-height: calc(100vh - var(--header-height) - 64px);
+  position: relative;
+  z-index: 1;
 }
 
-/* === Mode Tabs === */
-.mode-tabs {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 8px;
-  margin-bottom: 24px;
+/* ====================== Hero ====================== */
+.tutor-hero {
+  padding: 48px 40px 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 20px;
 }
 
-.mode-tab {
+.hero-badge {
+  display: inline-block;
+  padding: 4px 14px;
+  border-radius: 100px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  background: rgba(0, 212, 255, 0.08);
+  color: var(--color-accent-cyan);
+  border: 1px solid rgba(0, 212, 255, 0.1);
+  margin-bottom: 12px;
+}
+
+.hero-title {
+  font-family: var(--font-display);
+  font-size: 34px;
+  font-weight: 400;
+  color: #fff;
+  line-height: 1.2;
+  margin-bottom: 8px;
+}
+
+.gradient-text {
+  background: linear-gradient(135deg, var(--color-accent-cyan), var(--color-accent-purple));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.hero-desc {
+  font-size: 14px;
+  color: var(--color-text-secondary);
+}
+
+.history-btn {
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 14px 16px;
-  border-radius: var(--radius-md);
-  background: var(--color-bg-card);
+  gap: 6px;
+  padding: 8px 16px;
+  border-radius: 10px;
   border: 1px solid var(--color-border);
-  text-align: left;
-  transition: all var(--duration-normal) var(--ease-out);
+  font-size: 12px;
+  color: var(--color-text-secondary);
+  transition: all 0.2s var(--ease-out);
+  white-space: nowrap;
+  flex-shrink: 0;
 }
-.mode-tab:hover {
-  border-color: var(--tab-color);
-  background: rgba(0, 0, 0, 0.15);
-}
-.mode-tab.active {
-  border-color: var(--tab-color);
-  background: rgba(0, 0, 0, 0.2);
-  box-shadow: inset 0 -2px 0 var(--tab-color);
+.history-btn:hover {
+  border-color: var(--color-accent-cyan);
+  color: var(--color-accent-cyan);
 }
 
-.mode-tab-icon {
-  font-size: 22px;
-  color: var(--tab-color);
+.hist-arrow-right { transition: transform 0.2s var(--ease-out); }
+
+/* ====================== History Panel ====================== */
+.history-panel {
+  display: flex;
+  gap: 8px;
+  padding: 12px 40px;
+  margin-bottom: 16px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.history-panel::-webkit-scrollbar { display: none; }
+
+.history-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  border-radius: 12px;
+  border: 1px solid var(--color-border);
+  text-align: left;
+  white-space: nowrap;
+  color: var(--color-text-primary);
+  font-size: 12px;
+  transition: all 0.2s var(--ease-out);
+  flex-shrink: 0;
+  background: var(--color-bg-card);
+}
+.history-item:hover {
+  border-color: var(--color-accent-cyan);
+  background: rgba(0, 212, 255, 0.04);
+}
+
+.history-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background: rgba(0, 212, 255, 0.08);
+  color: var(--color-accent-cyan);
   flex-shrink: 0;
 }
 
-.mode-tab-info {
-  display: flex;
-  flex-direction: column;
-  gap: 1px;
+.history-info { display: flex; flex-direction: column; gap: 1px; }
+.history-title { display: block; font-weight: 500; }
+.history-meta { display: block; font-size: 11px; color: var(--color-text-tertiary); }
+
+.history-chevron { color: var(--color-text-tertiary); }
+
+/* ====================== Mode Selector ====================== */
+.mode-selector {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+  padding: 0 40px;
+  margin-bottom: 20px;
 }
 
-.mode-tab-label {
+.mode-btn {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px;
+  border-radius: 14px;
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  text-align: left;
+  transition: all 0.3s var(--ease-out);
+  overflow: hidden;
+}
+.mode-btn:hover {
+  border-color: var(--m-clr);
+  background: color-mix(in srgb, var(--m-clr) 4%, var(--color-bg-card));
+}
+.mode-btn.active {
+  border-color: var(--m-clr);
+  background: color-mix(in srgb, var(--m-clr) 6%, var(--color-bg-card));
+  box-shadow: 0 0 20px color-mix(in srgb, var(--m-clr) 8%, transparent);
+}
+
+.mode-btn-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--m-clr) 10%, transparent);
+  color: var(--m-clr);
+  flex-shrink: 0;
+  transition: all 0.3s var(--ease-out);
+}
+.mode-btn.active .mode-btn-icon {
+  background: color-mix(in srgb, var(--m-clr) 20%, transparent);
+}
+
+.mode-btn-text { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+.mode-btn-label {
   font-size: 13px;
   font-weight: 600;
   color: var(--color-text-primary);
 }
-
-.mode-tab-desc {
-  font-size: 11px;
+.mode-btn-desc {
+  font-size: 10px;
   color: var(--color-text-tertiary);
-  display: none;
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
-/* === Q&A === */
-.qa-list {
+.mode-active-indicator {
+  position: absolute;
+  bottom: 0;
+  left: 20%;
+  right: 20%;
+  height: 2px;
+  border-radius: 1px;
+  background: var(--m-clr);
+}
+
+/* ====================== Conversation ====================== */
+.conversation {
   flex: 1;
   overflow-y: auto;
+  padding: 0 40px 20px;
   display: flex;
   flex-direction: column;
-  gap: 24px;
-  margin-bottom: 24px;
+  gap: 20px;
 }
 
 .qa-pair {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 10px;
 }
 
 .question-bubble,
 .answer-bubble {
   display: flex;
   gap: 12px;
-  padding: 16px 20px;
-  border-radius: var(--radius-md);
-  font-size: 14px;
-  line-height: 1.7;
 }
 
 .question-bubble {
-  background: rgba(0, 212, 255, 0.06);
-  border: 1px solid rgba(0, 212, 255, 0.1);
-  margin-left: 40px;
-  align-items: flex-start;
+  justify-content: flex-end;
 }
 
 .answer-bubble {
-  background: var(--color-bg-card);
-  border: 1px solid var(--color-border);
-  flex-direction: column;
+  justify-content: flex-start;
 }
 
-.bubble-icon {
-  width: 28px;
-  height: 28px;
-  border-radius: 50%;
+.bubble-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 700;
   flex-shrink: 0;
 }
-
-.bubble-q {
+.q-avatar {
   background: linear-gradient(135deg, var(--color-accent-cyan), var(--color-accent-blue));
   color: #fff;
+  order: 1;
 }
-
-.bubble-a {
+.a-avatar {
   background: linear-gradient(135deg, var(--color-accent-purple), #a855f7);
   color: #fff;
 }
 
-.question-text {
-  flex: 1;
+.bubble-content {
+  max-width: 80%;
+}
+
+.question-bubble .bubble-content {
+  order: 0;
+}
+
+.question-bubble .bubble-content p {
+  display: inline-block;
+  padding: 12px 18px;
+  border-radius: 14px 14px 4px 14px;
+  background: linear-gradient(135deg, rgba(0, 212, 255, 0.08), rgba(124, 58, 237, 0.08));
+  border: 1px solid rgba(0, 212, 255, 0.1);
+  font-size: 14px;
   color: var(--color-text-primary);
+  line-height: 1.6;
 }
 
-.bubble-time {
-  font-size: 11px;
-  color: var(--color-text-tertiary);
-  flex-shrink: 0;
-  font-family: var(--font-mono);
+.answer-bubble .bubble-content {
+  width: 100%;
 }
 
-.answer-content {
-  flex: 1;
+.answer-body {
+  padding: 16px 20px;
+  border-radius: 14px 14px 14px 4px;
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
   white-space: pre-wrap;
+  font-size: 13px;
+  line-height: 1.75;
   color: var(--color-text-primary);
 }
 
-.answer-content :deep(.tutor-h2) {
+.answer-body :deep(.h2) {
   font-family: var(--font-display);
-  font-size: 18px;
+  font-size: 16px;
   color: #fff;
-  margin: 16px 0 8px;
+  margin: 14px 0 6px;
 }
-
-.answer-content :deep(.tutor-h3) {
+.answer-body :deep(.h3) {
   font-family: var(--font-display);
-  font-size: 15px;
+  font-size: 14px;
   color: var(--color-accent-cyan);
-  margin: 12px 0 6px;
+  margin: 10px 0 4px;
 }
-
-.answer-content :deep(strong) {
-  color: #fff;
-  font-weight: 600;
-}
-
-.answer-content :deep(blockquote) {
-  border-left: 3px solid var(--color-accent-cyan);
-  padding: 8px 16px;
-  margin: 8px 0;
+.answer-body :deep(strong) { color: #fff; font-weight: 600; }
+.answer-body :deep(blockquote) {
+  border-left: 2px solid var(--color-accent-cyan);
+  padding: 6px 14px;
+  margin: 6px 0;
   background: rgba(0, 212, 255, 0.04);
-  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+  border-radius: 0 8px 8px 0;
   color: var(--color-text-secondary);
   font-style: italic;
 }
-
-.answer-content :deep(.tutor-code) {
+.answer-body :deep(.code-block) {
   display: block;
   background: rgba(0, 0, 0, 0.4);
   border: 1px solid var(--color-border);
-  border-radius: var(--radius-sm);
+  border-radius: 8px;
   padding: 16px;
-  margin: 8px 0;
+  margin: 6px 0;
   overflow-x: auto;
   font-family: var(--font-mono);
-  font-size: 13px;
+  font-size: 12px;
   line-height: 1.6;
   color: var(--color-accent-cyan);
 }
 
-.answer-content :deep(.tutor-table-row) {
-  display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
-  gap: 8px;
-  padding: 6px 12px;
-  border-bottom: 1px solid var(--color-border);
-  font-size: 13px;
-}
-.answer-content :deep(.tutor-table-row:first-child) {
-  font-weight: 600;
-  color: #fff;
-}
-
-/* === Answer Footer === */
-.answer-footer {
-  margin-top: 12px;
-  padding-top: 12px;
-  border-top: 1px solid var(--color-border);
-}
-
-.answer-feedback {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.feedback-label {
-  font-size: 12px;
+.bubble-time {
+  display: block;
+  font-size: 10px;
   color: var(--color-text-tertiary);
+  margin-top: 4px;
+  font-family: var(--font-mono);
+}
+
+.question-bubble .bubble-time { text-align: right; }
+
+.answer-footer {
+  display: flex;
+  gap: 4px;
+  margin-top: 8px;
+  padding-left: 4px;
 }
 
 .feedback-btn {
-  font-size: 11px;
-  padding: 4px 12px;
-  border-radius: var(--radius-sm);
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
   color: var(--color-text-tertiary);
-  border: 1px solid var(--color-border);
-  transition: all var(--duration-fast) var(--ease-out);
+  border: 1px solid transparent;
+  transition: all 0.2s var(--ease-out);
 }
 .feedback-btn:hover {
   border-color: var(--color-accent-cyan);
   color: var(--color-accent-cyan);
+  background: rgba(0, 212, 255, 0.06);
 }
 .feedback-btn.active {
   background: rgba(0, 212, 255, 0.08);
@@ -676,332 +692,152 @@ function askTopic(q: string) {
   color: var(--color-accent-cyan);
 }
 
-/* === Empty State === */
+/* ====================== Empty State ====================== */
 .empty-state {
   flex: 1;
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 40px 20px;
+  padding: 24px 40px;
   overflow-y: auto;
 }
 
-.empty-graphic {
-  position: relative;
-  width: 80px;
-  height: 80px;
+.empty-mode-icon {
+  width: 72px;
+  height: 72px;
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-bottom: 20px;
-}
-
-.empty-icon {
-  font-size: 36px;
+  margin-bottom: 16px;
+  border-radius: 20px;
+  background: rgba(0, 212, 255, 0.06);
   color: var(--color-accent-cyan);
-  z-index: 1;
 }
 
-.empty-ring {
-  position: absolute;
-  inset: 0;
-  border-radius: 50%;
-  border: 2px solid rgba(0, 212, 255, 0.15);
-  animation: ring-expand 3s ease-out infinite;
-}
-
-.empty-state h3 {
+.empty-title {
   font-family: var(--font-display);
-  font-size: 24px;
+  font-size: 22px;
   color: #fff;
-  margin-bottom: 8px;
+  margin-bottom: 4px;
 }
 
-.empty-state > p {
+.empty-desc {
   color: var(--color-text-secondary);
-  font-size: 14px;
-  margin-bottom: 32px;
+  font-size: 13px;
+  margin-bottom: 28px;
 }
 
-.topic-browse {
+.topic-grid {
   width: 100%;
   max-width: 700px;
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 20px;
+  gap: 16px;
 }
 
-.topic-group-header {
+.topic-header {
   display: flex;
   align-items: center;
   gap: 8px;
-  margin-bottom: 10px;
-}
-
-.topic-group-icon {
-  font-size: 16px;
-  color: var(--group-color);
-}
-
-.topic-group-label {
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 600;
-  color: var(--color-text-primary);
+  color: var(--t-clr);
+  margin-bottom: 8px;
 }
 
-.topic-items {
+.topic-list {
   display: flex;
   flex-direction: column;
   gap: 6px;
 }
 
-.topic-item {
+.topic-btn {
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 10px 14px;
-  border-radius: var(--radius-sm);
+  border-radius: 10px;
   background: var(--color-bg-card);
   border: 1px solid var(--color-border);
-  font-size: 13px;
+  font-size: 12px;
   color: var(--color-text-secondary);
   text-align: left;
-  transition: all var(--duration-fast) var(--ease-out);
+  transition: all 0.2s var(--ease-out);
+  width: 100%;
 }
-.topic-item:hover {
-  border-color: var(--group-color);
+.topic-btn:hover {
+  border-color: var(--t-clr);
   color: var(--color-text-primary);
-  background: rgba(0, 0, 0, 0.15);
+  background: color-mix(in srgb, var(--t-clr) 4%, transparent);
 }
 
-.topic-arrow {
-  font-size: 12px;
-  opacity: 0;
-  transition: all var(--duration-fast) var(--ease-out);
-}
-.topic-item:hover .topic-arrow {
-  opacity: 1;
-  transform: translateX(3px);
-}
+.topic-btn-arrow { opacity: 0; transition: all 0.2s var(--ease-out); flex-shrink: 0; }
+.topic-btn:hover .topic-btn-arrow { opacity: 1; transform: translateX(3px); color: var(--t-clr); }
 
-/* === Input === */
-.tutoring-input {
+/* ====================== Input Area ====================== */
+.input-section {
+  padding: 16px 40px 24px;
   border-top: 1px solid var(--color-border);
-  padding-top: 16px;
+  background: rgba(7, 7, 13, 0.85);
+  backdrop-filter: blur(20px);
 }
 
-.input-mode-badge {
+.mode-indicator {
   font-size: 11px;
   color: var(--color-accent-cyan);
   margin-bottom: 8px;
-  padding: 2px 10px;
   display: inline-block;
-  border-radius: 4px;
+  padding: 3px 10px;
+  border-radius: 6px;
   background: rgba(0, 212, 255, 0.06);
+  font-weight: 500;
 }
 
 .input-row {
   display: flex;
-  gap: 12px;
+  gap: 10px;
 }
 
 .input-row input {
   flex: 1;
-  padding: 14px 18px;
-  border-radius: var(--radius-md);
+  padding: 12px 18px;
+  border-radius: 12px;
   background: var(--color-bg-elevated);
   border: 1px solid var(--color-border);
   font-size: 14px;
   color: var(--color-text-primary);
-  transition: border-color var(--duration-fast) var(--ease-out);
+  transition: all 0.2s var(--ease-out);
 }
-.input-row input:focus {
-  border-color: var(--color-accent-cyan);
-  box-shadow: 0 0 16px rgba(0, 212, 255, 0.06);
-}
-.input-row input::placeholder {
-  color: var(--color-text-tertiary);
-}
+.input-row input:focus { border-color: var(--color-accent-cyan); }
+.input-row input::placeholder { color: var(--color-text-tertiary); opacity: 0.6; }
 
 .ask-btn {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 14px 28px;
-  border-radius: var(--radius-md);
+  gap: 6px;
+  padding: 12px 22px;
+  border-radius: 12px;
   background: linear-gradient(135deg, var(--color-accent-cyan), var(--color-accent-blue));
   color: #fff;
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 600;
-  transition: all var(--duration-fast) var(--ease-out);
+  transition: all 0.2s var(--ease-out);
   white-space: nowrap;
 }
 .ask-btn:hover:not(:disabled) {
-  box-shadow: 0 4px 20px rgba(0, 212, 255, 0.3);
+  box-shadow: 0 4px 16px rgba(0, 212, 255, 0.3);
   transform: translateY(-1px);
 }
-.ask-btn:disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
-}
+.ask-btn:disabled { opacity: 0.4; cursor: not-allowed; }
 
-.ask-arrow {
-  transition: transform var(--duration-fast) var(--ease-out);
-}
-.ask-btn:hover:not(:disabled) .ask-arrow {
-  transform: translateX(3px);
-}
-
-/* === Sidebar === */
-.tutoring-sidebar {
-  width: 260px;
-  flex-shrink: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-
-.sidebar-card {
-  padding: 20px;
-  border-radius: var(--radius-md);
-  background: var(--color-bg-card);
-  border: 1px solid var(--color-border);
-}
-
-.sidebar-card h3 {
-  font-family: var(--font-display);
-  font-size: 17px;
-  color: #fff;
-  margin-bottom: 14px;
-}
-
-.mode-list {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.mode-item {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 10px 12px;
-  border-radius: var(--radius-sm);
-  transition: all var(--duration-fast) var(--ease-out);
-  text-align: left;
-  width: 100%;
-}
-.mode-item:hover {
-  background: rgba(255, 255, 255, 0.03);
-}
-.mode-item.active {
-  background: rgba(0, 0, 0, 0.15);
-  border-left: 2px solid var(--mode-color);
-}
-
-.mode-item-icon {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 32px;
-  height: 32px;
-  border-radius: var(--radius-sm);
-  font-size: 14px;
-  background: rgba(255, 255, 255, 0.04);
-  color: var(--mode-color);
-  flex-shrink: 0;
-}
-.mode-item-icon.active {
-  background: rgba(0, 0, 0, 0.2);
-  box-shadow: 0 0 12px var(--mode-color);
-}
-
-.mode-item-info {
-  display: flex;
-  flex-direction: column;
-}
-
-.mode-item-label {
-  font-size: 13px;
-  font-weight: 500;
-  color: var(--color-text-primary);
-}
-
-.mode-item-desc {
-  font-size: 11px;
-  color: var(--color-text-tertiary);
-}
-
-/* === Sessions === */
-.sessions-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.sessions-toggle {
-  font-size: 12px;
-  color: var(--color-text-tertiary);
-  display: flex;
-  align-items: center;
-  gap: 4px;
-}
-.sessions-toggle:hover {
-  color: var(--color-accent-cyan);
-}
-
-.sessions-arrow {
-  transition: transform var(--duration-fast) var(--ease-out);
-  font-size: 10px;
-}
-.sessions-arrow.open {
-  transform: rotate(180deg);
-}
-
-.session-list {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.session-item {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 10px 12px;
-  border-radius: var(--radius-sm);
-  text-align: left;
-  transition: all var(--duration-fast) var(--ease-out);
-}
-.session-item:hover {
-  background: rgba(0, 212, 255, 0.04);
-}
-
-.session-info {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
-.session-title {
-  font-size: 13px;
-  font-weight: 500;
-  color: var(--color-text-primary);
-}
-
-.session-meta {
-  font-size: 11px;
-  color: var(--color-text-tertiary);
-}
-
-.session-arrow {
-  font-size: 12px;
-  color: var(--color-text-tertiary);
-}
-
+/* ====================== Responsive ====================== */
 @media (max-width: 900px) {
-  .mode-tabs { grid-template-columns: repeat(2, 1fr); }
-  .topic-browse { grid-template-columns: 1fr; }
-  .tutoring-sidebar { display: none; }
+  .tutor-hero { padding: 32px 20px 20px; flex-direction: column; }
+  .mode-selector { padding: 0 20px; grid-template-columns: repeat(2, 1fr); }
+  .empty-state { padding: 20px; }
+  .conversation { padding: 0 20px 20px; }
+  .input-section { padding: 16px 20px 20px; }
+  .topic-grid { grid-template-columns: 1fr; }
+  .history-panel { padding: 12px 20px; }
 }
 </style>

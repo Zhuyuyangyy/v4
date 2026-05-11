@@ -10,11 +10,13 @@ import {
   Zap,
   BookOpen,
   Star,
-  GitCompare,
   BarChart3,
   AlertTriangle,
   ArrowUp,
   ArrowRight,
+  Brain,
+  Download,
+  FileBarChart,
 } from 'lucide-vue-next'
 
 const loaded = ref(false)
@@ -58,12 +60,12 @@ const suggestions = [
 ]
 
 const badges = [
-  { icon: Sparkles, name: '初识学习', desc: '完成首次学习画像', earned: true, color: '#00d4ff' },
-  { icon: Zap, name: '连续打卡', desc: '连续学习 7 天', earned: true, color: '#06d6a0' },
-  { icon: Award, name: '知识达人', desc: '掌握 5 个以上知识点', earned: true, color: '#7c3aed' },
-  { icon: PenTool, name: '刷题能手', desc: '完成 100 道练习题', earned: false, color: '#f59e0b' },
-  { icon: BookOpen, name: '项目先锋', desc: '完成一个实战项目', earned: false, color: '#f43f5e' },
-  { icon: Star, name: '学习大师', desc: '综合评分达到 85%', earned: false, color: '#3b82f6' },
+  { icon: Sparkles, name: '初识学习', earned: true, color: '#00d4ff' },
+  { icon: Zap, name: '连续打卡', earned: true, color: '#06d6a0' },
+  { icon: Award, name: '知识达人', earned: true, color: '#7c3aed' },
+  { icon: PenTool, name: '刷题能手', earned: false, color: '#f59e0b' },
+  { icon: BookOpen, name: '项目先锋', earned: false, color: '#f43f5e' },
+  { icon: Star, name: '学习大师', earned: false, color: '#3b82f6' },
 ]
 
 function suggestIconColor(type: string) {
@@ -84,121 +86,124 @@ function masteryColor(val: number) {
 }
 
 function chartHeight(val: number) {
-  return Math.max(val * 2.2, 8)
+  return Math.max(val * 2, 8)
 }
 
 function trendLinePath(data: { week: string; you: number; avg: number }[]) {
   const w = 100 / (data.length - 1)
-  const youPoints = data.map((d, i) => `${i * w},${100 - d.you * 0.8}`).join(' ')
-  const avgPoints = data.map((d, i) => `${i * w},${100 - d.avg * 0.8}`).join(' ')
+  const youPoints = data.map((d, i) => `${i * w},${100 - d.you}`).join(' ')
+  const avgPoints = data.map((d, i) => `${i * w},${100 - d.avg}`).join(' ')
   return { youPoints, avgPoints }
 }
 
-const { youPoints, avgPoints } = trendLinePath(weeklyTrend)
+const { youPoints, avgPoints } = trendLinePath(weeklyTrend.map(d => ({ ...d, you: d.you * 0.8, avg: d.avg * 0.8 })))
 
 onMounted(() => {
-  setTimeout(() => { loaded.value = true }, 200)
+  setTimeout(() => { loaded.value = true }, 100)
 })
 </script>
 
 <template>
   <div class="evaluation">
-    <div class="page-header reveal">
-      <div class="page-header-row">
-        <div>
-          <h1 class="page-title">学习效果评估</h1>
-          <p class="page-desc">数据驱动的学习分析，全面了解你的学习成效</p>
-        </div>
-        <button class="report-btn" @click="showReportModal = true" aria-label="生成评估报告">
-          <BarChart3 :size="16" stroke-width="1.5" />
-          生成评估报告
-        </button>
+    <!-- Hero -->
+    <div class="eval-hero">
+      <div>
+        <div class="hero-badge">效果评估</div>
+        <h1 class="hero-title">学习效果<span class="gradient-text">数据洞察</span></h1>
+        <p class="hero-desc">数据驱动的学习分析，追踪你的每一步成长</p>
       </div>
+      <button class="report-btn" @click="showReportModal = true">
+        <FileBarChart :size="16" stroke-width="1.5" />
+        <span>生成评估报告</span>
+      </button>
     </div>
 
-    <!-- Stats Row -->
-    <div class="stats-grid reveal reveal-delay-1">
-      <div v-for="s in stats" :key="s.label" class="stat-card" :style="{ '--stat-color': s.color }">
-        <component :is="s.icon" :size="22" stroke-width="1.5" class="stat-icon" :style="{ color: 'var(--stat-color)' }" />
-        <div class="stat-info">
-          <span class="stat-value">{{ s.value }}</span>
-          <span class="stat-change">{{ s.change }}</span>
+    <!-- Stats Grid -->
+    <div class="stats-grid">
+      <div v-for="s in stats" :key="s.label" class="stat-card" :style="{ '--s-color': s.color }">
+        <div class="stat-icon">
+          <component :is="s.icon" :size="20" stroke-width="1.5" />
         </div>
-        <span class="stat-label">{{ s.label }}</span>
+        <div class="stat-body">
+          <div class="stat-top">
+            <span class="stat-value">{{ s.value }}</span>
+            <span class="stat-change">{{ s.change }}</span>
+          </div>
+          <span class="stat-label">{{ s.label }}</span>
+        </div>
       </div>
-    </div>
-
-    <!-- Badges -->
-    <div class="badges-strip reveal reveal-delay-2">
-      <span class="badges-label">成就徽章</span>
-      <div class="badges-list">
+      <div class="badge-strip">
         <div
-          v-for="b in badges"
+          v-for="b in badges.slice(0, 3)"
           :key="b.name"
-          :class="['badge-item', { earned: b.earned }]"
-          :style="{ '--badge-color': b.color }"
-          :title="b.name + ': ' + b.desc"
+          :class="['mini-badge', { earned: b.earned }]"
+          :style="{ '--b-color': b.color }"
         >
-          <span class="badge-icon">
-              <component :is="b.icon" v-if="b.earned" :size="18" stroke-width="1.5" :style="{ color: b.color }" />
-              <span v-else style="opacity: 0.3">○</span>
-            </span>
-          <span class="badge-name">{{ b.name }}</span>
+          <component :is="b.icon" v-if="b.earned" :size="14" stroke-width="2" />
+          <span v-else class="badge-locked">○</span>
         </div>
+        <span class="badge-more">+{{ badges.filter(b => !b.earned).length }} 待解锁</span>
       </div>
     </div>
 
-    <div class="eval-grid">
-      <!-- Heatmap -->
-      <div :class="['card heatmap-card reveal reveal-delay-3', { visible: loaded }]">
-        <div class="card-header-row">
-          <h2 class="card-title">本周学习热力</h2>
-          <div class="card-legend">
-            <span class="legend-item"><span class="legend-dot you" /> 你</span>
-            <span class="legend-item"><span class="legend-dot avg" /> 平均值</span>
+    <!-- Dashboard Grid -->
+    <div class="dashboard-grid">
+      <!-- Growth Curve -->
+      <div class="card chart-card">
+        <div class="card-head">
+          <h2 class="card-title-sm">能力成长曲线</h2>
+          <div class="chart-legend">
+            <span class="legend-item">
+              <span class="legend-dot cyan" /> 我的
+            </span>
+            <span class="legend-item">
+              <span class="legend-dot dim" /> 平均
+            </span>
           </div>
         </div>
-        <div class="heatmap">
-          <div class="heatmap-row">
-            <div class="heatmap-labels">
-              <span v-for="d in days" :key="d" class="heatmap-day">{{ d }}</span>
-            </div>
-            <div class="heatmap-chart">
-              <!-- Bars (you) -->
-              <div v-for="(v, i) in weeklyData" :key="'bar'+i" class="heatmap-bar-group">
-                <div class="bar-pair">
-                  <div
-                    class="heatmap-bar you"
-                    :style="{ height: chartHeight(v) + 'px' }"
-                  >
-                    <div class="bar-glow" />
-                  </div>
-                  <div
-                    class="heatmap-bar avg"
-                    :style="{ height: chartHeight(peerAvg[i]) + 'px' }"
-                  />
-                </div>
-                <span class="heatmap-value">{{ v }}m</span>
-              </div>
-            </div>
+        <div class="chart-body">
+          <svg viewBox="0 0 350 120" class="trend-svg">
+            <line x1="0" y1="30" x2="350" y2="30" stroke="rgba(0,212,255,0.04)" stroke-width="1" />
+            <line x1="0" y1="60" x2="350" y2="60" stroke="rgba(0,212,255,0.04)" stroke-width="1" />
+            <line x1="0" y1="90" x2="350" y2="90" stroke="rgba(0,212,255,0.04)" stroke-width="1" />
+            <polyline :points="avgPoints" fill="none" stroke="rgba(255,255,255,0.15)" stroke-width="2" stroke-dasharray="5 4" />
+            <polyline :points="youPoints" fill="none" stroke="url(#tg)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" />
+            <path :d="`M${youPoints} L350,120 L0,120 Z`" fill="url(#ta)" />
+            <circle v-for="(d, i) in weeklyTrend" :key="i" :cx="i * (350 / (weeklyTrend.length - 1))" :cy="80 - d.you * 0.8" r="4" fill="#00d4ff" stroke="rgba(0,0,0,0.4)" stroke-width="1.5" />
+            <defs>
+              <linearGradient id="tg" x1="0" y1="0" x2="1" y2="0">
+                <stop offset="0%" stop-color="#00d4ff" />
+                <stop offset="100%" stop-color="#7c3aed" />
+              </linearGradient>
+              <linearGradient id="ta" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="rgba(0,212,255,0.15)" />
+                <stop offset="100%" stop-color="rgba(0,212,255,0)" />
+              </linearGradient>
+            </defs>
+          </svg>
+          <div class="chart-labels">
+            <span v-for="d in weeklyTrend" :key="d.week">{{ d.week }}</span>
           </div>
-          <div class="heatmap-footer">
-            <span class="heatmap-total">本周累计：{{ weeklyData.reduce((a, b) => a + b, 0) }} 分钟</span>
-            <span class="heatmap-compare">较上周 ↑ 12%</span>
+          <div class="chart-footer">
+            <span>累计提升 <strong>23%</strong></span>
+            <span>较上周 <strong class="up">↑ 12%</strong></span>
           </div>
         </div>
       </div>
 
       <!-- Knowledge Mastery -->
-      <div :class="['card mastery-card reveal reveal-delay-4', { visible: loaded }]">
-        <h2 class="card-title">知识掌握度</h2>
+      <div class="card mastery-card">
+        <div class="card-head">
+          <h2 class="card-title-sm">知识掌握度</h2>
+          <span class="mastery-avg">平均 66%</span>
+        </div>
         <div class="mastery-list">
-          <div v-for="s in subjects" :key="s.name" class="mastery-item">
-            <div class="mastery-header">
+          <div v-for="s in subjects" :key="s.name" class="mastery-row">
+            <div class="mastery-top">
               <span class="mastery-name">{{ s.name }}</span>
-              <span class="mastery-value" :style="{ color: masteryColor(s.mastery) }">{{ s.mastery }}%</span>
+              <span class="mastery-pct" :style="{ color: masteryColor(s.mastery) }">{{ s.mastery }}%</span>
             </div>
-            <div class="mastery-bar">
+            <div class="mastery-track">
               <div
                 class="mastery-fill"
                 :style="{
@@ -211,85 +216,17 @@ onMounted(() => {
         </div>
       </div>
 
-      <!-- Growth Curve -->
-      <div :class="['card growth-card reveal reveal-delay-5', { visible: loaded }]">
-        <div class="card-header-row">
-          <h2 class="card-title">能力成长曲线</h2>
-          <div class="card-legend">
-            <span class="legend-item"><span class="legend-dot you" /> 你</span>
-            <span class="legend-item"><span class="legend-dot avg" /> 平均</span>
-          </div>
-        </div>
-        <div class="trend-chart">
-          <svg viewBox="0 0 350 140" class="trend-svg">
-            <!-- Grid -->
-            <line x1="0" y1="35" x2="350" y2="35" stroke="rgba(0,212,255,0.04)" stroke-width="1" />
-            <line x1="0" y1="70" x2="350" y2="70" stroke="rgba(0,212,255,0.04)" stroke-width="1" />
-            <line x1="0" y1="105" x2="350" y2="105" stroke="rgba(0,212,255,0.04)" stroke-width="1" />
-            <!-- Avg line -->
-            <polyline
-              :points="avgPoints"
-              fill="none"
-              stroke="rgba(255,255,255,0.15)"
-              stroke-width="2"
-              stroke-dasharray="6 4"
-              class="trend-line avg"
-            />
-            <!-- You line -->
-            <polyline
-              :points="youPoints"
-              fill="none"
-              stroke="url(#trendGrad)"
-              stroke-width="3"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              class="trend-line you"
-            />
-            <!-- Area -->
-            <path
-              :d="`M${youPoints} L350,140 L0,140 Z`"
-              fill="url(#trendArea)"
-              class="trend-area"
-            />
-            <!-- Dots -->
-            <circle
-              v-for="(d, i) in weeklyTrend"
-              :key="'dot'+i"
-              :cx="i * (350 / (weeklyTrend.length - 1))"
-              :cy="100 - d.you * 0.8"
-              r="4"
-              fill="#00d4ff"
-              class="trend-dot"
-            />
-            <defs>
-              <linearGradient id="trendGrad" x1="0" y1="0" x2="1" y2="0">
-                <stop offset="0%" stop-color="#00d4ff" />
-                <stop offset="100%" stop-color="#7c3aed" />
-              </linearGradient>
-              <linearGradient id="trendArea" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stop-color="rgba(0,212,255,0.2)" />
-                <stop offset="100%" stop-color="rgba(0,212,255,0)" />
-              </linearGradient>
-            </defs>
-          </svg>
-          <div class="trend-labels">
-            <span v-for="d in weeklyTrend" :key="d.week">{{ d.week }}</span>
-          </div>
-        </div>
-      </div>
-
       <!-- Suggestions -->
-      <div :class="['card suggest-card reveal reveal-delay-6', { visible: loaded }]">
-        <h2 class="card-title">学习建议</h2>
+      <div class="card suggest-card">
+        <div class="card-head">
+          <h2 class="card-title-sm">学习建议</h2>
+          <span class="suggest-count">{{ suggestions.length }} 条</span>
+        </div>
         <div class="suggest-list">
-          <div
-            v-for="(s, i) in suggestions"
-            :key="i"
-            :class="['suggest-item', s.type]"
-          >
-            <span class="suggest-icon">
-              <component :is="s.icon" :size="16" stroke-width="1.5" :style="suggestIconColor(s.type)" />
-            </span>
+          <div v-for="(s, i) in suggestions" :key="i" :class="['suggest-item', s.type]">
+            <div class="suggest-icon">
+              <component :is="s.icon" :size="15" stroke-width="1.5" :style="suggestIconColor(s.type)" />
+            </div>
             <span class="suggest-text">{{ s.text }}</span>
           </div>
         </div>
@@ -298,65 +235,62 @@ onMounted(() => {
 
     <!-- Report Modal -->
     <transition name="scale-in">
-      <div v-if="showReportModal" class="report-overlay" @click.self="showReportModal = false">
-        <div class="report-modal">
-          <div class="report-top">
-            <h2 class="report-title">学习评估报告</h2>
-            <button class="report-close" @click="showReportModal = false">✕</button>
+      <div v-if="showReportModal" class="modal-overlay" @click.self="showReportModal = false">
+        <div class="modal">
+          <div class="modal-header">
+            <h2 class="modal-title">学习评估报告</h2>
+            <button class="modal-close-btn" @click="showReportModal = false">✕</button>
           </div>
-
-          <div class="report-body">
+          <div class="modal-body">
             <div class="report-summary">
               <div class="report-grade">
-                <span class="grade-score">B+</span>
+                <span class="grade-letter">B+</span>
                 <span class="grade-label">综合评级</span>
               </div>
-              <div class="report-stats-grid">
-                <div class="report-stat">
-                  <span class="rs-label">学习总时长</span>
-                  <span class="rs-value">128 小时</span>
+              <div class="report-metrics">
+                <div class="metric-item">
+                  <span class="metric-label">学习总时长</span>
+                  <span class="metric-value">128 小时</span>
                 </div>
-                <div class="report-stat">
-                  <span class="rs-label">完成课程</span>
-                  <span class="rs-value">18 门</span>
+                <div class="metric-item">
+                  <span class="metric-label">完成课程</span>
+                  <span class="metric-value">18 门</span>
                 </div>
-                <div class="report-stat">
-                  <span class="rs-label">平均正确率</span>
-                  <span class="rs-value">82%</span>
+                <div class="metric-item">
+                  <span class="metric-label">平均正确率</span>
+                  <span class="metric-value">82%</span>
                 </div>
-                <div class="report-stat">
-                  <span class="rs-label">连续学习</span>
-                  <span class="rs-value">23 天</span>
+                <div class="metric-item">
+                  <span class="metric-label">连续学习</span>
+                  <span class="metric-value">23 天</span>
                 </div>
               </div>
             </div>
-
             <div class="report-section">
               <h3>学习总结</h3>
               <p>在过去一个月中，你保持了良好的学习节奏，累计学习 128 小时，完成了 18 门课程的学习。你的知识掌握度从 60% 提升到了 68%，机器学习领域进步最为显著。</p>
             </div>
-
             <div class="report-section">
               <h3>待改进领域</h3>
-              <p>概率论与数理统计是你的主要薄弱环节，建议投入更多时间进行专项训练。同时，深度学习领域的知识掌握度较低，可以考虑调整学习计划，增加相关学习时间。</p>
+              <p>概率论与数理统计是你的主要薄弱环节，建议投入更多时间进行专项训练。同时，深度学习领域的知识掌握度较低，可以考虑调整学习计划。</p>
             </div>
-
             <div class="report-section">
               <h3>下一步建议</h3>
-              <ul class="report-recommendations">
+              <ul class="rec-list">
                 <li>制定概率论专项复习计划，目标 2 周内完成基础巩固</li>
                 <li>每周至少完成 3 道编程实战题，保持代码手感</li>
                 <li>尝试参与开源项目或竞赛，将理论知识应用于实践</li>
-                <li>保持当前的学习节奏，适当增加周末学习时间</li>
               </ul>
             </div>
           </div>
-
-          <div class="report-footer">
-            <span class="report-date">报告生成时间：2026-05-11</span>
-            <div class="report-actions">
-              <button class="report-btn-secondary">预览</button>
-              <button class="report-btn-primary">下载 PDF</button>
+          <div class="modal-footer">
+            <span class="footer-date">2026-05-11</span>
+            <div class="footer-actions">
+              <button class="btn-ghost">预览</button>
+              <button class="btn-primary">
+                <Download :size="14" stroke-width="1.5" />
+                下载 PDF
+              </button>
             </div>
           </div>
         </div>
@@ -367,32 +301,54 @@ onMounted(() => {
 
 <style scoped>
 .evaluation {
-  padding: 40px;
+  padding: 0;
   max-width: 1200px;
   margin: 0 auto;
+  position: relative;
+  z-index: 1;
 }
 
-.page-header {
-  margin-bottom: 32px;
-}
-
-.page-header-row {
+/* ====================== Hero ====================== */
+.eval-hero {
+  padding: 48px 40px 28px;
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
+  gap: 24px;
 }
 
-.page-title {
+.hero-badge {
+  display: inline-block;
+  padding: 4px 14px;
+  border-radius: 100px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  background: rgba(0, 212, 255, 0.08);
+  color: var(--color-accent-cyan);
+  border: 1px solid rgba(0, 212, 255, 0.1);
+  margin-bottom: 12px;
+}
+
+.hero-title {
   font-family: var(--font-display);
-  font-size: 42px;
-  letter-spacing: -0.02em;
-  margin-bottom: 8px;
+  font-size: 34px;
+  font-weight: 400;
   color: #fff;
+  line-height: 1.2;
+  margin-bottom: 8px;
 }
 
-.page-desc {
+.gradient-text {
+  background: linear-gradient(135deg, var(--color-accent-cyan), var(--color-accent-purple));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.hero-desc {
+  font-size: 14px;
   color: var(--color-text-secondary);
-  font-size: 15px;
 }
 
 .report-btn {
@@ -400,38 +356,42 @@ onMounted(() => {
   align-items: center;
   gap: 8px;
   padding: 10px 20px;
-  border-radius: var(--radius-md);
-  border: 1px solid var(--color-border);
-  color: var(--color-text-secondary);
+  border-radius: 10px;
+  background: linear-gradient(135deg, rgba(0, 212, 255, 0.1), rgba(124, 58, 237, 0.1));
+  border: 1px solid rgba(0, 212, 255, 0.15);
+  color: var(--color-accent-cyan);
   font-size: 13px;
-  transition: all var(--duration-fast) var(--ease-out);
+  font-weight: 500;
   white-space: nowrap;
+  transition: all 0.2s var(--ease-out);
 }
 .report-btn:hover {
-  border-color: var(--color-accent-cyan);
-  color: var(--color-accent-cyan);
-  background: rgba(0, 212, 255, 0.04);
+  background: linear-gradient(135deg, rgba(0, 212, 255, 0.18), rgba(124, 58, 237, 0.18));
+  box-shadow: 0 4px 16px rgba(0, 212, 255, 0.1);
 }
 
-/* === Stats === */
+/* ====================== Stats Grid ====================== */
 .stats-grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 16px;
-  margin-bottom: 24px;
+  grid-template-columns: repeat(4, 1fr) auto;
+  gap: 12px;
+  padding: 0 40px;
+  margin-bottom: 28px;
 }
 
 .stat-card {
-  padding: 24px;
-  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 18px;
+  border-radius: 14px;
   background: var(--color-bg-card);
   border: 1px solid var(--color-border);
-  border-left: 3px solid var(--stat-color);
-  transition: all var(--duration-normal) var(--ease-out);
+  transition: all 0.3s var(--ease-out);
 }
 .stat-card:hover {
+  border-color: var(--s-color);
   transform: translateY(-2px);
-  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
 }
 
 .stat-icon {
@@ -440,278 +400,181 @@ onMounted(() => {
   justify-content: center;
   width: 40px;
   height: 40px;
-  font-size: 18px;
-  border-radius: var(--radius-md);
-  background: rgba(0, 212, 255, 0.06);
-  color: var(--stat-color);
-  margin-bottom: 12px;
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--s-color) 12%, transparent);
+  color: var(--s-color);
+  flex-shrink: 0;
 }
 
-.stat-info {
+.stat-body { flex: 1; }
+
+.stat-top {
   display: flex;
   align-items: baseline;
   gap: 8px;
-  margin-bottom: 4px;
 }
 
 .stat-value {
   font-family: var(--font-display);
-  font-size: 32px;
-  line-height: 1;
+  font-size: 22px;
   color: #fff;
+  line-height: 1;
 }
 
 .stat-change {
-  font-size: 13px;
+  font-size: 12px;
   font-family: var(--font-mono);
   color: var(--color-accent-emerald);
+  font-weight: 600;
 }
 
 .stat-label {
-  font-size: 13px;
+  display: block;
+  font-size: 11px;
   color: var(--color-text-tertiary);
+  margin-top: 2px;
 }
 
-/* === Badges === */
-.badges-strip {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  padding: 16px 20px;
-  border-radius: var(--radius-md);
-  background: var(--color-bg-card);
-  border: 1px solid var(--color-border);
-  margin-bottom: 32px;
-  overflow-x: auto;
-}
-
-.badges-label {
-  font-size: 12px;
-  color: var(--color-text-tertiary);
-  letter-spacing: 0.5px;
-  text-transform: uppercase;
-  flex-shrink: 0;
-}
-
-.badges-list {
-  display: flex;
-  gap: 16px;
-}
-
-.badge-item {
+.badge-strip {
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 6px 12px;
-  border-radius: 100px;
-  background: rgba(255, 255, 255, 0.02);
+  padding: 0 4px;
+}
+
+.mini-badge {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   border: 1px solid var(--color-border);
-  transition: all var(--duration-fast) var(--ease-out);
-  cursor: default;
+  background: var(--color-bg-card);
+  color: var(--b-color);
+  transition: all 0.2s var(--ease-out);
+}
+.mini-badge.earned {
+  border-color: color-mix(in srgb, var(--b-color) 50%, transparent);
+  box-shadow: 0 0 12px color-mix(in srgb, var(--b-color) 15%, transparent);
+}
+
+.badge-locked { opacity: 0.3; }
+
+.badge-more {
+  font-size: 11px;
+  color: var(--color-text-tertiary);
   white-space: nowrap;
 }
-.badge-item.earned {
-  border-color: rgba(0, 212, 255, 0.15);
-  background: rgba(0, 212, 255, 0.04);
-}
-.badge-item:not(.earned) {
-  opacity: 0.5;
-}
 
-.badge-icon {
-  font-size: 16px;
-  color: var(--badge-color);
-}
-
-.badge-name {
-  font-size: 12px;
-  font-weight: 500;
-  color: var(--color-text-secondary);
-}
-
-/* === Grid === */
-.eval-grid {
+/* ====================== Dashboard Grid ====================== */
+.dashboard-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 24px;
+  grid-template-columns: 1.4fr 1fr;
+  gap: 20px;
+  padding: 0 40px 40px;
 }
 
 .card {
-  padding: 28px;
-  border-radius: var(--radius-lg);
+  padding: 24px;
+  border-radius: 16px;
   background: var(--color-bg-card);
   border: 1px solid var(--color-border);
+  transition: border-color 0.2s var(--ease-out);
 }
+.card:hover { border-color: rgba(0, 212, 255, 0.1); }
 
-.card-title {
-  font-family: var(--font-display);
-  font-size: 20px;
-  color: #fff;
-  margin-bottom: 20px;
-}
-
-.card-header-row {
+.card-head {
   display: flex;
   justify-content: space-between;
   align-items: center;
   margin-bottom: 20px;
 }
-.card-header-row .card-title {
-  margin-bottom: 0;
+
+.card-title-sm {
+  font-family: var(--font-display);
+  font-size: 20px;
+  font-weight: 400;
+  color: #fff;
 }
 
-.card-legend {
+/* ====================== Chart Card ====================== */
+.chart-card { grid-column: 1 / -1; }
+
+.chart-legend {
   display: flex;
-  gap: 16px;
+  gap: 14px;
   font-size: 12px;
   color: var(--color-text-tertiary);
 }
 
-.legend-item {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
+.legend-item { display: flex; align-items: center; gap: 6px; }
 .legend-dot {
   width: 8px;
   height: 8px;
   border-radius: 50%;
 }
-.legend-dot.you { background: var(--color-accent-cyan); }
-.legend-dot.avg { background: rgba(255, 255, 255, 0.2); }
+.legend-dot.cyan { background: var(--color-accent-cyan); }
+.legend-dot.dim { background: rgba(255, 255, 255, 0.2); }
 
-/* === Heatmap === */
-.heatmap-card {
-  grid-column: 1 / 2;
-}
+.chart-body { position: relative; }
 
-.heatmap-row {
-  display: flex;
-  gap: 16px;
-}
+.trend-svg { width: 100%; height: 120px; }
 
-.heatmap-labels {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  padding-top: 4px;
-}
-
-.heatmap-day {
-  font-size: 12px;
-  color: var(--color-text-tertiary);
-  height: 44px;
-  display: flex;
-  align-items: center;
-}
-
-.heatmap-chart {
-  flex: 1;
+.chart-labels {
   display: flex;
   justify-content: space-between;
-  align-items: flex-end;
-  gap: 8px;
-  height: 220px;
-}
-
-.heatmap-bar-group {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 6px;
-  height: 100%;
-  justify-content: flex-end;
-}
-
-.bar-pair {
-  display: flex;
-  align-items: flex-end;
-  gap: 4px;
-  height: 100%;
-}
-
-.heatmap-bar {
-  width: 16px;
-  border-radius: 4px 4px 0 0;
-  transition: height 1s var(--ease-out);
-  position: relative;
-  min-height: 4px;
-}
-.heatmap-bar.you {
-  background: linear-gradient(180deg, var(--color-accent-cyan), var(--color-accent-blue));
-}
-.heatmap-bar.avg {
-  background: rgba(255, 255, 255, 0.1);
-}
-
-.bar-glow {
-  position: absolute;
-  top: -4px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 24px;
-  height: 8px;
-  background: var(--color-accent-cyan);
-  filter: blur(8px);
-  opacity: 0.4;
-}
-
-.heatmap-value {
+  margin-top: 6px;
   font-size: 11px;
   font-family: var(--font-mono);
   color: var(--color-text-tertiary);
 }
 
-.heatmap-footer {
+.chart-footer {
   display: flex;
   justify-content: space-between;
   margin-top: 12px;
   padding-top: 12px;
   border-top: 1px solid var(--color-border);
   font-size: 13px;
-}
-
-.heatmap-total {
   color: var(--color-text-secondary);
 }
+.chart-footer strong { font-family: var(--font-mono); color: #fff; }
+.chart-footer .up { color: var(--color-accent-emerald); }
 
-.heatmap-compare {
-  color: var(--color-accent-emerald);
+/* ====================== Mastery ====================== */
+.mastery-avg {
+  font-size: 13px;
   font-family: var(--font-mono);
-}
-
-/* === Mastery === */
-.mastery-card {
-  grid-column: 2 / 3;
+  color: var(--color-text-tertiary);
+  font-weight: 600;
 }
 
 .mastery-list {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 14px;
 }
 
-.mastery-header {
+.mastery-row { display: flex; flex-direction: column; gap: 4px; }
+
+.mastery-top {
   display: flex;
   justify-content: space-between;
-  margin-bottom: 6px;
 }
 
 .mastery-name {
-  font-size: 14px;
-  font-weight: 500;
+  font-size: 13px;
   color: var(--color-text-primary);
 }
 
-.mastery-value {
-  font-size: 14px;
+.mastery-pct {
+  font-size: 13px;
   font-family: var(--font-mono);
   font-weight: 600;
 }
 
-.mastery-bar {
+.mastery-track {
   height: 6px;
   border-radius: 3px;
   background: rgba(255, 255, 255, 0.05);
@@ -721,172 +584,98 @@ onMounted(() => {
 .mastery-fill {
   height: 100%;
   border-radius: 3px;
-  transition: width 1s var(--ease-out);
+  transition: width 0.6s var(--ease-out);
 }
 
-/* === Trend === */
-.growth-card {
-  grid-column: 1 / 2;
-}
+/* ====================== Suggestions ====================== */
+.suggest-card { grid-column: 2 / 3; }
 
-.trend-chart {
-  position: relative;
-}
-
-.trend-svg {
-  width: 100%;
-  height: 140px;
-}
-
-.trend-line.you {
-  stroke-dasharray: 400;
-  stroke-dashoffset: 400;
-  animation: draw-line 1.5s var(--ease-out) forwards;
-}
-
-.trend-line.avg {
-  stroke-dasharray: 400;
-  stroke-dashoffset: 400;
-  animation: draw-line 1.5s var(--ease-out) 0.3s forwards;
-}
-
-@keyframes draw-line {
-  to { stroke-dashoffset: 0; }
-}
-
-.trend-area {
-  opacity: 0;
-  animation: fade-in 1s var(--ease-out) 0.5s forwards;
-}
-
-.trend-dot {
-  opacity: 0;
-  animation: fade-in 0.3s var(--ease-out) 1s forwards;
-}
-
-@keyframes fade-in {
-  to { opacity: 1; }
-}
-
-.trend-labels {
-  display: flex;
-  justify-content: space-between;
-  margin-top: 8px;
-  font-size: 12px;
+.suggest-count {
+  font-size: 11px;
   color: var(--color-text-tertiary);
-  font-family: var(--font-mono);
-}
-
-/* === Suggestions === */
-.suggest-card {
-  grid-column: 2 / 3;
+  font-weight: 500;
 }
 
 .suggest-list {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 8px;
 }
 
 .suggest-item {
   display: flex;
   gap: 12px;
-  padding: 14px 16px;
-  border-radius: var(--radius-sm);
-  align-items: flex-start;
-}
-.suggest-item.weakness {
-  background: rgba(244, 63, 94, 0.04);
-  border: 1px solid rgba(244, 63, 94, 0.08);
-}
-.suggest-item.strength {
-  background: rgba(0, 212, 255, 0.04);
-  border: 1px solid rgba(0, 212, 255, 0.08);
-}
-.suggest-item.positive {
-  background: rgba(6, 214, 160, 0.04);
-  border: 1px solid rgba(6, 214, 160, 0.08);
-}
-.suggest-item.action {
-  background: rgba(245, 158, 11, 0.04);
-  border: 1px solid rgba(245, 158, 11, 0.08);
-}
-
-.suggest-icon {
-  font-size: 14px;
-  flex-shrink: 0;
-  margin-top: 2px;
-}
-
-.suggest-text {
-  font-size: 14px;
-  line-height: 1.7;
+  padding: 12px 14px;
+  border-radius: 10px;
+  font-size: 13px;
+  line-height: 1.6;
   color: var(--color-text-secondary);
 }
+.suggest-item.weakness { background: rgba(244, 63, 94, 0.04); border: 1px solid rgba(244, 63, 94, 0.08); }
+.suggest-item.strength { background: rgba(0, 212, 255, 0.04); border: 1px solid rgba(0, 212, 255, 0.08); }
+.suggest-item.positive { background: rgba(6, 214, 160, 0.04); border: 1px solid rgba(6, 214, 160, 0.08); }
+.suggest-item.action { background: rgba(245, 158, 11, 0.04); border: 1px solid rgba(245, 158, 11, 0.08); }
 
-/* === Report Modal === */
-.report-overlay {
+.suggest-icon { flex-shrink: 0; margin-top: 2px; }
+
+/* ====================== Modal ====================== */
+.modal-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.7);
-  backdrop-filter: blur(8px);
+  background: rgba(0, 0, 0, 0.75);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: var(--z-modal);
   padding: 40px;
+  backdrop-filter: blur(4px);
 }
 
-.report-modal {
+.modal {
   background: var(--color-bg-elevated);
   border: 1px solid var(--color-border);
-  border-radius: var(--radius-xl);
-  max-width: 600px;
+  border-radius: 20px;
+  max-width: 620px;
   width: 100%;
-  max-height: 80vh;
+  max-height: 85vh;
   overflow-y: auto;
-  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
 }
 
-.report-top {
+.modal-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 32px 32px 0;
+  padding: 28px 28px 0;
 }
 
-.report-title {
+.modal-title {
   font-family: var(--font-display);
-  font-size: 28px;
+  font-size: 24px;
   color: #fff;
 }
 
-.report-close {
+.modal-close-btn {
   width: 32px;
   height: 32px;
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: var(--radius-sm);
+  border-radius: 8px;
   color: var(--color-text-tertiary);
-  transition: all var(--duration-fast) var(--ease-out);
+  transition: all 0.2s var(--ease-out);
 }
-.report-close:hover {
-  background: rgba(255, 255, 255, 0.06);
-  color: #fff;
-}
+.modal-close-btn:hover { background: rgba(255, 255, 255, 0.06); color: #fff; }
 
-.report-body {
-  padding: 24px 32px 32px;
-}
+.modal-body { padding: 20px 28px 28px; }
 
 .report-summary {
   display: flex;
-  gap: 32px;
-  padding: 24px;
-  border-radius: var(--radius-md);
-  background: rgba(0, 0, 0, 0.2);
-  margin-bottom: 24px;
+  gap: 28px;
+  padding: 20px;
+  border-radius: 12px;
+  background: rgba(0, 0, 0, 0.25);
+  margin-bottom: 20px;
 }
 
 .report-grade {
@@ -897,9 +686,9 @@ onMounted(() => {
   flex-shrink: 0;
 }
 
-.grade-score {
+.grade-letter {
   font-family: var(--font-display);
-  font-size: 48px;
+  font-size: 40px;
   background: linear-gradient(135deg, var(--color-accent-cyan), var(--color-accent-purple));
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
@@ -908,127 +697,96 @@ onMounted(() => {
 }
 
 .grade-label {
-  font-size: 12px;
+  font-size: 11px;
   color: var(--color-text-tertiary);
   margin-top: 4px;
 }
 
-.report-stats-grid {
+.report-metrics {
   flex: 1;
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 12px;
 }
 
-.report-stat {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
+.metric-item { display: flex; flex-direction: column; gap: 2px; }
+.metric-label { font-size: 11px; color: var(--color-text-tertiary); }
+.metric-value { font-size: 17px; font-weight: 600; color: #fff; }
 
-.rs-label {
-  font-size: 11px;
-  color: var(--color-text-tertiary);
-  text-transform: uppercase;
-  letter-spacing: 0.3px;
-}
-
-.rs-value {
-  font-size: 18px;
-  font-weight: 600;
-  color: #fff;
-}
-
-.report-section {
-  margin-bottom: 24px;
-}
-
+.report-section { margin-bottom: 20px; }
 .report-section h3 {
   font-family: var(--font-display);
-  font-size: 18px;
+  font-size: 16px;
   color: #fff;
-  margin-bottom: 8px;
+  margin-bottom: 6px;
 }
-
 .report-section p {
-  font-size: 14px;
+  font-size: 13px;
   color: var(--color-text-secondary);
   line-height: 1.7;
 }
 
-.report-recommendations {
-  list-style: none;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.report-recommendations li {
-  font-size: 14px;
+.rec-list { list-style: none; display: flex; flex-direction: column; gap: 6px; }
+.rec-list li {
+  font-size: 13px;
   color: var(--color-text-secondary);
   line-height: 1.6;
-  padding-left: 20px;
+  padding-left: 18px;
   position: relative;
 }
-.report-recommendations li::before {
+.rec-list li::before {
   content: '→';
   position: absolute;
   left: 0;
   color: var(--color-accent-cyan);
 }
 
-.report-footer {
+.modal-footer {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 20px 32px;
+  padding: 16px 28px;
   border-top: 1px solid var(--color-border);
 }
 
-.report-date {
+.footer-date {
   font-size: 12px;
   color: var(--color-text-tertiary);
   font-family: var(--font-mono);
 }
 
-.report-actions {
-  display: flex;
-  gap: 10px;
-}
+.footer-actions { display: flex; gap: 8px; }
 
-.report-btn-secondary {
-  padding: 8px 20px;
-  border-radius: var(--radius-sm);
+.btn-ghost {
+  padding: 8px 18px;
+  border-radius: 8px;
   border: 1px solid var(--color-border);
   font-size: 13px;
   color: var(--color-text-secondary);
-  transition: all var(--duration-fast) var(--ease-out);
+  transition: all 0.2s var(--ease-out);
 }
-.report-btn-secondary:hover {
-  border-color: var(--color-accent-cyan);
-  color: var(--color-accent-cyan);
-}
+.btn-ghost:hover { border-color: var(--color-accent-cyan); color: var(--color-accent-cyan); }
 
-.report-btn-primary {
+.btn-primary {
+  display: flex;
+  align-items: center;
+  gap: 6px;
   padding: 8px 20px;
-  border-radius: var(--radius-sm);
+  border-radius: 8px;
   background: linear-gradient(135deg, var(--color-accent-cyan), var(--color-accent-blue));
   color: #fff;
   font-size: 13px;
   font-weight: 600;
-  transition: all var(--duration-fast) var(--ease-out);
+  transition: all 0.2s var(--ease-out);
 }
-.report-btn-primary:hover {
-  box-shadow: 0 4px 16px rgba(0, 212, 255, 0.3);
-}
+.btn-primary:hover { box-shadow: 0 4px 16px rgba(0, 212, 255, 0.3); }
 
+/* ====================== Responsive ====================== */
 @media (max-width: 900px) {
-  .stats-grid { grid-template-columns: repeat(2, 1fr); }
-  .eval-grid { grid-template-columns: 1fr; }
-  .heatmap-card, .mastery-card, .growth-card, .suggest-card {
-    grid-column: 1;
-  }
-  .page-header-row { flex-direction: column; gap: 16px; }
-  .report-summary { flex-direction: column; }
+  .eval-hero { padding: 32px 20px 24px; flex-direction: column; }
+  .stats-grid { padding: 0 20px; grid-template-columns: repeat(2, 1fr); }
+  .badge-strip { display: none; }
+  .dashboard-grid { padding: 0 20px 32px; grid-template-columns: 1fr; }
+  .chart-card, .suggest-card { grid-column: 1; }
 }
 </style>

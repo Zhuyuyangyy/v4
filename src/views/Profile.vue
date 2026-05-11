@@ -9,6 +9,10 @@ import {
   FileText,
   Sparkles,
   TrendingUp,
+  Activity,
+  BarChart3,
+  Brain,
+  ChevronRight,
 } from 'lucide-vue-next'
 
 const loaded = ref(false)
@@ -106,7 +110,7 @@ function radarPoints(cx: number, cy: number, r: number) {
   })
 }
 
-const cx = 120, cy = 120, r = 100
+const cx = 140, cy = 140, r = 115
 const points = radarPoints(cx, cy, r)
 const gridLevels = [0.2, 0.4, 0.6, 0.8, 1]
 
@@ -117,247 +121,239 @@ function skillLevelColor(val: number) {
   return '#f43f5e'
 }
 
+const totalScore = Math.round(dimensions.reduce((s, d) => s + d.value, 0) / dimensions.length)
+
 onMounted(() => {
-  setTimeout(() => { loaded.value = true }, 200)
+  setTimeout(() => { loaded.value = true }, 100)
 })
 </script>
 
 <template>
   <div class="profile">
-    <div class="page-header reveal">
-      <h1 class="page-title">学习画像</h1>
-      <p class="page-desc">AI 驱动的多维度学习分析，全面了解你的学习状态与能力成长</p>
-    </div>
-
-    <!-- Overview Stats -->
-    <div class="overview-stats reveal reveal-delay-1">
-      <div v-for="s in overviewStats" :key="s.label" class="overview-card" :style="{ '--card-accent': s.color }">
-        <component :is="s.icon" :size="26" stroke-width="1.5" class="overview-icon" :style="{ color: s.color }" />
-        <div class="overview-info">
-          <span class="overview-value">{{ s.value }}</span>
-          <span class="overview-label">{{ s.label }}</span>
-        </div>
-        <div class="overview-glow" />
+    <!-- Hero Section -->
+    <div class="profile-hero">
+      <div class="hero-content">
+        <div class="hero-badge">学习画像</div>
+        <h1 class="hero-title">你的多维学习<span class="gradient-text">能力图谱</span></h1>
+        <p class="hero-desc">AI 驱动的多维度学习分析，全面了解你的学习特征与能力水平</p>
       </div>
-    </div>
-
-    <div class="profile-grid">
-      <!-- Radar Chart -->
-      <div :class="['card radar-card reveal reveal-delay-2', { visible: loaded }]">
-        <div class="card-header">
-          <h2 class="card-title">能力雷达</h2>
-          <span class="card-badge">综合评分 68%</span>
-        </div>
-        <div class="radar-container">
-          <svg viewBox="0 0 240 240" class="radar-svg">
-            <!-- Grid levels -->
-            <polygon
-              v-for="level in gridLevels"
-              :key="level"
-              :points="dimensions.map((_, i) => {
-                const a = (Math.PI * 2 * i) / dimensions.length - Math.PI / 2
-                const x = cx + r * level * Math.cos(a)
-                const y = cy + r * level * Math.sin(a)
-                return `${x},${y}`
-              }).join(' ')"
-              fill="none"
-              :stroke="'rgba(0,212,255,0.06)'"
-              stroke-width="1"
+      <div class="hero-score">
+        <div class="score-ring">
+          <svg viewBox="0 0 100 100" class="score-svg">
+            <circle cx="50" cy="50" r="42" fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="4" />
+            <circle cx="50" cy="50" r="42" fill="none" stroke="url(#scoreGrad)" stroke-width="4"
+              stroke-linecap="round"
+              :stroke-dasharray="263.9"
+              :stroke-dashoffset="loaded ? 263.9 * (1 - totalScore / 100) : 263.9"
+              transform="rotate(-90 50 50)"
+              class="score-arc"
             />
-            <!-- Axis lines -->
-            <line
-              v-for="(_, i) in dimensions"
-              :key="'axis'+i"
-              :x1="cx" :y1="cy"
-              :x2="cx + r * Math.cos((Math.PI * 2 * i) / dimensions.length - Math.PI / 2)"
-              :y2="cy + r * Math.sin((Math.PI * 2 * i) / dimensions.length - Math.PI / 2)"
-              stroke="rgba(0,212,255,0.06)"
-              stroke-width="1"
-            />
-            <!-- Data polygon -->
-            <polygon
-              :points="points.map(p => `${p.x},${p.y}`).join(' ')"
-              :fill="loaded ? 'rgba(0,212,255,0.12)' : 'transparent'"
-              :stroke="loaded ? '#00d4ff' : 'transparent'"
-              stroke-width="2.5"
-              class="radar-data"
-            />
-            <!-- Data points -->
-            <circle
-              v-for="(p, i) in points"
-              :key="'pt'+i"
-              :cx="p.x" :cy="p.y"
-              r="4.5"
-              :fill="dimensions[i].color"
-              class="radar-point"
-            />
-            <!-- Labels -->
-            <text
-              v-for="(d, i) in dimensions"
-              :key="'label'+i"
-              :x="cx + (r + 28) * Math.cos((Math.PI * 2 * i) / dimensions.length - Math.PI / 2)"
-              :y="cy + (r + 28) * Math.sin((Math.PI * 2 * i) / dimensions.length - Math.PI / 2)"
-              text-anchor="middle"
-              dominant-baseline="middle"
-              fill="#8892b0"
-              font-size="11"
-              font-family="Outfit, sans-serif"
-            >
-              {{ d.label }}
-            </text>
+            <defs>
+              <linearGradient id="scoreGrad" x1="0" y1="0" x2="1" y2="0">
+                <stop offset="0%" stop-color="#00d4ff" />
+                <stop offset="100%" stop-color="#7c3aed" />
+              </linearGradient>
+            </defs>
           </svg>
-        </div>
-        <div class="radar-stats">
-          <div v-for="d in dimensions" :key="d.label" class="stat-row">
-            <div class="stat-label">
-              <span class="stat-dot" :style="{ background: d.color }" />
-              {{ d.label }}
-            </div>
-            <div class="stat-bar">
-              <div class="stat-fill" :style="{ width: loaded ? d.value + '%' : '0%', background: d.color }" />
-            </div>
-            <span class="stat-value">{{ d.value }}%</span>
+          <div class="score-inner">
+            <span class="score-num">{{ totalScore }}</span>
+            <span class="score-label">综合</span>
           </div>
         </div>
       </div>
+    </div>
 
-      <!-- Skill Tree -->
-      <div :class="['card skill-card reveal reveal-delay-3', { visible: loaded }]">
-        <div class="card-header">
-          <h2 class="card-title">技能树</h2>
-          <span class="card-badge">9/24 技能</span>
+    <!-- Stats Row -->
+    <div class="stats-row">
+      <div v-for="s in overviewStats" :key="s.label" class="stat-card" :style="{ '--stat-color': s.color }">
+        <div class="stat-icon-wrap">
+          <component :is="s.icon" :size="18" stroke-width="1.5" />
         </div>
-        <div class="skill-tree">
-          <div v-for="group in skillTree" :key="group.category" class="skill-group">
-            <div class="skill-group-header">
-              <span class="skill-group-dot" :style="{ background: group.color }" />
-              <span class="skill-group-name">{{ group.category }}</span>
+        <div class="stat-info">
+          <span class="stat-value">{{ s.value }}</span>
+          <span class="stat-label">{{ s.label }}</span>
+        </div>
+        <div class="stat-glow" />
+      </div>
+    </div>
+
+    <!-- Main Layout -->
+    <div class="profile-layout">
+      <!-- Left Column -->
+      <div class="profile-left">
+        <!-- Radar Card -->
+        <div class="card radar-card">
+          <div class="card-header">
+            <h2 class="card-title">能力雷达</h2>
+            <span class="card-badge">6 维评估</span>
+          </div>
+          <div class="radar-body">
+            <svg viewBox="0 0 280 280" class="radar-svg">
+              <polygon
+                v-for="level in gridLevels" :key="level"
+                :points="dimensions.map((_, i) => {
+                  const a = (Math.PI * 2 * i) / dimensions.length - Math.PI / 2
+                  return `${cx + r * level * Math.cos(a)},${cy + r * level * Math.sin(a)}`
+                }).join(' ')"
+                fill="none" stroke="rgba(0,212,255,0.05)" stroke-width="1"
+              />
+              <line
+                v-for="(_, i) in dimensions" :key="'ax'+i"
+                :x1="cx" :y1="cy"
+                :x2="cx + r * Math.cos((Math.PI * 2 * i) / dimensions.length - Math.PI / 2)"
+                :y2="cy + r * Math.sin((Math.PI * 2 * i) / dimensions.length - Math.PI / 2)"
+                stroke="rgba(0,212,255,0.05)" stroke-width="1"
+              />
+              <polygon
+                :points="points.map(p => `${p.x},${p.y}`).join(' ')"
+                :fill="loaded ? 'rgba(0,212,255,0.1)' : 'transparent'"
+                :stroke="loaded ? '#00d4ff' : 'transparent'"
+                stroke-width="2.5" class="radar-fill"
+                stroke-linejoin="round"
+              />
+              <circle
+                v-for="(p, i) in points" :key="'pt'+i"
+                :cx="p.x" :cy="p.y" r="5"
+                :fill="dimensions[i].color"
+                :class="{ 'radar-point': true, visible: loaded }"
+              />
+              <text
+                v-for="(d, i) in dimensions" :key="'lb'+i"
+                :x="cx + (r + 28) * Math.cos((Math.PI * 2 * i) / dimensions.length - Math.PI / 2)"
+                :y="cy + (r + 28) * Math.sin((Math.PI * 2 * i) / dimensions.length - Math.PI / 2)"
+                text-anchor="middle" dominant-baseline="middle"
+                fill="#8892b0" font-size="12" font-family="Outfit, sans-serif"
+              >{{ d.label }}</text>
+            </svg>
+          </div>
+        </div>
+
+        <!-- Weakness Card -->
+        <div class="card weakness-card">
+          <div class="card-header">
+            <h2 class="card-title">薄弱知识点</h2>
+            <span class="card-badge">{{ weaknesses.length }} 项</span>
+          </div>
+          <div class="weakness-cloud">
+            <span v-for="w in weaknesses" :key="w.tag" class="weakness-tag" :style="{
+              fontSize: `${12 + w.count * 1.2}px`,
+              opacity: 0.5 + w.count * 0.04,
+              '--tag-hue': `${200 + w.count * 5}`,
+            }">
+              {{ w.tag }}
+              <span class="weakness-count">{{ w.count }}</span>
+            </span>
+          </div>
+          <div class="streak-section">
+            <div class="streak-header">
+              <span>本周学习</span>
+              <span class="streak-score">5/7 天</span>
             </div>
-            <div class="skill-items">
-              <div v-for="sk in group.skills" :key="sk.name" class="skill-item">
-                <div class="skill-item-top">
-                  <span class="skill-name">{{ sk.name }}</span>
-                  <span class="skill-level" :style="{ color: skillLevelColor(sk.level) }">{{ sk.level }}%</span>
-                </div>
-                <div class="skill-bar">
-                  <div class="skill-bar-fill" :style="{ width: loaded ? sk.level + '%' : '0%', background: skillLevelColor(sk.level) }" />
-                </div>
+            <div class="streak-grid">
+              <div v-for="d in streakDays" :key="d.day" :class="['streak-cell', { active: d.active }]">
+                <span>{{ d.day }}</span>
               </div>
             </div>
           </div>
         </div>
       </div>
 
-      <!-- Weakness Cloud + Streak -->
-      <div :class="['card cloud-card reveal reveal-delay-4', { visible: loaded }]">
-        <div class="card-header">
-          <h2 class="card-title">薄弱知识点</h2>
-          <span class="card-badge">{{ weaknesses.length }} 项</span>
-        </div>
-        <p class="card-sub">基于学习数据分析的高频薄弱点，建议优先复习</p>
-        <div class="cloud">
-          <span
-            v-for="w in weaknesses"
-            :key="w.tag"
-            class="cloud-tag"
-            :style="{
-              fontSize: `${12 + w.count * 1.5}px`,
-              opacity: 0.5 + w.count * 0.04,
-              '--tag-color': `hsl(${200 + w.count * 5}, 80%, 60%)`,
-            }"
-          >
-            {{ w.tag }}
-            <span class="cloud-count">{{ w.count }}</span>
-          </span>
+      <!-- Right Column -->
+      <div class="profile-right">
+        <!-- Skill Tree Card -->
+        <div class="card skill-card">
+          <div class="card-header">
+            <h2 class="card-title">技能树</h2>
+            <span class="card-badge">9 / 24</span>
+          </div>
+          <div class="skill-groups">
+            <div v-for="g in skillTree" :key="g.category" class="skill-group">
+              <div class="skill-group-header">
+                <span class="skill-group-dot" :style="{ background: g.color }" />
+                <span class="skill-group-name">{{ g.category }}</span>
+                <span class="skill-group-avg">
+                  {{ Math.round(g.skills.reduce((s, sk) => s + sk.level, 0) / g.skills.length) }}%
+                </span>
+              </div>
+              <div v-for="sk in g.skills" :key="sk.name" class="skill-row">
+                <span class="skill-name">{{ sk.name }}</span>
+                <div class="skill-track">
+                  <div
+                    class="skill-fill"
+                    :style="{
+                      width: loaded ? sk.level + '%' : '0%',
+                      background: skillLevelColor(sk.level),
+                    }"
+                  />
+                </div>
+                <span class="skill-pct" :style="{ color: skillLevelColor(sk.level) }">{{ sk.level }}%</span>
+              </div>
+            </div>
+          </div>
         </div>
 
-        <!-- Streak -->
-        <div class="streak-section">
-          <div class="streak-header">
-            <span class="streak-title">本周学习</span>
-            <span class="streak-days">5/7 天</span>
+        <!-- Preferences Card -->
+        <div class="card prefs-card">
+          <div class="card-header">
+            <h2 class="card-title">学习偏好</h2>
           </div>
-          <div class="streak-grid">
-            <div v-for="d in streakDays" :key="d.day" :class="['streak-day', { active: d.active }]">
-              <span>{{ d.day }}</span>
+          <div class="prefs-grid">
+            <div class="pref-item">
+              <div class="pref-icon" style="--pf-color: #00d4ff">
+                <Clock :size="16" stroke-width="1.5" />
+              </div>
+              <div class="pref-info">
+                <span class="pref-label">最佳时段</span>
+                <span class="pref-value">晚间 20:00-23:00</span>
+              </div>
+            </div>
+            <div class="pref-item">
+              <div class="pref-icon" style="--pf-color: #7c3aed">
+                <FileText :size="16" stroke-width="1.5" />
+              </div>
+              <div class="pref-info">
+                <span class="pref-label">资源偏好</span>
+                <span class="pref-value">视频 > 习题 > 文档</span>
+              </div>
+            </div>
+            <div class="pref-item">
+              <div class="pref-icon" style="--pf-color: #06d6a0">
+                <Target :size="16" stroke-width="1.5" />
+              </div>
+              <div class="pref-info">
+                <span class="pref-label">学习目标</span>
+                <span class="pref-value">深度学习工程师 · 6 个月</span>
+              </div>
+            </div>
+            <div class="pref-item">
+              <div class="pref-icon" style="--pf-color: #f59e0b">
+                <TrendingUp :size="16" stroke-width="1.5" />
+              </div>
+              <div class="pref-info">
+                <span class="pref-label">学习节奏</span>
+                <span class="pref-value">每周 8-10 小时</span>
+              </div>
             </div>
           </div>
         </div>
-      </div>
 
-      <!-- Learning Preferences -->
-      <div :class="['card pref-card reveal reveal-delay-5', { visible: loaded }]">
-        <div class="card-header">
-          <h2 class="card-title">学习偏好</h2>
-          <span class="card-badge">个性化</span>
-        </div>
-        <div class="pref-grid">
-          <div class="pref-item">
-            <span class="pref-icon pref-icon-time">
-              <Clock :size="20" stroke-width="1.5" />
-            </span>
-            <div>
-              <div class="pref-label">最佳学习时段</div>
-              <div class="pref-value">晚间 20:00 - 23:00</div>
-            </div>
+        <!-- Timeline Card -->
+        <div class="card timeline-card">
+          <div class="card-header">
+            <h2 class="card-title">画像演变</h2>
+            <span class="card-badge">近 10 天</span>
           </div>
-          <div class="pref-item">
-            <span class="pref-icon pref-icon-doc">
-              <FileText :size="20" stroke-width="1.5" />
-            </span>
-            <div>
-              <div class="pref-label">偏好资源类型</div>
-              <div class="pref-value">视频教程 > 习题实践 > 文档阅读</div>
-            </div>
-          </div>
-          <div class="pref-item">
-            <span class="pref-icon pref-icon-target">
-              <Target :size="20" stroke-width="1.5" />
-            </span>
-            <div>
-              <div class="pref-label">学习目标</div>
-              <div class="pref-value">深度学习工程师 · 6 个月</div>
-            </div>
-          </div>
-          <div class="pref-item">
-            <span class="pref-icon pref-icon-energy">
-              <Zap :size="20" stroke-width="1.5" />
-            </span>
-            <div>
-              <div class="pref-label">学习节奏</div>
-              <div class="pref-value">稳步推进 (每周 8-10 小时)</div>
-            </div>
-          </div>
-          <div class="pref-item">
-            <span class="pref-icon pref-icon-speed">
-              <TrendingUp :size="20" stroke-width="1.5" />
-            </span>
-            <div>
-              <div class="pref-label">学习风格</div>
-              <div class="pref-value">理论与实践交替 (1:1 比例)</div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Evolution Timeline -->
-      <div :class="['card timeline-card reveal reveal-delay-6', { visible: loaded }]">
-        <div class="card-header">
-          <h2 class="card-title">画像演变</h2>
-          <span class="card-badge">近 10 天</span>
-        </div>
-        <div class="timeline">
-          <div v-for="(t, i) in timeline" :key="i" class="timeline-item">
-            <div class="timeline-marker">
-              <span class="marker-dot" :class="{ latest: i === 0, down: t.type === 'down' }" />
-              <span v-if="i < timeline.length - 1" class="marker-line" />
-            </div>
-            <div class="timeline-content">
-              <div class="timeline-date">{{ t.date }}</div>
-              <div class="timeline-event">{{ t.event }}</div>
-              <span v-if="t.score" :class="['timeline-score', t.type === 'up' ? 'up' : 'down']">
-                {{ t.score }}
-              </span>
+          <div class="timeline-list">
+            <div v-for="(t, i) in timeline" :key="i" class="timeline-item">
+              <div class="timeline-marker">
+                <div :class="['timeline-dot', { latest: i === 0, down: t.type === 'down' }]" />
+                <div v-if="i < timeline.length - 1" class="timeline-line" />
+              </div>
+              <div class="timeline-body">
+                <span class="timeline-date">{{ t.date }}</span>
+                <span class="timeline-event">{{ t.event }}</span>
+                <span v-if="t.score" :class="['timeline-score', t.type]">{{ t.score }}</span>
+              </div>
             </div>
           </div>
         </div>
@@ -368,106 +364,178 @@ onMounted(() => {
 
 <style scoped>
 .profile {
-  padding: 40px;
+  padding: 0;
   max-width: 1200px;
   margin: 0 auto;
-}
-
-.page-header {
-  margin-bottom: 40px;
-}
-
-.page-title {
-  font-family: var(--font-display);
-  font-size: 42px;
-  letter-spacing: -0.02em;
-  margin-bottom: 8px;
-  color: #fff;
-}
-
-.page-desc {
-  color: var(--color-text-secondary);
-  font-size: 15px;
-}
-
-/* === Overview Stats === */
-.overview-stats {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 16px;
-  margin-bottom: 32px;
-}
-
-.overview-card {
   position: relative;
-  padding: 20px;
-  border-radius: var(--radius-md);
-  background: var(--color-bg-card);
-  border: 1px solid var(--color-border);
-  border-left: 3px solid var(--card-accent);
+  z-index: 1;
+}
+
+/* ====================== Hero ====================== */
+.profile-hero {
+  padding: 48px 40px 32px;
   display: flex;
+  justify-content: space-between;
   align-items: center;
-  gap: 16px;
-  overflow: hidden;
-  transition: all var(--duration-normal) var(--ease-out);
-}
-.overview-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+  gap: 32px;
 }
 
-.overview-glow {
-  position: absolute;
-  top: -50%;
-  right: -50%;
-  width: 100%;
-  height: 200%;
-  background: radial-gradient(circle, var(--card-accent) 0%, transparent 70%);
-  opacity: 0.03;
-  pointer-events: none;
+.hero-content { flex: 1; }
+
+.hero-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 14px;
+  border-radius: 100px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  background: rgba(0, 212, 255, 0.08);
+  color: var(--color-accent-cyan);
+  border: 1px solid rgba(0, 212, 255, 0.1);
+  margin-bottom: 12px;
 }
 
-.overview-icon {
-  font-size: 28px;
-  color: var(--card-accent);
+.hero-title {
+  font-family: var(--font-display);
+  font-size: 34px;
+  font-weight: 400;
+  color: #fff;
+  line-height: 1.2;
+  margin-bottom: 8px;
+}
+
+.gradient-text {
+  background: linear-gradient(135deg, var(--color-accent-cyan), var(--color-accent-purple));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.hero-desc {
+  font-size: 14px;
+  color: var(--color-text-secondary);
+  max-width: 400px;
+  line-height: 1.6;
+}
+
+.hero-score {
   flex-shrink: 0;
 }
 
-.overview-info {
+.score-ring {
+  position: relative;
+  width: 88px;
+  height: 88px;
+}
+
+.score-svg { width: 100%; height: 100%; }
+
+.score-arc {
+  transition: stroke-dashoffset 0.8s var(--ease-out);
+}
+
+.score-inner {
+  position: absolute;
+  inset: 0;
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  align-items: center;
+  justify-content: center;
 }
 
-.overview-value {
-  font-family: var(--font-display);
-  font-size: 28px;
-  line-height: 1;
+.score-num {
+  font-family: var(--font-mono);
+  font-size: 24px;
+  font-weight: 700;
   color: #fff;
+  line-height: 1;
 }
 
-.overview-label {
-  font-size: 12px;
+.score-label {
+  font-size: 10px;
   color: var(--color-text-tertiary);
+  margin-top: 2px;
 }
 
-/* === Grid === */
-.profile-grid {
+/* ====================== Stats Row ====================== */
+.stats-row {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 24px;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  padding: 0 40px;
+  margin-bottom: 28px;
 }
 
-.card {
-  padding: 28px;
-  border-radius: var(--radius-lg);
+.stat-card {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 20px;
+  border-radius: 14px;
   background: var(--color-bg-card);
   border: 1px solid var(--color-border);
-  transition: border-color var(--duration-normal) var(--ease-out);
+  overflow: hidden;
+  transition: all 0.3s var(--ease-out);
 }
-.card:hover {
-  border-color: rgba(0, 212, 255, 0.15);
+.stat-card:hover {
+  border-color: var(--stat-color);
+  transform: translateY(-2px);
 }
+
+.stat-icon-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--stat-color) 12%, transparent);
+  color: var(--stat-color);
+  flex-shrink: 0;
+}
+
+.stat-info { display: flex; flex-direction: column; gap: 2px; }
+.stat-value {
+  font-family: var(--font-display);
+  font-size: 22px;
+  color: #fff;
+  line-height: 1;
+}
+.stat-label { font-size: 11px; color: var(--color-text-tertiary); }
+
+.stat-glow {
+  position: absolute;
+  top: -50%;
+  right: -30%;
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  background: radial-gradient(circle, color-mix(in srgb, var(--stat-color) 8%, transparent), transparent);
+  pointer-events: none;
+}
+
+/* ====================== Layout ====================== */
+.profile-layout {
+  display: grid;
+  grid-template-columns: 1fr 1.2fr;
+  gap: 20px;
+  padding: 0 40px 40px;
+}
+
+.profile-left { display: flex; flex-direction: column; gap: 20px; }
+.profile-right { display: flex; flex-direction: column; gap: 20px; }
+
+/* ====================== Common Card ====================== */
+.card {
+  padding: 24px;
+  border-radius: 16px;
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  transition: border-color 0.2s var(--ease-out);
+}
+.card:hover { border-color: rgba(0, 212, 255, 0.1); }
 
 .card-header {
   display: flex;
@@ -478,7 +546,8 @@ onMounted(() => {
 
 .card-title {
   font-family: var(--font-display);
-  font-size: 24px;
+  font-size: 20px;
+  font-weight: 400;
   color: #fff;
 }
 
@@ -486,310 +555,224 @@ onMounted(() => {
   font-size: 11px;
   padding: 4px 12px;
   border-radius: 100px;
-  background: rgba(0, 212, 255, 0.08);
+  background: rgba(0, 212, 255, 0.06);
   color: var(--color-accent-cyan);
-  border: 1px solid rgba(0, 212, 255, 0.12);
+  border: 1px solid rgba(0, 212, 255, 0.08);
   font-weight: 500;
 }
 
-.card-sub {
-  font-size: 13px;
-  color: var(--color-text-tertiary);
-  margin-bottom: 20px;
-  line-height: 1.6;
-}
-
-/* === Radar === */
-.radar-card {
-  grid-column: 1;
-}
-
-.radar-container {
+/* ====================== Radar ====================== */
+.radar-body {
   display: flex;
   justify-content: center;
-  padding: 12px 0;
 }
 
 .radar-svg {
-  width: 240px;
-  height: 240px;
+  width: 260px;
+  height: 260px;
 }
 
-.radar-data {
-  transition: all 0.8s var(--ease-out);
+.radar-fill {
+  transition: fill 0.5s var(--ease-out), stroke 0.5s var(--ease-out);
 }
 
 .radar-point {
-  filter: drop-shadow(0 0 6px var(--color-accent-cyan));
+  transition: r 0.3s var(--ease-out);
 }
 
-.radar-stats {
-  margin-top: 16px;
-}
-
-.stat-row {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 5px 0;
-  font-size: 13px;
-}
-
-.stat-label {
-  width: 72px;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  color: var(--color-text-secondary);
-  flex-shrink: 0;
-}
-
-.stat-dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  flex-shrink: 0;
-}
-
-.stat-bar {
-  flex: 1;
-  height: 4px;
-  border-radius: 2px;
-  background: rgba(255, 255, 255, 0.05);
-  overflow: hidden;
-}
-
-.stat-fill {
-  height: 100%;
-  border-radius: 2px;
-  transition: width 1s var(--ease-out);
-}
-
-.stat-value {
-  width: 36px;
-  text-align: right;
-  font-family: var(--font-mono);
-  font-size: 12px;
-  color: var(--color-text-tertiary);
-}
-
-/* === Skill Tree === */
-.skill-card {
-  grid-column: 2;
-}
-
-.skill-tree {
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-}
-
-.skill-group-header {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-bottom: 10px;
-}
-
-.skill-group-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  box-shadow: 0 0 8px currentColor;
-}
-
-.skill-group-name {
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--color-text-primary);
-  letter-spacing: 0.3px;
-}
-
-.skill-items {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  padding-left: 16px;
-}
-
-.skill-item-top {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 4px;
-}
-
-.skill-name {
-  font-size: 13px;
-  color: var(--color-text-secondary);
-}
-
-.skill-level {
-  font-size: 12px;
-  font-family: var(--font-mono);
-  font-weight: 600;
-}
-
-.skill-bar {
-  height: 4px;
-  border-radius: 2px;
-  background: rgba(255, 255, 255, 0.05);
-  overflow: hidden;
-}
-
-.skill-bar-fill {
-  height: 100%;
-  border-radius: 2px;
-  transition: width 1s var(--ease-out);
-}
-
-/* === Cloud === */
-.cloud-card {
-  grid-column: 1 / 2;
-}
-
-.cloud {
+/* ====================== Weakness ====================== */
+.weakness-cloud {
   display: flex;
   flex-wrap: wrap;
-  gap: 10px 16px;
-  padding: 16px 0;
+  gap: 8px 12px;
+  padding: 4px 0;
   align-items: center;
-  justify-content: center;
-  min-height: 160px;
+  min-height: 80px;
 }
 
-.cloud-tag {
-  color: var(--tag-color, var(--color-accent-cyan));
+.weakness-tag {
+  color: hsl(var(--tag-hue), 80%, 60%);
   font-weight: 500;
-  cursor: default;
-  transition: all var(--duration-fast) var(--ease-out);
   display: inline-flex;
   align-items: center;
   gap: 4px;
+  padding: 3px 8px;
+  border-radius: 6px;
+  transition: all 0.2s var(--ease-out);
 }
-.cloud-tag:hover {
+.weakness-tag:hover {
   filter: brightness(1.3);
-  transform: scale(1.05);
+  background: rgba(255, 255, 255, 0.03);
 }
 
-.cloud-count {
+.weakness-count {
   font-size: 10px;
   font-family: var(--font-mono);
   opacity: 0.5;
 }
 
-/* === Streak === */
 .streak-section {
-  margin-top: 24px;
-  padding-top: 20px;
+  margin-top: 16px;
+  padding-top: 16px;
   border-top: 1px solid var(--color-border);
 }
 
 .streak-header {
   display: flex;
   justify-content: space-between;
-  align-items: center;
-  margin-bottom: 12px;
+  font-size: 13px;
+  color: var(--color-text-secondary);
+  margin-bottom: 10px;
 }
 
-.streak-title {
-  font-size: 14px;
-  font-weight: 600;
-}
-
-.streak-days {
-  font-size: 12px;
-  color: var(--color-accent-emerald);
+.streak-score {
   font-family: var(--font-mono);
+  color: var(--color-accent-emerald);
+  font-weight: 600;
 }
 
 .streak-grid {
   display: flex;
-  gap: 8px;
+  gap: 6px;
 }
 
-.streak-day {
+.streak-cell {
   flex: 1;
   aspect-ratio: 1;
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: var(--radius-sm);
+  border-radius: 8px;
   background: rgba(255, 255, 255, 0.03);
   border: 1px solid var(--color-border);
   font-size: 12px;
   color: var(--color-text-tertiary);
-  transition: all var(--duration-fast) var(--ease-out);
+  transition: all 0.2s var(--ease-out);
 }
-.streak-day.active {
+.streak-cell.active {
   background: rgba(6, 214, 160, 0.12);
   border-color: rgba(6, 214, 160, 0.3);
   color: var(--color-accent-emerald);
   box-shadow: 0 0 12px rgba(6, 214, 160, 0.1);
 }
 
-/* === Preferences === */
-.pref-card {
-  grid-column: 1 / 2;
+/* ====================== Skill Tree ====================== */
+.skill-groups {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
 }
 
-.pref-grid {
+.skill-group-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.skill-group-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+.skill-group-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  flex: 1;
+}
+
+.skill-group-avg {
+  font-size: 11px;
+  font-family: var(--font-mono);
+  color: var(--color-text-tertiary);
+  font-weight: 600;
+}
+
+.skill-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 5px 0 5px 16px;
+}
+
+.skill-name {
+  font-size: 13px;
+  color: var(--color-text-secondary);
+  width: 100px;
+  flex-shrink: 0;
+}
+
+.skill-track {
+  flex: 1;
+  height: 5px;
+  border-radius: 3px;
+  background: rgba(255, 255, 255, 0.05);
+  overflow: hidden;
+}
+
+.skill-fill {
+  height: 100%;
+  border-radius: 3px;
+  transition: width 0.6s var(--ease-out);
+}
+
+.skill-pct {
+  font-size: 12px;
+  font-family: var(--font-mono);
+  font-weight: 600;
+  width: 34px;
+  text-align: right;
+}
+
+/* ====================== Preferences ====================== */
+.prefs-grid {
   display: grid;
-  gap: 18px;
-  margin-top: 4px;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
 }
 
 .pref-item {
   display: flex;
   align-items: center;
-  gap: 16px;
-  padding: 4px 0;
+  gap: 12px;
+  padding: 12px 14px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid var(--color-border);
+  transition: all 0.2s var(--ease-out);
+}
+.pref-item:hover {
+  border-color: var(--pf-color);
+  background: color-mix(in srgb, var(--pf-color) 4%, transparent);
 }
 
 .pref-icon {
-  width: 44px;
-  height: 44px;
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: var(--radius-md);
-  background: rgba(0, 212, 255, 0.06);
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--pf-color) 12%, transparent);
+  color: var(--pf-color);
   flex-shrink: 0;
-  font-size: 18px;
 }
 
-.pref-icon-time { background: rgba(0, 212, 255, 0.08); color: #00d4ff; }
-.pref-icon-doc { background: rgba(124, 58, 237, 0.08); color: #7c3aed; }
-.pref-icon-target { background: rgba(6, 214, 160, 0.08); color: #06d6a0; }
-.pref-icon-energy { background: rgba(245, 158, 11, 0.08); color: #f59e0b; }
-.pref-icon-speed { background: rgba(244, 63, 94, 0.08); color: #f43f5e; }
+.pref-info { display: flex; flex-direction: column; gap: 1px; }
+.pref-label { font-size: 11px; color: var(--color-text-tertiary); }
+.pref-value { font-size: 13px; font-weight: 500; color: var(--color-text-primary); }
 
-.pref-label {
-  font-size: 12px;
-  color: var(--color-text-tertiary);
-  margin-bottom: 2px;
-  letter-spacing: 0.3px;
-}
-
-.pref-value {
-  font-size: 14px;
-  font-weight: 500;
-  color: var(--color-text-primary);
-}
-
-/* === Timeline === */
-.timeline-card {
-  grid-column: 2;
-}
-
-.timeline {
-  margin-top: 4px;
+/* ====================== Timeline ====================== */
+.timeline-list {
+  display: flex;
+  flex-direction: column;
 }
 
 .timeline-item {
   display: flex;
-  gap: 16px;
-  position: relative;
+  gap: 14px;
 }
 
 .timeline-marker {
@@ -800,69 +783,68 @@ onMounted(() => {
   flex-shrink: 0;
 }
 
-.marker-dot {
+.timeline-dot {
   width: 10px;
   height: 10px;
   border-radius: 50%;
-  background: rgba(0, 212, 255, 0.15);
+  background: rgba(0, 212, 255, 0.1);
   border: 2px solid var(--color-accent-cyan);
   flex-shrink: 0;
+  transition: all 0.2s var(--ease-out);
 }
-.marker-dot.latest {
+.timeline-dot.latest {
   background: var(--color-accent-cyan);
-  box-shadow: 0 0 12px rgba(0, 212, 255, 0.5);
+  box-shadow: 0 0 12px rgba(0, 212, 255, 0.4);
 }
-.marker-dot.down {
+.timeline-dot.down {
   border-color: var(--color-accent-rose);
-  background: rgba(244, 63, 94, 0.15);
+  background: rgba(244, 63, 94, 0.1);
 }
 
-.marker-line {
+.timeline-line {
   width: 1px;
   flex: 1;
   background: var(--color-border);
   margin: 4px 0;
 }
 
-.timeline-content {
-  padding-bottom: 24px;
+.timeline-body {
+  padding-bottom: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
 }
 
 .timeline-date {
-  font-size: 12px;
+  font-size: 11px;
   font-family: var(--font-mono);
   color: var(--color-text-tertiary);
-  margin-bottom: 4px;
 }
 
 .timeline-event {
-  font-size: 14px;
+  font-size: 13px;
   color: var(--color-text-primary);
 }
 
 .timeline-score {
   display: inline-block;
-  font-size: 12px;
+  font-size: 11px;
   font-family: var(--font-mono);
-  margin-top: 6px;
+  margin-top: 4px;
   padding: 2px 10px;
-  border-radius: 4px;
+  border-radius: 6px;
   font-weight: 600;
+  width: fit-content;
 }
-.timeline-score.up {
-  color: var(--color-accent-emerald);
-  background: rgba(6, 214, 160, 0.1);
-}
-.timeline-score.down {
-  color: var(--color-accent-rose);
-  background: rgba(244, 63, 94, 0.1);
-}
+.timeline-score.up { color: var(--color-accent-emerald); background: rgba(6, 214, 160, 0.1); }
+.timeline-score.down { color: var(--color-accent-rose); background: rgba(244, 63, 94, 0.1); }
 
+/* ====================== Responsive ====================== */
 @media (max-width: 900px) {
-  .profile-grid { grid-template-columns: 1fr; }
-  .radar-card, .skill-card, .cloud-card, .pref-card, .timeline-card {
-    grid-column: 1;
-  }
-  .overview-stats { grid-template-columns: repeat(2, 1fr); }
+  .profile-hero { padding: 32px 20px 24px; flex-direction: column; align-items: flex-start; }
+  .stats-row { padding: 0 20px; grid-template-columns: repeat(2, 1fr); }
+  .profile-layout { padding: 0 20px 32px; grid-template-columns: 1fr; }
+  .prefs-grid { grid-template-columns: 1fr; }
+  .hero-title { font-size: 28px; }
 }
 </style>

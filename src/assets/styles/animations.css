@@ -1,127 +1,49 @@
-/* === Fade & Scale (page transitions) === */
+/* === Page Transitions === */
 .fade-enter-active,
 .fade-leave-active {
-  transition: opacity var(--duration-normal) var(--ease-out);
+  transition: opacity 200ms cubic-bezier(0.16, 1, 0.3, 1);
 }
 .fade-enter-from,
-.fade-leave-to {
-  opacity: 0;
-}
+.fade-leave-to { opacity: 0; }
 
 .slide-up-enter-active,
 .slide-up-leave-active {
-  transition: all var(--duration-normal) var(--ease-out);
+  transition: all 200ms cubic-bezier(0.16, 1, 0.3, 1);
 }
 .slide-up-enter-from {
   opacity: 0;
-  transform: translateY(20px);
+  transform: translateY(12px);
 }
 .slide-up-leave-to {
   opacity: 0;
-  transform: translateY(-10px);
+  transform: translateY(-8px);
 }
 
 .scale-in-enter-active,
 .scale-in-leave-active {
-  transition: all var(--duration-normal) var(--ease-out);
+  transition: all 200ms cubic-bezier(0.16, 1, 0.3, 1);
 }
 .scale-in-enter-from,
 .scale-in-leave-to {
   opacity: 0;
-  transform: scale(0.95);
+  transform: scale(0.97);
 }
 
-/* === Scroll Reveal (triggered by IntersectionObserver) === */
-@keyframes reveal-up {
-  from {
-    opacity: 0;
-    transform: translateY(40px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-@keyframes reveal-scale {
-  from {
-    opacity: 0;
-    transform: scale(0.9);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1);
-  }
-}
-
-@keyframes reveal-left {
-  from {
-    opacity: 0;
-    transform: translateX(-40px);
-  }
-  to {
-    opacity: 1;
-    transform: translateX(0);
-  }
-}
-
-@keyframes reveal-right {
-  from {
-    opacity: 0;
-    transform: translateX(40px);
-  }
-  to {
-    opacity: 1;
-    transform: translateX(0);
-  }
-}
-
-.reveal {
-  opacity: 0;
-}
-
+/* === Scroll Reveal === */
+.reveal { opacity: 0; }
 .reveal.visible {
-  animation: reveal-up 0.7s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  animation: fade-in 300ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
-.reveal-scale.visible {
-  animation: reveal-scale 0.7s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+@keyframes fade-in {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
-.reveal-left.visible {
-  animation: reveal-left 0.7s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-}
-
-.reveal-right.visible {
-  animation: reveal-right 0.7s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-}
-
-/* Staggered delays */
-.reveal-delay-1 { animation-delay: 0.05s; }
-.reveal-delay-2 { animation-delay: 0.1s; }
-.reveal-delay-3 { animation-delay: 0.15s; }
-.reveal-delay-4 { animation-delay: 0.2s; }
-.reveal-delay-5 { animation-delay: 0.25s; }
-.reveal-delay-6 { animation-delay: 0.3s; }
-.reveal-delay-7 { animation-delay: 0.35s; }
-.reveal-delay-8 { animation-delay: 0.4s; }
-.reveal-delay-9 { animation-delay: 0.45s; }
-.reveal-delay-10 { animation-delay: 0.5s; }
-
-/* === Perpetual Micro-Interactions === */
+/* === Micro-interactions === */
 @keyframes glow-pulse {
-  0%, 100% {
-    box-shadow: 0 0 20px rgba(0, 212, 255, 0.2);
-  }
-  50% {
-    box-shadow: 0 0 35px rgba(0, 212, 255, 0.4);
-  }
-}
-
-@keyframes float {
-  0%, 100% { transform: translateY(0) translateX(0); }
-  33% { transform: translateY(-8px) translateX(4px); }
-  66% { transform: translateY(4px) translateX(-4px); }
+  0%, 100% { box-shadow: 0 0 20px rgba(0, 212, 255, 0.2); }
+  50% { box-shadow: 0 0 35px rgba(0, 212, 255, 0.4); }
 }
 
 @keyframes float-slow {
@@ -129,97 +51,46 @@
   50% { transform: translateY(-12px); }
 }
 
-@keyframes shimmer {
-  0% { background-position: -200% 0; }
-  100% { background-position: 200% 0; }
-}
-
-@keyframes breathe {
-  0%, 100% { opacity: 0.6; transform: scale(1); }
-  50% { opacity: 1; transform: scale(1.05); }
-}
-
 @keyframes pulse-glow {
   0%, 100% { opacity: 0.3; }
   50% { opacity: 0.8; }
 }
 
-/* === Scan line (ambient effect) === */
-@keyframes scan-line {
-  0% { transform: translateY(-100%); }
-  100% { transform: translateY(100vh); }
-}
-
-.scan-effect::after {
-  content: '';
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 2px;
-  background: linear-gradient(90deg, transparent, var(--color-accent-cyan), transparent);
-  opacity: 0.08;
-  animation: scan-line 8s linear infinite;
-  pointer-events: none;
-  z-index: 9999;
-}
-
-/* === Rotating gradient === */
-@keyframes gradient-rotate {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
-}
-
-/* === Typing cursor === */
-@keyframes blink {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0; }
-}
-
-/* === Data flow === */
-@keyframes data-flow {
-  0% { stroke-dashoffset: 100; }
-  100% { stroke-dashoffset: 0; }
-}
-
-/* === Pulsing ring === */
 @keyframes ring-expand {
   0% { transform: scale(0.8); opacity: 1; }
   100% { transform: scale(2); opacity: 0; }
 }
 
-/* === Gradient shift (for animated gradients) === */
-@keyframes gradient-shift {
-  0% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
-  100% { background-position: 0% 50%; }
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
 }
 
-/* === Smooth section enter === */
-@keyframes section-enter {
-  from {
-    opacity: 0;
-    transform: translateY(60px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-/* === Hero parallax scale === */
-@keyframes hero-parallax-in {
-  from {
-    transform: scale(1.1);
-    opacity: 0;
-  }
-  to {
-    transform: scale(1);
-    opacity: 1;
-  }
-}
-
-/* === Spin (for loading) === */
 @keyframes spin {
   to { transform: rotate(360deg); }
+}
+
+/* === Reduced Motion === */
+@media (prefers-reduced-motion: reduce) {
+  .fade-enter-active,
+  .fade-leave-active,
+  .slide-up-enter-active,
+  .slide-up-leave-active,
+  .scale-in-enter-active,
+  .scale-in-leave-active {
+    transition: none;
+  }
+  .reveal.visible {
+    animation: none;
+    opacity: 1;
+  }
+  .radar-data,
+  .progress-arc,
+  .stat-fill,
+  .mastery-fill,
+  .skill-bar-fill,
+  .scan-effect::after {
+    animation: none !important;
+    transition: none !important;
+  }
 }

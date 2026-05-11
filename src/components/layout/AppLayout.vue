@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { useRoute } from 'vue-router'
+import { computed } from 'vue'
 import { useScrollReveal } from '@/composables/useScrollReveal'
 import {
   Home,
@@ -15,6 +16,8 @@ import {
 
 const route = useRoute()
 useScrollReveal(0.12)
+
+const isHomePage = computed(() => route.path === '/')
 
 const navItems = [
   { path: '/', label: '欢迎', icon: Home },
@@ -57,7 +60,8 @@ const navItems = [
     </header>
 
     <!-- Main Content -->
-    <main class="main-content" id="main-content">
+    <main class="main-content" id="main-content" :class="{ 'has-background': !isHomePage }">
+      <div v-if="!isHomePage" class="background-image" />
       <router-view v-slot="{ Component }">
         <transition name="fade" mode="out-in">
           <component :is="Component" />
@@ -216,5 +220,25 @@ const navItems = [
   flex: 1;
   margin-top: var(--header-height);
   min-height: calc(100vh - var(--header-height));
+  position: relative;
+  overflow: hidden;
+}
+
+.main-content.has-background {
+  background: transparent;
+}
+
+.background-image {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-image: url('/all-background.png');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+  z-index: 0;
 }
 </style>
