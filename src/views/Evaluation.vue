@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 import {
   Clock,
   PenTool,
@@ -18,15 +19,17 @@ import {
   Download,
   FileBarChart,
 } from 'lucide-vue-next'
+import { allCourses } from '@/components/course/CourseData'
 
+const router = useRouter()
 const loaded = ref(false)
 const showReportModal = ref(false)
 
 const stats = [
-  { label: '学习时长', value: '128h', change: '+12h', icon: Clock, color: '#00d4ff' },
-  { label: '完成课时', value: '47', change: '+5', icon: PenTool, color: '#7c3aed' },
-  { label: '平均正确率', value: '82%', change: '+3%', icon: Target, color: '#06d6a0' },
-  { label: '知识掌握度', value: '68%', change: '+8%', icon: TrendingUp, color: '#f59e0b' },
+  { label: '机器学习', value: '78%', change: '+12%', icon: BarChart3, color: '#00d4ff' },
+  { label: '深度学习', value: '62%', change: '+8%', icon: Brain, color: '#7c3aed' },
+  { label: 'NLP & LLM', value: '45%', change: '+15%', icon: BookOpen, color: '#06d6a0' },
+  { label: '综合掌握度', value: '68%', change: '+10%', icon: TrendingUp, color: '#f59e0b' },
 ]
 
 const weeklyData = [45, 52, 38, 65, 70, 55, 80]
@@ -34,12 +37,12 @@ const peerAvg = [42, 48, 40, 52, 55, 50, 58]
 const days = ['周一', '周二', '周三', '周四', '周五', '周六', '周日']
 
 const subjects = [
-  { name: 'Python 基础', mastery: 92, color: '#00d4ff' },
-  { name: '数据结构', mastery: 75, color: '#3b82f6' },
-  { name: '机器学习', mastery: 60, color: '#7c3aed' },
-  { name: '深度学习', mastery: 45, color: '#06d6a0' },
-  { name: '数学基础', mastery: 70, color: '#f59e0b' },
-  { name: '算法设计', mastery: 55, color: '#f43f5e' },
+  { name: '机器学习基础', mastery: 88, color: '#00d4ff' },
+  { name: '监督学习算法', mastery: 72, color: '#3b82f6' },
+  { name: '深度学习', mastery: 58, color: '#7c3aed' },
+  { name: '自然语言处理', mastery: 45, color: '#06d6a0' },
+  { name: '大模型应用', mastery: 35, color: '#f59e0b' },
+  { name: '数学与编程基础', mastery: 82, color: '#f43f5e' },
 ]
 
 const weeklyTrend = [
@@ -53,11 +56,13 @@ const weeklyTrend = [
 ]
 
 const suggestions = [
-  { text: '概率论与数理统计是你的薄弱环节，建议安排 2 小时专项复习', type: 'weakness' as const, icon: AlertTriangle },
-  { text: '机器学习基础掌握良好，可以开始学习进阶内容', type: 'strength' as const, icon: Sparkles },
+  { text: 'Transformer 与注意力机制需要加强，建议通过流程图理解结构', type: 'weakness' as const, icon: AlertTriangle },
+  { text: '机器学习基础掌握良好，建议开始深度学习专题学习', type: 'strength' as const, icon: Sparkles },
   { text: '本周学习时长较上周增加 15%，保持良好的学习节奏', type: 'positive' as const, icon: ArrowUp },
-  { text: '建议增加编程实践时间，理论与实践比例建议 1:1', type: 'action' as const, icon: ArrowRight },
+  { text: '建议增加 LLM 实践项目，从 Prompt Engineering 开始入门', type: 'action' as const, icon: ArrowRight },
 ]
+
+const aiCourseList = allCourses.filter(c => c.domain === 'ai')
 
 const badges = [
   { icon: Sparkles, name: '初识学习', earned: true, color: '#00d4ff' },
@@ -76,6 +81,10 @@ function suggestIconColor(type: string) {
     action: 'var(--color-accent-amber)',
   }
   return { color: colors[type] || 'var(--color-text-tertiary)' }
+}
+
+function goToTutoring(q?: string) {
+  router.push({ path: '/tutoring', query: q ? { q } : {} })
 }
 
 function masteryColor(val: number) {
@@ -223,11 +232,12 @@ onMounted(() => {
           <span class="suggest-count">{{ suggestions.length }} 条</span>
         </div>
         <div class="suggest-list">
-          <div v-for="(s, i) in suggestions" :key="i" :class="['suggest-item', s.type]">
+          <div v-for="(s, i) in suggestions" :key="i" :class="['suggest-item', s.type]" @click="goToTutoring(s.text)">
             <div class="suggest-icon">
               <component :is="s.icon" :size="15" stroke-width="1.5" :style="suggestIconColor(s.type)" />
             </div>
             <span class="suggest-text">{{ s.text }}</span>
+            <ArrowRight :size="13" stroke-width="1.5" class="suggest-arrow" />
           </div>
         </div>
       </div>
@@ -610,6 +620,13 @@ onMounted(() => {
   font-size: 13px;
   line-height: 1.6;
   color: var(--color-text-secondary);
+  cursor: pointer;
+  transition: all 0.2s var(--ease-out);
+  align-items: center;
+}
+.suggest-item:hover {
+  opacity: 0.85;
+  transform: translateX(2px);
 }
 .suggest-item.weakness { background: rgba(244, 63, 94, 0.04); border: 1px solid rgba(244, 63, 94, 0.08); }
 .suggest-item.strength { background: rgba(0, 212, 255, 0.04); border: 1px solid rgba(0, 212, 255, 0.08); }

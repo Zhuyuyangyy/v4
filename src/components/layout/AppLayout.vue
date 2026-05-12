@@ -12,6 +12,8 @@ import {
   BarChart3,
   Settings,
   Sparkles,
+  Code,
+  Layers,
 } from 'lucide-vue-next'
 
 const route = useRoute()
@@ -21,11 +23,13 @@ const isHomePage = computed(() => route.path === '/')
 
 const navItems = [
   { path: '/', label: '欢迎', icon: Home },
-  { path: '/chat', label: '对话', icon: MessageCircle },
   { path: '/profile', label: '画像', icon: User },
+  { path: '/chat', label: '对话', icon: MessageCircle },
   { path: '/resources', label: '资源', icon: BookOpen },
   { path: '/learning-path', label: '路径', icon: Map },
   { path: '/tutoring', label: '辅导', icon: GraduationCap },
+  { path: '/codelab', label: '代码', icon: Code },
+  { path: '/mindmap', label: '图谱', icon: Layers },
   { path: '/evaluation', label: '评估', icon: BarChart3 },
   { path: '/settings', label: '设置', icon: Settings },
 ]

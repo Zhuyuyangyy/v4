@@ -216,7 +216,7 @@ function generateResult(answers: SurveyAnswers): ProfileResult {
   const weaknessMap: Record<string, string[]> = {
     'cs': ['数据结构', '算法分析', '操作系统', '计算机网络', '编译原理'],
     'data-science': ['概率论', '统计学', 'Python 数据处理', '特征工程', 'SQL'],
-    'ai': ['线性代数', '微积分', '神经网络', '深度学习', '强化学习'],
+    'ai': ['机器学习算法', '深度学习', '自然语言处理', '计算机视觉', '大模型应用', '模型部署'],
     'software-eng': ['系统设计', '设计模式', '架构演进', 'CI/CD', '测试策略'],
   }
 
@@ -386,11 +386,11 @@ function generateSkillTree(field: string, dims: Record<string, number>): SkillGr
     ],
     ai: [
       {
-        category: '数学基础', color: DIMENSION_COLORS[0],
+        category: '数学与编程', color: DIMENSION_COLORS[0],
         skills: [
           { name: '线性代数', level: clampAvg(dims.logicalThinking, dims.knowledgeBase) },
           { name: '概率论', level: clampVal(dims.logicalThinking) },
-          { name: '微积分', level: clampVal(dims.knowledgeBase - 5) },
+          { name: 'Python 编程', level: clampAvg(dims.knowledgeBase, dims.learningSpeed) },
         ],
       },
       {
@@ -398,7 +398,7 @@ function generateSkillTree(field: string, dims: Record<string, number>): SkillGr
         skills: [
           { name: '监督学习', level: clampAvg(dims.logicalThinking, dims.learningSpeed) },
           { name: '无监督学习', level: clampAvg(dims.creativity, dims.logicalThinking) },
-          { name: '强化学习', level: clampAvg(dims.creativity, dims.focus) },
+          { name: '模型评估与调优', level: clampVal(dims.logicalThinking - 3) },
         ],
       },
       {
@@ -406,7 +406,23 @@ function generateSkillTree(field: string, dims: Record<string, number>): SkillGr
         skills: [
           { name: '神经网络', level: clampAvg(dims.learningSpeed, dims.knowledgeBase) },
           { name: 'CNN/RNN', level: clampVal(dims.learningSpeed - 5) },
-          { name: 'Transformer', level: clampVal(dims.creativity - 5) },
+          { name: 'Transformer', level: clampVal(dims.creativity - 3) },
+        ],
+      },
+      {
+        category: 'NLP 与 CV', color: DIMENSION_COLORS[3],
+        skills: [
+          { name: '自然语言处理', level: clampAvg(dims.learningSpeed, dims.creativity) },
+          { name: '计算机视觉', level: clampVal(dims.creativity - 5) },
+          { name: '多模态学习', level: clampVal(dims.creativity - 10) },
+        ],
+      },
+      {
+        category: '前沿应用', color: DIMENSION_COLORS[4],
+        skills: [
+          { name: '大模型应用', level: clampAvg(dims.creativity, dims.learningSpeed) },
+          { name: 'AI Agent', level: clampVal(dims.creativity - 8) },
+          { name: '模型部署', level: clampVal(dims.focus - 5) },
         ],
       },
     ],

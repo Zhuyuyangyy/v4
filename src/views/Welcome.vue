@@ -296,6 +296,7 @@ onMounted(() => {
   position: relative;
   z-index: 2;
   max-width: 650px;
+  left: 100px;
 }
 
 .hero-badge {
