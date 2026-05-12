@@ -1,5 +1,7 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
+import { fetchRecommendedResources, fetchResources } from '@/lib/api'
+import type { ApiResource } from '@/types/api'
 import {
   LayoutGrid,
   FileText,
@@ -20,9 +22,10 @@ type ResourceType = 'all' | 'doc' | 'mindmap' | 'exercise' | 'video' | 'code'
 
 const activeFilter = ref<ResourceType>('all')
 const searchQuery = ref('')
-const selectedResource = ref<null | typeof resources[0]>(null)
+const selectedResource = ref<ApiResource | null>(null)
 const showDetail = ref(false)
 const bookmarks = ref<Set<number>>(new Set([0, 3]))
+const isLoading = ref(false)
 
 const filterTabs: { key: ResourceType; label: string; icon: any }[] = [
   { key: 'all', label: '全部', icon: LayoutGrid },
@@ -41,7 +44,7 @@ const resourceIcons: Record<string, any> = {
   code: Code,
 }
 
-const resources = [
+const resources = ref<ApiResource[]>([
   { id: 0, type: 'doc' as const, title: 'Python 机器学习入门指南', desc: '从零开始掌握 ML 核心概念与实战，涵盖监督学习、无监督学习、模型评估等内容。', tags: ['Python', 'ML'], date: '2026-05-10', color: '#00d4ff', reads: 234 },
   { id: 1, type: 'mindmap' as const, title: '深度学习知识图谱', desc: '神经网络、CNN、RNN 架构全景图，清晰梳理深度学习各分支之间的关系与发展脉络。', tags: ['DL', '架构'], date: '2026-05-09', color: '#7c3aed', reads: 189 },
   { id: 2, type: 'exercise' as const, title: '线性代数基础习题', desc: '矩阵运算、特征值、向量空间，精选 50 道经典习题，覆盖线性代数核心知识点。', tags: ['数学', '练习'], date: '2026-05-08', color: '#06d6a0', reads: 156 },
@@ -51,16 +54,16 @@ const resources = [
   { id: 6, type: 'mindmap' as const, title: '数据结构思维导图', desc: '数组、链表、树、图、哈希表，数据结构知识点全景梳理，面试复习必备。', tags: ['CS基础', '架构'], date: '2026-05-04', color: '#7c3aed', reads: 267 },
   { id: 7, type: 'exercise' as const, title: '动态规划专项练习', desc: '经典 DP 问题与解题模板，从背包问题到区间 DP，逐步提升算法能力。', tags: ['算法', '进阶'], date: '2026-05-03', color: '#06d6a0', reads: 143 },
   { id: 8, type: 'video' as const, title: 'PyTorch 快速上手', desc: '张量运算、自动求导、模型构建，30 分钟快速掌握 PyTorch 核心功能。', tags: ['框架', '入门'], date: '2026-05-02', color: '#f59e0b', reads: 378 },
-]
+])
 
-const recommended = [
+const recommended = ref<ApiResource[]>([
   { id: 9, type: 'video' as const, title: '机器学习数学基础', desc: '微积分、线性代数、概率论在 ML 中的应用', tags: ['数学', 'ML'], date: '2026-05-11', color: '#00d4ff', reads: 89 },
   { id: 10, type: 'doc' as const, title: '模型部署实战指南', desc: '从训练到生产，ML 模型部署全流程解析', tags: ['工程', '进阶'], date: '2026-05-11', color: '#7c3aed', reads: 67 },
   { id: 11, type: 'code' as const, title: 'Git 版本控制入门', desc: '团队协作必备，Git 工作流与最佳实践', tags: ['工具', '基础'], date: '2026-05-10', color: '#06d6a0', reads: 45 },
-]
+])
 
 const filtered = computed(() => {
-  return resources.filter(r => {
+  return resources.value.filter(r => {
     if (activeFilter.value !== 'all' && r.type !== activeFilter.value) return false
     if (searchQuery.value) {
       const q = searchQuery.value.toLowerCase()
@@ -70,10 +73,12 @@ const filtered = computed(() => {
   })
 })
 
+const selectedResourceId = computed(() => selectedResource.value?.id ?? -1)
+
 const filterCounts = computed(() => {
-  const counts: Record<string, number> = { all: resources.length }
+  const counts: Record<string, number> = { all: resources.value.length }
   filterTabs.slice(1).forEach(f => {
-    counts[f.key] = resources.filter(r => r.type === f.key).length
+    counts[f.key] = resources.value.filter(r => r.type === f.key).length
   })
   return counts
 })
@@ -83,7 +88,7 @@ function toggleBookmark(id: number) {
   else bookmarks.value.add(id)
 }
 
-function openDetail(r: typeof resources[0]) {
+function openDetail(r: ApiResource) {
   selectedResource.value = r
   showDetail.value = true
 }
@@ -92,6 +97,22 @@ function closeDetail() {
   showDetail.value = false
   setTimeout(() => { selectedResource.value = null }, 200)
 }
+
+onMounted(async () => {
+  isLoading.value = true
+  try {
+    const [resourceItems, recommendedItems] = await Promise.all([
+      fetchResources(),
+      fetchRecommendedResources(),
+    ])
+    resources.value = resourceItems
+    recommended.value = recommendedItems
+  } catch {
+    // Keep local fallback data when the API server is unavailable.
+  } finally {
+    isLoading.value = false
+  }
+})
 </script>
 
 <template>
@@ -124,6 +145,8 @@ function closeDetail() {
         <input v-model="searchQuery" type="text" placeholder="搜索资源名称或标签..." />
       </div>
     </div>
+
+    <div v-if="isLoading" class="loading-state">正在同步学习资源...</div>
 
     <!-- Resource Grid -->
     <div class="res-grid">
@@ -209,7 +232,7 @@ function closeDetail() {
           <div class="modal-header">
             <span class="modal-type-tag">
               <component :is="resourceIcons[selectedResource.type]" :size="16" stroke-width="1.5" />
-              {{ filterTabs.find(f => f.key === selectedResource.type)?.label }}
+              {{ filterTabs.find(f => f.key === selectedResource?.type)?.label }}
             </span>
             <button class="modal-close" @click="closeDetail">✕</button>
           </div>
@@ -229,7 +252,7 @@ function closeDetail() {
             </div>
             <div class="modal-meta-item">
               <span class="mm-label">资源类型</span>
-              <span class="mm-value">{{ filterTabs.find(f => f.key === selectedResource.type)?.label }}</span>
+              <span class="mm-value">{{ filterTabs.find(f => f.key === selectedResource?.type)?.label }}</span>
             </div>
           </div>
           <div class="modal-preview">
@@ -238,8 +261,8 @@ function closeDetail() {
           </div>
           <div class="modal-actions">
             <button class="btn-primary">开始学习 <ArrowRight :size="14" stroke-width="2" /></button>
-            <button :class="['btn-ghost', { saved: bookmarks.has(selectedResource.id) }]" @click="toggleBookmark(selectedResource.id)">
-              {{ bookmarks.has(selectedResource.id) ? '已收藏' : '收藏' }}
+            <button :class="['btn-ghost', { saved: bookmarks.has(selectedResourceId) }]" @click="toggleBookmark(selectedResourceId)">
+              {{ bookmarks.has(selectedResourceId) ? '已收藏' : '收藏' }}
             </button>
             <button class="btn-ghost">下载</button>
           </div>
@@ -370,6 +393,12 @@ function closeDetail() {
 }
 .search-box input:focus { border-color: var(--color-accent-cyan); }
 .search-box input::placeholder { color: var(--color-text-tertiary); opacity: 0.6; }
+
+.loading-state {
+  padding: 0 40px 20px;
+  font-size: 12px;
+  color: var(--color-accent-cyan);
+}
 
 /* ====================== Resource Grid ====================== */
 .res-grid {
@@ -785,6 +814,7 @@ function closeDetail() {
 @media (max-width: 900px) {
   .res-hero { padding: 32px 20px 20px; }
   .toolbar { padding: 0 20px 20px; flex-direction: column; align-items: stretch; }
+  .loading-state { padding: 0 20px 20px; }
   .search-box input { width: 100%; }
   .res-grid { padding: 0 20px 24px; grid-template-columns: 1fr; }
   .rec-grid { grid-template-columns: 1fr; }

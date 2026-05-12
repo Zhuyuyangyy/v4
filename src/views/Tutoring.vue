@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
+import { askTutoringQuestion } from '@/lib/api'
 import {
   MessageCircle,
   PenTool,
@@ -30,6 +31,7 @@ const question = ref('')
 const currentMode = ref<Mode>('qa')
 const history = ref<QAPair[]>([])
 const showHistory = ref(false)
+const isAsking = ref(false)
 
 const modes: { key: Mode; icon: any; label: string; desc: string; color: string }[] = [
   { key: 'qa', icon: MessageCircle, label: '自由问答', desc: '开放式提问，AI 即时解答', color: '#00d4ff' },
@@ -172,11 +174,21 @@ function formatAnswer(text: string) {
     .replace(/\n/g, '<br/>')
 }
 
-function askQuestion() {
-  if (!question.value.trim()) return
+async function askQuestion() {
+  if (!question.value.trim() || isAsking.value) return
   const q = question.value
   const now = new Date().toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })
-  const answer = mockAnswers[currentMode.value](q)
+  let answer = mockAnswers[currentMode.value](q)
+  isAsking.value = true
+
+  try {
+    const response = await askTutoringQuestion(q, currentMode.value)
+    answer = response.answer
+  } catch {
+    // Keep local fallback when the API server is unavailable.
+  } finally {
+    isAsking.value = false
+  }
 
   history.value.push({
     q,
@@ -256,7 +268,7 @@ function askTopic(q: string) {
     </div>
 
     <!-- Conversation Area -->
-    <div v-if="history.length > 0" class="conversation">
+    <div v-if="history.length > 0 || isAsking" class="conversation">
       <div v-for="(item, i) in history" :key="i" class="qa-pair">
         <!-- Question -->
         <div class="question-bubble">
@@ -281,6 +293,12 @@ function askTopic(q: string) {
               </button>
             </div>
           </div>
+        </div>
+      </div>
+      <div v-if="isAsking" class="answer-bubble pending-bubble">
+        <div class="bubble-avatar a-avatar">A</div>
+        <div class="bubble-content">
+          <div class="answer-body pending-answer">正在思考中...</div>
         </div>
       </div>
     </div>
@@ -316,12 +334,13 @@ function askTopic(q: string) {
         <input
           v-model="question"
           type="text"
+          :disabled="isAsking"
           :placeholder="`在「${modes.find(m => m.key === currentMode)?.label}」模式下输入你的问题...`"
           @keydown.enter="askQuestion"
         />
-        <button class="ask-btn" @click="askQuestion" :disabled="!question.trim()">
+        <button class="ask-btn" @click="askQuestion" :disabled="!question.trim() || isAsking">
           <Zap :size="16" stroke-width="2" />
-          <span>提问</span>
+          <span>{{ isAsking ? '思考中' : '提问' }}</span>
         </button>
       </div>
     </div>
@@ -542,6 +561,11 @@ export default {
   gap: 20px;
 }
 
+@keyframes message-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
 .qa-pair {
   display: flex;
   flex-direction: column;
@@ -560,6 +584,10 @@ export default {
 
 .answer-bubble {
   justify-content: flex-start;
+}
+
+.pending-bubble {
+  animation: message-in 0.3s var(--ease-out);
 }
 
 .bubble-avatar {
@@ -651,6 +679,10 @@ export default {
   font-size: 12px;
   line-height: 1.6;
   color: var(--color-accent-cyan);
+}
+
+.pending-answer {
+  color: var(--color-text-secondary);
 }
 
 .bubble-time {

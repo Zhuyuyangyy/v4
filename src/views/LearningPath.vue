@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
+import { fetchLearningPath } from '@/lib/api'
 import {
   Sparkles,
   Award,
@@ -28,8 +29,9 @@ import {
 } from 'lucide-vue-next'
 
 const loaded = ref(false)
+const isLoading = ref(false)
 
-const phases = [
+const phases = ref([
   {
     title: '基础夯实',
     period: '第 1-4 周',
@@ -79,7 +81,7 @@ const phases = [
       { name: '面试准备', progress: 0, duration: '1周', resources: 4 },
     ],
   },
-]
+])
 
 const achievements = [
   { icon: Sparkles, title: '新手启程', earned: true, color: '#00d4ff' },
@@ -90,25 +92,25 @@ const achievements = [
   { icon: Star, title: '全栈突破', earned: false, color: '#f43f5e' },
 ]
 
-const weeklyGoals = [
+const weeklyGoals = ref([
   { label: '完成 Python 基础', progress: 100, target: '1 章' },
   { label: '数据结构练习', progress: 60, target: '20 题' },
   { label: '阅读论文', progress: 30, target: '2 篇' },
   { label: '编程项目实践', progress: 0, target: '1 个' },
-]
+])
 
-const completedPhases = computed(() => phases.filter(p => p.status === 'completed').length)
-const totalPhases = phases.length
+const completedPhases = computed(() => phases.value.filter(p => p.status === 'completed').length)
+const totalPhases = computed(() => phases.value.length)
 
 const totalProgress = computed(() => {
-  const total = phases.reduce((sum, p) => sum + p.progress, 0)
-  return Math.round(total / phases.length)
+  const total = phases.value.reduce((sum, p) => sum + p.progress, 0)
+  return phases.value.length ? Math.round(total / phases.value.length) : 0
 })
 
-const activePhaseCount = computed(() => phases.filter(p => p.status === 'active').length)
-const totalNodes = computed(() => phases.reduce((sum, p) => sum + p.nodes.length, 0))
+const activePhaseCount = computed(() => phases.value.filter(p => p.status === 'active').length)
+const totalNodes = computed(() => phases.value.reduce((sum, p) => sum + p.nodes.length, 0))
 const completedNodes = computed(() => {
-  return phases.reduce((sum, p) => sum + p.nodes.filter(n => n.progress === 100).length, 0)
+  return phases.value.reduce((sum, p) => sum + p.nodes.filter(n => n.progress === 100).length, 0)
 })
 
 const skills = [
@@ -173,7 +175,19 @@ const recommendations = [
 const maxHours = computed(() => Math.max(...timeDist.map(t => t.hours)))
 
 onMounted(() => {
+  isLoading.value = true
   setTimeout(() => { loaded.value = true }, 100)
+  fetchLearningPath()
+    .then(data => {
+      phases.value = data.phases
+      weeklyGoals.value = data.weeklyGoals
+    })
+    .catch(() => {
+      // Keep local fallback data when the API server is unavailable.
+    })
+    .finally(() => {
+      isLoading.value = false
+    })
 })
 </script>
 
@@ -185,6 +199,7 @@ onMounted(() => {
         <div class="hero-badge">学习路径</div>
         <h1 class="hero-title">个性化<span class="gradient-text">学习路线</span></h1>
         <p class="hero-desc">AI 为你量身定制的学习路径，稳步达成学习目标</p>
+        <p v-if="isLoading" class="page-status">正在同步学习路径...</p>
       </div>
       <div class="hero-progress">
         <svg viewBox="0 0 56 56" width="56" height="56">
@@ -419,7 +434,7 @@ onMounted(() => {
             <Target :size="16" stroke-width="1.5" class="card-head-icon" />
             <h2 class="card-title-sm">本周目标</h2>
           </div>
-          <span class="card-badge">{{ weeklyGoals.filter(g => g.progress === 100).length }}/4</span>
+          <span class="card-badge">{{ weeklyGoals.filter(g => g.progress === 100).length }}/{{ weeklyGoals.length }}</span>
         </div>
         <div class="goal-list">
           <div v-for="g in weeklyGoals" :key="g.label" class="goal-item">
@@ -540,6 +555,12 @@ onMounted(() => {
 .hero-desc {
   font-size: 14px;
   color: var(--color-text-secondary);
+}
+
+.page-status {
+  margin-top: 8px;
+  font-size: 12px;
+  color: var(--color-accent-cyan);
 }
 
 .hero-progress {

@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
+import { fetchEvaluation } from '@/lib/api'
 import {
   Clock,
   PenTool,
@@ -20,14 +21,16 @@ import {
 } from 'lucide-vue-next'
 
 const loaded = ref(false)
+const isLoading = ref(false)
 const showReportModal = ref(false)
+const reportDate = ref('2026-05-11')
 
-const stats = [
+const stats = ref([
   { label: '学习时长', value: '128h', change: '+12h', icon: Clock, color: '#00d4ff' },
   { label: '完成课时', value: '47', change: '+5', icon: PenTool, color: '#7c3aed' },
   { label: '平均正确率', value: '82%', change: '+3%', icon: Target, color: '#06d6a0' },
   { label: '知识掌握度', value: '68%', change: '+8%', icon: TrendingUp, color: '#f59e0b' },
-]
+])
 
 const weeklyData = [45, 52, 38, 65, 70, 55, 80]
 const peerAvg = [42, 48, 40, 52, 55, 50, 58]
@@ -52,12 +55,12 @@ const weeklyTrend = [
   { week: 'W7', you: 78, avg: 60 },
 ]
 
-const suggestions = [
+const suggestions = ref([
   { text: '概率论与数理统计是你的薄弱环节，建议安排 2 小时专项复习', type: 'weakness' as const, icon: AlertTriangle },
   { text: '机器学习基础掌握良好，可以开始学习进阶内容', type: 'strength' as const, icon: Sparkles },
   { text: '本周学习时长较上周增加 15%，保持良好的学习节奏', type: 'positive' as const, icon: ArrowUp },
   { text: '建议增加编程实践时间，理论与实践比例建议 1:1', type: 'action' as const, icon: ArrowRight },
-]
+])
 
 const badges = [
   { icon: Sparkles, name: '初识学习', earned: true, color: '#00d4ff' },
@@ -99,7 +102,27 @@ function trendLinePath(data: { week: string; you: number; avg: number }[]) {
 const { youPoints, avgPoints } = trendLinePath(weeklyTrend.map(d => ({ ...d, you: d.you * 0.8, avg: d.avg * 0.8 })))
 
 onMounted(() => {
+  isLoading.value = true
   setTimeout(() => { loaded.value = true }, 100)
+  fetchEvaluation()
+    .then(data => {
+      stats.value = data.stats.map((item, index) => ({
+        ...item,
+        icon: stats.value[index]?.icon ?? Clock,
+      }))
+      suggestions.value = data.suggestions.map((text, index) => ({
+        text,
+        type: suggestions.value[index]?.type ?? 'action',
+        icon: suggestions.value[index]?.icon ?? ArrowRight,
+      }))
+      reportDate.value = data.generatedAt
+    })
+    .catch(() => {
+      // Keep local fallback data when the API server is unavailable.
+    })
+    .finally(() => {
+      isLoading.value = false
+    })
 })
 </script>
 
@@ -111,6 +134,7 @@ onMounted(() => {
         <div class="hero-badge">效果评估</div>
         <h1 class="hero-title">学习效果<span class="gradient-text">数据洞察</span></h1>
         <p class="hero-desc">数据驱动的学习分析，追踪你的每一步成长</p>
+        <p v-if="isLoading" class="page-status">正在同步评估数据...</p>
       </div>
       <button class="report-btn" @click="showReportModal = true">
         <FileBarChart :size="16" stroke-width="1.5" />
@@ -284,7 +308,7 @@ onMounted(() => {
             </div>
           </div>
           <div class="modal-footer">
-            <span class="footer-date">2026-05-11</span>
+            <span class="footer-date">{{ reportDate }}</span>
             <div class="footer-actions">
               <button class="btn-ghost">预览</button>
               <button class="btn-primary">
@@ -349,6 +373,12 @@ onMounted(() => {
 .hero-desc {
   font-size: 14px;
   color: var(--color-text-secondary);
+}
+
+.page-status {
+  margin-top: 8px;
+  font-size: 12px;
+  color: var(--color-accent-cyan);
 }
 
 .report-btn {
