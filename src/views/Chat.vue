@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, nextTick, onMounted, computed } from 'vue'
+import { useRouter } from 'vue-router'
 import {
   Send,
   Paperclip,
@@ -26,6 +27,9 @@ import {
   Brain,
   Layers,
   Zap,
+  Wand2,
+  Lightbulb,
+  RotateCcw,
 } from 'lucide-vue-next'
 
 interface Message {
@@ -45,13 +49,15 @@ interface AgentNode {
   desc: string
 }
 
+const router = useRouter()
+
 const messages = ref<Message[]>([
   {
     id: 1,
     role: 'assistant',
-    content: '你好！我是你的专属学习助手。我可以帮你制定学习计划、生成学习资源、解答问题。告诉我你想学什么？',
+    content: '晚上好，Alice\n\n我可以帮助你学习任何内容，选择下方功能或直接输入你的问题',
     time: '09:30',
-    suggestions: ['帮我制定 Python 学习计划', '解释机器学习概念', '生成练习题'],
+    suggestions: ['帮我制定 Python 学习计划', '解释机器学习概念', '生成练习题', '去智能辅导提问'],
   },
 ])
 
@@ -70,11 +76,12 @@ const agents = ref<AgentNode[]>([
 ])
 
 const historySessions = [
-  { id: 1, title: 'Python 机器学习入门', time: '10分钟前' },
-  { id: 2, title: '微积分复习 — 泰勒展开', time: '2小时前' },
-  { id: 3, title: '数据结构与算法练习', time: '昨天' },
-  { id: 4, title: '线性代数基础梳理', time: '3天前' },
-  { id: 5, title: '深度学习基础概念', time: '5天前' },
+  { id: 1, title: 'Python 机器学习入门', time: '10分钟前', category: 'ML' },
+  { id: 2, title: '微积分复习 — 泰勒展开', time: '2小时前', category: '数学' },
+  { id: 3, title: '数据结构与算法练习', time: '昨天', category: '算法' },
+  { id: 4, title: '线性代数基础梳理', time: '3天前', category: '数学' },
+  { id: 5, title: '深度学习基础概念', time: '5天前', category: 'DL' },
+  { id: 6, title: 'Python 基础概念', time: '6天前', category: 'Python' },
 ]
 
 const resourceIcons: Record<string, any> = {
@@ -85,10 +92,19 @@ const resourceIcons: Record<string, any> = {
 }
 
 const presets = [
-  { icon: Sparkles, label: '制定学习计划', query: '帮我制定一份详细的学习计划' },
-  { icon: Target, label: '生成练习题', query: '为我生成一组练习题' },
-  { icon: FileText, label: '知识点讲解', query: '请详细讲解一个知识点' },
-  { icon: BarChart3, label: '学习诊断', query: '分析我的学习薄弱点' },
+  { icon: Wand2, label: '制定学习计划', desc: '根据你的目标定制个性化学习路径', color: '#8b5cf6', bgGradient: 'from-purple-500/20 to-blue-500/10' },
+  { icon: Target, label: '生成练习题', desc: '生成适合当前水平的练习题和测试', color: '#06b6d4', bgGradient: 'from-cyan-500/20 to-teal-500/10' },
+  { icon: BookOpen, label: '知识点讲解', desc: '深入理解概念，结合例子与可视化讲解', color: '#10b981', bgGradient: 'from-emerald-500/20 to-green-500/10' },
+  { icon: BarChart3, label: '学习诊断', desc: '分析学习情况，找到薄弱环节并给出建议', color: '#f59e0b', bgGradient: 'from-amber-500/20 to-orange-500/10' },
+  { icon: Zap, label: '智能辅导', desc: '实时解答疑问，提供提示和引导', color: '#ec4899', bgGradient: 'from-pink-500/20 to-rose-500/10' },
+]
+
+const quickQuestions = [
+  { text: '帮我制定 Python 学习计划', action: 'send' },
+  { text: '解释机器学习中的过拟合', action: 'send' },
+  { text: '生成 10 道二元函数求导题', action: 'send' },
+  { text: '推荐数据结构学习路径', action: 'send' },
+  { text: '如何理解梯度下降算法', action: 'send' },
 ]
 
 const agentFlowActive = computed(() => agents.value.some(a => a.status === 'active'))
@@ -171,13 +187,21 @@ function sendMessage() {
 
 function usePreset(p: typeof presets[0]) {
   selectedPreset.value = p.label
-  inputText.value = p.query
+  inputText.value = `帮我${p.label.toLowerCase()}`
   sendMessage()
 }
 
 function useSuggestion(s: string) {
+  if (s === '去智能辅导提问') {
+    router.push('/tutoring')
+    return
+  }
   inputText.value = s
   sendMessage()
+}
+
+function goToTutoring() {
+  router.push('/tutoring')
 }
 
 function copyMessage(content: string) {
@@ -257,7 +281,7 @@ onMounted(scrollToBottom)
           <h3 class="sidebar-title">对话历史</h3>
           <button class="sidebar-new">
             <Plus :size="14" stroke-width="2" />
-            <span>新建</span>
+            <span>新建对话</span>
           </button>
         </div>
         <div class="sidebar-search">
@@ -267,7 +291,7 @@ onMounted(scrollToBottom)
         <div class="sidebar-list">
           <button v-for="s in historySessions" :key="s.id" :class="['session-item', { current: s.id === 1 }]">
             <div class="session-category" :class="`cat-${s.id}`">
-              {{ ['ML','数学','算法','数学','DL'][s.id-1] }}
+              {{ s.category }}
             </div>
             <div class="session-info">
               <span class="session-title">{{ s.title }}</span>
@@ -277,7 +301,7 @@ onMounted(scrollToBottom)
         </div>
         <div class="sidebar-footer">
           <div class="storage-bar">
-            <span class="storage-text">存储 2.4 / 10 GB</span>
+            <span class="storage-text">存储使用 2.4 / 10 GB</span>
             <div class="storage-track">
               <div class="storage-fill" style="width:24%" />
             </div>
@@ -288,22 +312,56 @@ onMounted(scrollToBottom)
       <!-- Main Chat Area -->
       <div class="chat-main">
         <div class="messages-container">
-          <!-- Presets (shown at start) -->
+          <!-- Welcome Section -->
           <div v-if="messages.length === 1" class="welcome-section">
             <div class="welcome-header">
-              <div class="welcome-avatar">
-                <Brain :size="24" stroke-width="1.5" />
+              <div class="welcome-badge">
+                <Star :size="12" stroke-width="2" />
+                <span>你的专属学习助手</span>
               </div>
-              <h2 class="welcome-title">有什么我可以帮你的？</h2>
-              <p class="welcome-desc">选择以下方向开始学习，或直接输入你的问题</p>
+              <h2 class="welcome-title">晚上好，Alice</h2>
+              <p class="welcome-subtitle">我可以帮助你学习任何内容，选择下方功能或直接输入你的问题</p>
             </div>
-            <div class="presets-grid">
-              <button v-for="p in presets" :key="p.label" class="preset-card" @click="usePreset(p)">
-                <div class="preset-icon">
-                  <component :is="p.icon" :size="20" stroke-width="1.5" />
+
+            <!-- Feature Cards Grid -->
+            <div class="feature-cards-grid">
+              <button
+                v-for="(p, index) in presets"
+                :key="p.label"
+                class="feature-card"
+                :style="{ '--card-color': p.color }"
+                @click="usePreset(p)"
+              >
+                <div class="feature-icon-wrapper">
+                  <component :is="p.icon" :size="24" stroke-width="1.5" />
+                  <div class="feature-icon-glow" />
                 </div>
-                <span class="preset-label">{{ p.label }}</span>
+                <h3 class="feature-title">{{ p.label }}</h3>
+                <p class="feature-desc">{{ p.desc }}</p>
+                <ArrowRight :size="14" class="feature-arrow" />
               </button>
+            </div>
+
+            <!-- Quick Questions -->
+            <div class="quick-questions-section">
+              <div class="quick-questions-header">
+                <Lightbulb :size="14" stroke-width="1.5" />
+                <span>你可能想问</span>
+                <button class="refresh-btn">
+                  <RotateCcw :size="12" stroke-width="1.5" />
+                </button>
+              </div>
+              <div class="quick-questions-grid">
+                <button
+                  v-for="(q, index) in quickQuestions"
+                  :key="q.text"
+                  class="quick-question-chip"
+                  @click="inputText = q.text; sendMessage()"
+                >
+                  {{ q.text }}
+                  <ArrowRight :size="12" class="question-arrow" />
+                </button>
+              </div>
             </div>
           </div>
 
@@ -394,6 +452,13 @@ onMounted(scrollToBottom)
             <div class="input-commands">
               <span class="cmd-hint">⌘K 命令</span>
               <span class="cmd-hint">@ 提及</span>
+            </div>
+            <div class="input-mode-selector">
+              <button class="mode-btn active">
+                <Sparkles :size="14" stroke-width="1.5" />
+                <span>深度思考</span>
+                <ChevronDown :size="12" stroke-width="1.5" />
+              </button>
             </div>
             <button
               :class="['input-send', { active: inputText.trim() }]"
@@ -723,6 +788,7 @@ onMounted(scrollToBottom)
 .cat-3 { background: rgba(6, 214, 160, 0.12); color: #06d6a0; }
 .cat-4 { background: rgba(245, 158, 11, 0.12); color: #f59e0b; }
 .cat-5 { background: rgba(244, 63, 94, 0.12); color: #f43f5e; }
+.cat-6 { background: rgba(168, 85, 247, 0.12); color: #a855f7; }
 
 .session-info { flex: 1; min-width: 0; }
 .session-title {
@@ -773,97 +839,224 @@ onMounted(scrollToBottom)
 .messages-container {
   flex: 1;
   overflow-y: auto;
-  padding: 24px 40px;
+  padding: 32px 48px;
   display: flex;
   flex-direction: column;
   gap: 24px;
 }
 
-/* ====================== Welcome / Presets ====================== */
+/* ====================== Welcome Section ====================== */
 .welcome-section {
-  padding: 40px 20px;
-  text-align: center;
+  padding: 40px 0;
+  max-width: 900px;
+  margin: 0 auto;
 }
 
 .welcome-header {
-  margin-bottom: 32px;
+  text-align: center;
+  margin-bottom: 40px;
 }
 
-.welcome-avatar {
-  width: 64px;
-  height: 64px;
-  border-radius: 18px;
-  margin: 0 auto 16px;
-  display: flex;
+.welcome-badge {
+  display: inline-flex;
   align-items: center;
-  justify-content: center;
-  background: linear-gradient(135deg, rgba(0, 212, 255, 0.15), rgba(124, 58, 237, 0.15));
-  color: var(--color-accent-cyan);
-  border: 1px solid rgba(0, 212, 255, 0.1);
+  gap: 6px;
+  padding: 6px 14px;
+  border-radius: 100px;
+  background: rgba(251, 191, 36, 0.1);
+  color: #fbbf24;
+  font-size: 12px;
+  font-weight: 500;
+  margin-bottom: 16px;
 }
 
 .welcome-title {
   font-family: var(--font-display);
-  font-size: 28px;
-  font-weight: 400;
+  font-size: 36px;
+  font-weight: 300;
+  color: #fff;
+  margin-bottom: 8px;
+  letter-spacing: -0.02em;
+}
+
+.welcome-subtitle {
+  font-size: 16px;
+  color: var(--color-text-secondary);
+  max-width: 500px;
+  margin: 0 auto;
+}
+
+/* Feature Cards Grid */
+.feature-cards-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 16px;
+  margin-bottom: 40px;
+}
+
+.feature-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  padding: 24px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  transition: all 0.3s var(--ease-out);
+  cursor: pointer;
+  overflow: hidden;
+}
+
+.feature-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: var(--card-color);
+  opacity: 0;
+  transition: opacity 0.3s var(--ease-out);
+}
+
+.feature-card:hover::before {
+  opacity: 1;
+}
+
+.feature-card:hover {
+  border-color: color-mix(in srgb, var(--card-color) 30%, transparent);
+  background: rgba(255, 255, 255, 0.05);
+  transform: translateY(-4px);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+}
+
+.feature-icon-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--card-color) 8%, transparent);
+  color: var(--card-color);
+  margin-bottom: 16px;
+  transition: all 0.3s var(--ease-out);
+}
+
+.feature-icon-glow {
+  position: absolute;
+  inset: -4px;
+  border-radius: 18px;
+  background: var(--card-color);
+  opacity: 0;
+  filter: blur(16px);
+  transition: opacity 0.3s var(--ease-out);
+}
+
+.feature-card:hover .feature-icon-glow {
+  opacity: 0.2;
+}
+
+.feature-card:hover .feature-icon-wrapper {
+  transform: scale(1.1);
+}
+
+.feature-title {
+  font-family: var(--font-display);
+  font-size: 16px;
+  font-weight: 600;
   color: #fff;
   margin-bottom: 8px;
   line-height: 1.3;
 }
 
-.welcome-desc {
+.feature-desc {
+  font-size: 12px;
+  color: var(--color-text-secondary);
+  line-height: 1.5;
+  margin-bottom: 16px;
+  flex: 1;
+}
+
+.feature-arrow {
+  color: var(--card-color);
+  transition: transform 0.2s var(--ease-out);
+}
+
+.feature-card:hover .feature-arrow {
+  transform: translateX(4px);
+}
+
+/* Quick Questions */
+.quick-questions-section {
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 16px;
+  padding: 20px 24px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.quick-questions-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.quick-questions-header span {
   font-size: 14px;
+  font-weight: 600;
   color: var(--color-text-secondary);
 }
 
-.presets-grid {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 12px;
-  max-width: 600px;
-  margin: 0 auto;
+.refresh-btn {
+  margin-left: auto;
+  padding: 6px;
+  border-radius: 6px;
+  color: var(--color-text-tertiary);
+  transition: all 0.2s var(--ease-out);
 }
 
-.preset-card {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 10px;
-  padding: 20px 12px;
-  border-radius: 14px;
-  background: var(--color-bg-card);
-  border: 1px solid var(--color-border);
-  transition: all 0.3s var(--ease-out);
-  text-align: center;
-}
-.preset-card:hover {
-  border-color: var(--color-accent-cyan);
-  background: rgba(0, 212, 255, 0.04);
-  transform: translateY(-3px);
-  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.2);
-}
-
-.preset-icon {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 44px;
-  height: 44px;
-  border-radius: 12px;
-  background: rgba(0, 212, 255, 0.08);
+.refresh-btn:hover {
   color: var(--color-accent-cyan);
-  transition: all 0.3s var(--ease-out);
-}
-.preset-card:hover .preset-icon {
-  background: rgba(0, 212, 255, 0.15);
-  transform: scale(1.05);
+  background: rgba(0, 212, 255, 0.08);
 }
 
-.preset-label {
+.quick-questions-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.quick-question-chip {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 16px;
+  border-radius: 100px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.06);
   font-size: 13px;
-  font-weight: 500;
   color: var(--color-text-secondary);
-  line-height: 1.3;
+  transition: all 0.2s var(--ease-out);
+}
+
+.quick-question-chip:hover {
+  border-color: rgba(0, 212, 255, 0.3);
+  background: rgba(0, 212, 255, 0.06);
+  color: var(--color-accent-cyan);
+}
+
+.question-arrow {
+  opacity: 0;
+  color: var(--color-accent-cyan);
+  transition: all 0.2s var(--ease-out);
+}
+
+.quick-question-chip:hover .question-arrow {
+  opacity: 1;
+  transform: translateX(3px);
 }
 
 /* ====================== Messages ====================== */
@@ -1131,6 +1324,30 @@ onMounted(scrollToBottom)
   opacity: 0.6;
 }
 
+.input-mode-selector {
+  display: flex;
+  align-items: center;
+}
+
+.mode-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--color-border);
+  color: var(--color-text-tertiary);
+  font-size: 12px;
+  transition: all 0.2s var(--ease-out);
+}
+
+.mode-btn.active {
+  background: rgba(0, 212, 255, 0.08);
+  border-color: rgba(0, 212, 255, 0.2);
+  color: var(--color-accent-cyan);
+}
+
 .input-send {
   width: 40px;
   height: 40px;
@@ -1152,12 +1369,22 @@ onMounted(scrollToBottom)
 .sending-dots { letter-spacing: 3px; font-weight: 700; }
 
 /* ====================== Responsive ====================== */
+@media (max-width: 1024px) {
+  .feature-cards-grid { grid-template-columns: repeat(3, 1fr); }
+}
+
 @media (max-width: 768px) {
-  .presets-grid { grid-template-columns: repeat(2, 1fr); }
+  .feature-cards-grid { grid-template-columns: repeat(2, 1fr); }
   .history-sidebar { display: none; }
   .messages-container { padding: 20px 16px; }
   .pipeline-bar { padding: 0 16px; }
   .input-area { padding: 12px 12px 16px; }
   .input-commands { display: none; }
+  .input-mode-selector { display: none; }
+  .welcome-title { font-size: 28px; }
+}
+
+@media (max-width: 480px) {
+  .feature-cards-grid { grid-template-columns: 1fr; }
 }
 </style>

@@ -43,6 +43,16 @@ const router = createRouter({
       name: 'settings',
       component: () => import('@/views/Settings.vue'),
     },
+    {
+      path: '/codelab',
+      name: 'codelab',
+      component: () => import('@/views/CodeLab.vue'),
+    },
+    {
+      path: '/mindmap',
+      name: 'mindmap',
+      component: () => import('@/views/MindMapView.vue'),
+    },
   ],
 })
 
