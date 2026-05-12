@@ -11,10 +11,12 @@
   "dependencies": {
     "lucide-vue-next": "^1.0.0",
     "pinia": "^2.1.7",
+    "three": "^0.184.0",
     "vue": "^3.4.21",
     "vue-router": "^4.3.0"
   },
   "devDependencies": {
+    "@types/three": "^0.184.1",
     "@vitejs/plugin-vue": "^5.0.4",
     "typescript": "^5.4.2",
     "vite": "^5.1.6",

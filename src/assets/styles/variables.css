@@ -64,4 +64,8 @@
   --z-overlay: 200;
   --z-modal: 300;
   --z-toast: 400;
+
+  /* Galaxy panel */
+  --galaxy-panel-bg: #0c0c1a;
+  --galaxy-border-color: rgba(0, 212, 255, 0.08);
 }

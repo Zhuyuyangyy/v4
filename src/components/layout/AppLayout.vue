@@ -243,6 +243,7 @@ const navItems = [
   background-position: center;
   background-repeat: no-repeat;
   background-attachment: fixed;
+  opacity: 0.35;
   z-index: 0;
 }
 </style>

@@ -93,8 +93,8 @@ img {
   position: fixed;
   inset: 0;
   background-image:
-    linear-gradient(rgba(0, 212, 255, 0.03) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(0, 212, 255, 0.03) 1px, transparent 1px);
+    linear-gradient(rgba(0, 212, 255, 0.015) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 212, 255, 0.015) 1px, transparent 1px);
   background-size: 60px 60px;
   pointer-events: none;
   z-index: 0;
@@ -104,8 +104,8 @@ img {
   content: '';
   position: fixed;
   inset: 0;
-  background: radial-gradient(ellipse 80% 60% at 50% -20%, rgba(0, 212, 255, 0.06), transparent),
-              radial-gradient(ellipse 60% 50% at 80% 80%, rgba(124, 58, 237, 0.04), transparent);
+  background: radial-gradient(ellipse 80% 60% at 50% -20%, rgba(0, 212, 255, 0.03), transparent),
+              radial-gradient(ellipse 60% 50% at 80% 80%, rgba(124, 58, 237, 0.02), transparent);
   pointer-events: none;
   z-index: 0;
 }
@@ -174,4 +174,28 @@ input:focus:not(:focus-visible) {
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
+}
+
+/* === Galaxy Labels === */
+.galaxy-label {
+  font-family: 'Outfit', 'Segoe UI', sans-serif;
+  font-size: 12px;
+  font-weight: 500;
+  color: #e8edf5;
+  background: rgba(7, 7, 13, 0.8);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  padding: 4px 12px;
+  border-radius: 6px;
+  border: 1px solid rgba(0, 212, 255, 0.15);
+  pointer-events: none;
+  white-space: nowrap;
+  text-shadow: 0 0 8px rgba(0, 0, 0, 0.8);
+  user-select: none;
+}
+.galaxy-label .pct {
+  color: var(--color-accent-cyan);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  margin-left: 6px;
 }

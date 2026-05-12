@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import {
   Sparkles,
@@ -18,9 +18,17 @@ import {
 } from 'lucide-vue-next'
 import type { StudyScenario } from '@/types/course'
 import { allCourses } from '@/components/course/CourseData'
+import GalaxyPanel from '@/components/galaxy/GalaxyPanel.vue'
+import { phasesToGalaxyData } from '@/components/galaxy/composables/useGalaxyData'
 
 const router = useRouter()
 const loaded = ref(false)
+const loading = ref(false)
+const empty = computed(() => phases.length === 0)
+const error = ref(false)
+const activePhaseId = ref<string | null>(null)
+
+const galaxyData = computed(() => phasesToGalaxyData(phases))
 
 /* ── AI 课程专属学习路径 ── */
 const phases = [
@@ -117,8 +125,63 @@ function goToTutoring(scenario: StudyScenario, nodeName?: string) {
   })
 }
 
+/* ── 行星点击 → 右侧滚动 ── */
+let ignoreObserver = false
+let ignoreTimer: ReturnType<typeof setTimeout> | null = null
+
+function handlePhaseClick(phaseId: string) {
+  activePhaseId.value = phaseId
+  scrollToPhase(phaseId)
+
+  // Anti-conflict: ignore observer for 1.5s after click
+  ignoreObserver = true
+  if (ignoreTimer) clearTimeout(ignoreTimer)
+  ignoreTimer = setTimeout(() => {
+    ignoreObserver = false
+  }, 1500)
+}
+
+function scrollToPhase(phaseId: string) {
+  const el = document.getElementById(`phase-${phaseId}`)
+  el?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+}
+
+/* ── IntersectionObserver：右侧滚动 → 左侧高亮 ── */
+function setupScrollObserver() {
+  const observer = new IntersectionObserver((entries) => {
+    if (ignoreObserver) return
+
+    // Find the most visible phase card
+    let best: { id: string; ratio: number } | null = null
+    for (const entry of entries) {
+      if (entry.isIntersecting && entry.intersectionRatio > (best?.ratio ?? 0)) {
+        const el = entry.target as HTMLElement
+        const phaseId = el.id.replace('phase-', '')
+        best = { id: phaseId, ratio: entry.intersectionRatio }
+      }
+    }
+
+    activePhaseId.value = best?.id ?? null
+  }, { threshold: [0, 0.15, 0.3, 0.5, 0.75] })
+
+  // Observe all phase cards
+  const cards = document.querySelectorAll('[id^="phase-"]')
+  cards.forEach(card => observer.observe(card))
+
+  return observer
+}
+
+let scrollObserver: IntersectionObserver | null = null
+
 onMounted(() => {
-  setTimeout(() => { loaded.value = true }, 100)
+  setTimeout(() => {
+    loaded.value = true
+    scrollObserver = setupScrollObserver()
+  }, 100)
+})
+
+onUnmounted(() => {
+  scrollObserver?.disconnect()
 })
 </script>
 
@@ -150,6 +213,11 @@ onMounted(() => {
       </div>
     </div>
 
+    <!-- Split Layout -->
+    <div class="lp-split">
+      <GalaxyPanel :galaxy-data="galaxyData" :active-phase-id="activePhaseId" :loading="loading" :empty="empty" :error="error" @phase-click="handlePhaseClick" />
+
+      <div class="lp-content">
     <!-- AI Course Overview -->
     <div class="course-overview">
       <div class="co-header">
@@ -197,6 +265,7 @@ onMounted(() => {
       <div
         v-for="(phase, pIdx) in phases"
         :key="phase.title"
+        :id="'phase-' + phase.title"
         :class="['phase-card', phase.status]"
         :style="{ '--p-color': phase.color }"
       >
@@ -295,21 +364,23 @@ onMounted(() => {
         </div>
       </div>
     </div>
+      </div> <!-- /lp-content -->
+    </div> <!-- /lp-split -->
   </div>
 </template>
 
 <style scoped>
 .lp {
-  padding: 0;
-  max-width: 1200px;
-  margin: 0 auto;
+  padding: 0 24px;
   position: relative;
   z-index: 1;
 }
 
 /* ====================== Hero ====================== */
 .lp-hero {
-  padding: 48px 40px 28px;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 48px 0 28px;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -777,9 +848,27 @@ onMounted(() => {
   color: var(--color-text-tertiary);
 }
 
+/* ====================== Split Layout ====================== */
+.lp-split {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  min-height: calc(100vh - var(--header-height) - 140px);
+}
+
+.lp-content {
+  overflow-y: auto;
+  padding: 0 32px 40px 40px;
+}
+
 /* ====================== Responsive ====================== */
 @media (max-width: 900px) {
   .lp-hero { padding: 32px 20px 24px; }
+  .lp-split {
+    grid-template-columns: 1fr;
+  }
+  .lp-content {
+    padding: 0 20px 32px;
+  }
   .quick-stats { padding: 0 20px; grid-template-columns: repeat(2, 1fr); }
   .phase-list { padding: 0 20px; }
   .bottom-grid { padding: 0 20px 32px; grid-template-columns: 1fr; }
