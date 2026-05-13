@@ -185,17 +185,18 @@
   },
   "active": "9170b95e66f1f60f",
   "lastOpenFiles": [
+    "src/learning-universe/components/panels/PathMap.vue.tmp.37480.838f4423955f",
+    "src/learning-universe/components/panels/PathMap.vue.tmp.37480.94f530b58904",
+    "src/learning-universe/components/panels/PathMap.vue.tmp.37480.268c3360714b",
+    "src/learning-universe/components/panels/PathMap.vue.tmp.37480.02d42737104f",
+    "src/learning-universe/components/UniverseCanvas.vue.tmp.37480.5774d26b0a4f",
+    "src/learning-universe/components/UniverseCanvas.vue.tmp.37480.7c4891acf376",
+    "src/learning-universe/components/panels/KnowledgeCard.vue.tmp.37480.16e37c37fb20",
+    "src/learning-universe/components/panels/KnowledgeCard.vue.tmp.37480.09805ce171f1",
+    "src/learning-universe/components/UniverseCanvas.vue.tmp.37480.2cc8a8882606",
+    "src/learning-universe/components/UniverseCanvas.vue.tmp.37480.a138eeea61f9",
+    "src/learning-universe/components/UniverseCanvas.vue.tmp.37480.ac56c6bfebb9",
     "README.md",
-    "dist/assets/Evaluation-DZL9ycTY.js",
-    "dist/assets/target-D1gDPinM.js",
-    "dist/assets/thumbs-down-jByLD4RR.js",
-    "dist/assets/Chat-aynPs9NU.js",
-    "dist/assets/Tutoring-y2yTECpd.js",
-    "dist/assets/LearningPath-CKgSJjZB.js",
-    "dist/assets/search-BhdLc_nP.js",
-    "dist/assets/refresh-cw-CYcjJmDZ.js",
-    "dist/assets/Resources-DqD1nay4.js",
-    "dist/assets/Profile-BQro1l5V.js",
     "node_modules/fflate/CHANGELOG.md",
     "node_modules/meshoptimizer/README.md",
     "node_modules/@types/stats.js/README.md",
@@ -229,7 +230,6 @@
     "docs/3D地图集成方案-B-Canvas2D轻量方案.md",
     "docs/3D地图集成方案-D-数据驱动可视化引擎.md",
     "docs/3D地图集成方案-A-ThreeJS全量方案.md",
-    "前端开发Skills介绍.md",
-    "DESIGN.md"
+    "前端开发Skills介绍.md"
   ]
 }

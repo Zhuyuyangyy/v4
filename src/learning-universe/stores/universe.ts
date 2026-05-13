@@ -1,4 +1,5 @@
 const STORAGE_KEY = 'universe_bookmarks'
+const MASTERY_KEY = 'universe_mastery'
 
 function loadBookmarks(): string[] {
   try {
@@ -11,18 +12,37 @@ function saveBookmarks(ids: string[]) {
   try { localStorage.setItem(STORAGE_KEY, JSON.stringify(ids)) } catch { /* noop */ }
 }
 
+function loadMastery(): Record<string, number> {
+  try {
+    const raw = localStorage.getItem(MASTERY_KEY)
+    return raw ? JSON.parse(raw) : {}
+  } catch { return {} }
+}
+
+function saveMastery(data: Record<string, number>) {
+  try { localStorage.setItem(MASTERY_KEY, JSON.stringify(data)) } catch { /* noop */ }
+}
+
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import { knowledgeNodes, galaxies } from '../data/knowledge-graph'
 import type { KnowledgeNode, GalaxyCluster } from '../types'
 
 export const useUniverseStore = defineStore('universe', () => {
-  const nodes = ref<KnowledgeNode[]>(knowledgeNodes)
+  // Apply persisted mastery to nodes
+  const savedMastery = loadMastery()
+  const initNodes = knowledgeNodes.map(n => ({
+    ...n,
+    mastery: savedMastery[n.id] !== undefined ? savedMastery[n.id] : n.mastery,
+  }))
+
+  const nodes = ref<KnowledgeNode[]>(initNodes)
   const galaxyList = ref<GalaxyCluster[]>(galaxies)
   const selectedNodeId = ref<string | null>(null)
   const hoveredNodeId = ref<string | null>(null)
   const currentZoomLevel = ref<string>('universe')
   const bookmarkedNodeIds = ref<string[]>(loadBookmarks())
+  const activeSystemFilter = ref<string | null>(null)
 
   const selectedNode = computed(() =>
     nodes.value.find(n => n.id === selectedNodeId.value) ?? null,
@@ -68,6 +88,12 @@ export const useUniverseStore = defineStore('universe', () => {
     const node = nodes.value.find(n => n.id === nodeId)
     if (node) {
       node.mastery = Math.max(0, Math.min(1, value))
+      // Persist to localStorage
+      const masteryData: Record<string, number> = {}
+      for (const n of nodes.value) {
+        masteryData[n.id] = n.mastery
+      }
+      saveMastery(masteryData)
     }
   }
 
@@ -85,6 +111,15 @@ export const useUniverseStore = defineStore('universe', () => {
     return bookmarkedNodeIds.value.includes(nodeId)
   }
 
+  function setSystemFilter(systemId: string | null) {
+    activeSystemFilter.value = systemId
+  }
+
+  const filteredNodes = computed(() => {
+    if (!activeSystemFilter.value) return nodes.value
+    return nodes.value.filter(n => n.system === activeSystemFilter.value)
+  })
+
   return {
     nodes,
     galaxyList,
@@ -92,6 +127,7 @@ export const useUniverseStore = defineStore('universe', () => {
     hoveredNodeId,
     currentZoomLevel,
     bookmarkedNodeIds,
+    activeSystemFilter,
     selectedNode,
     galaxyProgress,
     overallProgress,
@@ -102,5 +138,7 @@ export const useUniverseStore = defineStore('universe', () => {
     updateMastery,
     toggleBookmark,
     isBookmarked,
+    setSystemFilter,
+    filteredNodes,
   }
 })

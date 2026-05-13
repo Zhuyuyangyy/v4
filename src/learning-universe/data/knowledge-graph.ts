@@ -392,3 +392,43 @@ export const knowledgeNodes: KnowledgeNode[] = [
     description: 'HDFS、MapReduce、Spark、Hive、Kafka、Docker/Kubernetes、AWS/GCP云服务。',
   },
 ]
+
+/* ── Assign 3D positions for all nodes ─────────────────────────
+   Distributes nodes in a spiral galaxy layout across 5 systems.
+   Each system orbits at a unique radius/angle; nodes within a
+   system form a tight cluster around the system center.          */
+const SYSTEM_ORBITS: Record<string, { r: number; angle: number }> = {
+  sys_prog_basics: { r: 10, angle: 0 },
+  sys_ai:          { r: 22, angle: 1.2 },
+  sys_frontier:    { r: 16, angle: 2.5 },
+  sys_software:    { r: 7,  angle: 3.8 },
+  sys_computer:    { r: 14, angle: 5.0 },
+}
+
+function distributeNodes() {
+  const groups: Record<string, typeof knowledgeNodes> = {}
+  for (const n of knowledgeNodes) {
+    if (!groups[n.system]) groups[n.system] = []
+    groups[n.system].push(n)
+  }
+
+  for (const [sysId, nodes] of Object.entries(groups)) {
+    const orbit = SYSTEM_ORBITS[sysId]
+    if (!orbit) continue
+    const count = nodes.length
+    const cx = orbit.r * Math.cos(orbit.angle)
+    const cz = orbit.r * Math.sin(orbit.angle)
+    const clusterR = 2 + count * 0.8
+
+    for (let i = 0; i < count; i++) {
+      const a = (i / count) * Math.PI * 2 - Math.PI / 2
+      const spread = clusterR * (0.4 + 0.6 * (i / count))
+      const x = cx + spread * Math.cos(a)
+      const z = cz + spread * Math.sin(a)
+      const y = (i % 3 - 1) * 1.2
+      nodes[i].position = [Math.round(x * 10) / 10, y, Math.round(z * 10) / 10]
+    }
+  }
+}
+
+distributeNodes()
