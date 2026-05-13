@@ -16,8 +16,8 @@ import {
   Clock,
   ChevronRight,
 } from 'lucide-vue-next'
-import type { StudyScenario } from '@/types/course'
-import { allCourses } from '@/components/course/CourseData'
+import type { StudyScenario, CourseCategory } from '@/types/course'
+import { allCourses, getCategoryConfigs } from '@/components/course/CourseData'
 import GalaxyPanel from '@/components/galaxy/GalaxyPanel.vue'
 import { phasesToGalaxyData } from '@/components/galaxy/composables/useGalaxyData'
 
@@ -30,89 +30,111 @@ const activePhaseId = ref<string | null>(null)
 
 const galaxyData = computed(() => phasesToGalaxyData(phases))
 
-/* ── AI 课程专属学习路径 ── */
+/* ── 5 大方向学习路径 ── */
 const phases = [
   {
-    title: '基础夯实',
-    period: '第 1-4 周',
+    title: '编程与算法基础',
+    period: '第 1-8 周',
     progress: 100,
     status: 'completed' as const,
-    color: '#00d4ff',
+    color: '#00599C',
     scenario: 'preview' as StudyScenario,
     nodes: [
-      { name: 'Python 科学计算', progress: 100, duration: '1.5周', topicId: 'ml-intro' },
-      { name: '概率论与数理统计', progress: 100, duration: '1.5周', topicId: 'ml-intro' },
-      { name: '线性代数与矩阵运算', progress: 100, duration: '1周', topicId: 'ml-intro' },
+      { name: 'C 语言程序设计', progress: 100, duration: '1.5周', topicId: 'c-basics' },
+      { name: 'Python 程序设计', progress: 100, duration: '1.5周', topicId: 'py-basics' },
+      { name: '面向对象 (Java/C++)', progress: 90, duration: '2周', topicId: 'java-oop-core' },
+      { name: '数据结构', progress: 80, duration: '1.5周', topicId: 'ds-linear' },
+      { name: '算法设计与分析', progress: 60, duration: '1周', topicId: 'algo-paradigm' },
     ],
   },
   {
-    title: '机器学习核心',
-    period: '第 5-10 周',
-    progress: 65,
+    title: '计算机系统',
+    period: '第 9-14 周',
+    progress: 60,
     status: 'active' as const,
-    color: '#7c3aed',
+    color: '#1565C0',
     scenario: 'inclass' as StudyScenario,
     nodes: [
-      { name: '机器学习概论与流程', progress: 100, duration: '1周', topicId: 'ml-intro' },
-      { name: 'KNN 与决策树', progress: 80, duration: '1.5周', topicId: 'ml-supervised' },
-      { name: 'SVM 与集成学习', progress: 50, duration: '1.5周', topicId: 'ml-supervised' },
-      { name: '聚类与降维', progress: 30, duration: '1周', topicId: 'ml-unsupervised' },
-      { name: '模型评估与调优', progress: 20, duration: '1周', topicId: 'ml-supervised' },
+      { name: '计算机组成原理', progress: 80, duration: '1.5周', topicId: 'arch-basics' },
+      { name: '操作系统', progress: 60, duration: '2周', topicId: 'os-process' },
+      { name: '计算机网络', progress: 50, duration: '1.5周', topicId: 'net-protocol' },
+      { name: '数据库系统原理', progress: 40, duration: '1.5周', topicId: 'db-relational' },
     ],
   },
   {
-    title: '深度学习专题',
-    period: '第 11-16 周',
-    progress: 25,
+    title: '软件工程与测试',
+    period: '第 15-16 周',
+    progress: 20,
     status: 'active' as const,
-    color: '#06d6a0',
+    color: '#FF6F00',
     scenario: 'homework' as StudyScenario,
     nodes: [
-      { name: '神经网络与反向传播', progress: 40, duration: '1.5周', topicId: 'dl-basics' },
-      { name: 'CNN 图像识别', progress: 30, duration: '2周', topicId: 'dl-cnn' },
-      { name: 'Transformer 与注意力机制', progress: 15, duration: '2周', topicId: 'nlp-transformer' },
-      { name: 'NLP 预训练模型应用', progress: 0, duration: '1.5周', topicId: 'nlp-bert' },
+      { name: '软件工程', progress: 25, duration: '1周', topicId: 'se-process' },
+      { name: '软件测试', progress: 15, duration: '1周', topicId: 'test-methods' },
     ],
   },
   {
-    title: '实战与拓展',
-    period: '第 17-20 周',
+    title: '人工智能方向',
+    period: '第 17-26 周',
+    progress: 25,
+    status: 'active' as const,
+    color: '#7c3aed',
+    scenario: 'homework' as StudyScenario,
+    nodes: [
+      { name: '离散数学', progress: 50, duration: '1周', topicId: 'dm-logic' },
+      { name: '概率论与数理统计', progress: 40, duration: '1周', topicId: 'prob-basics' },
+      { name: '人工智能导论', progress: 35, duration: '1周', topicId: 'ai-fund' },
+      { name: '机器学习', progress: 30, duration: '2周', topicId: 'ml-intro' },
+      { name: '深度学习', progress: 15, duration: '2周', topicId: 'dl-basics' },
+      { name: 'NLP / 计算机视觉', progress: 10, duration: '2周', topicId: 'nlp-basics' },
+      { name: '强化学习与生成式AI', progress: 0, duration: '1周', topicId: 'rl-basics' },
+    ],
+  },
+  {
+    title: '前沿与应用',
+    period: '第 27-30 周',
     progress: 0,
     status: 'locked' as const,
-    color: '#f59e0b',
+    color: '#00695C',
     scenario: 'exam' as StudyScenario,
     nodes: [
-      { name: 'LLM 应用开发实战', progress: 0, duration: '2周', topicId: 'llm-rag' },
-      { name: 'AI Agent 项目', progress: 0, duration: '1.5周', topicId: 'llm-agent' },
-      { name: '模型部署与服务', progress: 0, duration: '1周', topicId: 'mlops-deploy' },
+      { name: '计算机图形学', progress: 0, duration: '1周', topicId: 'cg-basics' },
+      { name: '信息安全基础', progress: 0, duration: '1周', topicId: 'sec-crypto' },
+      { name: '大数据与云计算', progress: 0, duration: '2周', topicId: 'bd-basics' },
     ],
   },
 ]
 
 const achievements = [
-  { icon: Sparkles, title: 'Python 启航', earned: true, color: '#00d4ff' },
-  { icon: Award, title: '算法入门', earned: true, color: '#7c3aed' },
-  { icon: Zap, title: '机器学习', earned: true, color: '#06d6a0' },
-  { icon: Target, title: '深度学习', earned: false, color: '#3b82f6' },
-  { icon: BookOpen, title: '大模型实战', earned: false, color: '#f59e0b' },
+  { icon: Sparkles, title: 'C 语言启航', earned: true, color: '#00599C' },
+  { icon: Award, title: '数据结构', earned: true, color: '#4CAF50' },
+  { icon: Zap, title: '计算机系统', earned: true, color: '#1565C0' },
+  { icon: Target, title: '机器学习', earned: false, color: '#00d4ff' },
+  { icon: BookOpen, title: '深度学习', earned: false, color: '#7c3aed' },
   { icon: Star, title: '全栈 AI 工程师', earned: false, color: '#f43f5e' },
 ]
 
 const weeklyGoals = [
-  { label: '深度学习：CNN 专题', progress: 65, target: '卷积/池化/经典架构' },
+  { label: '操作系统：进程管理', progress: 60, target: '进程调度 / 同步互斥' },
   { label: 'LeetCode 算法练习', progress: 40, target: '10 题/周' },
-  { label: '论文阅读：Transformer', progress: 30, target: '1 篇' },
-  { label: 'PyTorch 项目实践', progress: 15, target: '图像分类模型' },
+  { label: '数据库：SQL 练习', progress: 35, target: '复杂查询 / 事务' },
+  { label: '机器学习项目实践', progress: 15, target: 'KNN 分类器实现' },
 ]
 
 const learningStats = [
-  { label: '本周学习', value: '14.5h', change: '+18%', icon: Award },
-  { label: '完成节点', value: '6/13', change: '进行中', icon: GitCompare },
+  { label: '本周学习', value: '16.5h', change: '+12%', icon: Award },
+  { label: '完成课程', value: '8/24', change: '进行中', icon: GitCompare },
   { label: '连续学习', value: '23天', change: '历史最长', icon: Sparkles },
 ]
 
-/* ── AI 课程概览 ── */
-const aiCourses = computed(() => allCourses.filter(c => c.domain === 'ai'))
+/* ── 课程概览（5大方向） ── */
+const categories = getCategoryConfigs()
+const coursesByCategory = computed(() => {
+  return categories.map(cat => ({
+    ...cat,
+    courses: cat.courses.map(id => allCourses.find(c => c.id === id)).filter(Boolean) as typeof allCourses,
+  }))
+})
 
 const completedPhases = phases.filter(p => p.status === 'completed').length
 const totalPhases = phases.length
@@ -218,24 +240,27 @@ onUnmounted(() => {
       <GalaxyPanel :galaxy-data="galaxyData" :active-phase-id="activePhaseId" :loading="loading" :empty="empty" :error="error" @phase-click="handlePhaseClick" />
 
       <div class="lp-content">
-    <!-- AI Course Overview -->
+    <!-- Course Overview: 5 大方向 -->
     <div class="course-overview">
       <div class="co-header">
         <BookOpen :size="14" stroke-width="1.5" />
-        <span>AI 课程体系</span>
+        <span>全部课程（24 门 / 5 大方向）</span>
       </div>
-      <div class="co-grid">
-        <div
-          v-for="c in aiCourses"
-          :key="c.id"
-          class="co-chip"
-          :style="{ '--c-clr': c.color }"
-          @click="goToTutoring('preview', c.name)"
-        >
-          <span class="co-name">{{ c.name }}</span>
-          <span class="co-diff">
-            {{ c.difficulty === 'beginner' ? '入门' : c.difficulty === 'intermediate' ? '进阶' : '高级' }}
-          </span>
+      <div v-for="cat in coursesByCategory" :key="cat.key" class="co-group">
+        <div class="co-group-label">{{ cat.seq }}. {{ cat.label }}（{{ cat.courses.length }} 门）</div>
+        <div class="co-grid">
+          <div
+            v-for="c in cat.courses"
+            :key="c.id"
+            class="co-chip"
+            :style="{ '--c-clr': c.color }"
+            @click="goToTutoring('preview', c.name)"
+          >
+            <span class="co-name">{{ c.name }}</span>
+            <span class="co-diff">
+              {{ c.difficulty === 'beginner' ? '入门' : c.difficulty === 'intermediate' ? '进阶' : '高级' }}
+            </span>
+          </div>
         </div>
       </div>
     </div>
@@ -808,6 +833,21 @@ onUnmounted(() => {
   font-size: 12px;
   color: var(--color-text-tertiary);
   margin-bottom: 10px;
+}
+
+.co-group {
+  margin-bottom: 12px;
+}
+.co-group:last-child { margin-bottom: 0; }
+
+.co-group-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  margin-bottom: 6px;
+  padding: 0 2px;
+  letter-spacing: 0.3px;
+  opacity: 0.8;
 }
 
 .co-grid {

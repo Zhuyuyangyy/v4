@@ -88,12 +88,37 @@ const resources = [
   { id: 25, type: 'doc' as const, title: 'MLflow 实验管理实战', desc: '实验追踪、模型注册、版本管理，使用 MLflow 构建可复现的机器学习实验流程。', tags: ['MLOps', '工程'], date: '2026-04-26', color: '#a855f7', reads: 123 },
   { id: 26, type: 'code' as const, title: 'FastAPI 模型服务部署', desc: '使用 FastAPI 将 ML 模型部署为 RESTful API 服务，包含 Docker 容器化方案。', tags: ['MLOps', '部署'], date: '2026-04-25', color: '#a855f7', reads: 189 },
   { id: 27, type: 'doc' as const, title: '模型监控与数据漂移检测', desc: '生产环境模型监控方案：数据漂移检测、概念漂移、模型性能衰减预警。', tags: ['MLOps', '监控'], date: '2026-04-24', color: '#a855f7', reads: 78 },
+
+  // ── 编程与算法基础 ──
+  { id: 28, type: 'doc' as const, title: 'C 语言指针深度解析', desc: '深入理解 C 语言指针、数组与指针的关系、函数指针、动态内存管理。', tags: ['C', '编程'], date: '2026-05-12', color: '#00599C', reads: 167 },
+  { id: 29, type: 'code' as const, title: 'Python 装饰器与生成器', desc: '深入理解 Python 装饰器原理、生成器与协程，写出更 Pythonic 的代码。', tags: ['Python', '进阶'], date: '2026-05-11', color: '#3776AB', reads: 198 },
+  { id: 30, type: 'doc' as const, title: 'Java OOP 核心思想详解', desc: '封装、继承、多态、接口与抽象类的深入解析，配合实战案例。', tags: ['Java', 'OOP'], date: '2026-05-10', color: '#ED8B00', reads: 145 },
+  { id: 31, type: 'doc' as const, title: 'C++ 模板与 STL 实战', desc: '函数模板、类模板、STL 容器与算法、智能指针，现代 C++ 开发必备。', tags: ['C++', '模板'], date: '2026-05-09', color: '#00599C', reads: 134 },
+  { id: 32, type: 'mindmap' as const, title: '数据结构知识图谱', desc: '线性表、树、图、散列表、堆等核心数据结构全景对比与应用场景。', tags: ['数据结构', '体系'], date: '2026-05-08', color: '#4CAF50', reads: 223 },
+  { id: 33, type: 'exercise' as const, title: '算法面试 150 题', desc: '精选高频算法面试题，涵盖动态规划、贪心、回溯、图论等核心算法。', tags: ['算法', '面试'], date: '2026-05-07', color: '#FF5722', reads: 289 },
+  { id: 34, type: 'doc' as const, title: '编译原理入门与实践', desc: '从词法分析到代码生成，理解编译器的工作流程与核心原理。', tags: ['编译', '系统'], date: '2026-05-06', color: '#9C27B0', reads: 98 },
+
+  // ── 计算机系统 ──
+  { id: 35, type: 'doc' as const, title: '计算机组成原理精要', desc: 'CPU 结构、存储器层次、流水线技术、I/O 系统，硬件核心知识全覆盖。', tags: ['组成原理', '硬件'], date: '2026-05-05', color: '#607D8B', reads: 145 },
+  { id: 36, type: 'video' as const, title: '操作系统核心概念精讲', desc: '进程管理、内存管理、文件系统、设备管理，OS 四大核心模块深入解析。', tags: ['OS', '核心'], date: '2026-05-04', color: '#1565C0', reads: 256 },
+  { id: 37, type: 'code' as const, title: 'TCP 套接字编程实战', desc: '从基础 TCP/UDP 编程到多线程并发服务器，网络编程完整实战教程。', tags: ['网络', '编程'], date: '2026-05-03', color: '#0277BD', reads: 167 },
+  { id: 38, type: 'exercise' as const, title: '数据库 SQL 强化练习', desc: '从基础查询到复杂嵌套、事务、索引优化，50 道 SQL 实战练习题。', tags: ['数据库', 'SQL'], date: '2026-05-02', color: '#336791', reads: 189 },
+
+  // ── 软件工程 ──
+  { id: 39, type: 'doc' as const, title: '软件工程实践指南', desc: '需求分析、架构设计、设计模式、项目管理、DevOps 全流程实践。', tags: ['软工', '实践'], date: '2026-05-01', color: '#FF6F00', reads: 123 },
+  { id: 40, type: 'code' as const, title: 'PyTest 自动化测试实战', desc: '单元测试、参数化测试、Mock、Fixture 覆盖，构建高质量自动化测试体系。', tags: ['测试', '自动化'], date: '2026-04-30', color: '#D32F2F', reads: 156 },
+
+  // ── 前沿与应用 ──
+  { id: 41, type: 'doc' as const, title: '信息安全基础入门', desc: '密码学、Web 安全、系统安全、隐私保护，信息安全核心知识全解析。', tags: ['安全', '入门'], date: '2026-04-29', color: '#C62828', reads: 134 },
+  { id: 42, type: 'doc' as const, title: '大数据技术全景', desc: 'Hadoop、Spark、Flink、Kafka 大数据核心技术栈与生态体系。', tags: ['大数据', '体系'], date: '2026-04-28', color: '#00695C', reads: 178 },
+  { id: 43, type: 'code' as const, title: 'Docker + K8s 容器化部署', desc: '从 Docker 容器到 Kubernetes 编排，云原生应用部署完整实战。', tags: ['云原生', '部署'], date: '2026-04-27', color: '#00695C', reads: 234 },
+  { id: 44, type: 'doc' as const, title: '计算机图形学入门', desc: '图形管线、三维变换、光照模型、光线追踪，图形学核心概念入门。', tags: ['图形学', '渲染'], date: '2026-04-26', color: '#2E7D32', reads: 89 },
 ]
 
 const recommended = [
-  { id: 100, type: 'doc' as const, title: 'Transformer 原理与代码实战', desc: '从论文到 PyTorch 代码，完整实现 Transformer 架构', tags: ['NLP', '核心'], date: '2026-05-12', color: '#06d6a0', reads: 312 },
+  { id: 100, type: 'doc' as const, title: '数据结构与算法刷题指南', desc: '从基础数据结构到高级算法，系统刷题路线与方法论', tags: ['编程', '算法'], date: '2026-05-12', color: '#4CAF50', reads: 345 },
   { id: 101, type: 'mindmap' as const, title: 'AI 算法工程师技能树', desc: '从基础到前沿，AI 算法工程师完整技能图谱与学习路线', tags: ['AI', '体系'], date: '2026-05-12', color: '#7c3aed', reads: 256 },
-  { id: 102, type: 'code' as const, title: 'RAG 系统企业级实现', desc: '基于 LangChain + ChromaDB 构建生产级 RAG 问答系统', tags: ['LLM', '实战'], date: '2026-05-11', color: '#f59e0b', reads: 189 },
+  { id: 102, type: 'code' as const, title: '操作系统实验：生产者消费者', desc: '使用信号量和管程解决经典同步问题，含完整代码实现', tags: ['OS', '实战'], date: '2026-05-11', color: '#1565C0', reads: 189 },
 ]
 
 const filtered = computed(() => {

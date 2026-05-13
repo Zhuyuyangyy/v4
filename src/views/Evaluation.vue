@@ -26,10 +26,10 @@ const loaded = ref(false)
 const showReportModal = ref(false)
 
 const stats = [
-  { label: '机器学习', value: '78%', change: '+12%', icon: BarChart3, color: '#00d4ff' },
-  { label: '深度学习', value: '62%', change: '+8%', icon: Brain, color: '#7c3aed' },
-  { label: 'NLP & LLM', value: '45%', change: '+15%', icon: BookOpen, color: '#06d6a0' },
-  { label: '综合掌握度', value: '68%', change: '+10%', icon: TrendingUp, color: '#f59e0b' },
+  { label: '编程与算法', value: '82%', change: '+8%', icon: BarChart3, color: '#00599C' },
+  { label: '计算机系统', value: '58%', change: '+12%', icon: Brain, color: '#1565C0' },
+  { label: 'AI 方向', value: '45%', change: '+15%', icon: BookOpen, color: '#7c3aed' },
+  { label: '综合掌握度', value: '62%', change: '+10%', icon: TrendingUp, color: '#f59e0b' },
 ]
 
 const weeklyData = [45, 52, 38, 65, 70, 55, 80]
@@ -37,11 +37,11 @@ const peerAvg = [42, 48, 40, 52, 55, 50, 58]
 const days = ['周一', '周二', '周三', '周四', '周五', '周六', '周日']
 
 const subjects = [
-  { name: '机器学习基础', mastery: 88, color: '#00d4ff' },
-  { name: '监督学习算法', mastery: 72, color: '#3b82f6' },
-  { name: '深度学习', mastery: 58, color: '#7c3aed' },
-  { name: '自然语言处理', mastery: 45, color: '#06d6a0' },
-  { name: '大模型应用', mastery: 35, color: '#f59e0b' },
+  { name: 'C / Python 编程基础', mastery: 90, color: '#00599C' },
+  { name: '数据结构与算法', mastery: 78, color: '#4CAF50' },
+  { name: '计算机系统（OS/网络/DB）', mastery: 58, color: '#1565C0' },
+  { name: '机器学习', mastery: 65, color: '#00d4ff' },
+  { name: '深度学习', mastery: 42, color: '#7c3aed' },
   { name: '数学与编程基础', mastery: 82, color: '#f43f5e' },
 ]
 
@@ -56,13 +56,13 @@ const weeklyTrend = [
 ]
 
 const suggestions = [
-  { text: 'Transformer 与注意力机制需要加强，建议通过流程图理解结构', type: 'weakness' as const, icon: AlertTriangle },
-  { text: '机器学习基础掌握良好，建议开始深度学习专题学习', type: 'strength' as const, icon: Sparkles },
+  { text: '操作系统与计算机网络需要加强，建议通过实验理解核心概念', type: 'weakness' as const, icon: AlertTriangle },
+  { text: '编程基础掌握良好，建议开始数据结构进阶学习', type: 'strength' as const, icon: Sparkles },
   { text: '本周学习时长较上周增加 15%，保持良好的学习节奏', type: 'positive' as const, icon: ArrowUp },
-  { text: '建议增加 LLM 实践项目，从 Prompt Engineering 开始入门', type: 'action' as const, icon: ArrowRight },
+  { text: '建议增加项目实践，从数据库或 Web 项目开始动手', type: 'action' as const, icon: ArrowRight },
 ]
 
-const aiCourseList = allCourses.filter(c => c.domain === 'ai')
+const aiCourseList = allCourses
 
 const badges = [
   { icon: Sparkles, name: '初识学习', earned: true, color: '#00d4ff' },

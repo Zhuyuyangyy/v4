@@ -26,7 +26,7 @@ const mindMapNodes = computed(() => {
   return allMaps
 })
 
-const courses = computed(() => allCourses.filter(c => c.domain === 'ai'))
+const courses = computed(() => allCourses)
 
 const currentColor = computed(() => selectedCourse.value?.color ?? '#00d4ff')
 

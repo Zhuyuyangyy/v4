@@ -1,14 +1,23 @@
 /* ===================================================================
  * EduMind — 课程内容类型系统
  * 定义课程、知识点、资源、流程图、代码示例等全局类型
+ * 支持 5 大方向 24 门课程
  * =================================================================== */
 
 /* ── 枚举类型 ── */
 
-/** 课程领域 */
-export type CourseDomain = 'ai' | 'cs' | 'math' | 'electronics'
+/** 课程大类方向（5大方向） */
+export type CourseCategory =
+  | 'programming'   // 一、编程与算法基础
+  | 'systems'       // 二、计算机系统
+  | 'software'      // 三、软件工程
+  | 'ai'            // 四、人工智能方向
+  | 'frontier'      // 五、前沿与应用
 
-/** AI 子方向（聚焦深耕） */
+/** 课程领域（原有，兼容使用） */
+export type CourseDomain = 'ai' | 'cs' | 'math' | 'electronics' | 'se' | 'advance'
+
+/** AI 子方向 */
 export type AISubfield =
   | 'ml'        // 机器学习
   | 'dl'        // 深度学习
@@ -17,29 +26,26 @@ export type AISubfield =
   | 'rl'        // 强化学习
   | 'llm'       // 大模型应用
   | 'mlops'     // ML 工程
+  | 'ai-intro'  // AI 概论
 
 /** 资源类型 */
 export type ResourceType = 'doc' | 'mindmap' | 'exercise' | 'video' | 'code' | 'flowchart'
 
-/** 学习场景（场景化辅导） */
+/** 学习场景 */
 export type StudyScenario = 'preview' | 'inclass' | 'homework' | 'exam' | 'project'
 
 /** 难度级别 */
 export type Difficulty = 'beginner' | 'intermediate' | 'advanced'
 
-/** 辅导模式（子模式） */
+/** 辅导模式 */
 export type TutorSubMode =
-  // 预习场景
   | 'concept-overview'
   | 'case-intro'
-  // 课中场景
   | 'quick-qa'
   | 'catch-up'
-  // 实验场景
   | 'code-tutor'
   | 'debug-help'
   | 'report-guide'
-  // 冲刺场景
   | 'review-points'
   | 'problem-types'
   | 'project-guide'
@@ -52,7 +58,6 @@ export interface Concept {
   name: string
   description: string
   difficulty: Difficulty
-  /** 前置知识点 ID 列表 */
   prerequisites: string[]
 }
 
@@ -61,9 +66,7 @@ export interface FlowStage {
   id: string
   name: string
   description: string
-  /** 该阶段的参数（可调节） */
   params?: { key: string; label: string; type: 'number' | 'select'; options?: string[]; default: number | string }[]
-  /** 悬停数据预览说明 */
   dataPreview?: string
 }
 
@@ -73,7 +76,6 @@ export interface CodeExample {
   description: string
   language: string
   code: string
-  /** 预期输出 */
   output?: string
 }
 
@@ -90,23 +92,22 @@ export interface CourseTopic {
   name: string
   description: string
   concepts: Concept[]
-  /** 关联资源 */
   resources: ResourceRef[]
-  /** 数据处理流程（用于流程图） */
   flowStages?: FlowStage[]
-  /** 代码示例（用于代码画板） */
   codeExamples?: CodeExample[]
-  /** 预设问题（用于辅导对话） */
   presetQuestions?: { q: string; a: string }[]
-  /** 思维导图节点树 */
   mindMap?: MindMapNode[]
 }
 
 /** 课程 */
 export interface Course {
   id: string
+  /** 所属大类方向 */
+  category: CourseCategory
+  /** 课程序号（1-24） */
+  seq: number
   domain: CourseDomain
-  subfield: AISubfield
+  subfield?: string
   name: string
   description: string
   icon: string
@@ -122,7 +123,6 @@ export interface MindMapNode {
   label: string
   description?: string
   children?: MindMapNode[]
-  /** 关联资源 ID */
   refId?: string
 }
 
@@ -136,10 +136,18 @@ export interface ScenarioConfig {
   color: string
 }
 
+/** 大类方向配置 */
+export interface CategoryConfig {
+  key: CourseCategory
+  label: string
+  seq: number
+  courses: string[] // course id 列表
+}
+
 /* ── 学习进度类型 ── */
 
 export interface TopicProgress {
   topicId: string
   status: 'locked' | 'available' | 'in-progress' | 'completed'
-  progress: number // 0-100
+  progress: number
 }
