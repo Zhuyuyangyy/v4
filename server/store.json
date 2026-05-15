@@ -1,0 +1,214 @@
+{
+  "profileResult": {
+    "dimensions": [
+      {
+        "label": "知识基础",
+        "value": 65,
+        "color": "#00d4ff"
+      },
+      {
+        "label": "学习速度",
+        "value": 57,
+        "color": "#3b82f6"
+      },
+      {
+        "label": "逻辑思维",
+        "value": 70,
+        "color": "#7c3aed"
+      },
+      {
+        "label": "创造力",
+        "value": 62,
+        "color": "#06d6a0"
+      },
+      {
+        "label": "专注力",
+        "value": 58,
+        "color": "#f59e0b"
+      },
+      {
+        "label": "自律性",
+        "value": 64,
+        "color": "#f43f5e"
+      }
+    ],
+    "totalScore": 63,
+    "stats": [
+      {
+        "label": "综合评分",
+        "value": "63",
+        "icon": "Brain",
+        "color": "#00d4ff"
+      },
+      {
+        "label": "最强维度",
+        "value": "逻辑思维",
+        "icon": "Zap",
+        "color": "#3b82f6"
+      },
+      {
+        "label": "待提升",
+        "value": "3 项",
+        "icon": "BarChart3",
+        "color": "#f59e0b"
+      },
+      {
+        "label": "学习阶段",
+        "value": "中级",
+        "icon": "BookOpen",
+        "color": "#06d6a0"
+      }
+    ],
+    "weaknesses": [
+      {
+        "tag": "学习速度提升",
+        "count": 8
+      },
+      {
+        "tag": "专注力提升",
+        "count": 6
+      },
+      {
+        "tag": "创造力提升",
+        "count": 4
+      }
+    ],
+    "skillTree": [
+      {
+        "category": "核心能力",
+        "color": "#00d4ff",
+        "skills": [
+          {
+            "name": "理论基础",
+            "level": 65
+          },
+          {
+            "name": "问题拆解",
+            "level": 70
+          },
+          {
+            "name": "持续学习",
+            "level": 64
+          }
+        ]
+      }
+    ],
+    "preferences": [
+      {
+        "label": "最佳时段",
+        "value": "晚上"
+      },
+      {
+        "label": "资源偏好",
+        "value": "视频课程"
+      },
+      {
+        "label": "每周投入",
+        "value": "5-10 小时"
+      },
+      {
+        "label": "学习节奏",
+        "value": "稳扎稳打"
+      }
+    ],
+    "timeline": [
+      {
+        "date": "2026-05-12",
+        "event": "完成学习画像评估",
+        "score": "63 分",
+        "type": "up"
+      }
+    ],
+    "recommendations": [
+      "优先巩固 学习速度，每天安排 20 分钟专项训练。",
+      "继续发挥 逻辑思维 优势，把它用在当前学习方向的关键任务里。",
+      "建议每两周复盘一次学习进度，动态调整资源和节奏。"
+    ]
+  },
+  "chatHistory": [
+    {
+      "id": 1778567366491,
+      "role": "user",
+      "content": "???????",
+      "time": "14:29"
+    },
+    {
+      "id": 1778567366492,
+      "role": "assistant",
+      "content": "我先帮你把问题拆开来看：???????\n\n1. 先确认你现在卡住的是概念、实现还是练习。\n2. 如果是概念问题，就抓住定义、例子和适用场景。\n3. 如果是实现问题，就优先理清输入、输出和边界条件。\n\n如果你愿意，我下一步可以继续把它拆成步骤、代码示例，或者配套练习题。",
+      "time": "14:29",
+      "resources": [
+        {
+          "type": "doc",
+          "title": "相关概念速查",
+          "color": "#00d4ff"
+        },
+        {
+          "type": "mindmap",
+          "title": "知识脉络图",
+          "color": "#7c3aed"
+        },
+        {
+          "type": "exercise",
+          "title": "配套练习",
+          "color": "#06d6a0"
+        }
+      ],
+      "suggestions": [
+        "用更简单的话解释",
+        "给我一个代码示例",
+        "顺便出 3 道练习题"
+      ]
+    },
+    {
+      "id": 1778674744276,
+      "role": "user",
+      "content": "帮我制定学习计划",
+      "time": "20:19"
+    },
+    {
+      "id": 1778674744277,
+      "role": "assistant",
+      "content": "我先帮你把问题拆开来看：帮我制定学习计划\n\n1. 先确认你现在卡住的是概念、实现还是练习。\n2. 如果是概念问题，就抓住定义、例子和适用场景。\n3. 如果是实现问题，就优先理清输入、输出和边界条件。\n\n如果你愿意，我下一步可以继续把它拆成步骤、代码示例，或者配套练习题。",
+      "time": "20:19",
+      "resources": [
+        {
+          "type": "doc",
+          "title": "相关概念速查",
+          "color": "#00d4ff"
+        },
+        {
+          "type": "mindmap",
+          "title": "知识脉络图",
+          "color": "#7c3aed"
+        },
+        {
+          "type": "exercise",
+          "title": "配套练习",
+          "color": "#06d6a0"
+        }
+      ],
+      "suggestions": [
+        "用更简单的话解释",
+        "给我一个代码示例",
+        "顺便出 3 道练习题"
+      ]
+    }
+  ],
+  "tutoringHistory": [
+    {
+      "q": "???????",
+      "a": "当前模式：概念精讲\n\n问题：???????\n\n建议你先抓住“定义、例子、应用”这三个层次。如果你愿意，我可以继续把它拆成步骤、代码或练习。",
+      "time": "14:29",
+      "mode": "explain",
+      "scenario": "preview"
+    },
+    {
+      "q": "什么是机器学习？它和传统编程有什么不同？",
+      "a": "当前模式：自由问答\n\n问题：什么是机器学习？它和传统编程有什么不同？\n\n建议你先抓住“定义、例子、应用”这三个层次。如果你愿意，我可以继续把它拆成步骤、代码或练习。",
+      "time": "15:06",
+      "mode": "concept-overview",
+      "scenario": "preview"
+    }
+  ]
+}

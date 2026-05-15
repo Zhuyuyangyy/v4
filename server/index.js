@@ -4,14 +4,21 @@ import {
   analyzeProfile,
   buildChatReply,
   buildTutoringReply,
-  evaluationPayload,
-  learningPathPayload,
-  recommendedResources,
-  resources,
-  tutoringTopics,
+  getChatHistory,
+  getEvaluationPayload,
+  getLearningPathPayload,
+  getLatestProfileResult,
+  getRecommendedResources,
+  getResources,
+  getTutoringHistory,
+  getTutoringTopics,
+  saveChatHistoryEntry,
+  saveProfileResult,
+  saveTutoringHistoryEntry,
 } from './data.js'
 
 const PORT = Number(process.env.PORT || 8787)
+const MAX_BODY_SIZE = 1024 * 1024
 
 function sendJson(res, statusCode, payload) {
   res.writeHead(statusCode, {
@@ -29,11 +36,21 @@ function notFound(res) {
 
 function readJson(req) {
   return new Promise((resolve, reject) => {
-    let raw = ''
+    const chunks = []
+    let size = 0
+
     req.on('data', chunk => {
-      raw += chunk
+      size += chunk.length
+      if (size > MAX_BODY_SIZE) {
+        const error = new Error('Payload too large')
+        error.statusCode = 413
+        req.destroy(error)
+        return
+      }
+      chunks.push(chunk)
     })
     req.on('end', () => {
+      const raw = Buffer.concat(chunks).toString('utf8')
       if (!raw) {
         resolve({})
         return
@@ -41,6 +58,7 @@ function readJson(req) {
       try {
         resolve(JSON.parse(raw))
       } catch (error) {
+        error.statusCode = 400
         reject(error)
       }
     })
@@ -51,6 +69,7 @@ function readJson(req) {
 function listResources(searchParams) {
   const type = searchParams.get('type')
   const q = (searchParams.get('q') || '').trim().toLowerCase()
+  const resources = getResources()
 
   return resources.filter(item => {
     if (type && type !== 'all' && item.type !== type) {
@@ -90,24 +109,50 @@ const server = http.createServer(async (req, res) => {
 
     if (req.method === 'POST' && pathname === '/api/profile/analyze') {
       const body = await readJson(req)
-      sendJson(res, 200, analyzeProfile(body))
+      const result = analyzeProfile(body)
+      saveProfileResult(result)
+      sendJson(res, 200, result)
+      return
+    }
+
+    if (req.method === 'GET' && pathname === '/api/profile/latest') {
+      sendJson(res, 200, { result: getLatestProfileResult() })
       return
     }
 
     if (req.method === 'POST' && pathname === '/api/chat') {
       const body = await readJson(req)
-      sendJson(res, 200, buildChatReply(body.message))
+      const reply = buildChatReply(body.message)
+      saveChatHistoryEntry(String(body.message || '').trim(), reply)
+      sendJson(res, 200, reply)
+      return
+    }
+
+    if (req.method === 'GET' && pathname === '/api/chat/history') {
+      sendJson(res, 200, { items: getChatHistory() })
       return
     }
 
     if (req.method === 'POST' && pathname === '/api/tutoring/ask') {
       const body = await readJson(req)
-      sendJson(res, 200, buildTutoringReply(body.question, body.mode))
+      const reply = buildTutoringReply(body.question, body.mode)
+      saveTutoringHistoryEntry({
+        question: String(body.question || '').trim() || '未提供问题',
+        answer: reply.answer,
+        mode: body.mode || 'qa',
+        scenario: body.scenario || 'preview',
+      })
+      sendJson(res, 200, reply)
+      return
+    }
+
+    if (req.method === 'GET' && pathname === '/api/tutoring/history') {
+      sendJson(res, 200, { items: getTutoringHistory() })
       return
     }
 
     if (req.method === 'GET' && pathname === '/api/tutoring/topics') {
-      sendJson(res, 200, { topics: tutoringTopics })
+      sendJson(res, 200, { topics: getTutoringTopics() })
       return
     }
 
@@ -117,24 +162,25 @@ const server = http.createServer(async (req, res) => {
     }
 
     if (req.method === 'GET' && pathname === '/api/resources/recommended') {
-      sendJson(res, 200, { items: recommendedResources })
+      sendJson(res, 200, { items: getRecommendedResources() })
       return
     }
 
     if (req.method === 'GET' && pathname === '/api/learning-path') {
-      sendJson(res, 200, learningPathPayload)
+      sendJson(res, 200, getLearningPathPayload())
       return
     }
 
     if (req.method === 'GET' && pathname === '/api/evaluation') {
-      sendJson(res, 200, evaluationPayload)
+      sendJson(res, 200, getEvaluationPayload())
       return
     }
 
     notFound(res)
   } catch (error) {
-    sendJson(res, 500, {
-      error: 'Internal Server Error',
+    const statusCode = error instanceof Error && 'statusCode' in error ? error.statusCode : 500
+    sendJson(res, statusCode, {
+      error: statusCode === 413 ? 'Payload Too Large' : statusCode === 400 ? 'Bad Request' : 'Internal Server Error',
       message: error instanceof Error ? error.message : 'Unknown error',
     })
   }

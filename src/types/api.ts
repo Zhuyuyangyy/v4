@@ -12,9 +12,14 @@ export interface ApiResource {
 }
 
 export interface ChatResource {
-  type: string
+  type: 'doc' | 'mindmap' | 'exercise' | 'video' | 'code'
   title: string
   color?: string
+}
+
+export interface ApiSuggestion {
+  text: string
+  type?: 'weakness' | 'strength' | 'positive' | 'action'
 }
 
 export interface ChatReply {
@@ -23,9 +28,27 @@ export interface ChatReply {
   suggestions?: string[]
 }
 
+export interface ChatHistoryItem {
+  id: number
+  role: 'user' | 'assistant'
+  content: string
+  time: string
+  resources?: ChatResource[]
+  suggestions?: string[]
+}
+
 export interface TutoringReply {
   answer: string
   time: string
+}
+
+export interface TutoringHistoryItem {
+  q: string
+  a: string
+  time: string
+  helpful?: boolean
+  scenario: string
+  mode: string
 }
 
 export interface LearningPathResponse {
@@ -56,9 +79,13 @@ export interface EvaluationResponse {
     value: string
     change: string
     color: string
+    icon?: string
   }>
-  suggestions: string[]
+  suggestions: ApiSuggestion[]
 }
 
 export type ProfileAnalyzeRequest = SurveyAnswers
 export type ProfileAnalyzeResponse = ProfileResult
+export interface LatestProfileResponse {
+  result: ProfileResult | null
+}

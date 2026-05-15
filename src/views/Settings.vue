@@ -20,7 +20,9 @@ import {
   Download,
   Check,
 } from 'lucide-vue-next'
+import { useAppStore } from '@/store'
 
+const appStore = useAppStore()
 const theme = ref('dark')
 const language = ref('zh')
 const notifications = ref(true)
@@ -30,9 +32,8 @@ const preferredResource = ref('video')
 const emailDigest = ref(true)
 const soundEnabled = ref(true)
 const shareData = ref(false)
-
 const accountEmail = ref('user@example.com')
-const accountName = ref('学习者')
+const accountName = ref('ѧϰ��')
 const saved = ref(false)
 
 function saveSettings() {
@@ -66,7 +67,7 @@ function saveSettings() {
           <div class="profile-row">
             <div class="avatar-section">
               <div class="avatar-ring">
-                <span class="avatar-letter">学</span>
+                <span class="avatar-letter">�?/span>
               </div>
               <button class="avatar-change">更换</button>
             </div>
@@ -78,7 +79,7 @@ function saveSettings() {
 
           <div class="field-row">
             <div class="field-info">
-              <span class="field-label">用户名</span>
+              <span class="field-label">用户�?/span>
               <span class="field-desc">你的显示名称</span>
             </div>
             <input type="text" v-model="accountName" class="field-input" />
@@ -93,7 +94,7 @@ function saveSettings() {
           <div class="field-row">
             <div class="field-info">
               <span class="field-label">登录密码</span>
-              <span class="field-desc">定期更换密码以保护账号安全</span>
+              <span class="field-desc">定期更换密码以保护账号安�?/span>
             </div>
             <button class="btn-outline">修改密码</button>
           </div>
@@ -129,7 +130,7 @@ function saveSettings() {
               <span class="field-desc">界面文字的语言</span>
             </div>
             <select v-model="language" class="field-select">
-              <option value="zh">简体中文</option>
+              <option value="zh">简体中�?/option>
               <option value="en">English</option>
             </select>
           </div>
@@ -148,6 +149,15 @@ function saveSettings() {
               <span class="field-desc">界面交互的提示音</span>
             </div>
             <button :class="['toggle-switch', { on: soundEnabled }]" @click="soundEnabled = !soundEnabled" role="switch" :aria-checked="soundEnabled">
+              <span class="switch-knob" />
+            </button>
+          </div>
+          <div class="field-row">
+            <div class="field-info">
+              <span class="field-label">������ʾ</span>
+              <span class="field-desc">���� AI Coding Companion �����Ƿ��ڸ���ҳ��ʾ</span>
+            </div>
+            <button :class="['toggle-switch', { on: appStore.desktopPetEnabled }]" @click="appStore.setDesktopPetEnabled(!appStore.desktopPetEnabled)" role="switch" :aria-checked="appStore.desktopPetEnabled">
               <span class="switch-knob" />
             </button>
           </div>
@@ -175,7 +185,7 @@ function saveSettings() {
           <div class="field-row">
             <div class="field-info">
               <span class="field-label">学习提醒</span>
-              <span class="field-desc">在设定的时间发送学习提醒</span>
+              <span class="field-desc">在设定的时间发送学习提�?/span>
             </div>
             <button :class="['toggle-switch', { on: studyReminder }]" @click="studyReminder = !studyReminder" role="switch" :aria-checked="studyReminder">
               <span class="switch-knob" />
@@ -184,14 +194,14 @@ function saveSettings() {
           <div class="field-row">
             <div class="field-info">
               <span class="field-label">提醒时间</span>
-              <span class="field-desc">每天的学习提醒时间</span>
+              <span class="field-desc">每天的学习提醒时�?/span>
             </div>
             <input type="time" v-model="reminderTime" class="field-time" />
           </div>
           <div class="field-row">
             <div class="field-info">
               <span class="field-label">资源偏好</span>
-              <span class="field-desc">优先推荐的学习资源类型</span>
+              <span class="field-desc">优先推荐的学习资源类�?/span>
             </div>
             <div class="toggle-group">
               <button :class="['toggle-opt', { active: preferredResource === 'video' }]" @click="preferredResource = 'video'">视频</button>
@@ -205,10 +215,10 @@ function saveSettings() {
               <span class="field-desc">设定长期学习方向</span>
             </div>
             <select class="field-select">
-              <option>深度学习工程师</option>
-              <option>数据科学家</option>
-              <option>AI 研究员</option>
-              <option>全栈开发者</option>
+              <option>深度学习工程�?/option>
+              <option>数据科学�?/option>
+              <option>AI 研究�?/option>
+              <option>全栈开发�?/option>
             </select>
           </div>
         </div>
@@ -220,7 +230,7 @@ function saveSettings() {
           <div class="group-icon privacy-icon">
             <Shield :size="16" stroke-width="1.5" />
           </div>
-          <h2 class="group-title">隐私与数据</h2>
+          <h2 class="group-title">隐私与数�?/h2>
         </div>
         <div class="group-card">
           <div class="field-row">
@@ -235,7 +245,7 @@ function saveSettings() {
           <div class="field-row">
             <div class="field-info">
               <span class="field-label">导出数据</span>
-              <span class="field-desc">下载你的学习数据和画像</span>
+              <span class="field-desc">下载你的学习数据和画�?/span>
             </div>
             <button class="btn-outline">
               <Download :size="14" stroke-width="1.5" />
@@ -267,14 +277,14 @@ function saveSettings() {
           <div class="field-row">
             <div class="field-info">
               <span class="field-label">Notion</span>
-              <span class="field-desc">同步学习笔记到 Notion</span>
+              <span class="field-desc">同步学习笔记�?Notion</span>
             </div>
             <button class="btn-outline">连接</button>
           </div>
           <div class="field-row">
             <div class="field-info">
               <span class="field-label">Anki</span>
-              <span class="field-desc">导入学习卡片到 Anki</span>
+              <span class="field-desc">导入学习卡片�?Anki</span>
             </div>
             <button class="btn-outline">连接</button>
           </div>
@@ -317,7 +327,7 @@ function saveSettings() {
             <span class="about-value">EduMind AI Engine v2.4</span>
           </div>
           <div class="about-row">
-            <span class="about-key">最近更新</span>
+            <span class="about-key">最近更�?/span>
             <span class="about-value">2026-05-11</span>
           </div>
         </div>
@@ -328,7 +338,7 @@ function saveSettings() {
         <transition name="fade">
           <div v-if="saved" class="save-toast">
             <Check :size="16" stroke-width="2" />
-            <span>设置已保存</span>
+            <span>设置已保�?/span>
           </div>
         </transition>
         <button class="save-btn" @click="saveSettings">

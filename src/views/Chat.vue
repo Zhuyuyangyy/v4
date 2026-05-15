@@ -1,49 +1,48 @@
 <script setup lang="ts">
-import { ref, nextTick, onMounted, computed } from 'vue'
+import { computed, nextTick, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import {
-  Send,
-  Paperclip,
-  Copy,
-  ThumbsUp,
-  ThumbsDown,
-  RefreshCw,
-  MessageCircle,
-  User,
-  BookOpen,
-  Map,
-  BarChart3,
-  Sparkles,
-  FileText,
-  Play,
-  Code,
-  Target,
-  ChevronDown,
   ArrowRight,
-  Search,
-  Plus,
-  Star,
-  Bot,
-  Brain,
+  BarChart3,
+  BookOpen,
+  ChevronDown,
+  Code,
+  Copy,
+  FileText,
   Layers,
-  Zap,
-  Wand2,
   Lightbulb,
+  Map,
+  Paperclip,
+  Play,
+  Plus,
+  RefreshCw,
   RotateCcw,
+  Search,
+  Send,
+  Sparkles,
+  Star,
+  Target,
+  ThumbsDown,
+  ThumbsUp,
+  User,
+  Wand2,
+  Zap,
 } from 'lucide-vue-next'
+import { sendChatMessage } from '@/lib/api'
+import type { ChatReply, ChatResource } from '@/types/api'
 
 interface Message {
   id: number
   role: 'user' | 'assistant'
   content: string
   time: string
-  resources?: { type: string; title: string; color?: string; icon?: any }[]
+  resources?: ChatResource[]
   suggestions?: string[]
 }
 
 interface AgentNode {
   name: string
-  icon: any
+  icon: unknown
   status: 'idle' | 'active' | 'done'
   color: string
   desc: string
@@ -63,6 +62,7 @@ const messages = ref<Message[]>([
 
 const inputText = ref('')
 const isStreaming = ref(false)
+const isSending = ref(false)
 const streamContent = ref('')
 const chatEndRef = ref<HTMLElement | null>(null)
 const showAgentPanel = ref(false)
@@ -84,19 +84,20 @@ const historySessions = [
   { id: 6, title: 'Python 基础概念', time: '6天前', category: 'Python' },
 ]
 
-const resourceIcons: Record<string, any> = {
-  '≡': FileText,
-  '◈': Map,
-  '✎': FileText,
-  '▶': Play,
+const resourceIcons: Record<ChatResource['type'], unknown> = {
+  doc: FileText,
+  mindmap: Map,
+  exercise: Target,
+  video: Play,
+  code: Code,
 }
 
 const presets = [
-  { icon: Wand2, label: '制定学习计划', desc: '根据你的目标定制个性化学习路径', color: '#8b5cf6', bgGradient: 'from-purple-500/20 to-blue-500/10' },
-  { icon: Target, label: '生成练习题', desc: '生成适合当前水平的练习题和测试', color: '#06b6d4', bgGradient: 'from-cyan-500/20 to-teal-500/10' },
-  { icon: BookOpen, label: '知识点讲解', desc: '深入理解概念，结合例子与可视化讲解', color: '#10b981', bgGradient: 'from-emerald-500/20 to-green-500/10' },
-  { icon: BarChart3, label: '学习诊断', desc: '分析学习情况，找到薄弱环节并给出建议', color: '#f59e0b', bgGradient: 'from-amber-500/20 to-orange-500/10' },
-  { icon: Zap, label: '智能辅导', desc: '实时解答疑问，提供提示和引导', color: '#ec4899', bgGradient: 'from-pink-500/20 to-rose-500/10' },
+  { icon: Wand2, label: '制定学习计划', desc: '根据你的目标定制个性化学习路径', color: '#8b5cf6' },
+  { icon: Target, label: '生成练习题', desc: '生成适合当前水平的练习题和测试', color: '#06b6d4' },
+  { icon: BookOpen, label: '知识点讲解', desc: '深入理解概念，结合例子与可视化讲解', color: '#10b981' },
+  { icon: BarChart3, label: '学习诊断', desc: '分析学习情况，找到薄弱环节并给出建议', color: '#f59e0b' },
+  { icon: Zap, label: '智能辅导', desc: '实时解答疑问，提供提示和引导', color: '#ec4899' },
 ]
 
 const quickQuestions = [
@@ -107,7 +108,7 @@ const quickQuestions = [
   { text: '如何理解梯度下降算法', action: 'send' },
 ]
 
-const agentFlowActive = computed(() => agents.value.some(a => a.status === 'active'))
+const canSend = computed(() => Boolean(inputText.value.trim()) && !isSending.value && !isStreaming.value)
 
 function scrollToBottom() {
   nextTick(() => {
@@ -115,60 +116,88 @@ function scrollToBottom() {
   })
 }
 
-function simulateStream(content: string, suggestions?: string[]) {
+function resetAgents() {
+  agents.value.forEach(agent => {
+    agent.status = 'idle'
+  })
+}
+
+function fallbackChatReply(message: string): ChatReply {
+  const topic = message.trim() || '当前学习问题'
+  return {
+    content:
+      `好的，我已经分析了你的需求：${topic}\n\n` +
+      '**关键要点：**\n\n' +
+      '1. **理解核心原理** — 先掌握基本概念和理论基础\n' +
+      '2. **动手实践** — 通过实际项目巩固所学知识\n' +
+      '3. **持续反馈** — 定期自测，查漏补缺\n\n' +
+      '> 学习是一个循序渐进的过程，不要急于求成。每天坚持学习，效果会越来越好。\n\n' +
+      '我已经为你准备了相关的学习资源，包括入门指南、知识图谱和自测习题。',
+    resources: [
+      { type: 'doc', title: 'Python 机器学习入门指南', color: '#00d4ff' },
+      { type: 'mindmap', title: '知识图谱：ML 学习路线', color: '#7c3aed' },
+      { type: 'exercise', title: '入门水平自测习题', color: '#06d6a0' },
+    ],
+    suggestions: ['继续深入讲解这部分', '给我一个代码示例', '推荐相关学习资源', '有哪些常见的坑？'],
+  }
+}
+
+function simulateStream(content: string, resources?: ChatResource[], suggestions?: string[]) {
   isStreaming.value = true
   streamContent.value = ''
-  let i = 0
+  let index = 0
   const chars = content.split('')
-  const interval = setInterval(() => {
-    if (i < chars.length) {
-      streamContent.value += chars[i]
-      i++
+  const interval = window.setInterval(() => {
+    if (index < chars.length) {
+      streamContent.value += chars[index]
+      index += 1
       scrollToBottom()
-    } else {
-      clearInterval(interval)
-      isStreaming.value = false
-      messages.value.push({
-        id: Date.now(),
-        role: 'assistant',
-        content: content,
-        time: new Date().toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' }),
-        resources: [
-          { type: '≡', title: 'Python 机器学习入门指南', color: '#00d4ff' },
-          { type: '◈', title: '知识图谱：ML 学习路线', color: '#7c3aed' },
-          { type: '✎', title: '入门水平自测习题', color: '#06d6a0' },
-        ],
-        suggestions: suggestions || [
-          '继续深入讲解',
-          '给我一个代码示例',
-          '推荐相关学习资源',
-        ],
-      })
-      streamContent.value = ''
-      resetAgents()
+      return
     }
+
+    window.clearInterval(interval)
+    isStreaming.value = false
+    isSending.value = false
+    messages.value.push({
+      id: Date.now(),
+      role: 'assistant',
+      content,
+      time: new Date().toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' }),
+      resources,
+      suggestions,
+    })
+    streamContent.value = ''
+    resetAgents()
+    scrollToBottom()
   }, 25)
 }
 
-function runAgentPipeline(finalContent: string, suggestions?: string[]) {
+function runAgentPipeline(finalContent: string, resources?: ChatResource[], suggestions?: string[]) {
   agents.value[0].status = 'active'
-  setTimeout(() => { agents.value[0].status = 'done'; agents.value[1].status = 'active' }, 800)
-  setTimeout(() => { agents.value[1].status = 'done'; agents.value[2].status = 'active' }, 1600)
-  setTimeout(() => { agents.value[2].status = 'done'; agents.value[3].status = 'active' }, 2400)
-  setTimeout(() => {
+  window.setTimeout(() => {
+    agents.value[0].status = 'done'
+    agents.value[1].status = 'active'
+  }, 800)
+  window.setTimeout(() => {
+    agents.value[1].status = 'done'
+    agents.value[2].status = 'active'
+  }, 1600)
+  window.setTimeout(() => {
+    agents.value[2].status = 'done'
+    agents.value[3].status = 'active'
+  }, 2400)
+  window.setTimeout(() => {
     agents.value[3].status = 'done'
-    simulateStream(finalContent, suggestions)
+    simulateStream(finalContent, resources, suggestions)
   }, 3200)
 }
 
-function resetAgents() {
-  agents.value.forEach(a => a.status = 'idle')
-}
-
-function sendMessage() {
+async function sendMessage() {
   const text = inputText.value.trim()
-  if (!text || isStreaming.value) return
+  if (!text || isSending.value || isStreaming.value) return
+
   selectedPreset.value = ''
+  isSending.value = true
 
   messages.value.push({
     id: Date.now(),
@@ -179,36 +208,36 @@ function sendMessage() {
   inputText.value = ''
   scrollToBottom()
 
-  runAgentPipeline(
-    '好的，我已经分析了你的需求。根据你的问题，我建议从基础概念开始，逐步深入实践。\n\n**关键要点：**\n\n1. **理解核心原理** — 先掌握基本概念和理论基础\n2. **动手实践** — 通过实际项目巩固所学知识\n3. **持续反馈** — 定期自测，查漏补缺\n\n> 学习是一个循序渐进的过程，不要急于求成。每天坚持学习，效果会越来越好。\n\n我已经为你准备了相关的学习资源，包括入门指南、知识图谱和自测习题。',
-    ['继续深入讲解这部分', '给我一个代码示例', '推荐相关学习资源', '有哪些常见的坑？']
-  )
+  try {
+    const reply = await sendChatMessage(text)
+    runAgentPipeline(reply.content, reply.resources, reply.suggestions)
+  } catch {
+    const fallback = fallbackChatReply(text)
+    runAgentPipeline(fallback.content, fallback.resources, fallback.suggestions)
+  }
 }
 
-function usePreset(p: typeof presets[0]) {
-  selectedPreset.value = p.label
-  inputText.value = `帮我${p.label.toLowerCase()}`
+function usePreset(preset: (typeof presets)[number]) {
+  selectedPreset.value = preset.label
+  inputText.value = `帮我${preset.label}`
   sendMessage()
 }
 
-function useSuggestion(s: string) {
-  if (s === '去智能辅导提问') {
+function useSuggestion(suggestion: string) {
+  if (suggestion === '去智能辅导提问') {
     router.push('/tutoring')
     return
   }
-  inputText.value = s
-  sendMessage()
-}
 
-function goToTutoring() {
-  router.push('/tutoring')
+  inputText.value = suggestion
+  sendMessage()
 }
 
 function copyMessage(content: string) {
   navigator.clipboard.writeText(content)
 }
 
-function getResourceIcon(type: string) {
+function getResourceIcon(type: ChatResource['type']) {
   return resourceIcons[type] || FileText
 }
 
@@ -225,7 +254,6 @@ onMounted(scrollToBottom)
 
 <template>
   <div class="chat">
-    <!-- Agent Pipeline Bar -->
     <div class="pipeline-bar">
       <div class="pipeline-flow">
         <div
@@ -253,7 +281,6 @@ onMounted(scrollToBottom)
       </button>
     </div>
 
-    <!-- Agent Detail Panel -->
     <transition name="slide-up">
       <div v-if="showAgentPanel" class="agent-detail">
         <div v-for="a in agents" :key="a.name" class="agent-card" :style="{ '--accent': a.color }">
@@ -275,7 +302,6 @@ onMounted(scrollToBottom)
     </transition>
 
     <div class="chat-body">
-      <!-- History Sidebar -->
       <aside class="history-sidebar">
         <div class="sidebar-header">
           <h3 class="sidebar-title">对话历史</h3>
@@ -309,10 +335,8 @@ onMounted(scrollToBottom)
         </div>
       </aside>
 
-      <!-- Main Chat Area -->
       <div class="chat-main">
         <div class="messages-container">
-          <!-- Welcome Section -->
           <div v-if="messages.length === 1" class="welcome-section">
             <div class="welcome-header">
               <div class="welcome-badge">
@@ -323,26 +347,24 @@ onMounted(scrollToBottom)
               <p class="welcome-subtitle">我可以帮助你学习任何内容，选择下方功能或直接输入你的问题</p>
             </div>
 
-            <!-- Feature Cards Grid -->
             <div class="feature-cards-grid">
               <button
-                v-for="(p, index) in presets"
-                :key="p.label"
+                v-for="preset in presets"
+                :key="preset.label"
                 class="feature-card"
-                :style="{ '--card-color': p.color }"
-                @click="usePreset(p)"
+                :style="{ '--card-color': preset.color }"
+                @click="usePreset(preset)"
               >
                 <div class="feature-icon-wrapper">
-                  <component :is="p.icon" :size="24" stroke-width="1.5" />
+                  <component :is="preset.icon" :size="24" stroke-width="1.5" />
                   <div class="feature-icon-glow" />
                 </div>
-                <h3 class="feature-title">{{ p.label }}</h3>
-                <p class="feature-desc">{{ p.desc }}</p>
+                <h3 class="feature-title">{{ preset.label }}</h3>
+                <p class="feature-desc">{{ preset.desc }}</p>
                 <ArrowRight :size="14" class="feature-arrow" />
               </button>
             </div>
 
-            <!-- Quick Questions -->
             <div class="quick-questions-section">
               <div class="quick-questions-header">
                 <Lightbulb :size="14" stroke-width="1.5" />
@@ -353,7 +375,7 @@ onMounted(scrollToBottom)
               </div>
               <div class="quick-questions-grid">
                 <button
-                  v-for="(q, index) in quickQuestions"
+                  v-for="q in quickQuestions"
                   :key="q.text"
                   class="quick-question-chip"
                   @click="inputText = q.text; sendMessage()"
@@ -365,12 +387,7 @@ onMounted(scrollToBottom)
             </div>
           </div>
 
-          <!-- Messages -->
-          <div
-            v-for="msg in messages"
-            :key="msg.id"
-            :class="['message', msg.role]"
-          >
+          <div v-for="msg in messages" :key="msg.id" :class="['message', msg.role]">
             <div class="message-avatar">
               <div class="avatar-content">
                 {{ msg.role === 'assistant' ? 'AI' : '你' }}
@@ -380,8 +397,7 @@ onMounted(scrollToBottom)
               <div class="message-sender">{{ msg.role === 'assistant' ? 'EduMind 助手' : '你' }}</div>
               <div class="message-content" v-html="formatContent(msg.content)" />
 
-              <!-- Resource chips -->
-              <div v-if="msg.resources" class="resource-chips">
+              <div v-if="msg.resources?.length" class="resource-chips">
                 <div v-for="r in msg.resources" :key="r.title" class="resource-chip" :style="{ '--chip-color': r.color || '#00d4ff' }">
                   <component :is="getResourceIcon(r.type)" :size="14" stroke-width="1.5" />
                   <span>{{ r.title }}</span>
@@ -389,15 +405,13 @@ onMounted(scrollToBottom)
                 </div>
               </div>
 
-              <!-- Suggestions -->
-              <div v-if="msg.suggestions && msg.role === 'assistant'" class="suggestions">
+              <div v-if="msg.suggestions?.length && msg.role === 'assistant'" class="suggestions">
                 <button v-for="s in msg.suggestions" :key="s" class="suggestion-chip" @click="useSuggestion(s)">
                   {{ s }}
                   <ArrowRight :size="11" class="suggestion-arrow" />
                 </button>
               </div>
 
-              <!-- Message Footer -->
               <div class="message-footer">
                 <span class="message-time">{{ msg.time }}</span>
                 <div v-if="msg.role === 'assistant'" class="message-actions">
@@ -418,14 +432,13 @@ onMounted(scrollToBottom)
             </div>
           </div>
 
-          <!-- Streaming indicator -->
-          <div v-if="isStreaming" class="message assistant">
+          <div v-if="isStreaming || isSending" class="message assistant">
             <div class="message-avatar">
               <div class="avatar-content">AI</div>
             </div>
             <div class="message-body">
               <div class="message-sender">EduMind 助手</div>
-              <div class="message-content" v-html="formatContent(streamContent)" />
+              <div class="message-content" v-html="formatContent(streamContent || '正在分析中...')" />
               <div class="typing-indicator">
                 <span class="typing-dot" /><span class="typing-dot" /><span class="typing-dot" />
               </div>
@@ -435,7 +448,6 @@ onMounted(scrollToBottom)
           <div ref="chatEndRef" />
         </div>
 
-        <!-- Input Area -->
         <div class="input-area">
           <div class="input-wrapper">
             <button class="input-attach" aria-label="上传附件">
@@ -447,7 +459,7 @@ onMounted(scrollToBottom)
               class="input-field"
               placeholder="输入你的问题或需求..."
               @keydown.enter="sendMessage"
-              :disabled="isStreaming"
+              :disabled="isSending || isStreaming"
             />
             <div class="input-commands">
               <span class="cmd-hint">⌘K 命令</span>
@@ -461,11 +473,11 @@ onMounted(scrollToBottom)
               </button>
             </div>
             <button
-              :class="['input-send', { active: inputText.trim() }]"
+              :class="['input-send', { active: canSend }]"
               @click="sendMessage"
-              :disabled="isStreaming || !inputText.trim()"
+              :disabled="!canSend"
             >
-              <Send v-if="!isStreaming" :size="16" stroke-width="2" />
+              <Send v-if="!isSending && !isStreaming" :size="16" stroke-width="2" />
               <span v-else class="sending-dots">···</span>
             </button>
           </div>
@@ -485,7 +497,6 @@ onMounted(scrollToBottom)
   z-index: 1;
 }
 
-/* ====================== Pipeline Bar ====================== */
 .pipeline-bar {
   display: flex;
   align-items: center;
@@ -506,6 +517,7 @@ onMounted(scrollToBottom)
   overflow-x: auto;
   scrollbar-width: none;
 }
+
 .pipeline-flow::-webkit-scrollbar { display: none; }
 
 .pipeline-node {
@@ -539,11 +551,13 @@ onMounted(scrollToBottom)
   transition: all 0.3s var(--ease-out);
   z-index: 1;
 }
+
 .pipeline-node.active .node-ring {
   background: color-mix(in srgb, var(--node-color) 20%, transparent);
   color: var(--node-color);
   box-shadow: 0 0 16px color-mix(in srgb, var(--node-color) 30%, transparent);
 }
+
 .pipeline-node.done .node-ring {
   background: color-mix(in srgb, var(--node-color) 25%, transparent);
   color: var(--node-color);
@@ -571,6 +585,7 @@ onMounted(scrollToBottom)
   white-space: nowrap;
   transition: color 0.3s var(--ease-out);
 }
+
 .pipeline-node.active .node-label { color: var(--node-color); }
 .pipeline-node.done .node-label { color: rgba(255, 255, 255, 0.7); }
 
@@ -582,6 +597,7 @@ onMounted(scrollToBottom)
   border-radius: 1px;
   overflow: hidden;
 }
+
 .connector-track {
   height: 100%;
   width: 0;
@@ -589,6 +605,7 @@ onMounted(scrollToBottom)
   background: linear-gradient(90deg, var(--node-color), var(--color-accent-cyan));
   transition: width 0.5s var(--ease-out);
 }
+
 .connector-track.filled { width: 100%; }
 
 .pipeline-toggle {
@@ -603,6 +620,7 @@ onMounted(scrollToBottom)
   transition: all 0.2s var(--ease-out);
   flex-shrink: 0;
 }
+
 .pipeline-toggle:hover {
   border-color: var(--color-accent-cyan);
   color: var(--color-accent-cyan);
@@ -611,7 +629,6 @@ onMounted(scrollToBottom)
 .toggle-icon { transition: transform 0.2s var(--ease-out); }
 .toggle-icon.open { transform: rotate(180deg); }
 
-/* ====================== Agent Detail ====================== */
 .agent-detail {
   padding: 16px 32px;
   border-bottom: 1px solid var(--color-border);
@@ -631,6 +648,7 @@ onMounted(scrollToBottom)
   border: 1px solid transparent;
   transition: all 0.2s var(--ease-out);
 }
+
 .agent-card:hover {
   border-color: color-mix(in srgb, var(--accent) 20%, transparent);
 }
@@ -652,11 +670,14 @@ onMounted(scrollToBottom)
   color: var(--color-text-tertiary);
   flex-shrink: 0;
 }
-.agent-badge.active { background: color-mix(in srgb, var(--accent) 15%, transparent); color: var(--accent); }
-.agent-badge.done { background: color-mix(in srgb, var(--accent) 15%, transparent); color: var(--accent); }
+
+.agent-badge.active,
+.agent-badge.done {
+  background: color-mix(in srgb, var(--accent) 15%, transparent);
+  color: var(--accent);
+}
 
 .badge-done { font-weight: 700; }
-
 .agent-info { display: flex; flex-direction: column; gap: 1px; }
 .agent-name { font-size: 13px; font-weight: 500; color: var(--color-text-primary); }
 .agent-desc { font-size: 11px; color: var(--color-text-tertiary); }
@@ -667,18 +688,17 @@ onMounted(scrollToBottom)
   border-radius: 100px;
   font-weight: 500;
 }
+
 .agent-status-tag.idle { background: rgba(255, 255, 255, 0.04); color: var(--color-text-tertiary); }
 .agent-status-tag.active { background: color-mix(in srgb, var(--accent) 15%, transparent); color: var(--accent); }
 .agent-status-tag.done { background: color-mix(in srgb, var(--accent) 12%, transparent); color: var(--accent); }
 
-/* ====================== Chat Body ====================== */
 .chat-body {
   display: flex;
   flex: 1;
   overflow: hidden;
 }
 
-/* ====================== History Sidebar ====================== */
 .history-sidebar {
   width: 260px;
   border-right: 1px solid var(--color-border);
@@ -717,6 +737,7 @@ onMounted(scrollToBottom)
   font-weight: 500;
   transition: all 0.2s var(--ease-out);
 }
+
 .sidebar-new:hover {
   background: linear-gradient(135deg, rgba(0, 212, 255, 0.2), rgba(124, 58, 237, 0.2));
 }
@@ -725,6 +746,7 @@ onMounted(scrollToBottom)
   padding: 0 16px 12px;
   position: relative;
 }
+
 .search-icon {
   position: absolute;
   left: 26px;
@@ -733,6 +755,7 @@ onMounted(scrollToBottom)
   color: var(--color-text-tertiary);
   opacity: 0.4;
 }
+
 .sidebar-search input {
   width: 100%;
   padding: 8px 12px 8px 34px;
@@ -743,6 +766,7 @@ onMounted(scrollToBottom)
   color: var(--color-text-primary);
   transition: border-color 0.2s var(--ease-out);
 }
+
 .sidebar-search input:focus { border-color: var(--color-accent-cyan); }
 .sidebar-search input::placeholder { color: var(--color-text-tertiary); opacity: 0.6; }
 
@@ -766,10 +790,12 @@ onMounted(scrollToBottom)
   transition: all 0.2s var(--ease-out);
   width: 100%;
 }
+
 .session-item:hover {
   background: rgba(0, 212, 255, 0.03);
   border-color: rgba(0, 212, 255, 0.06);
 }
+
 .session-item.current {
   background: rgba(0, 212, 255, 0.06);
   border-color: rgba(0, 212, 255, 0.1);
@@ -783,6 +809,7 @@ onMounted(scrollToBottom)
   flex-shrink: 0;
   letter-spacing: 0.5px;
 }
+
 .cat-1 { background: rgba(0, 212, 255, 0.12); color: #00d4ff; }
 .cat-2 { background: rgba(124, 58, 237, 0.12); color: #7c3aed; }
 .cat-3 { background: rgba(6, 214, 160, 0.12); color: #06d6a0; }
@@ -801,6 +828,7 @@ onMounted(scrollToBottom)
   overflow: hidden;
   text-overflow: ellipsis;
 }
+
 .session-time {
   display: block;
   font-size: 10px;
@@ -821,13 +849,13 @@ onMounted(scrollToBottom)
   background: rgba(255, 255, 255, 0.06);
   overflow: hidden;
 }
+
 .storage-fill {
   height: 100%;
   border-radius: 2px;
   background: linear-gradient(90deg, var(--color-accent-cyan), var(--color-accent-purple));
 }
 
-/* ====================== Main Chat Area ====================== */
 .chat-main {
   flex: 1;
   display: flex;
@@ -845,7 +873,6 @@ onMounted(scrollToBottom)
   gap: 24px;
 }
 
-/* ====================== Welcome Section ====================== */
 .welcome-section {
   padding: 40px 0;
   max-width: 900px;
@@ -886,7 +913,6 @@ onMounted(scrollToBottom)
   margin: 0 auto;
 }
 
-/* Feature Cards Grid */
 .feature-cards-grid {
   display: grid;
   grid-template-columns: repeat(5, 1fr);
@@ -920,9 +946,7 @@ onMounted(scrollToBottom)
   transition: opacity 0.3s var(--ease-out);
 }
 
-.feature-card:hover::before {
-  opacity: 1;
-}
+.feature-card:hover::before { opacity: 1; }
 
 .feature-card:hover {
   border-color: color-mix(in srgb, var(--card-color) 30%, transparent);
@@ -955,13 +979,8 @@ onMounted(scrollToBottom)
   transition: opacity 0.3s var(--ease-out);
 }
 
-.feature-card:hover .feature-icon-glow {
-  opacity: 0.2;
-}
-
-.feature-card:hover .feature-icon-wrapper {
-  transform: scale(1.1);
-}
+.feature-card:hover .feature-icon-glow { opacity: 0.2; }
+.feature-card:hover .feature-icon-wrapper { transform: scale(1.1); }
 
 .feature-title {
   font-family: var(--font-display);
@@ -985,11 +1004,8 @@ onMounted(scrollToBottom)
   transition: transform 0.2s var(--ease-out);
 }
 
-.feature-card:hover .feature-arrow {
-  transform: translateX(4px);
-}
+.feature-card:hover .feature-arrow { transform: translateX(4px); }
 
-/* Quick Questions */
 .quick-questions-section {
   background: rgba(255, 255, 255, 0.03);
   border-radius: 16px;
@@ -1059,13 +1075,13 @@ onMounted(scrollToBottom)
   transform: translateX(3px);
 }
 
-/* ====================== Messages ====================== */
 .message {
   display: flex;
   gap: 14px;
   max-width: 780px;
   animation: message-in 0.3s var(--ease-out);
 }
+
 .message.user { margin-left: auto; flex-direction: row-reverse; }
 
 @keyframes message-in {
@@ -1073,9 +1089,7 @@ onMounted(scrollToBottom)
   to { opacity: 1; transform: translateY(0); }
 }
 
-.message-avatar {
-  flex-shrink: 0;
-}
+.message-avatar { flex-shrink: 0; }
 
 .avatar-content {
   width: 36px;
@@ -1088,11 +1102,13 @@ onMounted(scrollToBottom)
   font-weight: 700;
   letter-spacing: 0.5px;
 }
+
 .message.assistant .avatar-content {
   background: linear-gradient(135deg, #00d4ff, #3b82f6);
   color: #fff;
   box-shadow: 0 4px 12px rgba(0, 212, 255, 0.3);
 }
+
 .message.user .avatar-content {
   background: linear-gradient(135deg, #7c3aed, #a855f7);
   color: #fff;
@@ -1118,16 +1134,19 @@ onMounted(scrollToBottom)
   white-space: pre-wrap;
   color: var(--color-text-primary);
 }
+
 .message.assistant .message-content {
   background: var(--color-bg-card);
   border: 1px solid var(--color-border);
 }
+
 .message.user .message-content {
   background: linear-gradient(135deg, rgba(0, 212, 255, 0.08), rgba(124, 58, 237, 0.08));
   border: 1px solid rgba(0, 212, 255, 0.1);
 }
 
 .message-content :deep(strong) { color: #fff; font-weight: 600; }
+
 .message-content :deep(blockquote) {
   border-left: 2px solid var(--color-accent-cyan);
   padding: 8px 16px;
@@ -1137,6 +1156,7 @@ onMounted(scrollToBottom)
   color: var(--color-text-secondary);
   font-style: italic;
 }
+
 .message-content :deep(.cb) {
   display: block;
   background: rgba(0, 0, 0, 0.4);
@@ -1151,7 +1171,6 @@ onMounted(scrollToBottom)
   color: var(--color-accent-cyan);
 }
 
-/* Resource Chips */
 .resource-chips {
   display: flex;
   gap: 8px;
@@ -1172,15 +1191,16 @@ onMounted(scrollToBottom)
   cursor: pointer;
   transition: all 0.2s var(--ease-out);
 }
+
 .resource-chip:hover {
   border-color: var(--chip-color);
   background: color-mix(in srgb, var(--chip-color) 8%, transparent);
 }
+
 .resource-chip :first-child { color: var(--chip-color); flex-shrink: 0; }
 .chip-arrow { color: var(--color-text-tertiary); opacity: 0; transition: all 0.2s var(--ease-out); }
 .resource-chip:hover .chip-arrow { opacity: 1; color: var(--chip-color); transform: translateX(3px); }
 
-/* Suggestions */
 .suggestions { margin-top: 10px; }
 
 .suggestion-chip {
@@ -1196,15 +1216,16 @@ onMounted(scrollToBottom)
   color: var(--color-text-secondary);
   transition: all 0.2s var(--ease-out);
 }
+
 .suggestion-chip:hover {
   border-color: var(--color-accent-cyan);
   background: rgba(0, 212, 255, 0.08);
   color: var(--color-accent-cyan);
 }
+
 .suggestion-arrow { opacity: 0; transition: all 0.2s var(--ease-out); }
 .suggestion-chip:hover .suggestion-arrow { opacity: 1; transform: translateX(3px); }
 
-/* Message Footer */
 .message-footer {
   display: flex;
   align-items: center;
@@ -1225,6 +1246,7 @@ onMounted(scrollToBottom)
   opacity: 0;
   transition: opacity 0.2s var(--ease-out);
 }
+
 .message:hover .message-actions { opacity: 1; }
 @media (hover: none) { .message-actions { opacity: 1; } }
 
@@ -1238,14 +1260,15 @@ onMounted(scrollToBottom)
   color: var(--color-text-tertiary);
   transition: all 0.2s var(--ease-out);
 }
+
 .action-btn:hover { color: var(--color-accent-cyan); background: rgba(0, 212, 255, 0.08); }
 
-/* Typing indicator */
 .typing-indicator {
   display: flex;
   gap: 4px;
   padding: 8px 4px 0;
 }
+
 .typing-dot {
   width: 5px;
   height: 5px;
@@ -1253,6 +1276,7 @@ onMounted(scrollToBottom)
   background: var(--color-accent-cyan);
   animation: typing-bounce 1.2s ease-in-out infinite;
 }
+
 .typing-dot:nth-child(2) { animation-delay: 0.15s; }
 .typing-dot:nth-child(3) { animation-delay: 0.3s; }
 
@@ -1261,7 +1285,6 @@ onMounted(scrollToBottom)
   50% { transform: translateY(-4px); opacity: 1; }
 }
 
-/* ====================== Input Area ====================== */
 .input-area {
   padding: 16px 24px 20px;
   border-top: 1px solid var(--color-border);
@@ -1281,6 +1304,7 @@ onMounted(scrollToBottom)
   max-width: 800px;
   margin: 0 auto;
 }
+
 .input-wrapper:focus-within {
   border-color: var(--color-accent-cyan);
   box-shadow: 0 0 20px rgba(0, 212, 255, 0.06);
@@ -1293,6 +1317,7 @@ onMounted(scrollToBottom)
   transition: color 0.2s var(--ease-out);
   flex-shrink: 0;
 }
+
 .input-attach:hover { color: var(--color-accent-cyan); }
 
 .input-field {
@@ -1305,6 +1330,7 @@ onMounted(scrollToBottom)
   outline: none;
   min-height: 24px;
 }
+
 .input-field::placeholder { color: var(--color-text-tertiary); opacity: 0.6; }
 
 .input-commands {
@@ -1360,15 +1386,16 @@ onMounted(scrollToBottom)
   transition: all 0.2s var(--ease-out);
   flex-shrink: 0;
 }
+
 .input-send.active {
   color: #fff;
   background: linear-gradient(135deg, var(--color-accent-cyan), var(--color-accent-blue));
   box-shadow: 0 4px 12px rgba(0, 212, 255, 0.3);
 }
+
 .input-send:hover:not(:disabled).active { transform: scale(1.05); }
 .sending-dots { letter-spacing: 3px; font-weight: 700; }
 
-/* ====================== Responsive ====================== */
 @media (max-width: 1024px) {
   .feature-cards-grid { grid-template-columns: repeat(3, 1fr); }
 }
