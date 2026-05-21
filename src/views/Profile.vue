@@ -11,14 +11,19 @@ const {
   analysisProgress, analysisMessage, totalSteps,
   isFirstStep, isLastStep, isWelcomeStep, progressPercent,
   canProceed, nextStep, prevStep, startAnalysis, toResults,
-  reset, loadFromStorage,
+  reset, loadFromStorage, loadLatestSavedResult,
 } = useProfileSurvey()
 
 const loaded = ref(false)
 
-onMounted(() => {
-  const saved = loadFromStorage()
-  if (saved) toResults(saved)
+onMounted(async () => {
+  const saved = await loadLatestSavedResult()
+  if (saved) {
+    toResults(saved)
+  } else {
+    const localSaved = loadFromStorage()
+    if (localSaved) toResults(localSaved)
+  }
   setTimeout(() => { loaded.value = true }, 50)
 })
 

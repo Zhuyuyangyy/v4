@@ -1,89 +1,80 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { computed, onMounted, ref } from 'vue'
+import { useRoute } from 'vue-router'
+import { askTutoringQuestion } from '@/lib/api'
 import {
-  MessageCircle,
   ArrowRight,
-  ThumbsUp,
-  ThumbsDown,
-  History,
-  Zap,
+  BookOpen,
   Bot,
   ChevronRight,
-  Lightbulb,
-  BookOpen,
   Code,
   GitCompare,
+  History,
   Layers,
+  Lightbulb,
+  MessageCircle,
+  ThumbsDown,
+  ThumbsUp,
+  Zap,
 } from 'lucide-vue-next'
-import type { StudyScenario, TutorSubMode, Course } from '@/types/course'
+import type { Course, StudyScenario, TutorSubMode } from '@/types/course'
 import {
   allCourses,
+  dlFlowStages,
+  mlFlowStages,
+  nlpFlowStages,
   presetQuestionsByScenario,
   scenarioAnswerTemplates,
   scenarioConfigs,
-  mlFlowStages,
-  dlFlowStages,
-  nlpFlowStages,
   sharedCodeExamples,
 } from '@/components/course/CourseData'
-import { useEmotionStore } from '@/store/emotion'
-import { useCourseStore } from '@/store/course'
-import ScenarioSelector from '@/components/tutor/ScenarioSelector.vue'
-import EmotionMascot from '@/components/tutor/EmotionMascot.vue'
 import CodeCanvas from '@/components/canvas/CodeCanvas.vue'
 import FlowChart from '@/components/canvas/FlowChart.vue'
 import MindMap from '@/components/mindmap/MindMap.vue'
+import EmotionMascot from '@/components/tutor/EmotionMascot.vue'
+import ScenarioSelector from '@/components/tutor/ScenarioSelector.vue'
+import { useCourseStore } from '@/store/course'
+import { useEmotionStore } from '@/store/emotion'
 
-/* ── Stores ── */
+const route = useRoute()
 const emotion = useEmotionStore()
 const courseStore = useCourseStore()
 
-/* ── State ── */
 const question = ref('')
 const currentScenario = ref<StudyScenario>('preview')
 const currentSubMode = ref<TutorSubMode>('concept-overview')
-const history = ref<{ q: string; a: string; time: string; helpful?: boolean; scenario: StudyScenario; submode: TutorSubMode }[]>([])
+const history = ref<Array<{ q: string; a: string; time: string; helpful?: boolean; scenario: StudyScenario; submode: TutorSubMode }>>([])
 const showHistory = ref(false)
 const showCoursePanel = ref(false)
 const selectedCourseId = ref(courseStore.currentCourseId)
-
-// ── 多模态面板 ──
 const activeModalPanel = ref<'code' | 'flow' | 'mindmap' | null>(null)
+const isAsking = ref(false)
+const petCompletedAt = ref(0)
+const petLastResult = ref<'success' | 'error' | null>(null)
 
-/* ── Computed ── */
-const selectedCourse = computed(() =>
-  allCourses.find(c => c.id === selectedCourseId.value)
-)
+const selectedCourse = computed(() => allCourses.find(c => c.id === selectedCourseId.value))
 
 const scenarioQuestions = computed(() => {
-  const qs = presetQuestionsByScenario[currentScenario.value] ?? []
+  const scenarioItems = presetQuestionsByScenario[currentScenario.value] ?? []
   const course = selectedCourse.value
-  // Also collect course-specific preset questions
-  const courseQs: { q: string; category: string; submodes?: string[] }[] = []
+  const courseItems: { q: string; category: string; submodes?: string[] }[] = []
+
   if (course) {
     for (const topic of course.topics) {
-      if (topic.presetQuestions) {
-        for (const pq of topic.presetQuestions) {
-          courseQs.push({ q: pq.q, category: topic.name, submodes: [currentSubMode.value] })
-        }
+      if (!topic.presetQuestions) continue
+      for (const preset of topic.presetQuestions) {
+        courseItems.push({ q: preset.q, category: topic.name, submodes: [currentSubMode.value] })
       }
     }
   }
-  // Filter by sub-mode
-  const filtered = [...qs, ...courseQs].filter(item =>
-    !item.submodes || item.submodes.length === 0 || item.submodes.includes(currentSubMode.value)
-  )
-  return filtered.slice(0, 8) // Max 8 questions
+
+  return [...scenarioItems, ...courseItems]
+    .filter(item => !item.submodes || item.submodes.length === 0 || item.submodes.includes(currentSubMode.value))
+    .slice(0, 8)
 })
 
-const activeScenarioConfig = computed(() =>
-  scenarioConfigs.find(s => s.key === currentScenario.value)
-)
-
-const activeSubModeConfig = computed(() => {
-  const sc = scenarioConfigs.find(s => s.key === currentScenario.value)
-  return sc?.subModes.find(sm => sm.key === currentSubMode.value)
-})
+const activeScenarioConfig = computed(() => scenarioConfigs.find(s => s.key === currentScenario.value))
+const activeSubModeConfig = computed(() => activeScenarioConfig.value?.subModes.find(s => s.key === currentSubMode.value))
 
 const sessionHistory = [
   { title: '机器学习预习', count: 6, date: '今天', scenario: 'preview' as StudyScenario },
@@ -91,7 +82,6 @@ const sessionHistory = [
   { title: '期末考试冲刺', count: 9, date: '3天前', scenario: 'exam' as StudyScenario },
 ]
 
-/* ── Scenario Indicator ── */
 const scenarioColors: Record<string, string> = {
   preview: '#00d4ff',
   inclass: '#7c3aed',
@@ -99,17 +89,13 @@ const scenarioColors: Record<string, string> = {
   exam: '#f59e0b',
 }
 
-/* ── Answer Generation (Scenario-aware) ── */
 function generateAnswer(q: string): string {
   const template = scenarioAnswerTemplates[currentScenario.value]
-  if (template) {
-    return template(q, currentSubMode.value)
-  }
-  // Fallback
-  return `关于「${q}」的解答：\n\n这是一个很好的问题。在当前「${activeSubModeConfig.value?.label ?? ''}」模式下，我来为你详细解答。\n\n**关键要点：**\n1. 核心概念\n2. 原理说明\n3. 实际应用\n\n> 需要更深入的解释可以继续追问。`
+  if (template) return template(q, currentSubMode.value)
+
+  return `���ڡ�${q}���Ľ��\n\n����һ���ܺõ����⡣�ڵ�ǰ��${activeSubModeConfig.value?.label ?? ''}��ģʽ�£�����Ϊ����ϸ���\n\n**�ؼ�Ҫ�㣺**\n1. ���ĸ���\n2. ԭ��˵��\n3. ʵ��Ӧ��\n\n> ��Ҫ������Ľ��Ϳ��Լ���׷�ʡ�`
 }
 
-/* ── Formatting ── */
 function formatAnswer(text: string) {
   return text
     .replace(/```(\w*)\n([\s\S]*?)```/g, '<pre class="code-block"><code>$2</code></pre>')
@@ -117,16 +103,28 @@ function formatAnswer(text: string) {
     .replace(/## (.*?)(\n|$)/g, '<h2 class="h2">$1</h2>')
     .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
     .replace(/> (.*?)(\n|$)/g, '<blockquote>$1</blockquote>')
-    .replace(/\|(.+?)\|(.+?)\|/g, (m) => `<span class="inline-table">${m}</span>`)
+    .replace(/\|(.+?)\|(.+?)\|/g, match => `<span class="inline-table">${match}</span>`)
     .replace(/\n/g, '<br/>')
 }
 
-/* ── Actions ── */
-function askQuestion() {
-  if (!question.value.trim()) return
-  const q = question.value
+async function askQuestion() {
+  const q = question.value.trim()
+  if (!q || isAsking.value) return
+
   const now = new Date().toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })
-  const answer = generateAnswer(q)
+  let answer = generateAnswer(q)
+  let petResult: 'success' | 'error' = 'success'
+  isAsking.value = true
+
+  try {
+    const response = await askTutoringQuestion(q, currentSubMode.value, currentScenario.value)
+    answer = response.answer
+  } catch {
+    petResult = 'error'
+    // Keep the original local tutoring fallback when the API server is unavailable.
+  } finally {
+    isAsking.value = false
+  }
 
   history.value.push({
     q,
@@ -136,17 +134,15 @@ function askQuestion() {
     submode: currentSubMode.value,
   })
 
-  // Record for emotion detection
   emotion.recordQuestion(q.slice(0, 20))
-  courseStore.recordAnswer(true) // Simulated: mark as "correct" for now
-
+  courseStore.recordAnswer(true)
+  petLastResult.value = petResult
+  petCompletedAt.value = Date.now()
   question.value = ''
 }
 
 function setHelpful(index: number, helpful: boolean) {
-  if (history.value[index]) {
-    history.value[index].helpful = helpful
-  }
+  if (history.value[index]) history.value[index].helpful = helpful
 }
 
 function askScenarioQuestion(q: string) {
@@ -163,8 +159,8 @@ function onSubModeChange(submode: TutorSubMode) {
   currentSubMode.value = submode
 }
 
-function selectSession(s: typeof sessionHistory[0]) {
-  currentScenario.value = s.scenario
+function selectSession(session: typeof sessionHistory[number]) {
+  currentScenario.value = session.scenario
   showHistory.value = false
 }
 
@@ -174,26 +170,21 @@ function selectCourse(course: Course) {
   showCoursePanel.value = false
 }
 
-/* ── 多模态面板数据 ── */
 const currentFlowStages = computed(() => {
   const course = selectedCourse.value
-  // Return flow stages based on current scenario / course
   if (!course) return mlFlowStages
-  const sf = course.subfield
-  if (sf === 'dl') return dlFlowStages
-  if (sf === 'nlp') return nlpFlowStages
+  if (course.subfield === 'dl') return dlFlowStages
+  if (course.subfield === 'nlp') return nlpFlowStages
   return mlFlowStages
 })
 
 const currentCodeExamples = computed(() => {
   const course = selectedCourse.value
   if (!course) return sharedCodeExamples['model-training']
-  // Collect all code examples from the course
-  const examples: any[] = []
+
+  const examples: typeof sharedCodeExamples['model-training'] = []
   for (const topic of course.topics) {
-    if (topic.codeExamples) {
-      examples.push(...topic.codeExamples)
-    }
+    if (topic.codeExamples) examples.push(...topic.codeExamples)
   }
   return examples.length > 0 ? examples : sharedCodeExamples['model-training']
 })
@@ -201,18 +192,29 @@ const currentCodeExamples = computed(() => {
 const currentMindMap = computed(() => {
   const course = selectedCourse.value
   if (!course) return undefined
-  const topic = course.topics[0]
-  return topic.mindMap
+  return course.topics[0]?.mindMap
 })
 
 function toggleModalPanel(panel: 'code' | 'flow' | 'mindmap') {
   activeModalPanel.value = activeModalPanel.value === panel ? null : panel
 }
+
+onMounted(() => {
+  const scenario = route.query.scenario
+  const q = route.query.q
+
+  if (typeof scenario === 'string' && scenarioConfigs.some(item => item.key === scenario)) {
+    currentScenario.value = scenario as StudyScenario
+  }
+
+  if (typeof q === 'string' && q.trim()) {
+    question.value = q
+  }
+})
 </script>
 
 <template>
   <div class="tutor">
-    <!-- ====================== Hero ====================== -->
     <div class="tutor-hero">
       <div>
         <div class="hero-badge">智能辅导</div>
@@ -222,13 +224,11 @@ function toggleModalPanel(panel: 'code' | 'flow' | 'mindmap') {
         <p class="hero-desc">{{ activeScenarioConfig?.description ?? '多模式深度讲解，随时随地解决你的学习问题' }}</p>
       </div>
       <div class="hero-actions">
-        <!-- Course Selector -->
         <button class="hero-btn course-btn" @click="showCoursePanel = !showCoursePanel">
           <BookOpen :size="15" stroke-width="1.5" />
           <span>{{ selectedCourse?.name ?? '选择课程' }}</span>
           <ChevronRight :size="13" stroke-width="1.5" :class="{ rotated: showCoursePanel }" />
         </button>
-        <!-- History -->
         <button class="hero-btn" @click="showHistory = !showHistory">
           <History :size="15" stroke-width="1.5" />
           <span>历史</span>
@@ -236,7 +236,6 @@ function toggleModalPanel(panel: 'code' | 'flow' | 'mindmap') {
       </div>
     </div>
 
-    <!-- Course Panel -->
     <transition name="slide-up">
       <div v-if="showCoursePanel" class="course-panel">
         <button
@@ -252,7 +251,6 @@ function toggleModalPanel(panel: 'code' | 'flow' | 'mindmap') {
       </div>
     </transition>
 
-    <!-- History Panel -->
     <transition name="slide-up">
       <div v-if="showHistory" class="history-panel">
         <button v-for="s in sessionHistory" :key="s.title" class="history-item" @click="selectSession(s)">
@@ -261,14 +259,13 @@ function toggleModalPanel(panel: 'code' | 'flow' | 'mindmap') {
           </div>
           <div class="history-info">
             <span class="history-title">{{ s.title }}</span>
-            <span class="history-meta">{{ s.count }} 条对话 · {{ s.date }}</span>
+            <span class="history-meta">{{ s.count }} 条对�?· {{ s.date }}</span>
           </div>
           <ChevronRight :size="16" stroke-width="1.5" class="history-chevron" />
         </button>
       </div>
     </transition>
 
-    <!-- ====================== Scenario Selector ====================== -->
     <ScenarioSelector
       :current-scenario="currentScenario"
       :current-sub-mode="currentSubMode"
@@ -276,14 +273,10 @@ function toggleModalPanel(panel: 'code' | 'flow' | 'mindmap') {
       @update:sub-mode="onSubModeChange"
     />
 
-    <!-- ====================== Main Content Area ====================== -->
     <div class="tutor-body">
-      <!-- Left: Conversation / Empty State -->
       <div class="tutor-main">
-        <!-- Conversation -->
         <div v-if="history.length > 0" class="conversation">
-          <div v-for="(item, i) in history" :key="i" class="qa-pair">
-            <!-- Question -->
+          <div v-for="(item, i) in history" :key="`${item.time}-${i}`" class="qa-pair">
             <div class="question-bubble">
               <div class="bubble-avatar q-avatar">Q</div>
               <div class="bubble-content">
@@ -297,7 +290,6 @@ function toggleModalPanel(panel: 'code' | 'flow' | 'mindmap') {
               </div>
             </div>
 
-            <!-- Answer -->
             <div class="answer-bubble">
               <div class="bubble-avatar a-avatar">A</div>
               <div class="bubble-content">
@@ -313,15 +305,23 @@ function toggleModalPanel(panel: 'code' | 'flow' | 'mindmap') {
               </div>
             </div>
           </div>
+
+          <div v-if="isAsking" class="qa-pair pending-pair">
+            <div class="answer-bubble pending-bubble">
+              <div class="bubble-avatar a-avatar">A</div>
+              <div class="bubble-content">
+                <div class="answer-body pending-answer">正在思考中...</div>
+              </div>
+            </div>
+          </div>
         </div>
 
-        <!-- Empty State -->
         <div v-else class="empty-state">
           <div class="empty-mode-icon">
             <MessageCircle :size="36" stroke-width="1" />
           </div>
-          <h3 class="empty-title">{{ activeSubModeConfig?.label ?? '开始学习' }}</h3>
-          <p class="empty-desc">{{ activeSubModeConfig?.desc ?? '选择一个问题开始，或输入你的问题' }}</p>
+          <h3 class="empty-title">{{ activeSubModeConfig?.label ?? '��ʼѧϰ' }}</h3>
+          <p class="empty-desc">{{ activeSubModeConfig?.desc ?? 'ѡ��һ�����⿪ʼ���������������' }}</p>
 
           <div class="topic-grid">
             <div v-for="(qItem, idx) in scenarioQuestions" :key="idx" class="topic-group">
@@ -335,27 +335,34 @@ function toggleModalPanel(panel: 'code' | 'flow' | 'mindmap') {
               </button>
             </div>
           </div>
+
+          <div v-if="isAsking" class="qa-pair pending-pair">
+            <div class="answer-bubble pending-bubble">
+              <div class="bubble-avatar a-avatar">A</div>
+              <div class="bubble-content">
+                <div class="answer-body pending-answer">正在思考中...</div>
+              </div>
+            </div>
+          </div>
         </div>
 
-        <!-- Input Area -->
         <div class="input-section">
           <div class="mode-indicator">
-            {{ activeScenarioConfig?.label ?? '辅导' }} ·
-            {{ activeSubModeConfig?.label ?? '问答' }}
+            {{ activeScenarioConfig?.label ?? '辅导' }} · {{ activeSubModeConfig?.label ?? '问答' }}
           </div>
           <div class="input-row">
             <input
               v-model="question"
               type="text"
-              :placeholder="`在「${activeSubModeConfig?.label ?? '问答'}」模式下输入问题...`"
+              :placeholder="`�ڡ�${activeSubModeConfig?.label ?? '�ʴ�'}��ģʽ����������...`"
               @keydown.enter="askQuestion"
+              :disabled="isAsking"
             />
-            <button class="ask-btn" @click="askQuestion" :disabled="!question.trim()">
+            <button class="ask-btn" @click="askQuestion" :disabled="!question.trim() || isAsking">
               <Zap :size="16" stroke-width="2" />
-              <span>提问</span>
+              <span>{{ isAsking ? '思考中' : '提问' }}</span>
             </button>
           </div>
-          <!-- Multi-modal Toolbar -->
           <div class="mm-toolbar">
             <button
               :class="['mm-btn', { active: activeModalPanel === 'flow' }]"
@@ -363,7 +370,7 @@ function toggleModalPanel(panel: 'code' | 'flow' | 'mindmap') {
               @click="toggleModalPanel('flow')"
             >
               <GitCompare :size="13" stroke-width="1.5" />
-              <span>流程图</span>
+              <span>����ͼ</span>
             </button>
             <button
               :class="['mm-btn', { active: activeModalPanel === 'code' }]"
@@ -385,116 +392,73 @@ function toggleModalPanel(panel: 'code' | 'flow' | 'mindmap') {
         </div>
       </div>
 
-      <!-- Multi-modal Panel Overlay -->
       <transition name="slide-up">
         <div v-if="activeModalPanel" class="modal-panel-wrap">
           <div class="modal-panel">
             <div class="mp-header">
               <span class="mp-title">
-                {{ activeModalPanel === 'flow' ? '数据处理流程图' : activeModalPanel === 'code' ? '交互式代码画板' : '知识思维导图' }}
+                {{ activeModalPanel === 'flow' ? '���ݴ�������ͼ' : activeModalPanel === 'code' ? '����ʽ���뻭��' : '֪ʶ˼ά��ͼ' }}
               </span>
-              <button class="mp-close" @click="activeModalPanel = null">✕</button>
+              <button class="mp-close" @click="activeModalPanel = null">��</button>
             </div>
             <div class="mp-body">
-              <!-- FlowChart -->
               <FlowChart
                 v-if="activeModalPanel === 'flow'"
                 :stages="currentFlowStages"
-                :title="selectedCourse?.name ? selectedCourse.name + ' 流程' : '数据处理流程'"
+                :title="selectedCourse?.name ? `${selectedCourse.name} 流程` : '数据处理流程'"
               />
-              <!-- CodeCanvas -->
               <CodeCanvas
                 v-if="activeModalPanel === 'code'"
                 :examples="currentCodeExamples"
                 language="python"
-                @explain="(c) => { question = '请解释这段代码：' + c.slice(0, 100); activeModalPanel = null; }"
+                @explain="code => { question = '请解释这段代码：' + code.slice(0, 100); activeModalPanel = null }"
               />
-              <!-- MindMap -->
               <MindMap
                 v-if="activeModalPanel === 'mindmap'"
                 :nodes="currentMindMap ?? []"
                 :title="selectedCourse?.name ?? '知识体系'"
                 :color="selectedCourse?.color ?? '#00d4ff'"
-                @node-click="(n: any) => { question = '解释一下' + n.label; activeModalPanel = null; }"
+                @node-click="node => { question = '����һ��' + node.label; activeModalPanel = null }"
               />
             </div>
           </div>
         </div>
       </transition>
 
-      <!-- ============================================================ -->
-      <!-- Right: Digital Human Panel (reserved)                        -->
-      <!-- ============================================================ -->
-      <!--
-        AI 数字人面板 — 集成说明：
-        ==========
-        1. 替换 #digital-human-slot 中的 TODO 内容为实际的数字人组件
-        2. 数字人组件应接收以下 props:
-           - currentQuestion: string   (当前用户问题)
-           - currentAnswer: string     (当前 AI 回答)
-           - scenario: string           (当前场景: preview/inclass/homework/exam)
-           - subMode: string           (当前子模式)
-        3. 该面板已实现折叠/展开功能
-        4. 面板宽度: 280px (展开) / 0 (折叠)
-      -->
       <div class="tutor-sidebar">
-        <button
-          class="dh-toggle"
-          :class="{ active: true }"
-          title="AI 数字人"
-        >
+        <button class="dh-toggle" :class="{ active: true }" title="AI ������">
           <Bot :size="18" stroke-width="1.5" />
         </button>
 
         <div class="dh-panel">
-          <!-- ========== DH Panel Content ========== -->
           <div class="dh-header">
             <Bot :size="18" stroke-width="1.5" />
-            <span>AI 数字人</span>
+            <span>AI ������</span>
           </div>
 
-          <!-- === DIGITAL HUMAN SLOT (reserved) === -->
-          <!--
-            TODO: 在此替换为数字人组件
-            <DigitalHuman
-              :current-question="history[history.length - 1]?.q ?? ''"
-              :current-answer="history[history.length - 1]?.a ?? ''"
-              :scenario="currentScenario"
-              :sub-mode="currentSubMode"
-            />
-          -->
           <div id="digital-human-slot" class="dh-slot">
             <div class="dh-placeholder">
               <div class="dhp-icon">
                 <Bot :size="36" stroke-width="1" />
               </div>
-              <span class="dhp-text">AI 数字人</span>
-              <span class="dhp-hint">集成后将在此显示</span>
+              <span class="dhp-text">AI ������</span>
+              <span class="dhp-hint">���ɺ��ڴ���ʾ</span>
             </div>
           </div>
-          <!-- === END DIGITAL HUMAN SLOT === -->
 
           <div class="dh-footer">
-            <div class="dhf-label">当前讲解</div>
+            <div class="dhf-label">��ǰ����</div>
             <p class="dhf-text">
-              {{ history.length > 0 ? history[history.length - 1].q.slice(0, 50) + '...' : '等待提问中...' }}
+              {{ history.length > 0 ? `${history[history.length - 1].q.slice(0, 50)}...` : '�ȴ�������...' }}
             </p>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- Emotion Mascot -->
     <EmotionMascot />
   </div>
 </template>
-
-<script lang="ts">
-import { ChevronRight as ChevronRightIcon } from 'lucide-vue-next'
-export default {
-  components: { ChevronRightIcon }
-}
-</script>
 
 <style scoped>
 .tutor {
@@ -508,7 +472,6 @@ export default {
   z-index: 1;
 }
 
-/* ====================== Hero ====================== */
 .tutor-hero {
   padding: 48px 40px 8px;
   display: flex;
@@ -576,10 +539,8 @@ export default {
   color: var(--color-accent-cyan);
 }
 
-.course-btn { gap: 6px; }
 .course-btn .rotated { transform: rotate(90deg); }
 
-/* ── Course Panel ── */
 .course-panel {
   display: flex;
   flex-wrap: wrap;
@@ -620,7 +581,6 @@ export default {
   background: rgba(255,255,255,0.06);
 }
 
-/* ── History Panel ── */
 .history-panel {
   display: flex;
   gap: 8px;
@@ -669,10 +629,8 @@ export default {
 .history-info { display: flex; flex-direction: column; gap: 1px; }
 .history-title { display: block; font-weight: 500; }
 .history-meta { display: block; font-size: 11px; color: var(--color-text-tertiary); }
-
 .history-chevron { color: var(--color-text-tertiary); }
 
-/* ====================== Tutor Body (Sidebar layout) ====================== */
 .tutor-body {
   flex: 1;
   display: flex;
@@ -688,7 +646,6 @@ export default {
   min-width: 0;
 }
 
-/* ====================== Conversation ====================== */
 .conversation {
   flex: 1;
   overflow-y: auto;
@@ -698,19 +655,26 @@ export default {
   gap: 20px;
 }
 
+@keyframes message-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
 .qa-pair {
   display: flex;
   flex-direction: column;
   gap: 10px;
 }
 
-.question-bubble, .answer-bubble {
+.question-bubble,
+.answer-bubble {
   display: flex;
   gap: 12px;
 }
 
 .question-bubble { justify-content: flex-end; }
 .answer-bubble { justify-content: flex-start; }
+.pending-bubble { animation: message-in 0.3s var(--ease-out); }
 
 .bubble-avatar {
   width: 32px;
@@ -771,7 +735,6 @@ export default {
 }
 
 .question-bubble .bubble-meta { justify-content: flex-end; }
-
 .answer-bubble .bubble-content { width: 100%; }
 
 .answer-body {
@@ -825,6 +788,10 @@ export default {
   color: var(--color-accent-cyan);
 }
 
+.pending-answer {
+  color: var(--color-text-secondary);
+}
+
 .answer-footer {
   display: flex;
   gap: 4px;
@@ -856,7 +823,6 @@ export default {
   color: var(--color-accent-cyan);
 }
 
-/* ====================== Empty State ====================== */
 .empty-state {
   flex: 1;
   display: flex;
@@ -939,7 +905,6 @@ export default {
 .topic-btn-arrow { opacity: 0; transition: all 0.2s var(--ease-out); flex-shrink: 0; }
 .topic-btn:hover .topic-btn-arrow { opacity: 1; transform: translateX(3px); color: var(--color-accent-cyan); }
 
-/* ====================== Input Area ====================== */
 .input-section {
   padding: 16px 40px 24px;
   border-top: 1px solid var(--color-border);
@@ -998,9 +963,6 @@ export default {
 
 .ask-btn:disabled { opacity: 0.4; cursor: not-allowed; }
 
-/* ============================================================ */
-/* Digital Human Sidebar Panel                                  */
-/* ============================================================ */
 .tutor-sidebar {
   position: relative;
   display: flex;
@@ -1056,7 +1018,6 @@ export default {
   color: var(--color-text-primary);
 }
 
-/* ── Digital Human Slot (reserved) ── */
 .dh-slot {
   flex: 1;
   display: flex;
@@ -1128,7 +1089,6 @@ export default {
   overflow: hidden;
 }
 
-/* ====================== Multi-modal Toolbar ====================== */
 .mm-toolbar {
   display: flex;
   gap: 6px;
@@ -1161,7 +1121,6 @@ export default {
   color: var(--mm-clr);
 }
 
-/* ====================== Modal Panel ====================== */
 .modal-panel-wrap {
   position: fixed;
   inset: 0;
@@ -1222,7 +1181,6 @@ export default {
   padding: 20px 24px;
 }
 
-/* ====================== Responsive ====================== */
 @media (max-width: 1100px) {
   .dh-panel { width: 220px; }
 }

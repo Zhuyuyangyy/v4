@@ -5,6 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "server": "node server/index.js",
+    "dev:server": "node --watch server/index.js",
     "build": "vue-tsc --noEmit && vite build",
     "preview": "vite preview"
   },

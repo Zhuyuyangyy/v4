@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { useRoute } from 'vue-router'
-import { computed } from 'vue'
+import { computed, watch } from 'vue'
+import { useAppStore } from '@/store'
 import { useScrollReveal } from '@/composables/useScrollReveal'
 import {
   Home,
@@ -17,6 +18,7 @@ import {
 } from 'lucide-vue-next'
 
 const route = useRoute()
+const appStore = useAppStore()
 useScrollReveal(0.12)
 
 const isHomePage = computed(() => route.path === '/')
@@ -33,6 +35,13 @@ const navItems = [
   { path: '/evaluation', label: 'è¯„ä¼°', icon: BarChart3 },
   { path: '/settings', label: 'è®¾ç½®', icon: Settings },
 ]
+watch(
+  () => route.fullPath,
+  (nextPath, previousPath) => {
+    if (!previousPath || nextPath === previousPath) return
+    appStore.triggerPageLoading()
+  },
+)
 </script>
 
 <template>
@@ -47,7 +56,7 @@ const navItems = [
           <span class="brand-text">EduMind</span>
         </router-link>
 
-        <nav class="topbar-nav" aria-label="ä¸»å¯¼èˆª">
+        <nav class="topbar-nav" aria-label="Ö÷µ¼º½">
           <router-link
             v-for="item in navItems"
             :key="item.path"

@@ -1,4 +1,5 @@
 import { ref, computed } from 'vue'
+import { analyzeProfile as analyzeProfileRequest, fetchLatestProfile } from '@/lib/api'
 
 export interface SurveyAnswers {
   role: string
@@ -591,7 +592,11 @@ export function useProfileSurvey() {
       await delay(500 + Math.random() * 400)
     }
 
-    result.value = generateResult(answers.value)
+    try {
+      result.value = await analyzeProfileRequest(answers.value)
+    } catch {
+      result.value = generateResult(answers.value)
+    }
     saveToStorage(result.value)
     phase.value = 'results'
   }
@@ -629,6 +634,14 @@ export function useProfileSurvey() {
     try { localStorage.removeItem(STORAGE_KEY) } catch { /* ignore */ }
   }
 
+  async function loadLatestSavedResult() {
+    try {
+      return await fetchLatestProfile()
+    } catch {
+      return null
+    }
+  }
+
   return {
     phase,
     currentStep,
@@ -648,6 +661,7 @@ export function useProfileSurvey() {
     toResults,
     reset,
     loadFromStorage,
+    loadLatestSavedResult,
     clearStorage,
   }
 }

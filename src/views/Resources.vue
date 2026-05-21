@@ -1,34 +1,36 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import {
-  LayoutGrid,
+  ArrowRight,
+  ChevronRight,
+  Code,
+  Eye,
   FileText,
+  LayoutGrid,
   Map,
   PenTool,
   Play,
-  Code,
-  Search,
-  ArrowRight,
-  Star,
-  Sparkles,
-  Bookmark,
-  ChevronRight,
-  Eye,
   Route,
+  Search,
+  Sparkles,
+  Star,
 } from 'lucide-vue-next'
-
-const router = useRouter()
+import { fetchRecommendedResources, fetchResources } from '@/lib/api'
+import type { ApiResource } from '@/types/api'
 
 type ResourceType = 'all' | 'doc' | 'mindmap' | 'exercise' | 'video' | 'code' | 'flowchart'
 
+const router = useRouter()
+
 const activeFilter = ref<ResourceType>('all')
 const searchQuery = ref('')
-const selectedResource = ref<null | typeof resources[0]>(null)
+const selectedResource = ref<ApiResource | null>(null)
 const showDetail = ref(false)
 const bookmarks = ref<Set<number>>(new Set([0, 3]))
+const isLoading = ref(false)
 
-const filterTabs: { key: ResourceType; label: string; icon: any }[] = [
+const filterTabs: { key: ResourceType; label: string; icon: unknown }[] = [
   { key: 'all', label: '全部', icon: LayoutGrid },
   { key: 'doc', label: '文档', icon: FileText },
   { key: 'mindmap', label: '思维导图', icon: Map },
@@ -38,7 +40,7 @@ const filterTabs: { key: ResourceType; label: string; icon: any }[] = [
   { key: 'code', label: '代码', icon: Code },
 ]
 
-const resourceIcons: Record<string, any> = {
+const resourceIcons: Record<ApiResource['type'], unknown> = {
   doc: FileText,
   mindmap: Map,
   exercise: PenTool,
@@ -46,16 +48,19 @@ const resourceIcons: Record<string, any> = {
   code: Code,
 }
 
-const resources = [
-  // ── 机器学习 ──
-  { id: 0, type: 'doc' as const, title: 'Python 机器学习入门指南', desc: '从零开始掌握 ML 核心概念与实战，涵盖监督学习、无监督学习、模型评估等内容。', tags: ['ML', '入门'], date: '2026-05-10', color: '#00d4ff', reads: 234 },
-  { id: 1, type: 'mindmap' as const, title: '监督学习算法全景图', desc: 'KNN、决策树、SVM、随机森林、XGBoost 对比分析，清晰梳理各算法适用场景。', tags: ['ML', '架构'], date: '2026-05-09', color: '#7c3aed', reads: 189 },
-  { id: 2, type: 'exercise' as const, title: '机器学习面试 100 题', desc: '精选机器学习面试高频题目，涵盖算法原理、模型评估、特征工程等核心考点。', tags: ['ML', '面试'], date: '2026-05-08', color: '#06d6a0', reads: 156 },
-  { id: 3, type: 'video' as const, title: '模型评估与交叉验证', desc: '深入讲解偏差方差权衡、交叉验证方法、ROC/AUC 等评估指标。', tags: ['ML', '进阶'], date: '2026-05-07', color: '#f59e0b', reads: 312 },
-  { id: 4, type: 'code' as const, title: 'KNN 算法从零实现', desc: '从零实现 K-近邻分类器，包含完整的 Python 代码、测试用例和性能优化技巧。', tags: ['ML', '实现'], date: '2026-05-06', color: '#f43f5e', reads: 98 },
-  { id: 5, type: 'doc' as const, title: '特征工程实战指南', desc: '特征编码、标准化、PCA 降维、特征选择，系统掌握特征工程核心方法。', tags: ['ML', '工程'], date: '2026-05-05', color: '#00d4ff', reads: 201 },
-  { id: 6, type: 'doc' as const, title: '集成学习原理与实战', desc: 'Bagging、Boosting、Stacking 三大集成范式，从随机森林到 XGBoost/LightGBM。', tags: ['ML', '进阶'], date: '2026-05-04', color: '#00d4ff', reads: 267 },
+const resources = ref<ApiResource[]>([
+  { id: 0, type: 'doc', title: 'Python 机器学习入门指南', desc: '从零开始掌握 ML 核心概念与实战，涵盖监督学习、无监督学习、模型评估等内容。', tags: ['Python', 'ML'], date: '2026-05-10', color: '#00d4ff', reads: 234 },
+  { id: 1, type: 'mindmap', title: '深度学习知识图谱', desc: '神经网络、CNN、RNN 架构全景图，清晰梳理深度学习各分支之间的关系与发展脉络。', tags: ['DL', '架构'], date: '2026-05-09', color: '#7c3aed', reads: 189 },
+  { id: 2, type: 'exercise', title: '线性代数基础习题', desc: '矩阵运算、特征值、向量空间，精选 50 道经典习题，覆盖线性代数核心知识点。', tags: ['数学', '练习'], date: '2026-05-08', color: '#06d6a0', reads: 156 },
+  { id: 3, type: 'video', title: 'Transformer 原理解析', desc: '深入讲解 Attention 机制与多头注意力，从论文推导到代码实现。', tags: ['NLP', '进阶'], date: '2026-05-07', color: '#f59e0b', reads: 312 },
+  { id: 4, type: 'code', title: 'KNN 算法实现', desc: '从零实现 K-近邻分类器，包含完整的 Python 代码、测试用例和性能优化技巧。', tags: ['算法', '实现'], date: '2026-05-06', color: '#f43f5e', reads: 98 },
+  { id: 5, type: 'doc', title: '概率论与数理统计速查', desc: '常见分布、假设检验、贝叶斯公式，一份全面的概率论速查手册。', tags: ['数学', '统计'], date: '2026-05-05', color: '#00d4ff', reads: 201 },
+  { id: 6, type: 'mindmap', title: '数据结构思维导图', desc: '数组、链表、树、图、哈希表，数据结构知识点全景梳理，面试复习必备。', tags: ['CS基础', '架构'], date: '2026-05-04', color: '#7c3aed', reads: 267 },
+  { id: 7, type: 'exercise', title: '动态规划专项练习', desc: '经典 DP 问题与解题模板，从背包问题到区间 DP，逐步提升算法能力。', tags: ['算法', '进阶'], date: '2026-05-03', color: '#06d6a0', reads: 143 },
+  { id: 8, type: 'video', title: 'PyTorch 快速上手', desc: '张量运算、自动求导、模型构建，30 分钟快速掌握 PyTorch 核心功能。', tags: ['框架', '入门'], date: '2026-05-02', color: '#f59e0b', reads: 378 },
+])
 
+<<<<<<< HEAD
   // ── 深度学习 ──
   { id: 7, type: 'mindmap' as const, title: '深度学习知识图谱', desc: '神经网络、CNN、RNN、Transformer 架构全景图，清晰梳理深度学习发展脉络。', tags: ['DL', '架构'], date: '2026-05-09', color: '#7c3aed', reads: 189 },
   { id: 8, type: 'video' as const, title: '反向传播完整推导', desc: '从计算图到链式法则，手写推导反向传播的每一步，彻底理解梯度如何传递。', tags: ['DL', '数学'], date: '2026-05-07', color: '#7c3aed', reads: 312 },
@@ -120,53 +125,74 @@ const recommended = [
   { id: 101, type: 'mindmap' as const, title: 'AI 算法工程师技能树', desc: '从基础到前沿，AI 算法工程师完整技能图谱与学习路线', tags: ['AI', '体系'], date: '2026-05-12', color: '#7c3aed', reads: 256 },
   { id: 102, type: 'code' as const, title: '操作系统实验：生产者消费者', desc: '使用信号量和管程解决经典同步问题，含完整代码实现', tags: ['OS', '实战'], date: '2026-05-11', color: '#1565C0', reads: 189 },
 ]
+=======
+const recommended = ref<ApiResource[]>([
+  { id: 9, type: 'video', title: '机器学习数学基础', desc: '微积分、线性代数、概率论在 ML 中的应用', tags: ['数学', 'ML'], date: '2026-05-11', color: '#00d4ff', reads: 89 },
+  { id: 10, type: 'doc', title: '模型部署实战指南', desc: '从训练到生产，ML 模型部署全流程解析', tags: ['工程', '进阶'], date: '2026-05-11', color: '#7c3aed', reads: 67 },
+  { id: 11, type: 'code', title: 'Git 版本控制入门', desc: '团队协作必备，Git 工作流与最佳实践', tags: ['工具', '基础'], date: '2026-05-10', color: '#06d6a0', reads: 45 },
+])
+>>>>>>> feature/your-dev
 
 const filtered = computed(() => {
-  return resources.filter(r => {
+  return resources.value.filter(r => {
     if (activeFilter.value !== 'all' && r.type !== activeFilter.value) return false
-    if (searchQuery.value) {
-      const q = searchQuery.value.toLowerCase()
-      return r.title.toLowerCase().includes(q) || r.tags.some(t => t.toLowerCase().includes(q))
-    }
-    return true
+    if (!searchQuery.value.trim()) return true
+    const q = searchQuery.value.trim().toLowerCase()
+    return r.title.toLowerCase().includes(q) || r.tags.some(tag => tag.toLowerCase().includes(q))
   })
 })
 
 const filterCounts = computed(() => {
-  const counts: Record<string, number> = { all: resources.length }
+  const counts: Record<string, number> = { all: resources.value.length }
   filterTabs.slice(1).forEach(f => {
-    counts[f.key] = resources.filter(r => r.type === f.key).length
+    counts[f.key] = resources.value.filter(r => r.type === f.key).length
   })
   return counts
 })
+
+const detailItem = computed(() => selectedResource.value ?? resources.value[0])
 
 function toggleBookmark(id: number) {
   if (bookmarks.value.has(id)) bookmarks.value.delete(id)
   else bookmarks.value.add(id)
 }
 
-function openDetail(r: typeof resources[0]) {
-  selectedResource.value = r
+function openDetail(resource: ApiResource) {
+  selectedResource.value = resource
   showDetail.value = true
 }
 
 function closeDetail() {
   showDetail.value = false
-  setTimeout(() => { selectedResource.value = null }, 200)
+  window.setTimeout(() => {
+    selectedResource.value = null
+  }, 200)
 }
-
-const detailItem = computed(() => selectedResource.value!)
 
 function goToTutor() {
-  const item = selectedResource.value
-  if (!item) return
-  router.push({ path: '/tutoring', query: { q: item.title } })
+  if (!selectedResource.value) return
+  router.push({ path: '/tutoring', query: { q: selectedResource.value.title } })
 }
+
+onMounted(async () => {
+  isLoading.value = true
+  try {
+    const [resourceItems, recommendedItems] = await Promise.all([
+      fetchResources(),
+      fetchRecommendedResources(),
+    ])
+    resources.value = resourceItems
+    recommended.value = recommendedItems
+  } catch {
+    // Keep the original local cards when the API server is unavailable.
+  } finally {
+    isLoading.value = false
+  }
+})
 </script>
 
 <template>
   <div class="resources">
-    <!-- Hero -->
     <div class="res-hero">
       <div>
         <div class="hero-badge">学习资源</div>
@@ -175,7 +201,6 @@ function goToTutor() {
       </div>
     </div>
 
-    <!-- Filter + Search Bar -->
     <div class="toolbar">
       <div class="filter-group">
         <button
@@ -195,7 +220,8 @@ function goToTutor() {
       </div>
     </div>
 
-    <!-- Resource Grid -->
+    <div v-if="isLoading" class="loading-state">正在同步学习资源...</div>
+
     <div class="res-grid">
       <div
         v-for="r in filtered"
@@ -230,15 +256,13 @@ function goToTutor() {
       </div>
     </div>
 
-    <!-- Empty State -->
     <div v-if="filtered.length === 0" class="empty-state">
       <Search :size="36" stroke-width="1" class="empty-icon" />
       <h3>没有找到匹配的资源</h3>
       <p>尝试更换筛选条件或搜索关键词</p>
     </div>
 
-    <!-- Recommended Section -->
-    <div v-if="activeFilter === 'all' && !searchQuery" class="recommended">
+    <div v-if="activeFilter === 'all' && !searchQuery.trim()" class="recommended">
       <div class="rec-header">
         <div class="rec-header-left">
           <Sparkles :size="18" stroke-width="1.5" class="rec-sparkle" />
@@ -271,7 +295,6 @@ function goToTutor() {
       </div>
     </div>
 
-    <!-- Detail Modal -->
     <transition name="scale-in">
       <div v-if="showDetail && selectedResource" class="modal-overlay" @click.self="closeDetail">
         <div class="modal" :style="{ '--m-color': detailItem.color }">
@@ -328,7 +351,6 @@ function goToTutor() {
   z-index: 1;
 }
 
-/* ====================== Hero ====================== */
 .res-hero {
   padding: 48px 40px 24px;
 }
@@ -367,7 +389,6 @@ function goToTutor() {
   color: var(--color-text-secondary);
 }
 
-/* ====================== Toolbar ====================== */
 .toolbar {
   display: flex;
   justify-content: space-between;
@@ -396,10 +417,12 @@ function goToTutor() {
   color: var(--color-text-secondary);
   transition: all 0.2s var(--ease-out);
 }
+
 .filter-btn:hover {
   color: var(--color-text-primary);
   background: rgba(255, 255, 255, 0.03);
 }
+
 .filter-btn.active {
   color: #fff;
   background: linear-gradient(135deg, var(--color-accent-cyan), var(--color-accent-blue));
@@ -412,6 +435,7 @@ function goToTutor() {
   background: rgba(255, 255, 255, 0.1);
   font-family: var(--font-mono);
 }
+
 .filter-btn.active .filter-count { background: rgba(255, 255, 255, 0.15); }
 
 .search-box {
@@ -438,10 +462,16 @@ function goToTutor() {
   color: var(--color-text-primary);
   transition: all 0.2s var(--ease-out);
 }
+
 .search-box input:focus { border-color: var(--color-accent-cyan); }
 .search-box input::placeholder { color: var(--color-text-tertiary); opacity: 0.6; }
 
-/* ====================== Resource Grid ====================== */
+.loading-state {
+  padding: 0 40px 20px;
+  font-size: 12px;
+  color: var(--color-accent-cyan);
+}
+
 .res-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -459,6 +489,7 @@ function goToTutor() {
   overflow: hidden;
   transition: all 0.3s var(--ease-out);
 }
+
 .res-card:hover {
   border-color: var(--r-color);
   transform: translateY(-4px);
@@ -477,6 +508,7 @@ function goToTutor() {
   opacity: 0;
   transition: opacity 0.3s var(--ease-out);
 }
+
 .res-card:hover .res-card-glow { opacity: 1; }
 
 .res-card-top {
@@ -503,6 +535,7 @@ function goToTutor() {
   padding: 4px;
   transition: all 0.2s var(--ease-out);
 }
+
 .res-bookmark:hover { color: var(--color-accent-amber); transform: scale(1.1); }
 
 .bookmarked { color: #f59e0b; fill: #f59e0b; }
@@ -566,21 +599,22 @@ function goToTutor() {
   color: var(--color-text-tertiary);
 }
 
-/* ====================== Empty State ====================== */
 .empty-state {
   text-align: center;
   padding: 60px 20px;
 }
+
 .empty-icon { color: var(--color-text-tertiary); opacity: 0.25; margin-bottom: 14px; }
+
 .empty-state h3 {
   font-family: var(--font-display);
   font-size: 18px;
   color: var(--color-text-secondary);
   margin-bottom: 6px;
 }
+
 .empty-state p { font-size: 13px; color: var(--color-text-tertiary); }
 
-/* ====================== Recommended ====================== */
 .recommended {
   padding: 0 40px 40px;
 }
@@ -593,7 +627,6 @@ function goToTutor() {
 }
 
 .rec-header-left { display: flex; align-items: center; gap: 10px; }
-
 .rec-sparkle { color: var(--color-accent-cyan); }
 
 .rec-title {
@@ -618,6 +651,7 @@ function goToTutor() {
   border-radius: 8px;
   transition: all 0.2s var(--ease-out);
 }
+
 .rec-more:hover { background: rgba(0, 212, 255, 0.06); }
 
 .rec-grid {
@@ -635,6 +669,7 @@ function goToTutor() {
   cursor: pointer;
   transition: all 0.3s var(--ease-out);
 }
+
 .rec-card:hover {
   border-color: var(--r-color);
   transform: translateY(-3px);
@@ -686,6 +721,7 @@ function goToTutor() {
 }
 
 .rec-tags { display: flex; gap: 5px; flex-wrap: wrap; }
+
 .rec-tag {
   font-size: 10px;
   padding: 3px 8px;
@@ -694,7 +730,6 @@ function goToTutor() {
   color: var(--color-accent-cyan);
 }
 
-/* ====================== Modal ====================== */
 .modal-overlay {
   position: fixed;
   inset: 0;
@@ -751,6 +786,7 @@ function goToTutor() {
   color: var(--color-text-tertiary);
   transition: all 0.2s var(--ease-out);
 }
+
 .modal-close:hover { background: rgba(255, 255, 255, 0.06); color: #fff; }
 
 .modal-title {
@@ -774,6 +810,7 @@ function goToTutor() {
   padding: 14px 28px 0;
   flex-wrap: wrap;
 }
+
 .modal-tag {
   font-size: 11px;
   padding: 4px 12px;
@@ -803,12 +840,14 @@ function goToTutor() {
 .mm-value { font-size: 15px; font-weight: 500; color: var(--color-text-primary); }
 
 .modal-preview { padding: 0 28px 20px; }
+
 .modal-preview h3 {
   font-family: var(--font-display);
   font-size: 16px;
   color: #fff;
   margin-bottom: 8px;
 }
+
 .modal-preview p {
   font-size: 13px;
   color: var(--color-text-secondary);
@@ -838,6 +877,7 @@ function goToTutor() {
   font-weight: 600;
   transition: all 0.2s var(--ease-out);
 }
+
 .btn-primary:hover { box-shadow: 0 4px 16px rgba(0, 212, 255, 0.3); }
 
 .btn-ghost {
@@ -848,13 +888,14 @@ function goToTutor() {
   font-size: 13px;
   transition: all 0.2s var(--ease-out);
 }
-.btn-ghost:hover { border-color: var(--m-color); color: var(--m-color); }
-.btn-ghost.saved { color: var(--color-accent-amber); border-color: rgba(245,158,11,0.3); }
 
-/* ====================== Responsive ====================== */
+.btn-ghost:hover { border-color: var(--m-color); color: var(--m-color); }
+.btn-ghost.saved { color: var(--color-accent-amber); border-color: rgba(245, 158, 11, 0.3); }
+
 @media (max-width: 900px) {
   .res-hero { padding: 32px 20px 20px; }
   .toolbar { padding: 0 20px 20px; flex-direction: column; align-items: stretch; }
+  .loading-state { padding: 0 20px 20px; }
   .search-box input { width: 100%; }
   .res-grid { padding: 0 20px 24px; grid-template-columns: 1fr; }
   .rec-grid { grid-template-columns: 1fr; }

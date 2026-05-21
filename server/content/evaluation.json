@@ -1,0 +1,15 @@
+{
+  "generatedAt": "2026-05-12",
+  "stats": [
+    { "label": "学习时长", "value": "128h", "change": "+12h", "color": "#00d4ff", "icon": "Clock" },
+    { "label": "完成课时", "value": "47", "change": "+5", "color": "#7c3aed", "icon": "PenTool" },
+    { "label": "平均正确率", "value": "82%", "change": "+3%", "color": "#06d6a0", "icon": "Target" },
+    { "label": "知识掌握度", "value": "68%", "change": "+8%", "color": "#f59e0b", "icon": "TrendingUp" }
+  ],
+  "suggestions": [
+    { "text": "概率论与数理统计是当前短板，建议安排两次专项复习。", "type": "weakness" },
+    { "text": "机器学习基础掌握较稳，可以逐步加入项目实战。", "type": "strength" },
+    { "text": "本周学习时长较上周提升 15%，可以继续保持当前节奏。", "type": "positive" },
+    { "text": "建议增加编程实战时间，理论与实践比例可以调整到 1:1。", "type": "action" }
+  ]
+}

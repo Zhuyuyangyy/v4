@@ -1,40 +1,69 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import {
-  Clock,
-  PenTool,
-  Target,
-  TrendingUp,
-  Sparkles,
-  Award,
-  Zap,
-  BookOpen,
-  Star,
-  BarChart3,
   AlertTriangle,
-  ArrowUp,
   ArrowRight,
+  ArrowUp,
+  Award,
   Brain,
+  Clock,
   Download,
   FileBarChart,
+  PenTool,
+  Sparkles,
+  Target,
+  TrendingUp,
+  Zap,
 } from 'lucide-vue-next'
-import { allCourses } from '@/components/course/CourseData'
+import { fetchEvaluation } from '@/lib/api'
+
+type SuggestionType = 'weakness' | 'strength' | 'positive' | 'action'
+
+interface StatItem {
+  label: string
+  value: string
+  change: string
+  color: string
+  icon: unknown
+}
+
+interface SuggestionItem {
+  text: string
+  type: SuggestionType
+  icon: unknown
+}
 
 const router = useRouter()
 const loaded = ref(false)
+const isLoading = ref(false)
 const showReportModal = ref(false)
+const reportDate = ref('2026-05-12')
 
+<<<<<<< HEAD
 const stats = [
   { label: '编程与算法', value: '82%', change: '+8%', icon: BarChart3, color: '#00599C' },
   { label: '计算机系统', value: '58%', change: '+12%', icon: Brain, color: '#1565C0' },
   { label: 'AI 方向', value: '45%', change: '+15%', icon: BookOpen, color: '#7c3aed' },
   { label: '综合掌握度', value: '62%', change: '+10%', icon: TrendingUp, color: '#f59e0b' },
+=======
+const defaultStats: StatItem[] = [
+  { label: '学习时长', value: '128h', change: '+12h', icon: Clock, color: '#00d4ff' },
+  { label: '完成课时', value: '47', change: '+5', icon: PenTool, color: '#7c3aed' },
+  { label: '平均正确率', value: '82%', change: '+3%', icon: Target, color: '#06d6a0' },
+  { label: '知识掌握度', value: '68%', change: '+8%', icon: TrendingUp, color: '#f59e0b' },
+>>>>>>> feature/your-dev
 ]
 
-const weeklyData = [45, 52, 38, 65, 70, 55, 80]
-const peerAvg = [42, 48, 40, 52, 55, 50, 58]
-const days = ['周一', '周二', '周三', '周四', '周五', '周六', '周日']
+const defaultSuggestions: SuggestionItem[] = [
+  { text: '概率论与数理统计是当前短板，建议安排 2 小时专项复习。', type: 'weakness', icon: AlertTriangle },
+  { text: '机器学习基础掌握较稳，可以逐步加入项目实战。', type: 'strength', icon: Sparkles },
+  { text: '本周学习时长较上周提升 15%，可以继续保持当前节奏。', type: 'positive', icon: ArrowUp },
+  { text: '建议增加编程实战时间，理论与实践比例可以调整到 1:1。', type: 'action', icon: ArrowRight },
+]
+
+const stats = ref(defaultStats)
+const suggestions = ref(defaultSuggestions)
 
 const subjects = [
   { name: 'C / Python 编程基础', mastery: 90, color: '#00599C' },
@@ -55,6 +84,7 @@ const weeklyTrend = [
   { week: 'W7', you: 78, avg: 60 },
 ]
 
+<<<<<<< HEAD
 const suggestions = [
   { text: '操作系统与计算机网络需要加强，建议通过实验理解核心概念', type: 'weakness' as const, icon: AlertTriangle },
   { text: '编程基础掌握良好，建议开始数据结构进阶学习', type: 'strength' as const, icon: Sparkles },
@@ -64,62 +94,130 @@ const suggestions = [
 
 const aiCourseList = allCourses
 
+=======
+>>>>>>> feature/your-dev
 const badges = [
   { icon: Sparkles, name: '初识学习', earned: true, color: '#00d4ff' },
   { icon: Zap, name: '连续打卡', earned: true, color: '#06d6a0' },
   { icon: Award, name: '知识达人', earned: true, color: '#7c3aed' },
   { icon: PenTool, name: '刷题能手', earned: false, color: '#f59e0b' },
-  { icon: BookOpen, name: '项目先锋', earned: false, color: '#f43f5e' },
-  { icon: Star, name: '学习大师', earned: false, color: '#3b82f6' },
+  { icon: Brain, name: '项目先锋', earned: false, color: '#f43f5e' },
+  { icon: TrendingUp, name: '学习大师', earned: false, color: '#3b82f6' },
 ]
 
-function suggestIconColor(type: string) {
-  const colors: Record<string, string> = {
+const iconMap = {
+  Clock,
+  PenTool,
+  Target,
+  TrendingUp,
+  Sparkles,
+  Award,
+  Zap,
+  Brain,
+} as const
+
+const chartPoints = computed(() => {
+  const maxX = 350
+  const width = maxX / (weeklyTrend.length - 1)
+  const toY = (value: number) => 100 - value
+  const youPoints = weeklyTrend.map((item, index) => `${index * width},${toY(item.you)}`).join(' ')
+  const avgPoints = weeklyTrend.map((item, index) => `${index * width},${toY(item.avg)}`).join(' ')
+  return { youPoints, avgPoints }
+})
+
+const averageMastery = computed(() => {
+  const sum = subjects.reduce((total, item) => total + item.mastery, 0)
+  return Math.round(sum / subjects.length)
+})
+
+function suggestIconColor(type: SuggestionType) {
+  const colors: Record<SuggestionType, string> = {
     weakness: 'var(--color-accent-rose)',
     strength: 'var(--color-accent-cyan)',
     positive: 'var(--color-accent-emerald)',
     action: 'var(--color-accent-amber)',
   }
-  return { color: colors[type] || 'var(--color-text-tertiary)' }
+  return { color: colors[type] }
 }
 
-function goToTutoring(q?: string) {
-  router.push({ path: '/tutoring', query: q ? { q } : {} })
+function inferSuggestionType(text: string): SuggestionType {
+  if (text.includes('短板') || text.includes('薄弱') || text.includes('加强')) return 'weakness'
+  if (text.includes('保持') || text.includes('提升')) return 'positive'
+  if (text.includes('可以') || text.includes('掌握')) return 'strength'
+  return 'action'
 }
 
-function masteryColor(val: number) {
-  if (val >= 80) return 'var(--color-accent-emerald)'
-  if (val >= 60) return 'var(--color-accent-cyan)'
-  if (val >= 40) return 'var(--color-accent-amber)'
+function iconForSuggestion(type: SuggestionType) {
+  if (type === 'weakness') return AlertTriangle
+  if (type === 'strength') return Sparkles
+  if (type === 'positive') return ArrowUp
+  return ArrowRight
+}
+
+function iconForStat(label: string, iconName?: string) {
+  if (iconName && iconName in iconMap) {
+    return iconMap[iconName as keyof typeof iconMap]
+  }
+
+  if (label.includes('时长')) return Clock
+  if (label.includes('课时')) return PenTool
+  if (label.includes('正确率')) return Target
+  if (label.includes('掌握')) return TrendingUp
+  return Brain
+}
+
+function goToTutoring(text?: string) {
+  router.push({ path: '/tutoring', query: text ? { q: text } : {} })
+}
+
+function masteryColor(value: number) {
+  if (value >= 80) return 'var(--color-accent-emerald)'
+  if (value >= 60) return 'var(--color-accent-cyan)'
+  if (value >= 40) return 'var(--color-accent-amber)'
   return 'var(--color-accent-rose)'
 }
 
-function chartHeight(val: number) {
-  return Math.max(val * 2, 8)
-}
-
-function trendLinePath(data: { week: string; you: number; avg: number }[]) {
-  const w = 100 / (data.length - 1)
-  const youPoints = data.map((d, i) => `${i * w},${100 - d.you}`).join(' ')
-  const avgPoints = data.map((d, i) => `${i * w},${100 - d.avg}`).join(' ')
-  return { youPoints, avgPoints }
-}
-
-const { youPoints, avgPoints } = trendLinePath(weeklyTrend.map(d => ({ ...d, you: d.you * 0.8, avg: d.avg * 0.8 })))
-
 onMounted(() => {
-  setTimeout(() => { loaded.value = true }, 100)
+  isLoading.value = true
+  setTimeout(() => {
+    loaded.value = true
+  }, 100)
+
+  fetchEvaluation()
+    .then(data => {
+      stats.value = data.stats.map(item => ({
+        ...item,
+        icon: iconForStat(item.label, item.icon),
+      }))
+
+      suggestions.value = data.suggestions.map(item => {
+        const type = item.type ?? inferSuggestionType(item.text)
+        return {
+          text: item.text,
+          type,
+          icon: iconForSuggestion(type),
+        }
+      })
+
+      reportDate.value = data.generatedAt
+    })
+    .catch(() => {
+      // Keep local fallback data when the API server is unavailable.
+    })
+    .finally(() => {
+      isLoading.value = false
+    })
 })
 </script>
 
 <template>
   <div class="evaluation">
-    <!-- Hero -->
     <div class="eval-hero">
       <div>
         <div class="hero-badge">效果评估</div>
         <h1 class="hero-title">学习效果<span class="gradient-text">数据洞察</span></h1>
-        <p class="hero-desc">数据驱动的学习分析，追踪你的每一步成长</p>
+        <p class="hero-desc">从学习时长、知识掌握和成长曲线三个维度看清当前状态。</p>
+        <p v-if="isLoading" class="page-status">正在同步评估数据...</p>
       </div>
       <button class="report-btn" @click="showReportModal = true">
         <FileBarChart :size="16" stroke-width="1.5" />
@@ -127,47 +225,40 @@ onMounted(() => {
       </button>
     </div>
 
-    <!-- Stats Grid -->
     <div class="stats-grid">
-      <div v-for="s in stats" :key="s.label" class="stat-card" :style="{ '--s-color': s.color }">
+      <div v-for="item in stats" :key="item.label" class="stat-card" :style="{ '--s-color': item.color }">
         <div class="stat-icon">
-          <component :is="s.icon" :size="20" stroke-width="1.5" />
+          <component :is="item.icon" :size="20" stroke-width="1.5" />
         </div>
         <div class="stat-body">
           <div class="stat-top">
-            <span class="stat-value">{{ s.value }}</span>
-            <span class="stat-change">{{ s.change }}</span>
+            <span class="stat-value">{{ item.value }}</span>
+            <span class="stat-change">{{ item.change }}</span>
           </div>
-          <span class="stat-label">{{ s.label }}</span>
+          <span class="stat-label">{{ item.label }}</span>
         </div>
       </div>
       <div class="badge-strip">
         <div
-          v-for="b in badges.slice(0, 3)"
-          :key="b.name"
-          :class="['mini-badge', { earned: b.earned }]"
-          :style="{ '--b-color': b.color }"
+          v-for="badge in badges.slice(0, 3)"
+          :key="badge.name"
+          :class="['mini-badge', { earned: badge.earned }]"
+          :style="{ '--b-color': badge.color }"
         >
-          <component :is="b.icon" v-if="b.earned" :size="14" stroke-width="2" />
-          <span v-else class="badge-locked">○</span>
+          <component :is="badge.icon" v-if="badge.earned" :size="14" stroke-width="2" />
+          <span v-else class="badge-locked">•</span>
         </div>
-        <span class="badge-more">+{{ badges.filter(b => !b.earned).length }} 待解锁</span>
+        <span class="badge-more">+{{ badges.filter(item => !item.earned).length }} 待解锁</span>
       </div>
     </div>
 
-    <!-- Dashboard Grid -->
     <div class="dashboard-grid">
-      <!-- Growth Curve -->
       <div class="card chart-card">
         <div class="card-head">
           <h2 class="card-title-sm">能力成长曲线</h2>
           <div class="chart-legend">
-            <span class="legend-item">
-              <span class="legend-dot cyan" /> 我的
-            </span>
-            <span class="legend-item">
-              <span class="legend-dot dim" /> 平均
-            </span>
+            <span class="legend-item"><span class="legend-dot cyan" />我的</span>
+            <span class="legend-item"><span class="legend-dot dim" />平均</span>
           </div>
         </div>
         <div class="chart-body">
@@ -175,49 +266,42 @@ onMounted(() => {
             <line x1="0" y1="30" x2="350" y2="30" stroke="rgba(0,212,255,0.04)" stroke-width="1" />
             <line x1="0" y1="60" x2="350" y2="60" stroke="rgba(0,212,255,0.04)" stroke-width="1" />
             <line x1="0" y1="90" x2="350" y2="90" stroke="rgba(0,212,255,0.04)" stroke-width="1" />
-            <polyline :points="avgPoints" fill="none" stroke="rgba(255,255,255,0.15)" stroke-width="2" stroke-dasharray="5 4" />
-            <polyline :points="youPoints" fill="none" stroke="url(#tg)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" />
-            <path :d="`M${youPoints} L350,120 L0,120 Z`" fill="url(#ta)" />
-            <circle v-for="(d, i) in weeklyTrend" :key="i" :cx="i * (350 / (weeklyTrend.length - 1))" :cy="80 - d.you * 0.8" r="4" fill="#00d4ff" stroke="rgba(0,0,0,0.4)" stroke-width="1.5" />
+            <polyline :points="chartPoints.avgPoints" fill="none" stroke="rgba(255,255,255,0.15)" stroke-width="2" stroke-dasharray="5 4" />
+            <polyline :points="chartPoints.youPoints" fill="none" stroke="url(#trendLine)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" />
             <defs>
-              <linearGradient id="tg" x1="0" y1="0" x2="1" y2="0">
+              <linearGradient id="trendLine" x1="0" y1="0" x2="1" y2="0">
                 <stop offset="0%" stop-color="#00d4ff" />
                 <stop offset="100%" stop-color="#7c3aed" />
-              </linearGradient>
-              <linearGradient id="ta" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stop-color="rgba(0,212,255,0.15)" />
-                <stop offset="100%" stop-color="rgba(0,212,255,0)" />
               </linearGradient>
             </defs>
           </svg>
           <div class="chart-labels">
-            <span v-for="d in weeklyTrend" :key="d.week">{{ d.week }}</span>
+            <span v-for="item in weeklyTrend" :key="item.week">{{ item.week }}</span>
           </div>
           <div class="chart-footer">
             <span>累计提升 <strong>23%</strong></span>
-            <span>较上周 <strong class="up">↑ 12%</strong></span>
+            <span>较上周 <strong class="up">+12%</strong></span>
           </div>
         </div>
       </div>
 
-      <!-- Knowledge Mastery -->
       <div class="card mastery-card">
         <div class="card-head">
           <h2 class="card-title-sm">知识掌握度</h2>
-          <span class="mastery-avg">平均 66%</span>
+          <span class="mastery-avg">平均 {{ averageMastery }}%</span>
         </div>
         <div class="mastery-list">
-          <div v-for="s in subjects" :key="s.name" class="mastery-row">
+          <div v-for="subject in subjects" :key="subject.name" class="mastery-row">
             <div class="mastery-top">
-              <span class="mastery-name">{{ s.name }}</span>
-              <span class="mastery-pct" :style="{ color: masteryColor(s.mastery) }">{{ s.mastery }}%</span>
+              <span class="mastery-name">{{ subject.name }}</span>
+              <span class="mastery-pct" :style="{ color: masteryColor(subject.mastery) }">{{ subject.mastery }}%</span>
             </div>
             <div class="mastery-track">
               <div
                 class="mastery-fill"
                 :style="{
-                  width: loaded ? s.mastery + '%' : '0%',
-                  background: masteryColor(s.mastery),
+                  width: loaded ? `${subject.mastery}%` : '0%',
+                  background: masteryColor(subject.mastery),
                 }"
               />
             </div>
@@ -225,25 +309,28 @@ onMounted(() => {
         </div>
       </div>
 
-      <!-- Suggestions -->
       <div class="card suggest-card">
         <div class="card-head">
           <h2 class="card-title-sm">学习建议</h2>
           <span class="suggest-count">{{ suggestions.length }} 条</span>
         </div>
         <div class="suggest-list">
-          <div v-for="(s, i) in suggestions" :key="i" :class="['suggest-item', s.type]" @click="goToTutoring(s.text)">
+          <div
+            v-for="(item, index) in suggestions"
+            :key="index"
+            :class="['suggest-item', item.type]"
+            @click="goToTutoring(item.text)"
+          >
             <div class="suggest-icon">
-              <component :is="s.icon" :size="15" stroke-width="1.5" :style="suggestIconColor(s.type)" />
+              <component :is="item.icon" :size="15" stroke-width="1.5" :style="suggestIconColor(item.type)" />
             </div>
-            <span class="suggest-text">{{ s.text }}</span>
+            <span class="suggest-text">{{ item.text }}</span>
             <ArrowRight :size="13" stroke-width="1.5" class="suggest-arrow" />
           </div>
         </div>
       </div>
     </div>
 
-    <!-- Report Modal -->
     <transition name="scale-in">
       <div v-if="showReportModal" class="modal-overlay" @click.self="showReportModal = false">
         <div class="modal">
@@ -263,38 +350,34 @@ onMounted(() => {
                   <span class="metric-value">128 小时</span>
                 </div>
                 <div class="metric-item">
-                  <span class="metric-label">完成课程</span>
-                  <span class="metric-value">18 门</span>
+                  <span class="metric-label">完成课时</span>
+                  <span class="metric-value">47 节</span>
                 </div>
                 <div class="metric-item">
                   <span class="metric-label">平均正确率</span>
                   <span class="metric-value">82%</span>
                 </div>
                 <div class="metric-item">
-                  <span class="metric-label">连续学习</span>
-                  <span class="metric-value">23 天</span>
+                  <span class="metric-label">知识掌握度</span>
+                  <span class="metric-value">68%</span>
                 </div>
               </div>
             </div>
             <div class="report-section">
-              <h3>学习总结</h3>
-              <p>在过去一个月中，你保持了良好的学习节奏，累计学习 128 小时，完成了 18 门课程的学习。你的知识掌握度从 60% 提升到了 68%，机器学习领域进步最为显著。</p>
-            </div>
-            <div class="report-section">
-              <h3>待改进领域</h3>
-              <p>概率论与数理统计是你的主要薄弱环节，建议投入更多时间进行专项训练。同时，深度学习领域的知识掌握度较低，可以考虑调整学习计划。</p>
+              <h3>阶段总结</h3>
+              <p>当前学习节奏稳定，机器学习基础表现较好，但在深度学习和大模型应用上的完成度还有明显提升空间。</p>
             </div>
             <div class="report-section">
               <h3>下一步建议</h3>
               <ul class="rec-list">
-                <li>制定概率论专项复习计划，目标 2 周内完成基础巩固</li>
-                <li>每周至少完成 3 道编程实战题，保持代码手感</li>
-                <li>尝试参与开源项目或竞赛，将理论知识应用于实践</li>
+                <li>优先补足概率统计与模型评估相关内容。</li>
+                <li>增加项目驱动学习，把知识点转成可运行成果。</li>
+                <li>每周做一次短复盘，及时调整学习节奏。</li>
               </ul>
             </div>
           </div>
           <div class="modal-footer">
-            <span class="footer-date">2026-05-11</span>
+            <span class="footer-date">{{ reportDate }}</span>
             <div class="footer-actions">
               <button class="btn-ghost">预览</button>
               <button class="btn-primary">
@@ -311,16 +394,23 @@ onMounted(() => {
 
 <style scoped>
 .evaluation {
-  padding: 0;
   max-width: 1200px;
   margin: 0 auto;
+  padding: 0 0 40px;
   position: relative;
   z-index: 1;
 }
 
-/* ====================== Hero ====================== */
+.eval-hero,
+.stats-grid,
+.dashboard-grid {
+  padding-left: 40px;
+  padding-right: 40px;
+}
+
 .eval-hero {
-  padding: 48px 40px 28px;
+  padding-top: 48px;
+  padding-bottom: 28px;
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
@@ -330,23 +420,21 @@ onMounted(() => {
 .hero-badge {
   display: inline-block;
   padding: 4px 14px;
-  border-radius: 100px;
+  border-radius: 999px;
   font-size: 11px;
   font-weight: 600;
-  letter-spacing: 0.5px;
   background: rgba(0, 212, 255, 0.08);
   color: var(--color-accent-cyan);
-  border: 1px solid rgba(0, 212, 255, 0.1);
+  border: 1px solid rgba(0, 212, 255, 0.12);
   margin-bottom: 12px;
 }
 
 .hero-title {
-  font-family: var(--font-display);
-  font-size: 34px;
-  font-weight: 400;
+  margin: 0 0 8px;
   color: #fff;
-  line-height: 1.2;
-  margin-bottom: 8px;
+  font-size: 34px;
+  font-family: var(--font-display);
+  font-weight: 400;
 }
 
 .gradient-text {
@@ -356,9 +444,21 @@ onMounted(() => {
   background-clip: text;
 }
 
-.hero-desc {
-  font-size: 14px;
+.hero-desc,
+.page-status {
   color: var(--color-text-secondary);
+  font-size: 14px;
+}
+
+.page-status {
+  margin-top: 8px;
+  color: var(--color-accent-cyan);
+}
+
+.report-btn,
+.btn-primary,
+.btn-ghost {
+  transition: all 0.2s var(--ease-out);
 }
 
 .report-btn {
@@ -370,23 +470,26 @@ onMounted(() => {
   background: linear-gradient(135deg, rgba(0, 212, 255, 0.1), rgba(124, 58, 237, 0.1));
   border: 1px solid rgba(0, 212, 255, 0.15);
   color: var(--color-accent-cyan);
-  font-size: 13px;
-  font-weight: 500;
   white-space: nowrap;
-  transition: all 0.2s var(--ease-out);
-}
-.report-btn:hover {
-  background: linear-gradient(135deg, rgba(0, 212, 255, 0.18), rgba(124, 58, 237, 0.18));
-  box-shadow: 0 4px 16px rgba(0, 212, 255, 0.1);
 }
 
-/* ====================== Stats Grid ====================== */
+.report-btn:hover {
+  background: linear-gradient(135deg, rgba(0, 212, 255, 0.16), rgba(124, 58, 237, 0.16));
+}
+
 .stats-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr) auto;
   gap: 12px;
-  padding: 0 40px;
   margin-bottom: 28px;
+}
+
+.stat-card,
+.card,
+.modal {
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: 16px;
 }
 
 .stat-card {
@@ -394,55 +497,72 @@ onMounted(() => {
   align-items: center;
   gap: 12px;
   padding: 16px 18px;
-  border-radius: 14px;
-  background: var(--color-bg-card);
-  border: 1px solid var(--color-border);
-  transition: all 0.3s var(--ease-out);
-}
-.stat-card:hover {
-  border-color: var(--s-color);
-  transform: translateY(-2px);
 }
 
 .stat-icon {
-  display: flex;
-  align-items: center;
-  justify-content: center;
   width: 40px;
   height: 40px;
   border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   background: color-mix(in srgb, var(--s-color) 12%, transparent);
   color: var(--s-color);
   flex-shrink: 0;
 }
 
-.stat-body { flex: 1; }
+.stat-body {
+  flex: 1;
+}
+
+.stat-top,
+.card-head,
+.chart-footer,
+.metric-item,
+.modal-header,
+.modal-footer {
+  display: flex;
+}
+
+.stat-top,
+.card-head,
+.chart-footer,
+.modal-header,
+.modal-footer {
+  justify-content: space-between;
+}
 
 .stat-top {
-  display: flex;
   align-items: baseline;
   gap: 8px;
 }
 
 .stat-value {
-  font-family: var(--font-display);
-  font-size: 22px;
   color: #fff;
-  line-height: 1;
+  font-size: 22px;
+  font-family: var(--font-display);
+}
+
+.stat-change,
+.mastery-avg,
+.footer-date {
+  font-family: var(--font-mono);
 }
 
 .stat-change {
-  font-size: 12px;
-  font-family: var(--font-mono);
   color: var(--color-accent-emerald);
+  font-size: 12px;
   font-weight: 600;
 }
 
-.stat-label {
-  display: block;
-  font-size: 11px;
+.stat-label,
+.badge-more,
+.suggest-count,
+.chart-labels,
+.metric-label,
+.footer-date {
   color: var(--color-text-tertiary);
-  margin-top: 2px;
+  font-size: 11px;
 }
 
 .badge-strip {
@@ -460,56 +580,45 @@ onMounted(() => {
   align-items: center;
   justify-content: center;
   border: 1px solid var(--color-border);
-  background: var(--color-bg-card);
   color: var(--b-color);
-  transition: all 0.2s var(--ease-out);
+  background: var(--color-bg-card);
 }
+
 .mini-badge.earned {
-  border-color: color-mix(in srgb, var(--b-color) 50%, transparent);
-  box-shadow: 0 0 12px color-mix(in srgb, var(--b-color) 15%, transparent);
+  border-color: color-mix(in srgb, var(--b-color) 45%, transparent);
 }
 
-.badge-locked { opacity: 0.3; }
-
-.badge-more {
-  font-size: 11px;
-  color: var(--color-text-tertiary);
-  white-space: nowrap;
-}
-
-/* ====================== Dashboard Grid ====================== */
 .dashboard-grid {
   display: grid;
   grid-template-columns: 1.4fr 1fr;
   gap: 20px;
-  padding: 0 40px 40px;
 }
 
 .card {
   padding: 24px;
-  border-radius: 16px;
-  background: var(--color-bg-card);
-  border: 1px solid var(--color-border);
-  transition: border-color 0.2s var(--ease-out);
 }
-.card:hover { border-color: rgba(0, 212, 255, 0.1); }
+
+.chart-card {
+  grid-column: 1 / -1;
+}
 
 .card-head {
-  display: flex;
-  justify-content: space-between;
   align-items: center;
   margin-bottom: 20px;
 }
 
-.card-title-sm {
-  font-family: var(--font-display);
-  font-size: 20px;
-  font-weight: 400;
+.card-title-sm,
+.modal-title,
+.report-section h3 {
+  margin: 0;
   color: #fff;
+  font-family: var(--font-display);
+  font-weight: 400;
 }
 
-/* ====================== Chart Card ====================== */
-.chart-card { grid-column: 1 / -1; }
+.card-title-sm {
+  font-size: 20px;
+}
 
 .chart-legend {
   display: flex;
@@ -518,180 +627,196 @@ onMounted(() => {
   color: var(--color-text-tertiary);
 }
 
-.legend-item { display: flex; align-items: center; gap: 6px; }
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
 .legend-dot {
   width: 8px;
   height: 8px;
   border-radius: 50%;
 }
-.legend-dot.cyan { background: var(--color-accent-cyan); }
-.legend-dot.dim { background: rgba(255, 255, 255, 0.2); }
 
-.chart-body { position: relative; }
+.legend-dot.cyan {
+  background: var(--color-accent-cyan);
+}
 
-.trend-svg { width: 100%; height: 120px; }
+.legend-dot.dim {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.trend-svg {
+  width: 100%;
+  height: 120px;
+}
 
 .chart-labels {
   display: flex;
   justify-content: space-between;
   margin-top: 6px;
-  font-size: 11px;
-  font-family: var(--font-mono);
-  color: var(--color-text-tertiary);
 }
 
 .chart-footer {
-  display: flex;
-  justify-content: space-between;
   margin-top: 12px;
   padding-top: 12px;
   border-top: 1px solid var(--color-border);
-  font-size: 13px;
   color: var(--color-text-secondary);
-}
-.chart-footer strong { font-family: var(--font-mono); color: #fff; }
-.chart-footer .up { color: var(--color-accent-emerald); }
-
-/* ====================== Mastery ====================== */
-.mastery-avg {
   font-size: 13px;
-  font-family: var(--font-mono);
-  color: var(--color-text-tertiary);
-  font-weight: 600;
+}
+
+.chart-footer strong {
+  color: #fff;
+}
+
+.chart-footer .up {
+  color: var(--color-accent-emerald);
+}
+
+.mastery-list,
+.suggest-list,
+.rec-list {
+  display: flex;
+  flex-direction: column;
 }
 
 .mastery-list {
-  display: flex;
-  flex-direction: column;
   gap: 14px;
 }
 
-.mastery-row { display: flex; flex-direction: column; gap: 4px; }
+.mastery-row,
+.metric-item {
+  display: flex;
+  flex-direction: column;
+}
+
+.mastery-row {
+  gap: 4px;
+}
 
 .mastery-top {
   display: flex;
   justify-content: space-between;
 }
 
-.mastery-name {
-  font-size: 13px;
-  color: var(--color-text-primary);
+.mastery-name,
+.suggest-text,
+.report-section p,
+.rec-list li {
+  color: var(--color-text-secondary);
 }
 
 .mastery-pct {
-  font-size: 13px;
   font-family: var(--font-mono);
   font-weight: 600;
 }
 
 .mastery-track {
   height: 6px;
-  border-radius: 3px;
+  border-radius: 999px;
   background: rgba(255, 255, 255, 0.05);
   overflow: hidden;
 }
 
 .mastery-fill {
   height: 100%;
-  border-radius: 3px;
   transition: width 0.6s var(--ease-out);
 }
 
-/* ====================== Suggestions ====================== */
-.suggest-card { grid-column: 2 / 3; }
-
-.suggest-count {
-  font-size: 11px;
-  color: var(--color-text-tertiary);
-  font-weight: 500;
+.suggest-card {
+  grid-column: 2 / 3;
 }
 
 .suggest-list {
-  display: flex;
-  flex-direction: column;
   gap: 8px;
 }
 
 .suggest-item {
   display: flex;
+  align-items: center;
   gap: 12px;
   padding: 12px 14px;
-  border-radius: 10px;
-  font-size: 13px;
-  line-height: 1.6;
-  color: var(--color-text-secondary);
+  border-radius: 12px;
   cursor: pointer;
   transition: all 0.2s var(--ease-out);
-  align-items: center;
 }
+
 .suggest-item:hover {
-  opacity: 0.85;
   transform: translateX(2px);
 }
-.suggest-item.weakness { background: rgba(244, 63, 94, 0.04); border: 1px solid rgba(244, 63, 94, 0.08); }
-.suggest-item.strength { background: rgba(0, 212, 255, 0.04); border: 1px solid rgba(0, 212, 255, 0.08); }
-.suggest-item.positive { background: rgba(6, 214, 160, 0.04); border: 1px solid rgba(6, 214, 160, 0.08); }
-.suggest-item.action { background: rgba(245, 158, 11, 0.04); border: 1px solid rgba(245, 158, 11, 0.08); }
 
-.suggest-icon { flex-shrink: 0; margin-top: 2px; }
+.suggest-item.weakness {
+  background: rgba(244, 63, 94, 0.04);
+  border: 1px solid rgba(244, 63, 94, 0.08);
+}
 
-/* ====================== Modal ====================== */
+.suggest-item.strength {
+  background: rgba(0, 212, 255, 0.04);
+  border: 1px solid rgba(0, 212, 255, 0.08);
+}
+
+.suggest-item.positive {
+  background: rgba(6, 214, 160, 0.04);
+  border: 1px solid rgba(6, 214, 160, 0.08);
+}
+
+.suggest-item.action {
+  background: rgba(245, 158, 11, 0.04);
+  border: 1px solid rgba(245, 158, 11, 0.08);
+}
+
+.suggest-icon,
+.suggest-arrow {
+  flex-shrink: 0;
+}
+
 .modal-overlay {
   position: fixed;
   inset: 0;
+  z-index: var(--z-modal);
   background: rgba(0, 0, 0, 0.75);
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: var(--z-modal);
   padding: 40px;
   backdrop-filter: blur(4px);
 }
 
 .modal {
-  background: var(--color-bg-elevated);
-  border: 1px solid var(--color-border);
-  border-radius: 20px;
-  max-width: 620px;
   width: 100%;
+  max-width: 620px;
   max-height: 85vh;
   overflow-y: auto;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+  background: var(--color-bg-elevated);
+}
+
+.modal-header,
+.modal-footer {
+  align-items: center;
 }
 
 .modal-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
   padding: 28px 28px 0;
-}
-
-.modal-title {
-  font-family: var(--font-display);
-  font-size: 24px;
-  color: #fff;
 }
 
 .modal-close-btn {
   width: 32px;
   height: 32px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
   border-radius: 8px;
   color: var(--color-text-tertiary);
-  transition: all 0.2s var(--ease-out);
 }
-.modal-close-btn:hover { background: rgba(255, 255, 255, 0.06); color: #fff; }
 
-.modal-body { padding: 20px 28px 28px; }
+.modal-body {
+  padding: 20px 28px 28px;
+}
 
 .report-summary {
   display: flex;
   gap: 28px;
   padding: 20px;
   border-radius: 12px;
-  background: rgba(0, 0, 0, 0.25);
+  background: rgba(0, 0, 0, 0.24);
   margin-bottom: 20px;
 }
 
@@ -700,23 +825,21 @@ onMounted(() => {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  flex-shrink: 0;
 }
 
 .grade-letter {
-  font-family: var(--font-display);
   font-size: 40px;
+  font-family: var(--font-display);
   background: linear-gradient(135deg, var(--color-accent-cyan), var(--color-accent-purple));
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
-  line-height: 1;
 }
 
 .grade-label {
-  font-size: 11px;
-  color: var(--color-text-tertiary);
   margin-top: 4px;
+  color: var(--color-text-tertiary);
+  font-size: 11px;
 }
 
 .report-metrics {
@@ -726,31 +849,39 @@ onMounted(() => {
   gap: 12px;
 }
 
-.metric-item { display: flex; flex-direction: column; gap: 2px; }
-.metric-label { font-size: 11px; color: var(--color-text-tertiary); }
-.metric-value { font-size: 17px; font-weight: 600; color: #fff; }
-
-.report-section { margin-bottom: 20px; }
-.report-section h3 {
-  font-family: var(--font-display);
-  font-size: 16px;
+.metric-value {
   color: #fff;
-  margin-bottom: 6px;
-}
-.report-section p {
-  font-size: 13px;
-  color: var(--color-text-secondary);
-  line-height: 1.7;
+  font-size: 17px;
+  font-weight: 600;
 }
 
-.rec-list { list-style: none; display: flex; flex-direction: column; gap: 6px; }
+.report-section {
+  margin-bottom: 20px;
+}
+
+.report-section h3 {
+  margin-bottom: 6px;
+  font-size: 16px;
+}
+
+.report-section p,
 .rec-list li {
+  line-height: 1.7;
   font-size: 13px;
-  color: var(--color-text-secondary);
-  line-height: 1.6;
+}
+
+.rec-list {
+  gap: 6px;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.rec-list li {
   padding-left: 18px;
   position: relative;
 }
+
 .rec-list li::before {
   content: '→';
   position: absolute;
@@ -759,30 +890,21 @@ onMounted(() => {
 }
 
 .modal-footer {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
   padding: 16px 28px;
   border-top: 1px solid var(--color-border);
 }
 
-.footer-date {
-  font-size: 12px;
-  color: var(--color-text-tertiary);
-  font-family: var(--font-mono);
+.footer-actions {
+  display: flex;
+  gap: 8px;
 }
-
-.footer-actions { display: flex; gap: 8px; }
 
 .btn-ghost {
   padding: 8px 18px;
   border-radius: 8px;
   border: 1px solid var(--color-border);
-  font-size: 13px;
   color: var(--color-text-secondary);
-  transition: all 0.2s var(--ease-out);
 }
-.btn-ghost:hover { border-color: var(--color-accent-cyan); color: var(--color-accent-cyan); }
 
 .btn-primary {
   display: flex;
@@ -792,18 +914,45 @@ onMounted(() => {
   border-radius: 8px;
   background: linear-gradient(135deg, var(--color-accent-cyan), var(--color-accent-blue));
   color: #fff;
-  font-size: 13px;
   font-weight: 600;
-  transition: all 0.2s var(--ease-out);
 }
-.btn-primary:hover { box-shadow: 0 4px 16px rgba(0, 212, 255, 0.3); }
 
-/* ====================== Responsive ====================== */
 @media (max-width: 900px) {
-  .eval-hero { padding: 32px 20px 24px; flex-direction: column; }
-  .stats-grid { padding: 0 20px; grid-template-columns: repeat(2, 1fr); }
-  .badge-strip { display: none; }
-  .dashboard-grid { padding: 0 20px 32px; grid-template-columns: 1fr; }
-  .chart-card, .suggest-card { grid-column: 1; }
+  .eval-hero,
+  .stats-grid,
+  .dashboard-grid {
+    padding-left: 20px;
+    padding-right: 20px;
+  }
+
+  .eval-hero {
+    padding-top: 32px;
+    flex-direction: column;
+  }
+
+  .stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .badge-strip {
+    display: none;
+  }
+
+  .dashboard-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .chart-card,
+  .suggest-card {
+    grid-column: 1;
+  }
+
+  .modal-overlay {
+    padding: 20px;
+  }
+
+  .report-summary {
+    flex-direction: column;
+  }
 }
 </style>
