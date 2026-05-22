@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "WebSearch",
+      "Bash(claude --version)",
+      "Bash(claude plugin *)",
+      "Bash(npx skills *)",
+      "Bash(npx vue-tsc *)",
+      "Bash(npx vite *)"
+    ]
+  }
+}

@@ -1,0 +1,62 @@
+[
+  {
+    "id": 0,
+    "type": "doc",
+    "title": "Python 机器学习入门指南",
+    "desc": "从零开始掌握 ML 核心概念与实战，覆盖监督学习、无监督学习和模型评估。",
+    "tags": ["Python", "ML"],
+    "date": "2026-05-10",
+    "color": "#00d4ff",
+    "reads": 234
+  },
+  {
+    "id": 1,
+    "type": "mindmap",
+    "title": "深度学习知识图谱",
+    "desc": "梳理神经网络、CNN、RNN 与 Transformer 的关系，适合快速建立全局视角。",
+    "tags": ["DL", "架构"],
+    "date": "2026-05-09",
+    "color": "#7c3aed",
+    "reads": 189
+  },
+  {
+    "id": 2,
+    "type": "exercise",
+    "title": "线性代数基础习题",
+    "desc": "覆盖矩阵运算、特征值和向量空间的经典练习，适合作为 AI 数学基础巩固。",
+    "tags": ["数学", "练习"],
+    "date": "2026-05-08",
+    "color": "#06d6a0",
+    "reads": 156
+  },
+  {
+    "id": 3,
+    "type": "video",
+    "title": "Transformer 原理解析",
+    "desc": "从论文推导到代码实现，系统讲解注意力机制和多头注意力。",
+    "tags": ["NLP", "进阶"],
+    "date": "2026-05-07",
+    "color": "#f59e0b",
+    "reads": 312
+  },
+  {
+    "id": 4,
+    "type": "code",
+    "title": "KNN 算法实现",
+    "desc": "包含完整 Python 示例、测试用例和性能优化思路。",
+    "tags": ["算法", "实现"],
+    "date": "2026-05-06",
+    "color": "#f43f5e",
+    "reads": 98
+  },
+  {
+    "id": 5,
+    "type": "doc",
+    "title": "概率论与数理统计速查",
+    "desc": "整理常见分布、假设检验和贝叶斯公式，适合复习与查漏补缺。",
+    "tags": ["数学", "统计"],
+    "date": "2026-05-05",
+    "color": "#00d4ff",
+    "reads": 201
+  }
+]
