@@ -9,14 +9,17 @@ const router = createRouter({
       component: () => import('@/views/Welcome.vue'),
     },
     {
+      path: '/dialogue',
+      name: 'dialogue',
+      component: () => import('@/views/DialogueProfile.vue'),
+    },
+    {
       path: '/chat',
-      name: 'chat',
-      component: () => import('@/views/Chat.vue'),
+      redirect: '/dialogue',
     },
     {
       path: '/profile',
-      name: 'profile',
-      component: () => import('@/views/Profile.vue'),
+      redirect: '/dialogue',
     },
     {
       path: '/resources',
