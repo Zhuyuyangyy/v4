@@ -40,19 +40,11 @@ const isLoading = ref(false)
 const showReportModal = ref(false)
 const reportDate = ref('2026-05-12')
 
-<<<<<<< HEAD
-const stats = [
-  { label: '编程与算法', value: '82%', change: '+8%', icon: BarChart3, color: '#00599C' },
-  { label: '计算机系统', value: '58%', change: '+12%', icon: Brain, color: '#1565C0' },
-  { label: 'AI 方向', value: '45%', change: '+15%', icon: BookOpen, color: '#7c3aed' },
-  { label: '综合掌握度', value: '62%', change: '+10%', icon: TrendingUp, color: '#f59e0b' },
-=======
 const defaultStats: StatItem[] = [
   { label: '学习时长', value: '128h', change: '+12h', icon: Clock, color: '#00d4ff' },
   { label: '完成课时', value: '47', change: '+5', icon: PenTool, color: '#7c3aed' },
   { label: '平均正确率', value: '82%', change: '+3%', icon: Target, color: '#06d6a0' },
   { label: '知识掌握度', value: '68%', change: '+8%', icon: TrendingUp, color: '#f59e0b' },
->>>>>>> feature/your-dev
 ]
 
 const defaultSuggestions: SuggestionItem[] = [
@@ -84,18 +76,6 @@ const weeklyTrend = [
   { week: 'W7', you: 78, avg: 60 },
 ]
 
-<<<<<<< HEAD
-const suggestions = [
-  { text: '操作系统与计算机网络需要加强，建议通过实验理解核心概念', type: 'weakness' as const, icon: AlertTriangle },
-  { text: '编程基础掌握良好，建议开始数据结构进阶学习', type: 'strength' as const, icon: Sparkles },
-  { text: '本周学习时长较上周增加 15%，保持良好的学习节奏', type: 'positive' as const, icon: ArrowUp },
-  { text: '建议增加项目实践，从数据库或 Web 项目开始动手', type: 'action' as const, icon: ArrowRight },
-]
-
-const aiCourseList = allCourses
-
-=======
->>>>>>> feature/your-dev
 const badges = [
   { icon: Sparkles, name: '初识学习', earned: true, color: '#00d4ff' },
   { icon: Zap, name: '连续打卡', earned: true, color: '#06d6a0' },

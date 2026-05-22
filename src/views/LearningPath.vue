@@ -1,12 +1,3 @@
-<<<<<<< HEAD
-<template>
-  <UniverseCanvas :header-offset="60" />
-</template>
-
-<script setup lang="ts">
-import UniverseCanvas from '@/learning-universe/components/UniverseCanvas.vue'
-</script>
-=======
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
@@ -876,4 +867,3 @@ onMounted(() => {
   }
 }
 </style>
->>>>>>> feature/your-dev

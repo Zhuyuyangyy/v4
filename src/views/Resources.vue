@@ -60,78 +60,11 @@ const resources = ref<ApiResource[]>([
   { id: 8, type: 'video', title: 'PyTorch 快速上手', desc: '张量运算、自动求导、模型构建，30 分钟快速掌握 PyTorch 核心功能。', tags: ['框架', '入门'], date: '2026-05-02', color: '#f59e0b', reads: 378 },
 ])
 
-<<<<<<< HEAD
-  // ── 深度学习 ──
-  { id: 7, type: 'mindmap' as const, title: '深度学习知识图谱', desc: '神经网络、CNN、RNN、Transformer 架构全景图，清晰梳理深度学习发展脉络。', tags: ['DL', '架构'], date: '2026-05-09', color: '#7c3aed', reads: 189 },
-  { id: 8, type: 'video' as const, title: '反向传播完整推导', desc: '从计算图到链式法则，手写推导反向传播的每一步，彻底理解梯度如何传递。', tags: ['DL', '数学'], date: '2026-05-07', color: '#7c3aed', reads: 312 },
-  { id: 9, type: 'code' as const, title: 'PyTorch 神经网络模板', desc: '完整的 PyTorch 训练脚本模板：数据加载、模型定义、训练循环、评估、保存。', tags: ['DL', '框架'], date: '2026-05-06', color: '#7c3aed', reads: 178 },
-  { id: 10, type: 'doc' as const, title: 'CNN 架构演进史', desc: '从 LeNet 到 ResNet、EfficientNet、ConvNeXt，梳理卷积神经网络架构演化。', tags: ['DL', 'CV'], date: '2026-05-05', color: '#7c3aed', reads: 145 },
-
-  // ── 自然语言处理 ──
-  { id: 11, type: 'video' as const, title: 'Transformer 原理解析', desc: '深入讲解 Attention 机制与多头注意力，从论文推导到代码实现，面试必考。', tags: ['NLP', '核心'], date: '2026-05-07', color: '#06d6a0', reads: 312 },
-  { id: 12, type: 'code' as const, title: 'BERT 文本分类实战', desc: '使用预训练 BERT 模型进行文本分类 Fine-tuning，涵盖数据准备到模型部署。', tags: ['NLP', '实战'], date: '2026-05-04', color: '#06d6a0', reads: 134 },
-  { id: 13, type: 'doc' as const, title: 'Word2Vec 与词向量详解', desc: '分布式语义表示、CBOW 与 Skip-gram、负采样，从原理到实战完整解析。', tags: ['NLP', '基础'], date: '2026-05-03', color: '#06d6a0', reads: 189 },
-  { id: 14, type: 'mindmap' as const, title: 'NLP 技术全景图', desc: '从分词到大模型，自然语言处理核心技术栈完整梳理与对比。', tags: ['NLP', '架构'], date: '2026-05-02', color: '#06d6a0', reads: 223 },
-
-  // ── 大模型与 LLM ──
-  { id: 15, type: 'doc' as const, title: 'Prompt Engineering 完全指南', desc: '从基础 Prompt 设计到进阶的 Chain-of-Thought、Few-Shot、ReAct 等高级技巧。', tags: ['LLM', 'Prompt'], date: '2026-05-06', color: '#f59e0b', reads: 456 },
-  { id: 16, type: 'code' as const, title: 'RAG 系统完整实现', desc: '基于向量数据库的检索增强生成系统，文档分块→向量化→检索→生成的完整流程。', tags: ['LLM', 'RAG'], date: '2026-05-05', color: '#f59e0b', reads: 234 },
-  { id: 17, type: 'video' as const, title: 'AI Agent 入门到实战', desc: 'ReAct 框架、工具调用、Function Calling、多智能体协作，构建自主 AI Agent。', tags: ['LLM', 'Agent'], date: '2026-05-04', color: '#f59e0b', reads: 345 },
-  { id: 18, type: 'doc' as const, title: 'GPT 系列模型技术报告解读', desc: '从 GPT-1 到 GPT-4、Scaling Law、InstructGPT，大模型技术演进路线全面解读。', tags: ['LLM', '进阶'], date: '2026-05-03', color: '#f59e0b', reads: 267 },
-  { id: 19, type: 'exercise' as const, title: '大模型面试 80 题', desc: 'LLM 方向精选面试题：Transformer、RLHF、RAG、Agent、模型压缩等高频考点。', tags: ['LLM', '面试'], date: '2026-05-02', color: '#f59e0b', reads: 156 },
-
-  // ── 计算机视觉 ──
-  { id: 20, type: 'doc' as const, title: '目标检测算法综述', desc: '从 R-CNN 到 YOLOv8、DETR，两阶段与单阶段目标检测算法全面对比。', tags: ['CV', '目标检测'], date: '2026-05-01', color: '#f43f5e', reads: 189 },
-  { id: 21, type: 'code' as const, title: 'YOLOv8 训练自定义数据集', desc: '使用 YOLOv8 训练自己的目标检测模型，从数据标注到模型导出的完整流程。', tags: ['CV', '实战'], date: '2026-04-30', color: '#f43f5e', reads: 234 },
-  { id: 22, type: 'video' as const, title: '图像分类迁移学习', desc: '使用预训练 ResNet 进行迁移学习，在小数据集上实现高精度图像分类。', tags: ['CV', '入门'], date: '2026-04-29', color: '#f43f5e', reads: 167 },
-
-  // ── 强化学习 ──
-  { id: 23, type: 'doc' as const, title: '强化学习入门：从 MDP 到 PPO', desc: '马尔可夫决策过程、贝尔曼方程、Q-Learning、Policy Gradient、PPO 完整入门。', tags: ['RL', '入门'], date: '2026-04-28', color: '#3b82f6', reads: 145 },
-  { id: 24, type: 'code' as const, title: 'DQN 玩转 Atari 游戏', desc: '使用 Deep Q-Network 训练智能体玩 Atari 游戏，从环境搭建到训练完成。', tags: ['RL', '实现'], date: '2026-04-27', color: '#3b82f6', reads: 98 },
-
-  // ── MLOps ──
-  { id: 25, type: 'doc' as const, title: 'MLflow 实验管理实战', desc: '实验追踪、模型注册、版本管理，使用 MLflow 构建可复现的机器学习实验流程。', tags: ['MLOps', '工程'], date: '2026-04-26', color: '#a855f7', reads: 123 },
-  { id: 26, type: 'code' as const, title: 'FastAPI 模型服务部署', desc: '使用 FastAPI 将 ML 模型部署为 RESTful API 服务，包含 Docker 容器化方案。', tags: ['MLOps', '部署'], date: '2026-04-25', color: '#a855f7', reads: 189 },
-  { id: 27, type: 'doc' as const, title: '模型监控与数据漂移检测', desc: '生产环境模型监控方案：数据漂移检测、概念漂移、模型性能衰减预警。', tags: ['MLOps', '监控'], date: '2026-04-24', color: '#a855f7', reads: 78 },
-
-  // ── 编程与算法基础 ──
-  { id: 28, type: 'doc' as const, title: 'C 语言指针深度解析', desc: '深入理解 C 语言指针、数组与指针的关系、函数指针、动态内存管理。', tags: ['C', '编程'], date: '2026-05-12', color: '#00599C', reads: 167 },
-  { id: 29, type: 'code' as const, title: 'Python 装饰器与生成器', desc: '深入理解 Python 装饰器原理、生成器与协程，写出更 Pythonic 的代码。', tags: ['Python', '进阶'], date: '2026-05-11', color: '#3776AB', reads: 198 },
-  { id: 30, type: 'doc' as const, title: 'Java OOP 核心思想详解', desc: '封装、继承、多态、接口与抽象类的深入解析，配合实战案例。', tags: ['Java', 'OOP'], date: '2026-05-10', color: '#ED8B00', reads: 145 },
-  { id: 31, type: 'doc' as const, title: 'C++ 模板与 STL 实战', desc: '函数模板、类模板、STL 容器与算法、智能指针，现代 C++ 开发必备。', tags: ['C++', '模板'], date: '2026-05-09', color: '#00599C', reads: 134 },
-  { id: 32, type: 'mindmap' as const, title: '数据结构知识图谱', desc: '线性表、树、图、散列表、堆等核心数据结构全景对比与应用场景。', tags: ['数据结构', '体系'], date: '2026-05-08', color: '#4CAF50', reads: 223 },
-  { id: 33, type: 'exercise' as const, title: '算法面试 150 题', desc: '精选高频算法面试题，涵盖动态规划、贪心、回溯、图论等核心算法。', tags: ['算法', '面试'], date: '2026-05-07', color: '#FF5722', reads: 289 },
-  { id: 34, type: 'doc' as const, title: '编译原理入门与实践', desc: '从词法分析到代码生成，理解编译器的工作流程与核心原理。', tags: ['编译', '系统'], date: '2026-05-06', color: '#9C27B0', reads: 98 },
-
-  // ── 计算机系统 ──
-  { id: 35, type: 'doc' as const, title: '计算机组成原理精要', desc: 'CPU 结构、存储器层次、流水线技术、I/O 系统，硬件核心知识全覆盖。', tags: ['组成原理', '硬件'], date: '2026-05-05', color: '#607D8B', reads: 145 },
-  { id: 36, type: 'video' as const, title: '操作系统核心概念精讲', desc: '进程管理、内存管理、文件系统、设备管理，OS 四大核心模块深入解析。', tags: ['OS', '核心'], date: '2026-05-04', color: '#1565C0', reads: 256 },
-  { id: 37, type: 'code' as const, title: 'TCP 套接字编程实战', desc: '从基础 TCP/UDP 编程到多线程并发服务器，网络编程完整实战教程。', tags: ['网络', '编程'], date: '2026-05-03', color: '#0277BD', reads: 167 },
-  { id: 38, type: 'exercise' as const, title: '数据库 SQL 强化练习', desc: '从基础查询到复杂嵌套、事务、索引优化，50 道 SQL 实战练习题。', tags: ['数据库', 'SQL'], date: '2026-05-02', color: '#336791', reads: 189 },
-
-  // ── 软件工程 ──
-  { id: 39, type: 'doc' as const, title: '软件工程实践指南', desc: '需求分析、架构设计、设计模式、项目管理、DevOps 全流程实践。', tags: ['软工', '实践'], date: '2026-05-01', color: '#FF6F00', reads: 123 },
-  { id: 40, type: 'code' as const, title: 'PyTest 自动化测试实战', desc: '单元测试、参数化测试、Mock、Fixture 覆盖，构建高质量自动化测试体系。', tags: ['测试', '自动化'], date: '2026-04-30', color: '#D32F2F', reads: 156 },
-
-  // ── 前沿与应用 ──
-  { id: 41, type: 'doc' as const, title: '信息安全基础入门', desc: '密码学、Web 安全、系统安全、隐私保护，信息安全核心知识全解析。', tags: ['安全', '入门'], date: '2026-04-29', color: '#C62828', reads: 134 },
-  { id: 42, type: 'doc' as const, title: '大数据技术全景', desc: 'Hadoop、Spark、Flink、Kafka 大数据核心技术栈与生态体系。', tags: ['大数据', '体系'], date: '2026-04-28', color: '#00695C', reads: 178 },
-  { id: 43, type: 'code' as const, title: 'Docker + K8s 容器化部署', desc: '从 Docker 容器到 Kubernetes 编排，云原生应用部署完整实战。', tags: ['云原生', '部署'], date: '2026-04-27', color: '#00695C', reads: 234 },
-  { id: 44, type: 'doc' as const, title: '计算机图形学入门', desc: '图形管线、三维变换、光照模型、光线追踪，图形学核心概念入门。', tags: ['图形学', '渲染'], date: '2026-04-26', color: '#2E7D32', reads: 89 },
-]
-
-const recommended = [
-  { id: 100, type: 'doc' as const, title: '数据结构与算法刷题指南', desc: '从基础数据结构到高级算法，系统刷题路线与方法论', tags: ['编程', '算法'], date: '2026-05-12', color: '#4CAF50', reads: 345 },
-  { id: 101, type: 'mindmap' as const, title: 'AI 算法工程师技能树', desc: '从基础到前沿，AI 算法工程师完整技能图谱与学习路线', tags: ['AI', '体系'], date: '2026-05-12', color: '#7c3aed', reads: 256 },
-  { id: 102, type: 'code' as const, title: '操作系统实验：生产者消费者', desc: '使用信号量和管程解决经典同步问题，含完整代码实现', tags: ['OS', '实战'], date: '2026-05-11', color: '#1565C0', reads: 189 },
-]
-=======
 const recommended = ref<ApiResource[]>([
   { id: 9, type: 'video', title: '机器学习数学基础', desc: '微积分、线性代数、概率论在 ML 中的应用', tags: ['数学', 'ML'], date: '2026-05-11', color: '#00d4ff', reads: 89 },
   { id: 10, type: 'doc', title: '模型部署实战指南', desc: '从训练到生产，ML 模型部署全流程解析', tags: ['工程', '进阶'], date: '2026-05-11', color: '#7c3aed', reads: 67 },
   { id: 11, type: 'code', title: 'Git 版本控制入门', desc: '团队协作必备，Git 工作流与最佳实践', tags: ['工具', '基础'], date: '2026-05-10', color: '#06d6a0', reads: 45 },
 ])
->>>>>>> feature/your-dev
 
 const filtered = computed(() => {
   return resources.value.filter(r => {
