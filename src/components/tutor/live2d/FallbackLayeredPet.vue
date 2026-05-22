@@ -2,12 +2,12 @@
 import type { CSSProperties } from 'vue'
 
 defineProps<{
-  shellStyle: CSSProperties
-  shadowStyle: CSSProperties
-  bodyStyle: CSSProperties
-  headStyle: CSSProperties
-  eyesStyle: CSSProperties
-  frontHairStyle: CSSProperties
+  shellStyle?: CSSProperties
+  shadowStyle?: CSSProperties
+  bodyStyle?: CSSProperties
+  headStyle?: CSSProperties
+  eyesStyle?: CSSProperties
+  frontHairStyle?: CSSProperties
   dragging?: boolean
 }>()
 </script>
