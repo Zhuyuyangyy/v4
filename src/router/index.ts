@@ -11,7 +11,7 @@ const router = createRouter({
     {
       path: '/dialogue',
       name: 'dialogue',
-      component: () => import('@/views/DialogueProfile.vue'),
+      component: () => import('@/views/DialoguePage.vue'),
     },
     {
       path: '/chat',
