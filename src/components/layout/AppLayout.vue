@@ -6,7 +6,6 @@ import { useScrollReveal } from '@/composables/useScrollReveal'
 import {
   Home,
   MessageCircle,
-  User,
   BookOpen,
   Map,
   GraduationCap,
@@ -25,8 +24,7 @@ const isHomePage = computed(() => route.path === '/')
 
 const navItems = [
   { path: '/', label: '欢迎', icon: Home },
-  { path: '/profile', label: '画像', icon: User },
-  { path: '/chat', label: '对话', icon: MessageCircle },
+  { path: '/dialogue', label: '智能对话', icon: MessageCircle },
   { path: '/resources', label: '资源', icon: BookOpen },
   { path: '/learning-path', label: '路径', icon: Map },
   { path: '/tutoring', label: '辅导', icon: GraduationCap },
@@ -56,7 +54,7 @@ watch(
           <span class="brand-text">EduMind</span>
         </router-link>
 
-        <nav class="topbar-nav" aria-label="������">
+        <nav class="topbar-nav" aria-label="������">
           <router-link
             v-for="item in navItems"
             :key="item.path"

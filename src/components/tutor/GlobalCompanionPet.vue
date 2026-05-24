@@ -2,8 +2,14 @@
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { resolveDesktopPetAnimation } from '@/config/desktopPet'
 import { useAppStore, type CompanionState } from '@/store'
+import AiriLive2DRenderer from './live2d/AiriLive2DRenderer.vue'
+import FallbackLayeredPet from './live2d/FallbackLayeredPet.vue'
 
 const appStore = useAppStore()
+
+const useLive2D = ref(true)
+const live2dReady = ref(false)
+const live2dError = ref<Error | null>(null)
 
 const frameIndex = ref(0)
 const position = ref({ x: 0, y: 0 })
@@ -66,6 +72,11 @@ const frameStyle = computed(() => {
 const petStyle = computed(() => ({
   left: `${position.value.x}px`,
   top: `${position.value.y}px`,
+}))
+
+const live2dFocus = computed(() => ({
+  x: currentLook.value.x * 60,
+  y: currentLook.value.y * 40,
 }))
 
 const spriteStyle = computed(() => {
@@ -305,6 +316,12 @@ function handleResize() {
   persistPosition()
 }
 
+function onLive2DError(error: Error) {
+  console.warn('[GlobalCompanionPet] Live2D 加载失败，降级为精灵桌宠:', error.message)
+  useLive2D.value = false
+  live2dError.value = error
+}
+
 watch(
   () => animationState.value,
   () => {
@@ -334,8 +351,21 @@ onBeforeUnmount(() => {
 
 <template>
   <div class="global-pet" :class="{ dragging: isDragging, snapping: isSnapping }" :style="petStyle" @pointerdown="startDrag">
-    <div class="global-pet-aura" />
-    <div class="global-pet-sprite" :style="spriteStyle" />
+    <div v-if="useLive2D" class="global-pet-live2d">
+      <AiriLive2DRenderer
+        :state="displayState"
+        :width="112"
+        :height="136"
+        :focus-at="live2dFocus"
+        @ready="live2dReady = true"
+        @error="onLive2DError"
+      />
+    </div>
+    <template v-else>
+      <div class="global-pet-aura" />
+      <FallbackLayeredPet v-if="live2dError" />
+      <div v-else class="global-pet-sprite" :style="spriteStyle" />
+    </template>
   </div>
 </template>
 
@@ -348,6 +378,26 @@ onBeforeUnmount(() => {
   justify-content: center;
   user-select: none;
   touch-action: none;
+}
+
+.global-pet-live2d {
+  position: relative;
+  width: 140px;
+  height: 170px;
+  pointer-events: auto;
+}
+
+.global-pet-live2d::before {
+  content: '';
+  position: absolute;
+  z-index: 0;
+  inset: 0;
+  border-radius: 16px;
+  background: linear-gradient(160deg, rgba(255,255,255,0.06) 0%, rgba(0,0,0,0.3) 100%);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.08), 0 8px 32px rgba(0,0,0,0.3);
+  pointer-events: none;
 }
 
 .global-pet-aura {
@@ -384,11 +434,14 @@ onBeforeUnmount(() => {
 }
 
 @media (max-width: 900px) {
+  .global-pet-live2d {
+    width: 110px;
+    height: 135px;
+  }
   .global-pet-sprite {
     width: 92px;
     height: 92px;
   }
-
   .global-pet-aura {
     width: 72px;
   }

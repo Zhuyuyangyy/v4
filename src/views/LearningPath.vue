@@ -13,6 +13,9 @@ import {
 import { fetchLearningPath } from '@/lib/api'
 import type { StudyScenario } from '@/types/course'
 import { allCourses } from '@/components/course/CourseData'
+import GalaxyPanel from '@/components/galaxy/GalaxyPanel.vue'
+import { phasesToGalaxyData } from '@/components/galaxy/composables/useGalaxyData'
+import type { GalaxySceneData } from '@/components/galaxy/galaxy.types'
 
 type PathStatus = 'completed' | 'active' | 'locked'
 
@@ -135,6 +138,17 @@ const learningStats = computed(() => [
 
 const aiCourses = computed(() => allCourses.filter(course => course.domain === 'ai'))
 
+const galaxyData = computed<GalaxySceneData | undefined>(() => {
+  if (phases.value.length === 0) return undefined
+  return phasesToGalaxyData(phases.value)
+})
+
+const activePhaseId = ref<string | null>(null)
+
+function onPhaseClick(phaseId: string) {
+  activePhaseId.value = activePhaseId.value === phaseId ? null : phaseId
+}
+
 function normalizePhases(phasesFromApi: Array<Omit<PathPhase, 'scenario'>>) {
   return phasesFromApi.map((phase, index) => ({
     ...phase,
@@ -174,7 +188,16 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="lp">
+  <div class="lp-layout">
+    <GalaxyPanel
+      class="lp-galaxy"
+      :galaxy-data="galaxyData"
+      :active-phase-id="activePhaseId"
+      :loading="isLoading"
+      :empty="phases.length === 0"
+      @phase-click="onPhaseClick"
+    />
+    <div class="lp">
     <div class="lp-hero">
       <div>
         <div class="hero-badge">学习路径</div>
@@ -210,6 +233,14 @@ onMounted(() => {
           <span class="hp-lbl">总进度</span>
         </div>
       </div>
+      <button class="universe-btn" @click="router.push('/universe')">
+        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.5">
+          <circle cx="12" cy="12" r="10" />
+          <path d="M12 2a15 15 0 0 0 0 20 15 15 0 0 0 0-20z" />
+          <path d="M2 12h20" />
+        </svg>
+        进入学习宇宙
+      </button>
     </div>
 
     <div class="course-overview">
@@ -356,6 +387,7 @@ onMounted(() => {
         </div>
       </div>
     </div>
+    </div>
   </div>
 </template>
 
@@ -429,6 +461,28 @@ onMounted(() => {
   width: 56px;
   height: 56px;
   flex-shrink: 0;
+}
+
+.universe-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, rgba(122, 151, 255, 0.12), rgba(115, 240, 208, 0.08));
+  border: 1px solid rgba(122, 151, 255, 0.18);
+  color: rgba(230, 238, 255, 0.85);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.2s;
+}
+
+.universe-btn:hover {
+  background: linear-gradient(135deg, rgba(122, 151, 255, 0.2), rgba(115, 240, 208, 0.14));
+  transform: translateY(-1px);
+  box-shadow: 0 4px 16px rgba(122, 151, 255, 0.12);
 }
 
 .progress-arc,
@@ -864,6 +918,36 @@ onMounted(() => {
 
   .node-right {
     width: 110px;
+  }
+}
+
+.lp-layout {
+  display: flex;
+  min-height: calc(100vh - var(--header-height));
+}
+
+.lp-galaxy {
+  width: 420px;
+  flex-shrink: 0;
+  position: sticky;
+  top: var(--header-height);
+  height: calc(100vh - var(--header-height));
+}
+
+.lp {
+  flex: 1;
+  min-width: 0;
+}
+
+@media (max-width: 1100px) {
+  .lp-layout {
+    flex-direction: column;
+  }
+  .lp-galaxy {
+    width: 100%;
+    height: 50vh;
+    position: relative;
+    top: 0;
   }
 }
 </style>

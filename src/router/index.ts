@@ -9,14 +9,17 @@ const router = createRouter({
       component: () => import('@/views/Welcome.vue'),
     },
     {
+      path: '/dialogue',
+      name: 'dialogue',
+      component: () => import('@/views/DialoguePage.vue'),
+    },
+    {
       path: '/chat',
-      name: 'chat',
-      component: () => import('@/views/Chat.vue'),
+      redirect: '/dialogue',
     },
     {
       path: '/profile',
-      name: 'profile',
-      component: () => import('@/views/Profile.vue'),
+      redirect: '/dialogue',
     },
     {
       path: '/resources',
@@ -52,6 +55,11 @@ const router = createRouter({
       path: '/mindmap',
       name: 'mindmap',
       component: () => import('@/views/MindMapView.vue'),
+    },
+    {
+      path: '/universe',
+      name: 'universe',
+      component: () => import('@/learning-universe/components/UniverseCanvas.vue'),
     },
   ],
 })

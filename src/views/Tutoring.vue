@@ -93,7 +93,7 @@ function generateAnswer(q: string): string {
   const template = scenarioAnswerTemplates[currentScenario.value]
   if (template) return template(q, currentSubMode.value)
 
-  return `¹ØÓÚ¡¸${q}¡¹µÄ½â´ð£º\n\nÕâÊÇÒ»¸öºÜºÃµÄÎÊÌâ¡£ÔÚµ±Ç°¡¸${activeSubModeConfig.value?.label ?? ''}¡¹Ä£Ê½ÏÂ£¬ÎÒÀ´ÎªÄãÏêÏ¸½â´ð¡£\n\n**¹Ø¼üÒªµã£º**\n1. ºËÐÄ¸ÅÄî\n2. Ô­ÀíËµÃ÷\n3. Êµ¼ÊÓ¦ÓÃ\n\n> ÐèÒª¸üÉîÈëµÄ½âÊÍ¿ÉÒÔ¼ÌÐø×·ÎÊ¡£`
+  return `å…³äºŽã€Œ${q}ã€çš„è§£ç­”\n\nè¿™æ˜¯ä¸€ä¸ªå¾ˆå¥½çš„é—®é¢˜ã€‚åœ¨å½“å‰ã€Œ${activeSubModeConfig.value?.label ?? ''}ã€æ¨¡å¼ä¸‹ï¼Œæˆ‘æ¥ä¸ºä½ è¯¦ç»†è§£ç­”\n\n**å…³é”®è¦ç‚¹ï¼š**\n1. æ ¸å¿ƒæ¦‚å¿µ\n2. åŽŸç†è¯´æ˜Ž\n3. å®žé™…åº”ç”¨\n\n> å¦‚æžœéœ€è¦æ›´è¯¦ç»†çš„è§£é‡Šå¯ä»¥ç»§ç»­è¿½é—®ã€‚`
 }
 
 function formatAnswer(text: string) {
@@ -259,7 +259,7 @@ onMounted(() => {
           </div>
           <div class="history-info">
             <span class="history-title">{{ s.title }}</span>
-            <span class="history-meta">{{ s.count }} æ¡å¯¹è¯?Â· {{ s.date }}</span>
+            <span class="history-meta">{{ s.count }} æ¡å¯¹ï¿½?Â· {{ s.date }}</span>
           </div>
           <ChevronRight :size="16" stroke-width="1.5" class="history-chevron" />
         </button>
@@ -320,8 +320,8 @@ onMounted(() => {
           <div class="empty-mode-icon">
             <MessageCircle :size="36" stroke-width="1" />
           </div>
-          <h3 class="empty-title">{{ activeSubModeConfig?.label ?? '¿ªÊ¼Ñ§Ï°' }}</h3>
-          <p class="empty-desc">{{ activeSubModeConfig?.desc ?? 'Ñ¡ÔñÒ»¸öÎÊÌâ¿ªÊ¼£¬»òÊäÈëÄãµÄÎÊÌâ' }}</p>
+          <h3 class="empty-title">{{ activeSubModeConfig?.label ?? 'ï¿½ï¿½Ê¼Ñ§Ï°' }}</h3>
+          <p class="empty-desc">{{ activeSubModeConfig?.desc ?? 'Ñ¡ï¿½ï¿½Ò»ï¿½ï¿½ï¿½ï¿½ï¿½â¿ªÊ¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½' }}</p>
 
           <div class="topic-grid">
             <div v-for="(qItem, idx) in scenarioQuestions" :key="idx" class="topic-group">
@@ -354,7 +354,7 @@ onMounted(() => {
             <input
               v-model="question"
               type="text"
-              :placeholder="`ÔÚ¡¸${activeSubModeConfig?.label ?? 'ÎÊ´ð'}¡¹Ä£Ê½ÏÂÊäÈëÎÊÌâ...`"
+              :placeholder="`ï¿½Ú¡ï¿½${activeSubModeConfig?.label ?? 'ï¿½Ê´ï¿½'}ï¿½ï¿½Ä£Ê½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½...`"
               @keydown.enter="askQuestion"
               :disabled="isAsking"
             />
@@ -370,7 +370,7 @@ onMounted(() => {
               @click="toggleModalPanel('flow')"
             >
               <GitCompare :size="13" stroke-width="1.5" />
-              <span>Á÷³ÌÍ¼</span>
+              <span>ï¿½ï¿½ï¿½ï¿½Í¼</span>
             </button>
             <button
               :class="['mm-btn', { active: activeModalPanel === 'code' }]"
@@ -397,9 +397,9 @@ onMounted(() => {
           <div class="modal-panel">
             <div class="mp-header">
               <span class="mp-title">
-                {{ activeModalPanel === 'flow' ? 'Êý¾Ý´¦ÀíÁ÷³ÌÍ¼' : activeModalPanel === 'code' ? '½»»¥Ê½´úÂë»­°å' : 'ÖªÊ¶Ë¼Î¬µ¼Í¼' }}
+                {{ activeModalPanel === 'flow' ? 'ï¿½ï¿½ï¿½Ý´ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Í¼' : activeModalPanel === 'code' ? 'ï¿½ï¿½ï¿½ï¿½Ê½ï¿½ï¿½ï¿½ë»­ï¿½ï¿½' : 'ÖªÊ¶Ë¼Î¬ï¿½ï¿½Í¼' }}
               </span>
-              <button class="mp-close" @click="activeModalPanel = null">¡Á</button>
+              <button class="mp-close" @click="activeModalPanel = null">ï¿½ï¿½</button>
             </div>
             <div class="mp-body">
               <FlowChart
@@ -418,7 +418,7 @@ onMounted(() => {
                 :nodes="currentMindMap ?? []"
                 :title="selectedCourse?.name ?? 'çŸ¥è¯†ä½“ç³»'"
                 :color="selectedCourse?.color ?? '#00d4ff'"
-                @node-click="node => { question = '½âÊÍÒ»ÏÂ' + node.label; activeModalPanel = null }"
+                @node-click="node => { question = 'ï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½' + node.label; activeModalPanel = null }"
               />
             </div>
           </div>
@@ -426,14 +426,14 @@ onMounted(() => {
       </transition>
 
       <div class="tutor-sidebar">
-        <button class="dh-toggle" :class="{ active: true }" title="AI Êý×ÖÈË">
+        <button class="dh-toggle" :class="{ active: true }" title="AI ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½">
           <Bot :size="18" stroke-width="1.5" />
         </button>
 
         <div class="dh-panel">
           <div class="dh-header">
             <Bot :size="18" stroke-width="1.5" />
-            <span>AI Êý×ÖÈË</span>
+            <span>AI ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½</span>
           </div>
 
           <div id="digital-human-slot" class="dh-slot">
@@ -441,15 +441,15 @@ onMounted(() => {
               <div class="dhp-icon">
                 <Bot :size="36" stroke-width="1" />
               </div>
-              <span class="dhp-text">AI Êý×ÖÈË</span>
-              <span class="dhp-hint">¼¯³Éºó½«ÔÚ´ËÏÔÊ¾</span>
+              <span class="dhp-text">AI ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½</span>
+              <span class="dhp-hint">ï¿½ï¿½ï¿½Éºï¿½ï¿½Ú´ï¿½ï¿½ï¿½Ê¾</span>
             </div>
           </div>
 
           <div class="dh-footer">
-            <div class="dhf-label">µ±Ç°½²½â</div>
+            <div class="dhf-label">ï¿½ï¿½Ç°ï¿½ï¿½ï¿½ï¿½</div>
             <p class="dhf-text">
-              {{ history.length > 0 ? `${history[history.length - 1].q.slice(0, 50)}...` : 'µÈ´ýÌáÎÊÖÐ...' }}
+              {{ history.length > 0 ? `${history[history.length - 1].q.slice(0, 50)}...` : 'ï¿½È´ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½...' }}
             </p>
           </div>
         </div>

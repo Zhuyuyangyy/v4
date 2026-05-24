@@ -17,6 +17,7 @@ import {
   Zap,
 } from 'lucide-vue-next'
 import { fetchEvaluation } from '@/lib/api'
+import ThreeKnowledgeTree from '@/components/knowledge-tree/ThreeKnowledgeTree.vue'
 
 type SuggestionType = 'weakness' | 'strength' | 'positive' | 'action'
 
@@ -192,47 +193,60 @@ onMounted(() => {
 
 <template>
   <div class="evaluation">
-    <div class="eval-hero">
-      <div>
-        <div class="hero-badge">效果评估</div>
-        <h1 class="hero-title">学习效果<span class="gradient-text">数据洞察</span></h1>
-        <p class="hero-desc">从学习时长、知识掌握和成长曲线三个维度看清当前状态。</p>
-        <p v-if="isLoading" class="page-status">正在同步评估数据...</p>
+    <!-- ════════ Full-screen 3D Knowledge Tree Hero ════════ -->
+    <div class="tree-hero">
+      <ThreeKnowledgeTree fill />
+      <div class="tree-hero-overlay">
+        <div class="tree-hero-content">
+          <div class="hero-badge">效果评估</div>
+          <h1 class="hero-title">学习效果<span class="gradient-text">数据洞察</span></h1>
+          <p class="hero-desc">从学习时长、知识掌握和成长曲线三个维度看清当前状态。</p>
+          <p v-if="isLoading" class="page-status">正在同步评估数据...</p>
+        </div>
+        <button class="report-btn" @click="showReportModal = true">
+          <FileBarChart :size="16" stroke-width="1.5" />
+          <span>生成评估报告</span>
+        </button>
       </div>
-      <button class="report-btn" @click="showReportModal = true">
-        <FileBarChart :size="16" stroke-width="1.5" />
-        <span>生成评估报告</span>
-      </button>
+      <div class="tree-hero-hint">拖拽旋转 · 滚轮缩放</div>
+      <div class="tree-hero-scroll">
+        <span>向下滚动查看详情</span>
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.5">
+          <path d="M12 5v14M5 12l7 7 7-7" />
+        </svg>
+      </div>
     </div>
 
-    <div class="stats-grid">
-      <div v-for="item in stats" :key="item.label" class="stat-card" :style="{ '--s-color': item.color }">
-        <div class="stat-icon">
-          <component :is="item.icon" :size="20" stroke-width="1.5" />
-        </div>
-        <div class="stat-body">
-          <div class="stat-top">
-            <span class="stat-value">{{ item.value }}</span>
-            <span class="stat-change">{{ item.change }}</span>
+    <!-- ════════ Scrollable Content ════════ -->
+    <div class="scroll-content">
+      <div class="stats-grid">
+        <div v-for="item in stats" :key="item.label" class="stat-card" :style="{ '--s-color': item.color }">
+          <div class="stat-icon">
+            <component :is="item.icon" :size="20" stroke-width="1.5" />
           </div>
-          <span class="stat-label">{{ item.label }}</span>
+          <div class="stat-body">
+            <div class="stat-top">
+              <span class="stat-value">{{ item.value }}</span>
+              <span class="stat-change">{{ item.change }}</span>
+            </div>
+            <span class="stat-label">{{ item.label }}</span>
+          </div>
+        </div>
+        <div class="badge-strip">
+          <div
+            v-for="badge in badges.slice(0, 3)"
+            :key="badge.name"
+            :class="['mini-badge', { earned: badge.earned }]"
+            :style="{ '--b-color': badge.color }"
+          >
+            <component :is="badge.icon" v-if="badge.earned" :size="14" stroke-width="2" />
+            <span v-else class="badge-locked">•</span>
+          </div>
+          <span class="badge-more">+{{ badges.filter(item => !item.earned).length }} 待解锁</span>
         </div>
       </div>
-      <div class="badge-strip">
-        <div
-          v-for="badge in badges.slice(0, 3)"
-          :key="badge.name"
-          :class="['mini-badge', { earned: badge.earned }]"
-          :style="{ '--b-color': badge.color }"
-        >
-          <component :is="badge.icon" v-if="badge.earned" :size="14" stroke-width="2" />
-          <span v-else class="badge-locked">•</span>
-        </div>
-        <span class="badge-more">+{{ badges.filter(item => !item.earned).length }} 待解锁</span>
-      </div>
-    </div>
 
-    <div class="dashboard-grid">
+      <div class="dashboard-grid">
       <div class="card chart-card">
         <div class="card-head">
           <h2 class="card-title-sm">能力成长曲线</h2>
@@ -311,6 +325,8 @@ onMounted(() => {
       </div>
     </div>
 
+    </div><!-- /scroll-content -->
+
     <transition name="scale-in">
       <div v-if="showReportModal" class="modal-overlay" @click.self="showReportModal = false">
         <div class="modal">
@@ -374,27 +390,103 @@ onMounted(() => {
 
 <style scoped>
 .evaluation {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 0 0 40px;
   position: relative;
   z-index: 1;
 }
 
-.eval-hero,
-.stats-grid,
-.dashboard-grid {
-  padding-left: 40px;
-  padding-right: 40px;
+/* ════════ Full-screen 3D Tree Hero ════════ */
+.tree-hero {
+  position: relative;
+  width: 100%;
+  height: 100vh;
+  overflow: hidden;
+  background: #0a0a14;
 }
 
-.eval-hero {
-  padding-top: 48px;
-  padding-bottom: 28px;
+.tree-hero :deep(.three-tree-wrapper) {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border-radius: 0;
+  border: none;
+}
+
+.tree-hero-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  padding: 48px 56px 0;
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
   gap: 24px;
+  pointer-events: none;
+  z-index: 2;
+}
+
+.tree-hero-overlay > * {
+  pointer-events: auto;
+}
+
+.tree-hero-content {
+  max-width: 480px;
+}
+
+.tree-hero-hint {
+  position: absolute;
+  bottom: 60px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 6px 16px;
+  border-radius: 10px;
+  background: rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(8px);
+  color: rgba(255, 255, 255, 0.35);
+  font-size: 12px;
+  pointer-events: none;
+  z-index: 2;
+  opacity: 0;
+  transition: opacity 0.4s;
+}
+
+.tree-hero:hover .tree-hero-hint {
+  opacity: 1;
+}
+
+.tree-hero-scroll {
+  position: absolute;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  color: rgba(255, 255, 255, 0.25);
+  font-size: 11px;
+  pointer-events: none;
+  z-index: 2;
+  animation: scrollBounce 2s ease-in-out infinite;
+}
+
+@keyframes scrollBounce {
+  0%, 100% { transform: translateX(-50%) translateY(0); }
+  50% { transform: translateX(-50%) translateY(6px); }
+}
+
+/* ════════ Scrollable Content ════════ */
+.scroll-content {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 0 40px;
+}
+
+.stats-grid,
+.dashboard-grid {
+  padding-left: 40px;
+  padding-right: 40px;
 }
 
 .hero-badge {
@@ -898,16 +990,15 @@ onMounted(() => {
 }
 
 @media (max-width: 900px) {
-  .eval-hero,
+  .tree-hero-overlay {
+    padding: 28px 20px 0;
+    flex-direction: column;
+  }
+
   .stats-grid,
   .dashboard-grid {
     padding-left: 20px;
     padding-right: 20px;
-  }
-
-  .eval-hero {
-    padding-top: 32px;
-    flex-direction: column;
   }
 
   .stats-grid {
