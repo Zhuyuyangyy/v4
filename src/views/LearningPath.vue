@@ -447,7 +447,6 @@ onMounted(() => {
         </div>
       </div>
     </div>
-    </div>
 
     <div class="replan-card">
       <div class="replan-header">
@@ -466,6 +465,7 @@ onMounted(() => {
     </div>
 
     </div>
+  </div>
 
 </template>
 

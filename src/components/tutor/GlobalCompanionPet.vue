@@ -3,7 +3,6 @@ import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { resolveDesktopPetAnimation } from '@/config/desktopPet'
 import { useAppStore, type CompanionState } from '@/store'
 import AiriLive2DRenderer from './live2d/AiriLive2DRenderer.vue'
-import FallbackLayeredPet from './live2d/FallbackLayeredPet.vue'
 
 const appStore = useAppStore()
 
@@ -35,6 +34,7 @@ const PET_POSITION_KEY = 'global-companion-pet-position'
 const DRAG_THRESHOLD = 8
 const LOOK_RANGE_X = 220
 const LOOK_RANGE_Y = 180
+const LOOK_ACTIVE_DISTANCE = 360
 const LOOK_OFFSET_X = 9
 const LOOK_OFFSET_Y = 6
 const LOOK_ROTATION = 7
@@ -75,8 +75,8 @@ const petStyle = computed(() => ({
 }))
 
 const live2dFocus = computed(() => ({
-  x: currentLook.value.x * 60,
-  y: currentLook.value.y * 40,
+  x: currentLook.value.x * getPetMetrics().width * 0.42,
+  y: currentLook.value.y * getPetMetrics().height * 0.28,
 }))
 
 const spriteStyle = computed(() => {
@@ -123,7 +123,6 @@ function playCurrentState() {
   frameIndex.value = 0
 
   const animation = activeAnimation.value
-  if (animationState.value === 'idle') return
 
   frameTimer = setInterval(() => {
     if (animation.loop) {
@@ -152,8 +151,8 @@ function animateLook() {
 function getPetMetrics() {
   const compact = window.innerWidth <= 900
   return {
-    width: compact ? 92 : 112,
-    height: compact ? 116 : 136,
+    width: compact ? 150 : 220,
+    height: compact ? 210 : 300,
   }
 }
 
@@ -217,6 +216,12 @@ function updateLookTarget(clientX: number, clientY: number) {
   const centerY = position.value.y + metrics.height * 0.38
   const deltaX = clientX - centerX
   const deltaY = clientY - centerY
+  const distance = Math.hypot(deltaX, deltaY)
+
+  if (distance > LOOK_ACTIVE_DISTANCE) {
+    targetLook.value = { x: 0, y: 0 }
+    return
+  }
 
   targetLook.value = {
     x: clampLook(deltaX / LOOK_RANGE_X),
@@ -317,8 +322,7 @@ function handleResize() {
 }
 
 function onLive2DError(error: Error) {
-  console.warn('[GlobalCompanionPet] Live2D 加载失败，降级为精灵桌宠:', error.message)
-  useLive2D.value = false
+  console.warn('[GlobalCompanionPet] Live2D renderer failed:', error.message)
   live2dError.value = error
 }
 
@@ -354,17 +358,16 @@ onBeforeUnmount(() => {
     <div v-if="useLive2D" class="global-pet-live2d">
       <AiriLive2DRenderer
         :state="displayState"
-        :width="112"
-        :height="136"
+        :width="220"
+        :height="300"
         :focus-at="live2dFocus"
-        @ready="live2dReady = true"
+        @ready="live2dReady = true; live2dError = null"
         @error="onLive2DError"
       />
     </div>
-    <template v-else>
+    <template v-else-if="!live2dError">
       <div class="global-pet-aura" />
-      <FallbackLayeredPet v-if="live2dError" />
-      <div v-else class="global-pet-sprite" :style="spriteStyle" />
+      <div class="global-pet-sprite" :style="spriteStyle" />
     </template>
   </div>
 </template>
@@ -382,22 +385,9 @@ onBeforeUnmount(() => {
 
 .global-pet-live2d {
   position: relative;
-  width: 140px;
-  height: 170px;
+  width: 220px;
+  height: 300px;
   pointer-events: auto;
-}
-
-.global-pet-live2d::before {
-  content: '';
-  position: absolute;
-  z-index: 0;
-  inset: 0;
-  border-radius: 16px;
-  background: linear-gradient(160deg, rgba(255,255,255,0.06) 0%, rgba(0,0,0,0.3) 100%);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  box-shadow: inset 0 1px 0 rgba(255,255,255,0.08), 0 8px 32px rgba(0,0,0,0.3);
-  pointer-events: none;
 }
 
 .global-pet-aura {
@@ -406,8 +396,14 @@ onBeforeUnmount(() => {
   width: 88px;
   height: 22px;
   border-radius: 999px;
-  background: radial-gradient(circle, rgba(255, 134, 184, 0.2), rgba(255, 134, 184, 0));
+  background: radial-gradient(circle, rgba(251, 191, 36, 0.25), rgba(245, 158, 11, 0));
   filter: blur(12px);
+  animation: aura-glow 3s ease-in-out infinite;
+}
+
+@keyframes aura-glow {
+  0%, 100% { opacity: 0.7; }
+  50% { opacity: 1; }
 }
 
 .global-pet-sprite {
@@ -418,8 +414,8 @@ onBeforeUnmount(() => {
   background-repeat: no-repeat;
   transition: transform 160ms ease-out;
   filter:
-    drop-shadow(0 12px 22px rgba(240, 102, 153, 0.16))
-    drop-shadow(0 2px 8px rgba(255, 255, 255, 0.2));
+    drop-shadow(0 12px 22px rgba(251, 191, 36, 0.2))
+    drop-shadow(0 2px 8px rgba(255, 255, 255, 0.15));
   cursor: grab;
 }
 
@@ -435,8 +431,8 @@ onBeforeUnmount(() => {
 
 @media (max-width: 900px) {
   .global-pet-live2d {
-    width: 110px;
-    height: 135px;
+    width: 150px;
+    height: 210px;
   }
   .global-pet-sprite {
     width: 92px;
