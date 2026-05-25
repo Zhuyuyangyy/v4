@@ -9,6 +9,7 @@ import type {
   ProfileAnalyzeResponse,
   TutoringHistoryItem,
   TutoringReply,
+  MultimodalContent,
 } from '@/types/api'
 import { useAppStore } from '@/store'
 
@@ -74,10 +75,10 @@ export async function fetchLatestProfile() {
   return data.result
 }
 
-export function sendChatMessage(message: string) {
+export function sendChatMessage(message: string, multimodalContents?: MultimodalContent[]) {
   return requestJson<ChatReply>('/api/chat', {
     method: 'POST',
-    body: JSON.stringify({ message }),
+    body: JSON.stringify({ message, multimodalContents }),
   })
 }
 
@@ -86,10 +87,10 @@ export async function fetchChatHistory() {
   return data.items
 }
 
-export function askTutoringQuestion(question: string, mode: string, scenario?: string) {
+export function askTutoringQuestion(question: string, mode: string, scenario?: string, multimodalContents?: MultimodalContent[]) {
   return requestJson<TutoringReply>('/api/tutoring/ask', {
     method: 'POST',
-    body: JSON.stringify({ question, mode, scenario }),
+    body: JSON.stringify({ question, mode, scenario, multimodalContents }),
   })
 }
 

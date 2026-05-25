@@ -9,6 +9,17 @@ export interface ApiResource {
   date: string
   color: string
   reads: number
+  reason?: string
+  profileTag?: string
+  pathStage?: string
+  format?: string
+  estTime?: string
+  recommendEvidence?: {
+    profileSource: string
+    evaluationReason: string
+    pathStage: string
+    formatReason: string
+  }
 }
 
 export interface ChatResource {
@@ -20,6 +31,13 @@ export interface ChatResource {
 export interface ApiSuggestion {
   text: string
   type?: 'weakness' | 'strength' | 'positive' | 'action'
+}
+
+export interface MultimodalContent {
+  type: 'text' | 'image'
+  text?: string
+  imageData?: string
+  imageType?: string
 }
 
 export interface ChatReply {
@@ -35,6 +53,7 @@ export interface ChatHistoryItem {
   time: string
   resources?: ChatResource[]
   suggestions?: string[]
+  multimodalContents?: MultimodalContent[]
 }
 
 export interface TutoringReply {
@@ -49,6 +68,7 @@ export interface TutoringHistoryItem {
   helpful?: boolean
   scenario: string
   mode: string
+  multimodalContents?: MultimodalContent[]
 }
 
 export interface LearningPathResponse {

@@ -86,7 +86,7 @@ export function getChatHistory() {
   return readStore().chatHistory
 }
 
-export function saveChatHistoryEntry(userMessage, reply) {
+export function saveChatHistoryEntry(userMessage, reply, multimodalContents) {
   const store = readStore()
   const timestamp = nowTime()
   const historyItems = [
@@ -96,6 +96,7 @@ export function saveChatHistoryEntry(userMessage, reply) {
       role: 'user',
       content: userMessage,
       time: timestamp,
+      multimodalContents: multimodalContents || [],
     },
     {
       id: Date.now() + 1,
@@ -114,7 +115,7 @@ export function getTutoringHistory() {
   return readStore().tutoringHistory
 }
 
-export function saveTutoringHistoryEntry({ question, answer, mode, scenario }) {
+export function saveTutoringHistoryEntry({ question, answer, mode, scenario, multimodalContents }) {
   const store = readStore()
   store.tutoringHistory = keepLast(
     [
@@ -125,6 +126,7 @@ export function saveTutoringHistoryEntry({ question, answer, mode, scenario }) {
         time: nowTime(),
         mode,
         scenario: scenario || 'preview',
+        multimodalContents: multimodalContents || [],
       },
     ],
     20,
@@ -132,9 +134,28 @@ export function saveTutoringHistoryEntry({ question, answer, mode, scenario }) {
   writeStore(store)
 }
 
-export function buildChatReply(message) {
+export function buildChatReply(message, multimodalContents) {
   const text = String(message || '').trim()
   const topic = text || '当前学习问题'
+
+  const hasImages = multimodalContents && multimodalContents.some(c => c.type === 'image')
+
+  if (hasImages) {
+    return {
+      content:
+        `我看到你上传了图片！虽然我是模拟的多模态助手，现在帮你分析一下：\n\n` +
+        '1. 首先观察图片内容，可能是公式、图表、代码截图或其他学习资料。\n' +
+        '2. 如果你能补充一些文字说明，我能更好地帮助你。\n' +
+        '3. 我们可以从概念理解、解题思路或实践应用三个维度来探讨。\n\n' +
+        '你希望我帮你做什么呢？比如讲解图片中的内容、帮你分析问题、还是给出相关知识点？',
+      resources: [
+        { type: 'doc', title: '图片分析指南', color: '#00d4ff' },
+        { type: 'mindmap', title: '知识点关联', color: '#7c3aed' },
+        { type: 'exercise', title: '相关练习', color: '#06d6a0' },
+      ],
+      suggestions: ['详细描述图片内容', '给我相关知识点', '出几道相关题目'],
+    }
+  }
 
   return {
     content:
@@ -152,21 +173,44 @@ export function buildChatReply(message) {
   }
 }
 
-export function buildTutoringReply(question, mode = 'qa') {
+export function buildTutoringReply(question, mode = 'qa', multimodalContents) {
   const titleMap = {
     qa: '自由问答',
     solve: '解题助手',
     explain: '概念精讲',
     brainstorm: '举一反三',
+    'concept-overview': '概念总览',
+    'case-intro': '案例引入',
+    'step-solve': '分步解题',
+    'debug-guide': '调试指导',
   }
 
   const q = String(question || '').trim() || '未提供问题'
+  const title = titleMap[mode] || '自由问答'
+  const hasImages = multimodalContents && multimodalContents.some(c => c.type === 'image')
+
+  if (hasImages) {
+    return {
+      answer:
+        `当前模式：${title}\n\n` +
+        '我看到你上传了图片。我们可以先从图中的题目、公式、代码或图表里提取关键信息，再一步步分析。\n\n' +
+        '1. 先确认图片里的核心问题。\n' +
+        '2. 再拆解相关概念、已知条件和目标。\n' +
+        '3. 最后给出解题思路、讲解步骤或练习建议。\n\n' +
+        '你也可以补充一句：希望我重点讲哪一部分？',
+      time: '即时返回',
+    }
+  }
 
   return {
     answer:
-      `当前模式：${titleMap[mode] || '自由问答'}\n\n` +
+      `当前模式：${title}\n\n` +
       `问题：${q}\n\n` +
-      '建议你先抓住“定义、例子、应用”这三个层次。如果你愿意，我可以继续把它拆成步骤、代码或练习。',
+      '建议先抓住“定义、例子、应用”三个层次。\n\n' +
+      '1. 定义：把核心概念用一句话说清楚。\n' +
+      '2. 例子：找一个最小例子验证理解。\n' +
+      '3. 应用：说明它在题目或项目里解决什么问题。\n\n' +
+      '如果你愿意，我可以继续把它拆成步骤、代码示例或配套练习。',
     time: '即时返回',
   }
 }

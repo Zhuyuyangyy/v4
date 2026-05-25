@@ -122,8 +122,8 @@ const server = http.createServer(async (req, res) => {
 
     if (req.method === 'POST' && pathname === '/api/chat') {
       const body = await readJson(req)
-      const reply = buildChatReply(body.message)
-      saveChatHistoryEntry(String(body.message || '').trim(), reply)
+      const reply = buildChatReply(body.message, body.multimodalContents)
+      saveChatHistoryEntry(String(body.message || '').trim(), reply, body.multimodalContents)
       sendJson(res, 200, reply)
       return
     }
@@ -135,12 +135,13 @@ const server = http.createServer(async (req, res) => {
 
     if (req.method === 'POST' && pathname === '/api/tutoring/ask') {
       const body = await readJson(req)
-      const reply = buildTutoringReply(body.question, body.mode)
+      const reply = buildTutoringReply(body.question, body.mode, body.multimodalContents)
       saveTutoringHistoryEntry({
         question: String(body.question || '').trim() || '未提供问题',
         answer: reply.answer,
         mode: body.mode || 'qa',
         scenario: body.scenario || 'preview',
+        multimodalContents: body.multimodalContents || [],
       })
       sendJson(res, 200, reply)
       return

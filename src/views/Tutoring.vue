@@ -13,11 +13,14 @@ import {
   Layers,
   Lightbulb,
   MessageCircle,
+  Paperclip,
   ThumbsDown,
   ThumbsUp,
+  X,
   Zap,
 } from 'lucide-vue-next'
 import type { Course, StudyScenario, TutorSubMode } from '@/types/course'
+import type { MultimodalContent } from '@/types/api'
 import {
   allCourses,
   dlFlowStages,
@@ -31,6 +34,7 @@ import {
 import CodeCanvas from '@/components/canvas/CodeCanvas.vue'
 import FlowChart from '@/components/canvas/FlowChart.vue'
 import MindMap from '@/components/mindmap/MindMap.vue'
+import DesktopPet from '@/components/tutor/DesktopPet.vue'
 import EmotionMascot from '@/components/tutor/EmotionMascot.vue'
 import ScenarioSelector from '@/components/tutor/ScenarioSelector.vue'
 import { useCourseStore } from '@/store/course'
@@ -43,7 +47,7 @@ const courseStore = useCourseStore()
 const question = ref('')
 const currentScenario = ref<StudyScenario>('preview')
 const currentSubMode = ref<TutorSubMode>('concept-overview')
-const history = ref<Array<{ q: string; a: string; time: string; helpful?: boolean; scenario: StudyScenario; submode: TutorSubMode }>>([])
+const history = ref<Array<{ q: string; a: string; time: string; helpful?: boolean; scenario: StudyScenario; submode: TutorSubMode; multimodalContents?: MultimodalContent[] }>>([])
 const showHistory = ref(false)
 const showCoursePanel = ref(false)
 const selectedCourseId = ref(courseStore.currentCourseId)
@@ -51,6 +55,8 @@ const activeModalPanel = ref<'code' | 'flow' | 'mindmap' | null>(null)
 const isAsking = ref(false)
 const petCompletedAt = ref(0)
 const petLastResult = ref<'success' | 'error' | null>(null)
+const fileInputRef = ref<HTMLInputElement | null>(null)
+const pendingImages = ref<Array<{ id: string; dataUrl: string; type: string }>>([])
 
 const selectedCourse = computed(() => allCourses.find(c => c.id === selectedCourseId.value))
 
@@ -79,7 +85,7 @@ const activeSubModeConfig = computed(() => activeScenarioConfig.value?.subModes.
 const sessionHistory = [
   { title: 'æœºå™¨å­¦ä¹ é¢„ä¹ ', count: 6, date: 'ä»Šå¤©', scenario: 'preview' as StudyScenario },
   { title: 'KNN ç®—æ³•è°ƒè¯•', count: 12, date: 'æ˜¨å¤©', scenario: 'homework' as StudyScenario },
-  { title: 'æœŸæœ«è€ƒè¯•å†²åˆº', count: 9, date: '3å¤©å‰', scenario: 'exam' as StudyScenario },
+  { title: 'æœŸæœ«è€ƒè¯•å†²åˆº', count: 9, date: '3 å¤©å‰', scenario: 'exam' as StudyScenario },
 ]
 
 const scenarioColors: Record<string, string> = {
@@ -93,7 +99,7 @@ function generateAnswer(q: string): string {
   const template = scenarioAnswerTemplates[currentScenario.value]
   if (template) return template(q, currentSubMode.value)
 
-  return `¹ØÓÚ¡¸${q}¡¹µÄ½â´ğ£º\n\nÕâÊÇÒ»¸öºÜºÃµÄÎÊÌâ¡£ÔÚµ±Ç°¡¸${activeSubModeConfig.value?.label ?? ''}¡¹Ä£Ê½ÏÂ£¬ÎÒÀ´ÎªÄãÏêÏ¸½â´ğ¡£\n\n**¹Ø¼üÒªµã£º**\n1. ºËĞÄ¸ÅÄî\n2. Ô­ÀíËµÃ÷\n3. Êµ¼ÊÓ¦ÓÃ\n\n> ĞèÒª¸üÉîÈëµÄ½âÊÍ¿ÉÒÔ¼ÌĞø×·ÎÊ¡£`
+  return `## å…³äºã€Œ${q || 'è¿™ä¸ªé—®é¢˜'}ã€çš„è®²è§£\n\nè¿™æ˜¯ä¸€ä¸ªå¾ˆå¥½çš„é—®é¢˜ã€‚åœ¨å½“å‰ã€Œ${activeSubModeConfig.value?.label ?? 'é—®ç­”'}ã€æ¨¡å¼ä¸‹ï¼Œæˆ‘ä¼šä»æ¦‚å¿µã€åŸç†å’Œåº”ç”¨ä¸‰ä¸ªå±‚æ¬¡å¸®ä½ æ‹†å¼€ã€‚\n\n**å…³é”®è¦ç‚¹ï¼š**\n1. å…ˆç¡®è®¤æ ¸å¿ƒæ¦‚å¿µ\n2. å†è§£é‡ŠèƒŒåçš„åŸç†\n3. æœ€åç»™å‡ºå®é™…åº”ç”¨æˆ–ç»ƒä¹ å»ºè®®\n\n> å¦‚æœæŸä¸€æ­¥ä¸æ¸…æ¥šï¼Œå¯ä»¥ç»§ç»­è¿½é—®ï¼Œæˆ‘ä¼šæ¢ä¸€ç§æ–¹å¼è®²ã€‚`
 }
 
 function formatAnswer(text: string) {
@@ -109,19 +115,27 @@ function formatAnswer(text: string) {
 
 async function askQuestion() {
   const q = question.value.trim()
-  if (!q || isAsking.value) return
+  if ((!q && pendingImages.value.length === 0) || isAsking.value) return
 
   const now = new Date().toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })
+
+  const multimodalContents: MultimodalContent[] = []
+  pendingImages.value.forEach(img => {
+    multimodalContents.push({ type: 'image', imageData: img.dataUrl, imageType: img.type })
+  })
+  if (q) {
+    multimodalContents.push({ type: 'text', text: q })
+  }
+
   let answer = generateAnswer(q)
   let petResult: 'success' | 'error' = 'success'
   isAsking.value = true
 
   try {
-    const response = await askTutoringQuestion(q, currentSubMode.value, currentScenario.value)
+    const response = await askTutoringQuestion(q, currentSubMode.value, currentScenario.value, multimodalContents)
     answer = response.answer
   } catch {
     petResult = 'error'
-    // Keep the original local tutoring fallback when the API server is unavailable.
   } finally {
     isAsking.value = false
   }
@@ -132,6 +146,7 @@ async function askQuestion() {
     time: now,
     scenario: currentScenario.value,
     submode: currentSubMode.value,
+    multimodalContents,
   })
 
   emotion.recordQuestion(q.slice(0, 20))
@@ -139,6 +154,35 @@ async function askQuestion() {
   petLastResult.value = petResult
   petCompletedAt.value = Date.now()
   question.value = ''
+  pendingImages.value = []
+}
+
+function handleFileSelect(event: Event) {
+  const target = event.target as HTMLInputElement
+  if (!target.files || target.files.length === 0) return
+
+  Array.from(target.files).forEach(file => {
+    if (!file.type.startsWith('image/')) return
+
+    const reader = new FileReader()
+    reader.onload = (e) => {
+      const dataUrl = e.target?.result as string
+      pendingImages.value.push({
+        id: Date.now() + Math.random().toString(36).substr(2, 9),
+        dataUrl,
+        type: file.type,
+      })
+    }
+    reader.readAsDataURL(file)
+  })
+
+  if (fileInputRef.value) {
+    fileInputRef.value.value = ''
+  }
+}
+
+function removePendingImage(id: string) {
+  pendingImages.value = pendingImages.value.filter(img => img.id !== id)
 }
 
 function setHelpful(index: number, helpful: boolean) {
@@ -221,7 +265,7 @@ onMounted(() => {
         <h1 class="hero-title">
           <span class="gradient-text">{{ activeSubModeConfig?.label ?? 'å³æ—¶ç­”ç–‘' }}</span>
         </h1>
-        <p class="hero-desc">{{ activeScenarioConfig?.description ?? 'å¤šæ¨¡å¼æ·±åº¦è®²è§£ï¼Œéšæ—¶éšåœ°è§£å†³ä½ çš„å­¦ä¹ é—®é¢˜' }}</p>
+        <p class="hero-desc">{{ activeScenarioConfig?.description ?? 'å¤šæ¨¡å¼æ·±åº¦è®²è§£ï¼Œéšæ—¶è§£å†³ä½ çš„å­¦ä¹ é—®é¢˜ã€‚' }}</p>
       </div>
       <div class="hero-actions">
         <button class="hero-btn course-btn" @click="showCoursePanel = !showCoursePanel">
@@ -259,7 +303,7 @@ onMounted(() => {
           </div>
           <div class="history-info">
             <span class="history-title">{{ s.title }}</span>
-            <span class="history-meta">{{ s.count }} æ¡å¯¹è¯?Â· {{ s.date }}</span>
+            <span class="history-meta">{{ s.count }} æ¡å¯¹è¯ Â· {{ s.date }}</span>
           </div>
           <ChevronRight :size="16" stroke-width="1.5" class="history-chevron" />
         </button>
@@ -280,7 +324,12 @@ onMounted(() => {
             <div class="question-bubble">
               <div class="bubble-avatar q-avatar">Q</div>
               <div class="bubble-content">
-                <p>{{ item.q }}</p>
+                <div v-if="item.multimodalContents && item.multimodalContents.length" class="bubble-images">
+                  <template v-for="(content, idx) in item.multimodalContents" :key="idx">
+                    <img v-if="content.type === 'image'" :src="content.imageData" class="bubble-image" />
+                  </template>
+                </div>
+                <p v-if="item.q">{{ item.q }}</p>
                 <span class="bubble-meta">
                   <span class="bubble-tag" :style="{ '--t-clr': scenarioColors[item.scenario] || '#00d4ff' }">
                     {{ scenarioConfigs.find(s => s.key === item.scenario)?.label }}
@@ -320,8 +369,8 @@ onMounted(() => {
           <div class="empty-mode-icon">
             <MessageCircle :size="36" stroke-width="1" />
           </div>
-          <h3 class="empty-title">{{ activeSubModeConfig?.label ?? '¿ªÊ¼Ñ§Ï°' }}</h3>
-          <p class="empty-desc">{{ activeSubModeConfig?.desc ?? 'Ñ¡ÔñÒ»¸öÎÊÌâ¿ªÊ¼£¬»òÊäÈëÄãµÄÎÊÌâ' }}</p>
+          <h3 class="empty-title">{{ activeSubModeConfig?.label ?? 'å³æ—¶ç­”ç–‘' }}</h3>
+          <p class="empty-desc">{{ activeSubModeConfig?.desc ?? 'é€‰æ‹©ä¸€ä¸ªé—®é¢˜å¼€å§‹ï¼Œæˆ‘ä¼šä¸€æ­¥æ­¥å¸®ä½ è®²æ¸…æ¥šã€‚' }}</p>
 
           <div class="topic-grid">
             <div v-for="(qItem, idx) in scenarioQuestions" :key="idx" class="topic-group">
@@ -350,15 +399,34 @@ onMounted(() => {
           <div class="mode-indicator">
             {{ activeScenarioConfig?.label ?? 'è¾…å¯¼' }} Â· {{ activeSubModeConfig?.label ?? 'é—®ç­”' }}
           </div>
+          <div v-if="pendingImages.length > 0" class="pending-images">
+            <div v-for="img in pendingImages" :key="img.id" class="pending-image-item">
+              <img :src="img.dataUrl" class="pending-image-preview" />
+              <button class="remove-image-btn" @click="removePendingImage(img.id)">
+                <X :size="14" stroke-width="2" />
+              </button>
+            </div>
+          </div>
           <div class="input-row">
+            <input
+              ref="fileInputRef"
+              type="file"
+              class="hidden-file-input"
+              accept="image/*"
+              multiple
+              @change="handleFileSelect"
+            />
+            <button class="attach-btn" @click="fileInputRef?.click()" aria-label="ä¸Šä¼ å›¾ç‰‡">
+              <Paperclip :size="16" stroke-width="1.5" />
+            </button>
             <input
               v-model="question"
               type="text"
-              :placeholder="`ÔÚ¡¸${activeSubModeConfig?.label ?? 'ÎÊ´ğ'}¡¹Ä£Ê½ÏÂÊäÈëÎÊÌâ...`"
+              placeholder="è¾“å…¥é—®é¢˜æˆ–ä¸Šä¼ å›¾ç‰‡..."
               @keydown.enter="askQuestion"
               :disabled="isAsking"
             />
-            <button class="ask-btn" @click="askQuestion" :disabled="!question.trim() || isAsking">
+            <button class="ask-btn" @click="askQuestion" :disabled="(!question.trim() && pendingImages.length === 0) || isAsking">
               <Zap :size="16" stroke-width="2" />
               <span>{{ isAsking ? 'æ€è€ƒä¸­' : 'æé—®' }}</span>
             </button>
@@ -370,7 +438,7 @@ onMounted(() => {
               @click="toggleModalPanel('flow')"
             >
               <GitCompare :size="13" stroke-width="1.5" />
-              <span>Á÷³ÌÍ¼</span>
+              <span>æµç¨‹å›¾</span>
             </button>
             <button
               :class="['mm-btn', { active: activeModalPanel === 'code' }]"
@@ -397,9 +465,9 @@ onMounted(() => {
           <div class="modal-panel">
             <div class="mp-header">
               <span class="mp-title">
-                {{ activeModalPanel === 'flow' ? 'Êı¾İ´¦ÀíÁ÷³ÌÍ¼' : activeModalPanel === 'code' ? '½»»¥Ê½´úÂë»­°å' : 'ÖªÊ¶Ë¼Î¬µ¼Í¼' }}
+                {{ activeModalPanel === 'flow' ? 'æ•°æ®å¤„ç†æµç¨‹å›¾' : activeModalPanel === 'code' ? 'äº¤äº’å¼ä»£ç ç”»æ¿' : 'çŸ¥è¯†æ€ç»´å¯¼å›¾' }}
               </span>
-              <button class="mp-close" @click="activeModalPanel = null">¡Á</button>
+              <button class="mp-close" @click="activeModalPanel = null">Ã—</button>
             </div>
             <div class="mp-body">
               <FlowChart
@@ -418,7 +486,7 @@ onMounted(() => {
                 :nodes="currentMindMap ?? []"
                 :title="selectedCourse?.name ?? 'çŸ¥è¯†ä½“ç³»'"
                 :color="selectedCourse?.color ?? '#00d4ff'"
-                @node-click="node => { question = '½âÊÍÒ»ÏÂ' + node.label; activeModalPanel = null }"
+                @node-click="node => { question = 'è®²è§£ä¸€ä¸‹' + node.label; activeModalPanel = null }"
               />
             </div>
           </div>
@@ -426,30 +494,30 @@ onMounted(() => {
       </transition>
 
       <div class="tutor-sidebar">
-        <button class="dh-toggle" :class="{ active: true }" title="AI Êı×ÖÈË">
+        <button class="dh-toggle" :class="{ active: true }" title="å‘æ—¥è‘µå­¦ä¼´">
           <Bot :size="18" stroke-width="1.5" />
         </button>
 
         <div class="dh-panel">
           <div class="dh-header">
             <Bot :size="18" stroke-width="1.5" />
-            <span>AI Êı×ÖÈË</span>
+            <span>å‘æ—¥è‘µå­¦ä¼´</span>
           </div>
 
-          <div id="digital-human-slot" class="dh-slot">
-            <div class="dh-placeholder">
-              <div class="dhp-icon">
-                <Bot :size="36" stroke-width="1" />
-              </div>
-              <span class="dhp-text">AI Êı×ÖÈË</span>
-              <span class="dhp-hint">¼¯³Éºó½«ÔÚ´ËÏÔÊ¾</span>
-            </div>
+          <div class="dh-slot">
+            <DesktopPet
+              :is-asking="isAsking"
+              :draft-question="question"
+              :last-completed-at="petCompletedAt"
+              :last-result="petLastResult"
+              :current-mood="emotion.currentMood"
+            />
           </div>
 
           <div class="dh-footer">
-            <div class="dhf-label">µ±Ç°½²½â</div>
+            <div class="dhf-label">å½“å‰è®²è§£</div>
             <p class="dhf-text">
-              {{ history.length > 0 ? `${history[history.length - 1].q.slice(0, 50)}...` : 'µÈ´ıÌáÎÊÖĞ...' }}
+              {{ history.length > 0 ? `${history[history.length - 1].q.slice(0, 50)}...` : 'ç­‰å¾…æé—®ä¸­...' }}
             </p>
           </div>
         </div>
@@ -912,6 +980,82 @@ onMounted(() => {
   backdrop-filter: blur(20px);
 }
 
+.hidden-file-input {
+  display: none;
+}
+
+.pending-images {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 10px;
+  flex-wrap: wrap;
+}
+
+.pending-image-item {
+  position: relative;
+  width: 72px;
+  height: 72px;
+}
+
+.pending-image-preview {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.remove-image-btn {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: rgba(239, 68, 68, 0.9);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+
+.remove-image-btn:hover {
+  transform: scale(1.1);
+}
+
+.attach-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px;
+  color: var(--color-text-tertiary);
+  border-radius: 12px;
+  transition: color 0.2s var(--ease-out);
+  flex-shrink: 0;
+}
+
+.attach-btn:hover {
+  color: var(--color-accent-cyan);
+}
+
+.bubble-images {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.bubble-image {
+  max-width: 280px;
+  max-height: 200px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  object-fit: contain;
+}
+
 .mode-indicator {
   font-size: 11px;
   color: var(--color-accent-cyan);
@@ -989,15 +1133,15 @@ onMounted(() => {
 
 .dh-toggle:hover,
 .dh-toggle.active {
-  border-color: var(--color-accent-cyan);
-  color: var(--color-accent-cyan);
+  border-color: var(--color-accent-amber);
+  color: var(--color-accent-amber);
 }
 
 .dh-panel {
   width: 260px;
   margin-left: -1px;
   background: var(--color-bg-card);
-  border: 1px solid var(--color-border);
+  border: 1px solid rgba(251, 191, 36, 0.12);
   border-radius: 0 14px 14px 0;
   border-left: none;
   display: flex;
@@ -1005,6 +1149,7 @@ onMounted(() => {
   height: 100%;
   min-height: 300px;
   overflow: hidden;
+  box-shadow: 0 0 24px rgba(251, 191, 36, 0.04);
 }
 
 .dh-header {
@@ -1012,19 +1157,19 @@ onMounted(() => {
   align-items: center;
   gap: 8px;
   padding: 14px 16px;
-  border-bottom: 1px solid var(--color-border);
+  border-bottom: 1px solid rgba(251, 191, 36, 0.1);
   font-size: 13px;
   font-weight: 600;
-  color: var(--color-text-primary);
+  color: var(--color-accent-amber);
 }
 
 .dh-slot {
   flex: 1;
   display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 24px 16px;
+  align-items: stretch;
+  padding: 16px 12px;
   min-height: 200px;
+  overflow: hidden;
 }
 
 .dh-placeholder {
@@ -1067,7 +1212,7 @@ onMounted(() => {
 
 .dh-footer {
   padding: 12px 16px;
-  border-top: 1px solid var(--color-border);
+  border-top: 1px solid rgba(251, 191, 36, 0.1);
 }
 
 .dhf-label {
