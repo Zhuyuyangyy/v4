@@ -27,9 +27,10 @@ import {
   User,
   Wand2,
   Zap,
+  X,
 } from 'lucide-vue-next'
 import { sendChatMessage } from '@/lib/api'
-import type { ChatReply, ChatResource } from '@/types/api'
+import type { ChatReply, ChatResource, MultimodalContent } from '@/types/api'
 
 interface Message {
   id: number
@@ -38,7 +39,11 @@ interface Message {
   time: string
   resources?: ChatResource[]
   suggestions?: string[]
+  multimodalContents?: MultimodalContent[]
 }
+
+const fileInputRef = ref<HTMLInputElement | null>(null)
+const pendingImages = ref<Array<{ id: string; dataUrl: string; type: string }>>([])
 
 interface AgentNode {
   name: string
@@ -194,27 +199,77 @@ function runAgentPipeline(finalContent: string, resources?: ChatResource[], sugg
 
 async function sendMessage() {
   const text = inputText.value.trim()
-  if (!text || isSending.value || isStreaming.value) return
+  if ((!text && pendingImages.value.length === 0) || isSending.value || isStreaming.value) return
 
   selectedPreset.value = ''
   isSending.value = true
+
+  const multimodalContents: MultimodalContent[] = []
+  
+  if (pendingImages.value.length > 0) {
+    pendingImages.value.forEach(img => {
+      multimodalContents.push({
+        type: 'image',
+        imageData: img.dataUrl,
+        imageType: img.type,
+      })
+    })
+  }
+
+  if (text) {
+    multimodalContents.push({
+      type: 'text',
+      text,
+    })
+  }
 
   messages.value.push({
     id: Date.now(),
     role: 'user',
     content: text,
     time: new Date().toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' }),
+    multimodalContents,
   })
+  
   inputText.value = ''
+  pendingImages.value = []
   scrollToBottom()
 
   try {
-    const reply = await sendChatMessage(text)
+    const reply = await sendChatMessage(text, multimodalContents)
     runAgentPipeline(reply.content, reply.resources, reply.suggestions)
   } catch {
     const fallback = fallbackChatReply(text)
     runAgentPipeline(fallback.content, fallback.resources, fallback.suggestions)
   }
+}
+
+function handleFileSelect(event: Event) {
+  const target = event.target as HTMLInputElement
+  if (!target.files || target.files.length === 0) return
+
+  Array.from(target.files).forEach(file => {
+    if (!file.type.startsWith('image/')) return
+
+    const reader = new FileReader()
+    reader.onload = (e) => {
+      const dataUrl = e.target?.result as string
+      pendingImages.value.push({
+        id: Date.now() + Math.random().toString(36).substr(2, 9),
+        dataUrl,
+        type: file.type,
+      })
+    }
+    reader.readAsDataURL(file)
+  })
+
+  if (fileInputRef.value) {
+    fileInputRef.value.value = ''
+  }
+}
+
+function removePendingImage(id: string) {
+  pendingImages.value = pendingImages.value.filter(img => img.id !== id)
 }
 
 function usePreset(preset: (typeof presets)[number]) {
@@ -395,6 +450,11 @@ onMounted(scrollToBottom)
             </div>
             <div class="message-body">
               <div class="message-sender">{{ msg.role === 'assistant' ? 'EduMind 助手' : '你' }}</div>
+              <div v-if="msg.multimodalContents && msg.multimodalContents.length > 0" class="multimodal-container">
+                <div v-for="(content, index) in msg.multimodalContents" :key="index">
+                  <img v-if="content.type === 'image'" :src="content.imageData" class="message-image" />
+                </div>
+              </div>
               <div class="message-content" v-html="formatContent(msg.content)" />
 
               <div v-if="msg.resources?.length" class="resource-chips">
@@ -449,15 +509,31 @@ onMounted(scrollToBottom)
         </div>
 
         <div class="input-area">
+          <div class="pending-images" v-if="pendingImages.length > 0">
+            <div v-for="img in pendingImages" :key="img.id" class="pending-image-item">
+              <img :src="img.dataUrl" class="pending-image-preview" />
+              <button class="remove-image-btn" @click="removePendingImage(img.id)">
+                <X :size="14" stroke-width="2" />
+              </button>
+            </div>
+          </div>
           <div class="input-wrapper">
-            <button class="input-attach" aria-label="上传附件">
+            <input
+              ref="fileInputRef"
+              type="file"
+              class="hidden-file-input"
+              accept="image/*"
+              multiple
+              @change="handleFileSelect"
+            />
+            <button class="input-attach" aria-label="上传附件" @click="fileInputRef?.click()">
               <Paperclip :size="18" stroke-width="1.5" />
             </button>
             <input
               v-model="inputText"
               type="text"
               class="input-field"
-              placeholder="输入你的问题或需求..."
+              placeholder="输入你的问题或上传图片..."
               @keydown.enter="sendMessage"
               :disabled="isSending || isStreaming"
             />
@@ -495,6 +571,67 @@ onMounted(scrollToBottom)
   background: transparent;
   position: relative;
   z-index: 1;
+}
+
+.hidden-file-input {
+  display: none;
+}
+
+.pending-images {
+  display: flex;
+  gap: 12px;
+  padding: 8px 24px;
+  flex-wrap: wrap;
+}
+
+.pending-image-item {
+  position: relative;
+  width: 80px;
+  height: 80px;
+}
+
+.pending-image-preview {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.remove-image-btn {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: rgba(239, 68, 68, 0.9);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+
+.remove-image-btn:hover {
+  transform: scale(1.1);
+}
+
+.multimodal-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.message-image {
+  max-width: 400px;
+  max-height: 300px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  object-fit: contain;
 }
 
 .pipeline-bar {

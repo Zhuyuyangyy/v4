@@ -18,6 +18,5 @@ const appStore = useAppStore()
 <style scoped>
 .app-wrapper {
   position: relative;
-  z-index: 1;
 }
 </style>

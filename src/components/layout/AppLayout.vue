@@ -13,7 +13,6 @@ import {
   BarChart3,
   Settings,
   Sparkles,
-  Code,
   Layers,
 } from 'lucide-vue-next'
 
@@ -24,13 +23,12 @@ useScrollReveal(0.12)
 const isHomePage = computed(() => route.path === '/')
 
 const navItems = [
-  { path: '/', label: '欢迎', icon: Home },
+  { path: '/', label: '首页', icon: Home },
   { path: '/profile', label: '画像', icon: User },
   { path: '/chat', label: '对话', icon: MessageCircle },
   { path: '/resources', label: '资源', icon: BookOpen },
   { path: '/learning-path', label: '路径', icon: Map },
   { path: '/tutoring', label: '辅导', icon: GraduationCap },
-  { path: '/codelab', label: '代码', icon: Code },
   { path: '/mindmap', label: '图谱', icon: Layers },
   { path: '/evaluation', label: '评估', icon: BarChart3 },
   { path: '/settings', label: '设置', icon: Settings },
@@ -56,7 +54,7 @@ watch(
           <span class="brand-text">EduMind</span>
         </router-link>
 
-        <nav class="topbar-nav" aria-label="������">
+        <nav class="topbar-nav" aria-label="������">
           <router-link
             v-for="item in navItems"
             :key="item.path"
@@ -73,13 +71,15 @@ watch(
     </header>
 
     <!-- Main Content -->
-    <main class="main-content" id="main-content" :class="{ 'has-background': !isHomePage }">
-      <div v-if="!isHomePage" class="background-image" />
-      <router-view v-slot="{ Component }">
-        <transition name="fade" mode="out-in">
-          <component :is="Component" />
-        </transition>
-      </router-view>
+    <main class="main-content" id="main-content">
+      <div class="background-image" />
+      <div class="content-layer">
+        <router-view v-slot="{ Component }">
+          <transition name="fade" mode="out-in">
+            <component :is="Component" />
+          </transition>
+        </router-view>
+      </div>
     </main>
   </div>
 </template>
@@ -234,15 +234,10 @@ watch(
   margin-top: var(--header-height);
   min-height: calc(100vh - var(--header-height));
   position: relative;
-  overflow: hidden;
-}
-
-.main-content.has-background {
-  background: transparent;
 }
 
 .background-image {
-  position: absolute;
+  position: fixed;
   top: 0;
   left: 0;
   right: 0;
@@ -251,8 +246,13 @@ watch(
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
-  background-attachment: fixed;
-  opacity: 0.35;
+  opacity: 0.3;
   z-index: 0;
+  pointer-events: none;
+}
+
+.content-layer {
+  position: relative;
+  z-index: 1;
 }
 </style>

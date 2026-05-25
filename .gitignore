@@ -16,3 +16,26 @@ dist-ssr/
 # 环境变量
 .env
 .env.local
+
+# 临时/参考项目
+caosmos-ui-main/
+staging/
+.agents/
+
+# 工具脚本
+*.cjs
+scripts/
+tmp_*.py
+
+# 截图和临时图片
+screenshot-*.png
+screenshot_*.png
+pet_check.png
+
+# 3D 模型（根目录）
+*.blend
+*.blend1
+*.glb
+
+# Claude 工作树
+.claude/worktrees/

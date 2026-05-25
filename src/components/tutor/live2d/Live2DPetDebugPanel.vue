@@ -4,7 +4,7 @@ import type { Live2DPetPresetId } from './live2dPetPresets'
 
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 
-type Live2DPetDebugApi = NonNullable<Window['__live2dPetDebug']>
+type Live2DPetDebugApi = NonNullable<(Window & { __live2dPetDebug?: any })['__live2dPetDebug']>
 
 type RendererStatus = {
   ready: boolean
@@ -25,20 +25,20 @@ const rendererStatus = ref<RendererStatus>({
   live2dFailed: false,
   canvasCount: 0,
 })
-const motionGroupInput = ref('Tap@Body')
+const motionGroupInput = ref('TapBody')
 const motionIndexInput = ref('0')
 const isTestingMotion = ref(false)
 const testResult = ref<string | null>(null)
 
 let refreshTimer: ReturnType<typeof setInterval> | null = null
 
-const capabilityGroups = computed(() => capability.value?.groupNames.map((groupName) => ({
+const capabilityGroups = computed(() => capability.value?.groupNames.map((groupName: string) => ({
   groupName,
   count: capability.value?.groups[groupName] ?? 0,
 })) ?? [])
 
 function getDebugApi() {
-  return window.__live2dPetDebug
+  return (window as any).__live2dPetDebug
 }
 
 function readRendererStatus(): RendererStatus {

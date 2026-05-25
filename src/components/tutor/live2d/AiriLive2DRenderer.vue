@@ -212,7 +212,7 @@ async function initRenderer() {
     containerRef.value.appendChild(canvasRef.value)
 
     const model = await live2dModule.Live2DModel.from(resolvedConfig.value.modelUrl, {
-      autoInteract: false,
+      autoInteract: true,
     })
 
     if (isUnmounted || sequence !== loadSequence) {
@@ -301,7 +301,7 @@ function positionModel() {
   const baseSize = modelBaseSizeRef.value ?? readModelBaseSize(model)
   const baseWidth = baseSize.width
   const baseHeight = baseSize.height
-  const fitScale = Math.min((props.width * 0.82) / baseWidth, (props.height * 0.92) / baseHeight)
+  const fitScale = Math.min((props.width * 0.9) / baseWidth, (props.height * 0.98) / baseHeight)
   const nextScale = Math.max(0.0001, fitScale * resolvedConfig.value.scale)
 
   model.anchor.set(0.5, 1)
@@ -629,7 +629,7 @@ defineExpose({
 .airi-live2d-renderer {
   position: absolute;
   inset: 0;
-  pointer-events: none;
+  pointer-events: auto;
   transform-origin: center bottom;
 }
 

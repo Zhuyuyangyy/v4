@@ -1,7 +1,6 @@
 @import './variables.css';
 @import './animations.css';
 
-/* === Reset === */
 *,
 *::before,
 *::after {
@@ -60,29 +59,26 @@ img {
   display: block;
 }
 
-/* === Scrollbar === */
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 5px;
+  height: 5px;
 }
 ::-webkit-scrollbar-track {
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: rgba(0, 212, 255, 0.2);
+  background: rgba(0, 212, 255, 0.15);
   border-radius: 3px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(0, 212, 255, 0.4);
+  background: rgba(0, 212, 255, 0.3);
 }
 
-/* === Selection === */
 ::selection {
-  background: rgba(0, 212, 255, 0.3);
+  background: rgba(0, 212, 255, 0.25);
   color: #fff;
 }
 
-/* === App background with grid effect === */
 #app {
   position: relative;
   min-height: 100vh;
@@ -93,9 +89,9 @@ img {
   position: fixed;
   inset: 0;
   background-image:
-    linear-gradient(rgba(0, 212, 255, 0.015) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(0, 212, 255, 0.015) 1px, transparent 1px);
-  background-size: 60px 60px;
+    linear-gradient(rgba(0, 212, 255, 0.012) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 212, 255, 0.012) 1px, transparent 1px);
+  background-size: 80px 80px;
   pointer-events: none;
   z-index: 0;
 }
@@ -104,13 +100,14 @@ img {
   content: '';
   position: fixed;
   inset: 0;
-  background: radial-gradient(ellipse 80% 60% at 50% -20%, rgba(0, 212, 255, 0.03), transparent),
-              radial-gradient(ellipse 60% 50% at 80% 80%, rgba(124, 58, 237, 0.02), transparent);
+  background:
+    radial-gradient(ellipse 80% 50% at 50% -10%, rgba(0, 212, 255, 0.04), transparent),
+    radial-gradient(ellipse 50% 40% at 85% 85%, rgba(124, 58, 237, 0.025), transparent),
+    radial-gradient(ellipse 40% 30% at 10% 70%, rgba(6, 214, 160, 0.015), transparent);
   pointer-events: none;
   z-index: 0;
 }
 
-/* === Focus Visible (Accessibility) === */
 :focus-visible {
   outline: 2px solid var(--color-accent-cyan);
   outline-offset: 2px;
@@ -123,7 +120,6 @@ input:focus:not(:focus-visible) {
   outline: none;
 }
 
-/* === Reduced Motion === */
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
@@ -147,7 +143,6 @@ input:focus:not(:focus-visible) {
   }
 }
 
-/* === Utility classes === */
 .glass {
   background: var(--color-bg-glass);
   backdrop-filter: blur(20px);
@@ -176,18 +171,17 @@ input:focus:not(:focus-visible) {
   background-clip: text;
 }
 
-/* === Galaxy Labels === */
 .galaxy-label {
-  font-family: 'Outfit', 'Segoe UI', sans-serif;
+  font-family: var(--font-body);
   font-size: 12px;
   font-weight: 500;
   color: #e8edf5;
-  background: rgba(7, 7, 13, 0.8);
+  background: rgba(5, 5, 16, 0.85);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
   padding: 4px 12px;
   border-radius: 6px;
-  border: 1px solid rgba(0, 212, 255, 0.15);
+  border: 1px solid rgba(0, 212, 255, 0.12);
   pointer-events: none;
   white-space: nowrap;
   text-shadow: 0 0 8px rgba(0, 0, 0, 0.8);
@@ -195,7 +189,7 @@ input:focus:not(:focus-visible) {
 }
 .galaxy-label .pct {
   color: var(--color-accent-cyan);
-  font-family: 'JetBrains Mono', monospace;
+  font-family: var(--font-mono);
   font-size: 11px;
   margin-left: 6px;
 }
