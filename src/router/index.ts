@@ -55,8 +55,7 @@ const router = createRouter({
     },
     {
       path: '/universe',
-      name: 'universe',
-      component: () => import('@/learning-universe/components/UniverseCanvas.vue'),
+      redirect: '/learning-path',
     },
   ],
 })

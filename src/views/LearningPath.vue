@@ -4,8 +4,12 @@ import { useRouter } from 'vue-router'
 import {
   Award,
   BookOpen,
+  Bot,
   Clock,
   GitCompare,
+  Lightbulb,
+  RefreshCw,
+  Route,
   Sparkles,
   Target,
   Zap,
@@ -14,6 +18,8 @@ import { fetchLearningPath } from '@/lib/api'
 import type { StudyScenario } from '@/types/course'
 import { allCourses } from '@/components/course/CourseData'
 import GalaxyPanel from '@/components/galaxy/GalaxyPanel.vue'
+import PathReplanCompare from '@/components/learning-path/PathReplanCompare.vue'
+import type { ReplanCompareData } from '@/components/learning-path/PathReplanCompare.vue'
 import { phasesToGalaxyData } from '@/components/galaxy/composables/useGalaxyData'
 import type { GalaxySceneData } from '@/components/galaxy/galaxy.types'
 
@@ -40,79 +46,123 @@ interface PathPhase {
 const router = useRouter()
 const loaded = ref(false)
 const isLoading = ref(false)
+const galaxyPanelRef = ref<InstanceType<typeof GalaxyPanel> | null>(null)
 
 const defaultPhases: PathPhase[] = [
   {
-    title: '基础夯实',
-    period: '第 1-4 周',
+    title: '课前预习',
+    period: '路径阶段一',
     progress: 100,
     status: 'completed',
     color: '#00d4ff',
     scenario: 'preview',
     nodes: [
-      { name: 'Python 科学计算', progress: 100, duration: '1.5 周', topicId: 'ml-intro' },
-      { name: '概率论与数理统计', progress: 100, duration: '1.5 周', topicId: 'ml-intro' },
-      { name: '线性代数与矩阵运算', progress: 100, duration: '1 周', topicId: 'ml-intro' },
+      { name: '根据画像生成预习知识点', progress: 100, duration: '画像智能体 + 路径规划智能体' },
+      { name: '预习问题与学习目标', progress: 100, duration: '资源生成智能体' },
+      { name: '知识卡片 / 思维导图预览', progress: 100, duration: '多模态资源' },
     ],
   },
   {
-    title: '机器学习核心',
-    period: '第 5-10 周',
-    progress: 65,
+    title: '课中答疑',
+    period: '路径阶段二',
+    progress: 80,
     status: 'active',
-    color: '#7c3aed',
+    color: '#3b82f6',
     scenario: 'inclass',
     nodes: [
-      { name: '机器学习概论与流程', progress: 100, duration: '1 周', topicId: 'ml-intro' },
-      { name: 'KNN 与决策树', progress: 80, duration: '1.5 周', topicId: 'ml-supervised' },
-      { name: 'SVM 与集成学习', progress: 50, duration: '1.5 周', topicId: 'ml-supervised' },
-      { name: '聚类与降维', progress: 30, duration: '1 周', topicId: 'ml-unsupervised' },
-      { name: '模型评估与调优', progress: 20, duration: '1 周', topicId: 'ml-supervised' },
+      { name: '实时对话答疑', progress: 90, duration: '辅导智能体' },
+      { name: '重难点标注与解析', progress: 85, duration: '资源生成智能体' },
+      { name: '课堂知识点掌握度记录', progress: 65, duration: '评估智能体' },
     ],
   },
   {
-    title: '深度学习专题',
-    period: '第 11-16 周',
-    progress: 25,
+    title: '课后巩固',
+    period: '路径阶段三',
+    progress: 55,
     status: 'active',
-    color: '#06d6a0',
+    color: '#7c3aed',
     scenario: 'homework',
     nodes: [
-      { name: '神经网络与反向传播', progress: 40, duration: '1.5 周', topicId: 'dl-basics' },
-      { name: 'CNN 图像识别', progress: 30, duration: '2 周', topicId: 'dl-cnn' },
-      { name: 'Transformer 与注意力机制', progress: 15, duration: '2 周', topicId: 'nlp-transformer' },
-      { name: 'NLP 预训练模型应用', progress: 0, duration: '1.5 周', topicId: 'nlp-bert' },
+      { name: '课后练习与错题训练', progress: 60, duration: '资源生成智能体' },
+      { name: '知识点薄弱项标记', progress: 50, duration: '评估智能体' },
+      { name: '巩固学习资源推荐', progress: 55, duration: '路径规划智能体' },
     ],
   },
   {
-    title: '实战与拓展',
-    period: '第 17-20 周',
-    progress: 0,
-    status: 'locked',
+    title: '阶段测评',
+    period: '路径阶段四',
+    progress: 30,
+    status: 'active',
     color: '#f59e0b',
     scenario: 'exam',
     nodes: [
-      { name: 'LLM 应用开发实战', progress: 0, duration: '2 周', topicId: 'llm-rag' },
-      { name: 'AI Agent 项目', progress: 0, duration: '1.5 周', topicId: 'llm-agent' },
-      { name: '模型部署与服务', progress: 0, duration: '1 周', topicId: 'mlops-deploy' },
+      { name: '阶段掌握度评估', progress: 35, duration: '评估智能体' },
+      { name: '错因分析与薄弱点识别', progress: 30, duration: '评估智能体 + 画像智能体' },
+      { name: '生成评估报告', progress: 25, duration: '反馈智能体' },
+    ],
+  },
+  {
+    title: '期末辅导',
+    period: '路径阶段五',
+    progress: 10,
+    status: 'locked',
+    color: '#f43f5e',
+    scenario: 'exam',
+    nodes: [
+      { name: '学期知识体系梳理', progress: 15, duration: '路径规划智能体' },
+      { name: '综合复习资源生成', progress: 10, duration: '资源生成智能体' },
+      { name: '模拟测试与预测', progress: 5, duration: '评估智能体' },
+    ],
+  },
+  {
+    title: '成果沉淀',
+    period: '路径阶段六',
+    progress: 0,
+    status: 'locked',
+    color: '#06d6a0',
+    scenario: 'preview',
+    nodes: [
+      { name: '学习成果总结', progress: 0, duration: '反馈智能体' },
+      { name: '画像全面更新', progress: 0, duration: '画像智能体' },
+      { name: '下一阶段路径预规划', progress: 0, duration: '路径规划智能体' },
     ],
   },
 ]
 
 const achievements = [
-  { icon: Sparkles, title: 'Python 启航', earned: true, color: '#00d4ff' },
-  { icon: Award, title: '算法入门', earned: true, color: '#7c3aed' },
-  { icon: Zap, title: '机器学习', earned: true, color: '#06d6a0' },
-  { icon: Target, title: '深度学习', earned: false, color: '#3b82f6' },
-  { icon: BookOpen, title: '大模型实战', earned: false, color: '#f59e0b' },
-  { icon: Sparkles, title: '全栈 AI 工程师', earned: false, color: '#f43f5e' },
+  { icon: Route, title: '路径规划智能体', earned: true, color: '#00d4ff' },
+  { icon: BookOpen, title: '资源生成智能体', earned: true, color: '#3b82f6' },
+  { icon: Bot, title: '辅导智能体', earned: true, color: '#7c3aed' },
+  { icon: Target, title: '评估智能体', earned: false, color: '#f59e0b' },
+  { icon: Lightbulb, title: '反馈智能体', earned: false, color: '#06d6a0' },
+  { icon: RefreshCw, title: '画像反向更新', earned: false, color: '#f43f5e' },
 ]
 
+const replanCompare: ReplanCompareData = {
+  before: [
+    { label: '基础概念复习', color: '#00d4ff' },
+    { label: '例题训练', color: '#3b82f6' },
+    { label: '综合练习', color: '#7c3aed' },
+  ],
+  trigger: {
+    source: '阶段测评发现问题',
+    issue: '"图结构理解"掌握度仅 42%',
+    evidence: '连续 2 次答错，近 3 次对话均涉及节点关系问题',
+    icon: 'alert',
+  },
+  after: [
+    { label: '基础概念复习', color: '#00d4ff' },
+    { label: '★ 图结构补救卡片', color: '#f43f5e' },
+    { label: '★ 错题专项训练', color: '#f59e0b' },
+    { label: '综合练习', color: '#7c3aed' },
+  ],
+}
+
 const defaultWeeklyGoals = [
-  { label: '完成 Python 基础', progress: 100, target: '1 章' },
-  { label: '数据结构练习', progress: 60, target: '20 题' },
-  { label: '阅读论文', progress: 30, target: '2 篇' },
-  { label: '编程项目实战', progress: 0, target: '1 个' },
+  { label: '画像更新完成', progress: 100, target: '已完成' },
+  { label: '课前预习资源生成', progress: 60, target: '3 份' },
+  { label: '错题分析与补救', progress: 30, target: '10 题' },
+  { label: '阶段测评反馈', progress: 0, target: '进行中' },
 ]
 
 const phases = ref<PathPhase[]>(defaultPhases)
@@ -131,8 +181,8 @@ const completedNodes = computed(() => {
 const weeklyGoalsDone = computed(() => weeklyGoals.value.filter(goal => goal.progress === 100).length)
 
 const learningStats = computed(() => [
-  { label: '本周学习', value: '14.5h', change: '+18%', icon: Award },
-  { label: '完成节点', value: `${completedNodes.value}/${totalNodes.value}`, change: '持续推进', icon: GitCompare },
+  { label: '剩余任务', value: `${totalNodes.value - completedNodes.value} 项`, change: '待推进', icon: Award },
+  { label: '协同智能体', value: '6 个', change: '全部就绪', icon: GitCompare },
   { label: '总体进度', value: `${totalProgress.value}%`, change: `${completedPhases.value}/${totalPhases.value} 阶段`, icon: Sparkles },
 ])
 
@@ -167,6 +217,14 @@ function goToTutoring(scenario: StudyScenario, nodeName?: string) {
   })
 }
 
+function focusPathMap() {
+  galaxyPanelRef.value?.$el?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  if (!activePhaseId.value) {
+    const currentPhase = phases.value.find(phase => phase.status === 'active') ?? phases.value[0]
+    activePhaseId.value = currentPhase ? currentPhase.title : null
+  }
+}
+
 onMounted(() => {
   isLoading.value = true
   setTimeout(() => {
@@ -190,6 +248,7 @@ onMounted(() => {
 <template>
   <div class="lp-layout">
     <GalaxyPanel
+      ref="galaxyPanelRef"
       class="lp-galaxy"
       :galaxy-data="galaxyData"
       :active-phase-id="activePhaseId"
@@ -201,8 +260,8 @@ onMounted(() => {
     <div class="lp-hero">
       <div>
         <div class="hero-badge">学习路径</div>
-        <h1 class="hero-title">个性化<span class="gradient-text">学习路线</span></h1>
-        <p class="hero-desc">AI 为你量身定制的学习路线，稳步推进到下一个阶段。</p>
+        <h1 class="hero-title">六阶段<span class="gradient-text">学习闭环</span></h1>
+        <p class="hero-desc">课前预习 → 课中答疑 → 课后巩固 → 阶段测评 → 期末辅导 → 成果沉淀，每步由对应智能体负责。</p>
         <p v-if="isLoading" class="page-status">正在同步学习路径...</p>
       </div>
       <div class="hero-progress">
@@ -233,20 +292,20 @@ onMounted(() => {
           <span class="hp-lbl">总进度</span>
         </div>
       </div>
-      <button class="universe-btn" @click="router.push('/universe')">
+      <button class="universe-btn" @click="focusPathMap">
         <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.5">
           <circle cx="12" cy="12" r="10" />
           <path d="M12 2a15 15 0 0 0 0 20 15 15 0 0 0 0-20z" />
           <path d="M2 12h20" />
         </svg>
-        进入学习宇宙
+        查看路径星图
       </button>
     </div>
 
     <div class="course-overview">
       <div class="co-header">
         <BookOpen :size="14" stroke-width="1.5" />
-        <span>AI 课程体系</span>
+        <span>多智能体协同</span>
       </div>
       <div class="co-grid">
         <div
@@ -287,8 +346,9 @@ onMounted(() => {
       <div
         v-for="(phase, phaseIndex) in phases"
         :key="phase.title"
-        :class="['phase-card', phase.status]"
+        :class="['phase-card', phase.status, { 'active-focus': activePhaseId === phase.title }]"
         :style="{ '--p-color': phase.color }"
+        @click="onPhaseClick(phase.title)"
       >
         <div class="phase-top">
           <div class="phase-info">
@@ -317,7 +377,7 @@ onMounted(() => {
             v-for="(node, nodeIndex) in phase.nodes"
             :key="node.name"
             class="node-card"
-            @click="goToTutoring(phase.scenario, node.name)"
+            @click.stop="goToTutoring(phase.scenario, node.name)"
           >
             <div class="node-left">
               <div :class="['node-check', { done: node.progress === 100 }]">
@@ -388,7 +448,25 @@ onMounted(() => {
       </div>
     </div>
     </div>
-  </div>
+
+    <div class="replan-card">
+      <div class="replan-header">
+        <RefreshCw :size="20" stroke-width="1.5" class="replan-icon" />
+        <h2 class="replan-title">评估后路径重规划</h2>
+      </div>
+      <p class="replan-intro">
+        当阶段测评发现知识点掌握度低于阈值时，系统将自动触发路径重规划，
+        插入补救资源，并更新学生画像以影响下一轮学习路径。
+      </p>
+      <PathReplanCompare :data="replanCompare" />
+      <div class="replan-tip">
+        <Lightbulb :size="14" stroke-width="1.5" />
+        <span>评估不是终点，而是下一轮画像更新和路径优化的起点。</span>
+      </div>
+    </div>
+
+    </div>
+
 </template>
 
 <style scoped>
@@ -416,6 +494,7 @@ onMounted(() => {
   justify-content: space-between;
   align-items: center;
   gap: 24px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
 }
 
 .hero-badge {
@@ -477,6 +556,7 @@ onMounted(() => {
   cursor: pointer;
   white-space: nowrap;
   transition: all 0.2s;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
 }
 
 .universe-btn:hover {
@@ -641,12 +721,38 @@ onMounted(() => {
   flex-direction: column;
   gap: 16px;
   margin-bottom: 28px;
+  position: relative;
+}
+
+.phase-list::before {
+  content: '';
+  position: absolute;
+  top: 24px;
+  bottom: 24px;
+  left: 56px;
+  width: 1px;
+  background: linear-gradient(to bottom, rgba(0, 212, 255, 0), rgba(0, 212, 255, 0.24), rgba(124, 58, 237, 0.14), rgba(0, 212, 255, 0));
+  pointer-events: none;
 }
 
 .phase-card {
   padding: 24px;
-  border-top: 3px solid var(--p-color);
+  position: relative;
+  overflow: hidden;
+  border-left: 3px solid var(--p-color);
   transition: all 0.2s var(--ease-out);
+  box-shadow: 0 18px 44px rgba(0, 0, 0, 0.16);
+  cursor: pointer;
+}
+
+.phase-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, color-mix(in srgb, var(--p-color) 12%, transparent), transparent 34%);
+  opacity: 0;
+  transition: opacity 0.25s var(--ease-out);
+  pointer-events: none;
 }
 
 .phase-card.locked {
@@ -655,6 +761,18 @@ onMounted(() => {
 
 .phase-card:not(.locked):hover {
   border-color: var(--p-color);
+  transform: translateY(-2px);
+  box-shadow: 0 22px 52px rgba(0, 0, 0, 0.24), 0 0 0 1px color-mix(in srgb, var(--p-color) 18%, transparent);
+}
+
+.phase-card:not(.locked):hover::before,
+.phase-card.active-focus::before {
+  opacity: 1;
+}
+
+.phase-card.active-focus {
+  border-color: var(--p-color);
+  box-shadow: 0 22px 56px rgba(0, 0, 0, 0.28), 0 0 0 1px color-mix(in srgb, var(--p-color) 30%, transparent);
 }
 
 .phase-top,
@@ -776,7 +894,8 @@ onMounted(() => {
 
 .phase-progress-fill {
   height: 100%;
-  background: var(--p-color);
+  background: linear-gradient(90deg, var(--p-color), color-mix(in srgb, var(--p-color) 45%, #ffffff));
+  box-shadow: 0 0 18px color-mix(in srgb, var(--p-color) 28%, transparent);
 }
 
 .phase-nodes,
@@ -805,6 +924,7 @@ onMounted(() => {
 .node-card:hover {
   border-color: color-mix(in srgb, var(--p-color) 15%, transparent);
   background: color-mix(in srgb, var(--p-color) 4%, transparent);
+  transform: translateX(4px);
 }
 
 .node-name,
@@ -924,6 +1044,9 @@ onMounted(() => {
 .lp-layout {
   display: flex;
   min-height: calc(100vh - var(--header-height));
+  background:
+    radial-gradient(circle at 18% 12%, rgba(0, 212, 255, 0.08), transparent 30%),
+    radial-gradient(circle at 78% 8%, rgba(124, 58, 237, 0.08), transparent 28%);
 }
 
 .lp-galaxy {
@@ -932,6 +1055,7 @@ onMounted(() => {
   position: sticky;
   top: var(--header-height);
   height: calc(100vh - var(--header-height));
+  box-shadow: 18px 0 46px rgba(0, 0, 0, 0.28);
 }
 
 .lp {
@@ -948,6 +1072,66 @@ onMounted(() => {
     height: 50vh;
     position: relative;
     top: 0;
+    box-shadow: 0 18px 46px rgba(0, 0, 0, 0.24);
+  }
+}
+
+.replan-card {
+  padding: 0 40px;
+  margin-top: 28px;
+}
+
+.replan-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.replan-icon {
+  color: var(--color-accent-cyan);
+}
+
+.replan-title {
+  margin: 0;
+  color: #fff;
+  font-family: var(--font-display);
+  font-size: 20px;
+  font-weight: 400;
+}
+
+.replan-intro {
+  color: var(--color-text-secondary);
+  font-size: 13px;
+  line-height: 1.7;
+  margin-bottom: 20px;
+  padding: 14px 18px;
+  border-radius: 12px;
+  background: rgba(0, 212, 255, 0.04);
+  border: 1px solid rgba(0, 212, 255, 0.08);
+}
+
+.replan-tip {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 16px;
+  margin-top: 14px;
+  border-radius: 10px;
+  background: rgba(6, 214, 160, 0.06);
+  border: 1px solid rgba(6, 214, 160, 0.12);
+  color: rgba(255, 255, 255, 0.75);
+  font-size: 13px;
+}
+
+.replan-tip svg {
+  color: var(--color-accent-emerald);
+  flex-shrink: 0;
+}
+
+@media (max-width: 900px) {
+  .replan-card {
+    padding: 0 20px;
   }
 }
 </style>
