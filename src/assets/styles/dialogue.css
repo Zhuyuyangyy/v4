@@ -1,0 +1,91 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+.dialogue-root {
+  --bg-deep: #07060a;
+  --bg-surface: #0e0c15;
+  --bg-elevated: #161220;
+  --bg-card: #110e1a;
+  --bg-hover: #1a1628;
+
+  --gold-300: #e8d48b;
+  --gold-400: #d9bc60;
+  --gold-500: #c9a84c;
+  --gold-600: #b8923a;
+  --gold-glow: rgba(201, 168, 76, 0.15);
+
+  --teal-400: #2dd4b8;
+  --teal-500: #1a9a8a;
+  --teal-600: #147a6c;
+
+  --ruby-400: #d64a7a;
+  --ruby-500: #9e2a5a;
+  --ruby-600: #7a1e44;
+
+  --text-primary: #e8e4d8;
+  --text-secondary: #b8b2a4;
+  --text-muted: #7a7568;
+  --text-dim: #4a463c;
+
+  --border-subtle: rgba(201, 168, 76, 0.1);
+  --border-medium: rgba(201, 168, 76, 0.2);
+  --border-strong: rgba(201, 168, 76, 0.35);
+}
+
+.dialogue-root h1,
+.dialogue-root h2,
+.dialogue-root h3,
+.dialogue-root h4,
+.dialogue-root h5,
+.dialogue-root h6 {
+  font-family: "DM Serif Display", "Noto Serif SC", serif;
+  letter-spacing: -0.01em;
+}
+
+.dialogue-root ::selection {
+  background: rgba(201, 168, 76, 0.25);
+  color: #fff;
+}
+
+.dialogue-root .glass-surface {
+  background: rgba(14, 12, 21, 0.6);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+}
+
+.dialogue-root .glass-card {
+  background: linear-gradient(
+    135deg,
+    rgba(22, 18, 32, 0.7) 0%,
+    rgba(17, 14, 26, 0.5) 100%
+  );
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--border-subtle);
+}
+
+.dialogue-root .cosmic-card {
+  background: linear-gradient(135deg, rgba(22, 18, 32, 0.7) 0%, rgba(17, 14, 26, 0.5) 100%);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-color: var(--border-subtle) !important;
+}
+
+@keyframes dialogue-fade-in {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes dialogue-fade-in-up {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.dialogue-root .animate-fade-in {
+  animation: dialogue-fade-in 0.5s ease-out both;
+}
+
+.dialogue-root .animate-fade-in-up {
+  animation: dialogue-fade-in-up 0.6s ease-out both;
+}

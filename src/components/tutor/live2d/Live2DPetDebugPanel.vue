@@ -18,8 +18,8 @@ const STATE_IDS: CompanionPetState[] = ['idle', 'thinking', 'typing', 'cheer', '
 const collapsed = ref(true)
 const presetId = ref<Live2DPetPresetId>('airi_default')
 const currentState = ref<CompanionPetState>('idle')
-const capability = ref<ReturnType<Live2DPetDebugApi['getMotionCapability']>>(null)
-const hitState = ref<ReturnType<Live2DPetDebugApi['getMotionHitState']>>(null)
+const capability = ref<ReturnType<Live2DPetDebugApi['getMotionCapability']> | null>(null)
+const hitState = ref<ReturnType<Live2DPetDebugApi['getMotionHitState']> | null>(null)
 const rendererStatus = ref<RendererStatus>({
   ready: false,
   live2dFailed: false,
@@ -67,8 +67,8 @@ function refreshSnapshot() {
     return
   }
 
-  presetId.value = debug.getPresetId()
-  currentState.value = debug.getState()
+  presetId.value = debug.getPresetId() as Live2DPetPresetId
+  currentState.value = debug.getState() as CompanionPetState
   capability.value = debug.getMotionCapability()
   hitState.value = debug.getMotionHitState()
   rendererStatus.value = readRendererStatus()

@@ -187,7 +187,7 @@ function getToday() {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
 }
 
-function generateResult(answers: SurveyAnswers): ProfileResult {
+export function generateResult(answers: SurveyAnswers): ProfileResult {
   const { field, level, experience, motivation } = answers
 
   const dims = {

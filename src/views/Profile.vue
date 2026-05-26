@@ -5,6 +5,7 @@ import {
   RefreshCw,
 } from 'lucide-vue-next'
 import { useProfileSurvey, roleOptions, fieldOptions, levelOptions, experienceOptions, goalOptions, longTermGoalOptions, motivationOptions, timeOptions, resourceOptions, weeklyHourOptions, paceOptions, stepLabels } from '@/composables/useProfileSurvey'
+
 const {
   phase, currentStep, answers, result,
   analysisProgress, analysisMessage, totalSteps,
@@ -496,7 +497,6 @@ function setSlider(key: string, val: number) {
             </div>
           </div>
         </div>
-
       </div>
 
       <div class="res-divider" />
@@ -527,7 +527,7 @@ function setSlider(key: string, val: number) {
           </div>
         </div>
 
-        <!-- Preferences -->
+        <!-- Preferences + Timeline -->
         <div class="res-side">
           <div class="res-prefs">
             <h2 class="res-sec-title">学习偏好</h2>
@@ -537,6 +537,22 @@ function setSlider(key: string, val: number) {
                 <span class="pref-val">{{ p.value }}</span>
               </li>
             </ul>
+          </div>
+          <div class="res-timeline">
+            <h2 class="res-sec-title">画像演变</h2>
+            <div class="tl-list">
+              <div v-for="(t, i) in result.timeline" :key="i" class="tl-item">
+                <div class="tl-marker">
+                  <span :class="['tl-dot', { 'tl-dot--cur': i === 0 }]" />
+                  <span v-if="i < result.timeline.length - 1" class="tl-line" />
+                </div>
+                <div class="tl-body">
+                  <time class="tl-date">{{ t.date }}</time>
+                  <span class="tl-event">{{ t.event }}</span>
+                  <span v-if="t.score" :class="['tl-score', t.type]">{{ t.score }}</span>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -952,6 +968,29 @@ function setSlider(key: string, val: number) {
   font-weight: 500;
   color: var(--color-text-primary);
 }
+
+/* ── Timeline ── */
+.tl-list { display: flex; flex-direction: column; }
+.tl-item { display: flex; gap: 14px; }
+.tl-marker { display: flex; flex-direction: column; align-items: center; width: 12px; flex-shrink: 0; }
+.tl-dot {
+  width: 10px; height: 10px; border-radius: 50%;
+  background: rgba(0,212,255,0.08);
+  border: 2px solid rgba(0,212,255,0.2);
+  flex-shrink: 0;
+}
+.tl-dot--cur { background: var(--color-accent-cyan); border-color: var(--color-accent-cyan); box-shadow: 0 0 10px rgba(0,212,255,0.3); }
+.tl-line { width: 1px; flex: 1; background: rgba(255,255,255,0.05); margin: 4px 0; }
+.tl-body { padding-bottom: 20px; display: flex; flex-direction: column; gap: 2px; }
+.tl-date { font-size: 12px; font-family: var(--font-mono); color: var(--color-text-tertiary); }
+.tl-event { font-size: 14px; color: var(--color-text-primary); }
+.tl-score {
+  display: inline-block; font-size: 12px; font-family: var(--font-mono);
+  margin-top: 4px; padding: 2px 10px; border-radius: 4px;
+  font-weight: 600; width: fit-content;
+}
+.tl-score.up { color: var(--color-accent-emerald); background: rgba(6,214,160,0.08); }
+.tl-score.down { color: var(--color-accent-rose); background: rgba(244,63,94,0.08); }
 
 /* ================================================================= */
 /* RESPONSIVE                                                         */

@@ -1,0 +1,81 @@
+<script setup lang="ts">
+import { ref, onMounted, onUnmounted } from 'vue'
+import CosmicBackground from '@/components/dialogue/CosmicBackground.vue'
+import ChatView from '@/components/dialogue/ChatView.vue'
+import XunfeiSidebar from '@/components/dialogue/XunfeiSidebar.vue'
+import DashboardView from '@/components/dialogue/DashboardView.vue'
+import HistoryView from '@/components/dialogue/HistoryView.vue'
+import RecommendView from '@/components/dialogue/RecommendView.vue'
+import {
+  activeMenu, isSidebarCollapsed, exportNotification,
+} from '@/composables/dialogue/useAppState'
+import '@/assets/styles/dialogue.css'
+import { MessageSquare, GraduationCap, Compass, History } from 'lucide-vue-next'
+
+const navItems = [
+  { id: 'chat' as const, title: '对话', icon: MessageSquare },
+  { id: 'recommend' as const, title: '课程', icon: GraduationCap },
+  { id: 'portrait-report' as const, title: '画像报告', icon: Compass },
+  { id: 'history' as const, title: '历史', icon: History },
+]
+
+function isNavActive(id: string) {
+  return activeMenu.value === id
+}
+
+function handleNavClick(id: typeof activeMenu.value) {
+  activeMenu.value = id
+}
+</script>
+
+<template>
+  <div class="dialogue-root flex h-screen text-[var(--text-primary)] overflow-hidden font-sans selection:bg-amber-500/25 selection:text-white relative z-0" style="background: var(--bg-deep)">
+    <CosmicBackground />
+
+    <!-- Notification Banner -->
+    <div v-if="exportNotification" class="fixed top-4 left-1/2 -translate-x-1/2 z-50 glass-card py-2.5 px-6 rounded-xl shadow-lg text-xs font-medium flex items-center gap-2 animate-fade-in">
+      <span class="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
+      <span class="text-amber-200">{{ exportNotification }}</span>
+    </div>
+
+    <!-- Left Navigation Sidebar -->
+    <aside class="flex flex-col items-center transition-all duration-300 relative select-none shrink-0 border-r"
+      :class="[
+        isSidebarCollapsed
+          ? 'w-0 overflow-hidden opacity-0 p-0 pointer-events-none border-transparent'
+          : 'w-[76px] py-8 opacity-100',
+        'border-[var(--border-subtle)]'
+      ]"
+    >
+      <nav class="flex-1 w-full space-y-4 px-2">
+        <button
+          v-for="item in navItems" :key="item.id"
+          @click="handleNavClick(item.id)"
+          class="relative w-full py-3.5 rounded-2xl flex flex-col items-center justify-center gap-2 transition-all duration-200 text-center border cursor-pointer group"
+          :class="isNavActive(item.id)
+            ? 'glass-card text-white font-bold shadow-lg'
+            : 'border-transparent text-[var(--text-muted)] hover:text-[var(--text-secondary)] hover:bg-[var(--bg-hover)]'"
+        >
+          <span v-if="isNavActive(item.id)"
+            class="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-7 bg-gradient-to-b from-amber-400 to-amber-600 rounded-r-full shadow-[0_0_10px_rgba(217,188,96,0.5)]"
+          />
+          <component :is="item.icon" class="w-5.5 h-5.5 transition-transform duration-200 group-hover:scale-105"
+            :class="isNavActive(item.id) ? 'text-amber-300' : 'text-[var(--text-muted)] group-hover:text-amber-400/70'" />
+          <span class="text-[11px] tracking-wider transition-all duration-200"
+            :class="isNavActive(item.id) ? 'text-amber-200 font-semibold' : 'text-[var(--text-dim)] group-hover:text-[var(--text-secondary)]'"
+          >{{ item.title }}</span>
+        </button>
+      </nav>
+    </aside>
+
+    <!-- Main Content Area -->
+    <main class="flex-1 flex overflow-hidden relative"
+      :class="activeMenu === 'recommend' ? 'flex-row-reverse' : 'flex-row'">
+      <XunfeiSidebar v-if="activeMenu === 'chat' || activeMenu === 'recommend'" :side="activeMenu === 'recommend' ? 'right' : 'left'" />
+      <ChatView v-if="activeMenu === 'chat'" />
+      <DashboardView v-if="activeMenu === 'portrait-report'" />
+      <HistoryView v-if="activeMenu === 'history'" />
+      <RecommendView v-if="activeMenu === 'recommend'" />
+    </main>
+  </div>
+</template>

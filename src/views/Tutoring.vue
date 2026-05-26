@@ -13,14 +13,11 @@ import {
   Layers,
   Lightbulb,
   MessageCircle,
-  Paperclip,
   ThumbsDown,
   ThumbsUp,
-  X,
   Zap,
 } from 'lucide-vue-next'
 import type { Course, StudyScenario, TutorSubMode } from '@/types/course'
-import type { MultimodalContent } from '@/types/api'
 import {
   allCourses,
   dlFlowStages,
@@ -34,7 +31,6 @@ import {
 import CodeCanvas from '@/components/canvas/CodeCanvas.vue'
 import FlowChart from '@/components/canvas/FlowChart.vue'
 import MindMap from '@/components/mindmap/MindMap.vue'
-import DesktopPet from '@/components/tutor/DesktopPet.vue'
 import EmotionMascot from '@/components/tutor/EmotionMascot.vue'
 import ScenarioSelector from '@/components/tutor/ScenarioSelector.vue'
 import { useCourseStore } from '@/store/course'
@@ -47,7 +43,7 @@ const courseStore = useCourseStore()
 const question = ref('')
 const currentScenario = ref<StudyScenario>('preview')
 const currentSubMode = ref<TutorSubMode>('concept-overview')
-const history = ref<Array<{ q: string; a: string; time: string; helpful?: boolean; scenario: StudyScenario; submode: TutorSubMode; multimodalContents?: MultimodalContent[] }>>([])
+const history = ref<Array<{ q: string; a: string; time: string; helpful?: boolean; scenario: StudyScenario; submode: TutorSubMode }>>([])
 const showHistory = ref(false)
 const showCoursePanel = ref(false)
 const selectedCourseId = ref(courseStore.currentCourseId)
@@ -55,8 +51,6 @@ const activeModalPanel = ref<'code' | 'flow' | 'mindmap' | null>(null)
 const isAsking = ref(false)
 const petCompletedAt = ref(0)
 const petLastResult = ref<'success' | 'error' | null>(null)
-const fileInputRef = ref<HTMLInputElement | null>(null)
-const pendingImages = ref<Array<{ id: string; dataUrl: string; type: string }>>([])
 
 const selectedCourse = computed(() => allCourses.find(c => c.id === selectedCourseId.value))
 
@@ -85,7 +79,7 @@ const activeSubModeConfig = computed(() => activeScenarioConfig.value?.subModes.
 const sessionHistory = [
   { title: '机器学习预习', count: 6, date: '今天', scenario: 'preview' as StudyScenario },
   { title: 'KNN 算法调试', count: 12, date: '昨天', scenario: 'homework' as StudyScenario },
-  { title: '期末考试冲刺', count: 9, date: '3 天前', scenario: 'exam' as StudyScenario },
+  { title: '期末考试冲刺', count: 9, date: '3天前', scenario: 'exam' as StudyScenario },
 ]
 
 const scenarioColors: Record<string, string> = {
@@ -99,7 +93,7 @@ function generateAnswer(q: string): string {
   const template = scenarioAnswerTemplates[currentScenario.value]
   if (template) return template(q, currentSubMode.value)
 
-  return `## 关于「${q || '这个问题'}」的讲解\n\n这是一个很好的问题。在当前「${activeSubModeConfig.value?.label ?? '问答'}」模式下，我会从概念、原理和应用三个层次帮你拆开。\n\n**关键要点：**\n1. 先确认核心概念\n2. 再解释背后的原理\n3. 最后给出实际应用或练习建议\n\n> 如果某一步不清楚，可以继续追问，我会换一种方式讲。`
+  return `关于「${q}」的解答\n\n这是一个很好的问题。在当前「${activeSubModeConfig.value?.label ?? ''}」模式下，我来为你详细解答\n\n**关键要点：**\n1. 核心概念\n2. 原理说明\n3. 实际应用\n\n> 如果需要更详细的解释可以继续追问。`
 }
 
 function formatAnswer(text: string) {
@@ -115,27 +109,19 @@ function formatAnswer(text: string) {
 
 async function askQuestion() {
   const q = question.value.trim()
-  if ((!q && pendingImages.value.length === 0) || isAsking.value) return
+  if (!q || isAsking.value) return
 
   const now = new Date().toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })
-
-  const multimodalContents: MultimodalContent[] = []
-  pendingImages.value.forEach(img => {
-    multimodalContents.push({ type: 'image', imageData: img.dataUrl, imageType: img.type })
-  })
-  if (q) {
-    multimodalContents.push({ type: 'text', text: q })
-  }
-
   let answer = generateAnswer(q)
   let petResult: 'success' | 'error' = 'success'
   isAsking.value = true
 
   try {
-    const response = await askTutoringQuestion(q, currentSubMode.value, currentScenario.value, multimodalContents)
+    const response = await askTutoringQuestion(q, currentSubMode.value, currentScenario.value)
     answer = response.answer
   } catch {
     petResult = 'error'
+    // Keep the original local tutoring fallback when the API server is unavailable.
   } finally {
     isAsking.value = false
   }
@@ -146,7 +132,6 @@ async function askQuestion() {
     time: now,
     scenario: currentScenario.value,
     submode: currentSubMode.value,
-    multimodalContents,
   })
 
   emotion.recordQuestion(q.slice(0, 20))
@@ -154,35 +139,6 @@ async function askQuestion() {
   petLastResult.value = petResult
   petCompletedAt.value = Date.now()
   question.value = ''
-  pendingImages.value = []
-}
-
-function handleFileSelect(event: Event) {
-  const target = event.target as HTMLInputElement
-  if (!target.files || target.files.length === 0) return
-
-  Array.from(target.files).forEach(file => {
-    if (!file.type.startsWith('image/')) return
-
-    const reader = new FileReader()
-    reader.onload = (e) => {
-      const dataUrl = e.target?.result as string
-      pendingImages.value.push({
-        id: Date.now() + Math.random().toString(36).substr(2, 9),
-        dataUrl,
-        type: file.type,
-      })
-    }
-    reader.readAsDataURL(file)
-  })
-
-  if (fileInputRef.value) {
-    fileInputRef.value.value = ''
-  }
-}
-
-function removePendingImage(id: string) {
-  pendingImages.value = pendingImages.value.filter(img => img.id !== id)
 }
 
 function setHelpful(index: number, helpful: boolean) {
@@ -265,7 +221,7 @@ onMounted(() => {
         <h1 class="hero-title">
           <span class="gradient-text">{{ activeSubModeConfig?.label ?? '即时答疑' }}</span>
         </h1>
-        <p class="hero-desc">{{ activeScenarioConfig?.description ?? '多模式深度讲解，随时解决你的学习问题。' }}</p>
+        <p class="hero-desc">{{ activeScenarioConfig?.description ?? '多模式深度讲解，随时随地解决你的学习问题' }}</p>
       </div>
       <div class="hero-actions">
         <button class="hero-btn course-btn" @click="showCoursePanel = !showCoursePanel">
@@ -303,7 +259,7 @@ onMounted(() => {
           </div>
           <div class="history-info">
             <span class="history-title">{{ s.title }}</span>
-            <span class="history-meta">{{ s.count }} 条对话 · {{ s.date }}</span>
+            <span class="history-meta">{{ s.count }} 条对�?· {{ s.date }}</span>
           </div>
           <ChevronRight :size="16" stroke-width="1.5" class="history-chevron" />
         </button>
@@ -324,12 +280,7 @@ onMounted(() => {
             <div class="question-bubble">
               <div class="bubble-avatar q-avatar">Q</div>
               <div class="bubble-content">
-                <div v-if="item.multimodalContents && item.multimodalContents.length" class="bubble-images">
-                  <template v-for="(content, idx) in item.multimodalContents" :key="idx">
-                    <img v-if="content.type === 'image'" :src="content.imageData" class="bubble-image" />
-                  </template>
-                </div>
-                <p v-if="item.q">{{ item.q }}</p>
+                <p>{{ item.q }}</p>
                 <span class="bubble-meta">
                   <span class="bubble-tag" :style="{ '--t-clr': scenarioColors[item.scenario] || '#00d4ff' }">
                     {{ scenarioConfigs.find(s => s.key === item.scenario)?.label }}
@@ -369,8 +320,8 @@ onMounted(() => {
           <div class="empty-mode-icon">
             <MessageCircle :size="36" stroke-width="1" />
           </div>
-          <h3 class="empty-title">{{ activeSubModeConfig?.label ?? '即时答疑' }}</h3>
-          <p class="empty-desc">{{ activeSubModeConfig?.desc ?? '选择一个问题开始，我会一步步帮你讲清楚。' }}</p>
+          <h3 class="empty-title">{{ activeSubModeConfig?.label ?? '��ʼѧϰ' }}</h3>
+          <p class="empty-desc">{{ activeSubModeConfig?.desc ?? 'ѡ��һ�����⿪ʼ���������������' }}</p>
 
           <div class="topic-grid">
             <div v-for="(qItem, idx) in scenarioQuestions" :key="idx" class="topic-group">
@@ -399,34 +350,15 @@ onMounted(() => {
           <div class="mode-indicator">
             {{ activeScenarioConfig?.label ?? '辅导' }} · {{ activeSubModeConfig?.label ?? '问答' }}
           </div>
-          <div v-if="pendingImages.length > 0" class="pending-images">
-            <div v-for="img in pendingImages" :key="img.id" class="pending-image-item">
-              <img :src="img.dataUrl" class="pending-image-preview" />
-              <button class="remove-image-btn" @click="removePendingImage(img.id)">
-                <X :size="14" stroke-width="2" />
-              </button>
-            </div>
-          </div>
           <div class="input-row">
-            <input
-              ref="fileInputRef"
-              type="file"
-              class="hidden-file-input"
-              accept="image/*"
-              multiple
-              @change="handleFileSelect"
-            />
-            <button class="attach-btn" @click="fileInputRef?.click()" aria-label="上传图片">
-              <Paperclip :size="16" stroke-width="1.5" />
-            </button>
             <input
               v-model="question"
               type="text"
-              placeholder="输入问题或上传图片..."
+              :placeholder="`�ڡ�${activeSubModeConfig?.label ?? '�ʴ�'}��ģʽ����������...`"
               @keydown.enter="askQuestion"
               :disabled="isAsking"
             />
-            <button class="ask-btn" @click="askQuestion" :disabled="(!question.trim() && pendingImages.length === 0) || isAsking">
+            <button class="ask-btn" @click="askQuestion" :disabled="!question.trim() || isAsking">
               <Zap :size="16" stroke-width="2" />
               <span>{{ isAsking ? '思考中' : '提问' }}</span>
             </button>
@@ -438,7 +370,7 @@ onMounted(() => {
               @click="toggleModalPanel('flow')"
             >
               <GitCompare :size="13" stroke-width="1.5" />
-              <span>流程图</span>
+              <span>����ͼ</span>
             </button>
             <button
               :class="['mm-btn', { active: activeModalPanel === 'code' }]"
@@ -465,9 +397,9 @@ onMounted(() => {
           <div class="modal-panel">
             <div class="mp-header">
               <span class="mp-title">
-                {{ activeModalPanel === 'flow' ? '数据处理流程图' : activeModalPanel === 'code' ? '交互式代码画板' : '知识思维导图' }}
+                {{ activeModalPanel === 'flow' ? '���ݴ�������ͼ' : activeModalPanel === 'code' ? '����ʽ���뻭��' : '֪ʶ˼ά��ͼ' }}
               </span>
-              <button class="mp-close" @click="activeModalPanel = null">×</button>
+              <button class="mp-close" @click="activeModalPanel = null">��</button>
             </div>
             <div class="mp-body">
               <FlowChart
@@ -486,7 +418,7 @@ onMounted(() => {
                 :nodes="currentMindMap ?? []"
                 :title="selectedCourse?.name ?? '知识体系'"
                 :color="selectedCourse?.color ?? '#00d4ff'"
-                @node-click="node => { question = '讲解一下' + node.label; activeModalPanel = null }"
+                @node-click="node => { question = '����һ��' + node.label; activeModalPanel = null }"
               />
             </div>
           </div>
@@ -494,30 +426,30 @@ onMounted(() => {
       </transition>
 
       <div class="tutor-sidebar">
-        <button class="dh-toggle" :class="{ active: true }" title="向日葵学伴">
+        <button class="dh-toggle" :class="{ active: true }" title="AI ������">
           <Bot :size="18" stroke-width="1.5" />
         </button>
 
         <div class="dh-panel">
           <div class="dh-header">
             <Bot :size="18" stroke-width="1.5" />
-            <span>向日葵学伴</span>
+            <span>AI ������</span>
           </div>
 
-          <div class="dh-slot">
-            <DesktopPet
-              :is-asking="isAsking"
-              :draft-question="question"
-              :last-completed-at="petCompletedAt"
-              :last-result="petLastResult"
-              :current-mood="emotion.currentMood"
-            />
+          <div id="digital-human-slot" class="dh-slot">
+            <div class="dh-placeholder">
+              <div class="dhp-icon">
+                <Bot :size="36" stroke-width="1" />
+              </div>
+              <span class="dhp-text">AI ������</span>
+              <span class="dhp-hint">���ɺ��ڴ���ʾ</span>
+            </div>
           </div>
 
           <div class="dh-footer">
-            <div class="dhf-label">当前讲解</div>
+            <div class="dhf-label">��ǰ����</div>
             <p class="dhf-text">
-              {{ history.length > 0 ? `${history[history.length - 1].q.slice(0, 50)}...` : '等待提问中...' }}
+              {{ history.length > 0 ? `${history[history.length - 1].q.slice(0, 50)}...` : '�ȴ�������...' }}
             </p>
           </div>
         </div>
@@ -980,82 +912,6 @@ onMounted(() => {
   backdrop-filter: blur(20px);
 }
 
-.hidden-file-input {
-  display: none;
-}
-
-.pending-images {
-  display: flex;
-  gap: 10px;
-  margin-bottom: 10px;
-  flex-wrap: wrap;
-}
-
-.pending-image-item {
-  position: relative;
-  width: 72px;
-  height: 72px;
-}
-
-.pending-image-preview {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  border-radius: 10px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-.remove-image-btn {
-  position: absolute;
-  top: -6px;
-  right: -6px;
-  width: 22px;
-  height: 22px;
-  border-radius: 50%;
-  background: rgba(239, 68, 68, 0.9);
-  color: white;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border: none;
-  cursor: pointer;
-  transition: transform 0.2s;
-}
-
-.remove-image-btn:hover {
-  transform: scale(1.1);
-}
-
-.attach-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 10px;
-  color: var(--color-text-tertiary);
-  border-radius: 12px;
-  transition: color 0.2s var(--ease-out);
-  flex-shrink: 0;
-}
-
-.attach-btn:hover {
-  color: var(--color-accent-cyan);
-}
-
-.bubble-images {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin-bottom: 8px;
-}
-
-.bubble-image {
-  max-width: 280px;
-  max-height: 200px;
-  border-radius: 10px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  object-fit: contain;
-}
-
 .mode-indicator {
   font-size: 11px;
   color: var(--color-accent-cyan);
@@ -1133,15 +989,15 @@ onMounted(() => {
 
 .dh-toggle:hover,
 .dh-toggle.active {
-  border-color: var(--color-accent-amber);
-  color: var(--color-accent-amber);
+  border-color: var(--color-accent-cyan);
+  color: var(--color-accent-cyan);
 }
 
 .dh-panel {
   width: 260px;
   margin-left: -1px;
   background: var(--color-bg-card);
-  border: 1px solid rgba(251, 191, 36, 0.12);
+  border: 1px solid var(--color-border);
   border-radius: 0 14px 14px 0;
   border-left: none;
   display: flex;
@@ -1149,7 +1005,6 @@ onMounted(() => {
   height: 100%;
   min-height: 300px;
   overflow: hidden;
-  box-shadow: 0 0 24px rgba(251, 191, 36, 0.04);
 }
 
 .dh-header {
@@ -1157,19 +1012,19 @@ onMounted(() => {
   align-items: center;
   gap: 8px;
   padding: 14px 16px;
-  border-bottom: 1px solid rgba(251, 191, 36, 0.1);
+  border-bottom: 1px solid var(--color-border);
   font-size: 13px;
   font-weight: 600;
-  color: var(--color-accent-amber);
+  color: var(--color-text-primary);
 }
 
 .dh-slot {
   flex: 1;
   display: flex;
-  align-items: stretch;
-  padding: 16px 12px;
+  align-items: center;
+  justify-content: center;
+  padding: 24px 16px;
   min-height: 200px;
-  overflow: hidden;
 }
 
 .dh-placeholder {
@@ -1212,7 +1067,7 @@ onMounted(() => {
 
 .dh-footer {
   padding: 12px 16px;
-  border-top: 1px solid rgba(251, 191, 36, 0.1);
+  border-top: 1px solid var(--color-border);
 }
 
 .dhf-label {
