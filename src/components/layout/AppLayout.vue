@@ -21,6 +21,7 @@ const appStore = useAppStore()
 useScrollReveal(0.12)
 
 const isHomePage = computed(() => route.path === '/')
+const isUniversePage = computed(() => route.path === '/learning-path')
 
 const navItems = [
   { path: '/', label: '欢迎', icon: Home },
@@ -71,7 +72,7 @@ watch(
     </header>
 
     <!-- Main Content -->
-    <main class="main-content" id="main-content" :class="{ 'has-background': !isHomePage }">
+    <main class="main-content" id="main-content" :class="{ 'has-background': !isHomePage, 'universe-active': isUniversePage }">
       <div v-if="!isHomePage" class="background-image" />
       <router-view v-slot="{ Component }">
         <transition name="fade" mode="out-in">
@@ -237,6 +238,10 @@ watch(
 
 .main-content.has-background {
   background: transparent;
+}
+
+.main-content.universe-active {
+  overflow: hidden;
 }
 
 .background-image {
