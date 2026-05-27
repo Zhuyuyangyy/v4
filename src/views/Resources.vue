@@ -5,12 +5,9 @@ import {
   ArrowRight,
   ChevronRight,
   Code,
-  Compass,
   FileText,
   LayoutGrid,
   Map as MapIcon,
-  Network,
-  Orbit,
   PenTool,
   Play,
   Route,
@@ -19,32 +16,17 @@ import {
 } from 'lucide-vue-next'
 import { fetchRecommendedResources, fetchResources } from '@/lib/api'
 import type { ApiResource } from '@/types/api'
-import ResourceConstellationView from '@/components/resources/ResourceConstellationView.vue'
-import ResourceMetroView from '@/components/resources/ResourceMetroView.vue'
-import ResourceMatrixView from '@/components/resources/ResourceMatrixView.vue'
-import ResourceSunburstView from '@/components/resources/ResourceSunburstView.vue'
-import ResourceOrbitalView from '@/components/resources/ResourceOrbitalView.vue'
 
 type ResourceType = 'all' | 'doc' | 'mindmap' | 'exercise' | 'video' | 'code' | 'flowchart'
-type ViewMode = 'constellation' | 'metro' | 'matrix' | 'sunburst' | 'orbital'
 
 const router = useRouter()
 
 const activeFilter = ref<ResourceType>('all')
-const activeView = ref<ViewMode>('constellation')
 const searchQuery = ref('')
 const selectedResource = ref<ApiResource | null>(null)
 const showDetail = ref(false)
 const bookmarks = ref<Set<number>>(new Set([0, 3]))
 const isLoading = ref(false)
-
-const viewTabs: { key: ViewMode; label: string; icon: unknown }[] = [
-  { key: 'constellation', label: '星座图', icon: Compass },
-  { key: 'metro', label: '地铁图', icon: Route },
-  { key: 'matrix', label: '认知矩阵', icon: Network },
-  { key: 'sunburst', label: '同心圆', icon: Sparkles },
-  { key: 'orbital', label: '学习轨道', icon: Orbit },
-]
 
 const filterTabs: { key: ResourceType; label: string; icon: unknown }[] = [
   { key: 'all', label: '全部', icon: LayoutGrid },
@@ -150,20 +132,6 @@ onMounted(async () => {
       </div>
     </div>
 
-    <div class="view-switcher">
-      <div class="view-switcher-group">
-        <button
-          v-for="v in viewTabs"
-          :key="v.key"
-          :class="['view-btn', { active: activeView === v.key }]"
-          @click="activeView = v.key"
-        >
-          <component :is="v.icon" :size="14" stroke-width="1.5" />
-          <span>{{ v.label }}</span>
-        </button>
-      </div>
-    </div>
-
     <div class="toolbar">
       <div class="filter-group">
         <button
@@ -184,12 +152,6 @@ onMounted(async () => {
     </div>
 
     <div v-if="isLoading" class="loading-state">正在同步学习资源...</div>
-
-    <ResourceConstellationView v-if="activeView === 'constellation'" />
-    <ResourceMetroView v-if="activeView === 'metro'" />
-    <ResourceMatrixView v-if="activeView === 'matrix'" />
-    <ResourceSunburstView v-if="activeView === 'sunburst'" />
-    <ResourceOrbitalView v-if="activeView === 'orbital'" />
 
     <transition name="scale-in">
       <div v-if="showDetail && selectedResource" class="modal-overlay" @click.self="closeDetail">
@@ -300,47 +262,6 @@ onMounted(async () => {
   color: #8892b0;
   line-height: 1.6;
   max-width: 480px;
-}
-
-/* ── View switcher ── */
-.view-switcher {
-  padding: 0 40px 16px;
-  animation: rs-float-up 0.6s ease 0.1s both;
-}
-
-.view-switcher-group {
-  display: flex;
-  gap: 3px;
-  padding: 4px;
-  border-radius: 14px;
-  background: rgba(12, 12, 30, 0.6);
-  backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.06);
-  width: fit-content;
-}
-
-.view-btn {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 9px 18px;
-  border-radius: 10px;
-  font-size: 12px;
-  font-weight: 500;
-  color: #8892b0;
-  transition: all 0.25s ease;
-  white-space: nowrap;
-}
-
-.view-btn:hover {
-  color: #e8edf5;
-  background: rgba(255, 255, 255, 0.04);
-}
-
-.view-btn.active {
-  color: #fff;
-  background: linear-gradient(135deg, #7c3aed, #00d4ff);
-  box-shadow: 0 2px 16px rgba(124, 58, 237, 0.25), 0 0 20px rgba(0, 212, 255, 0.1);
 }
 
 /* ── Toolbar ── */
@@ -784,9 +705,6 @@ onMounted(async () => {
 
 @media (max-width: 900px) {
   .res-hero { padding: 32px 20px 20px; }
-  .view-switcher { padding: 0 20px 12px; }
-  .view-switcher-group { width: 100%; overflow-x: auto; }
-  .view-btn { flex: 1; justify-content: center; padding: 8px 10px; }
   .toolbar { padding: 0 20px 20px; flex-direction: column; align-items: stretch; }
   .loading-state { padding: 0 20px 20px; }
   .search-box input { width: 100%; }

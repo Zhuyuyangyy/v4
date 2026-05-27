@@ -172,6 +172,27 @@
     </aside>
   </Transition>
 
+  <!-- ─── Viz Overlay (centered card popup) ─── -->
+  <Transition name="viz-fade">
+    <div v-if="showVizOverlay && activeViz" class="viz-overlay" @click.self="closeVizOverlay">
+      <div class="viz-card">
+        <div class="viz-card-header">
+          <h3 class="drawer-title">{{ vizTitle }}</h3>
+          <button class="drawer-close glass-button" @click="closeVizOverlay">
+            <X :size="14" />
+          </button>
+        </div>
+        <div class="viz-card-body">
+          <ResourceConstellationView v-if="activeViz === 'constellation'" />
+          <ResourceMetroView v-if="activeViz === 'metro'" />
+          <ResourceMatrixView v-if="activeViz === 'matrix'" />
+          <ResourceSunburstView v-if="activeViz === 'sunburst'" />
+          <ResourceOrbitalView v-if="activeViz === 'orbital'" />
+        </div>
+      </div>
+    </div>
+  </Transition>
+
   <!-- Top center floating nav bar (always visible) -->
   <nav class="nav-bar-wrapper">
     <div class="nav-bar glass-panel-strong">
@@ -191,12 +212,17 @@
 
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
-import { X, BarChart3, Map, GitBranch, Search } from '@lucide/vue'
+import { X, BarChart3, Map, GitBranch, Search, Compass, Route, Network, Sparkles, Orbit } from '@lucide/vue'
 import { useUniverseStore } from '../../stores/universeStore'
 import { courses } from '../../data/courses'
 import { learningPaths } from '../../data/learningPaths'
 import type { LearningPath } from '../../types'
 import RadarChart from './RadarChart.vue'
+import ResourceConstellationView from '@/components/resources/ResourceConstellationView.vue'
+import ResourceMetroView from '@/components/resources/ResourceMetroView.vue'
+import ResourceMatrixView from '@/components/resources/ResourceMatrixView.vue'
+import ResourceSunburstView from '@/components/resources/ResourceSunburstView.vue'
+import ResourceOrbitalView from '@/components/resources/ResourceOrbitalView.vue'
 
 const props = withDefaults(defineProps<{
   visible: boolean
@@ -219,15 +245,41 @@ const graphH = 500
 
 const streak = computed(() => store.learningStreak)
 
+const vizTabIds = ['constellation', 'metro', 'matrix', 'sunburst', 'orbital']
+const showVizOverlay = ref(false)
+const activeViz = ref<string | null>(null)
+
+const vizTitle = computed(() => {
+  const map: Record<string, string> = {
+    constellation: '星座图', metro: '地铁图', matrix: '认知矩阵', sunburst: '同心圆', orbital: '学习轨道',
+  }
+  return activeViz.value ? map[activeViz.value] || '' : ''
+})
+
+function closeVizOverlay() {
+  showVizOverlay.value = false
+  activeViz.value = null
+}
+
 const tabs = [
-  { id: 'dashboard', label: '仪表盘', icon: BarChart3 },
   { id: 'paths', label: '路径', icon: Map },
+  { id: 'dashboard', label: '仪表盘', icon: BarChart3 },
   { id: 'graph', label: '图谱', icon: GitBranch },
+  { id: 'constellation', label: '星座图', icon: Compass },
+  { id: 'metro', label: '地铁图', icon: Route },
+  { id: 'matrix', label: '认知矩阵', icon: Network },
+  { id: 'sunburst', label: '同心圆', icon: Sparkles },
+  { id: 'orbital', label: '学习轨道', icon: Orbit },
 ]
 
 watch(() => props.initialTab, (t) => { activeTab.value = t }, { immediate: true })
 
 function onNavTabClick(tabId: string) {
+  if (vizTabIds.includes(tabId)) {
+    activeViz.value = tabId
+    showVizOverlay.value = true
+    return
+  }
   activeTab.value = tabId
   if (!props.visible) {
     emit('open')
@@ -402,19 +454,24 @@ const graphEdges = computed(() => {
 .nav-bar {
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 2px;
   padding: 5px;
   border-radius: var(--radius-full);
   pointer-events: auto;
   border: 1px solid var(--glass-border);
+  max-width: 92vw;
+  overflow-x: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
 }
+.nav-bar::-webkit-scrollbar { display: none; }
 
 .nav-btn {
   display: flex;
   align-items: center;
-  gap: 5px;
-  padding: 6px 16px;
-  font-size: 13px;
+  gap: 4px;
+  padding: 5px 12px;
+  font-size: 12px;
   font-weight: 500;
   color: var(--text-muted);
   background: transparent;
@@ -424,6 +481,7 @@ const graphEdges = computed(() => {
   transition: all var(--duration-fast) var(--ease-out-expo);
   font-family: inherit;
   white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .nav-btn:hover {
@@ -615,5 +673,59 @@ const graphEdges = computed(() => {
 .compass-slide-leave-active { transition: all 0.25s ease; }
 .compass-slide-enter-from { opacity: 0; transform: translateX(-60px); }
 .compass-slide-leave-to { opacity: 0; transform: translateX(-40px); }
+
+/* ─── Viz Overlay ─── */
+.viz-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(5, 5, 16, 0.7);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 300;
+  padding: 20px;
+}
+
+.viz-card {
+  background: var(--bg-glass-strong);
+  backdrop-filter: blur(40px);
+  -webkit-backdrop-filter: blur(40px);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--glass-shadow-lg), 0 0 80px rgba(186, 104, 200, 0.12);
+  width: 96vw;
+  max-width: 1500px;
+  height: 92vh;
+  display: flex;
+  flex-direction: column;
+  animation: vizIn 0.35s var(--ease-out-expo) both;
+}
+
+.viz-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 20px;
+  border-bottom: 1px solid var(--glass-border);
+  flex-shrink: 0;
+}
+
+.viz-card-body {
+  flex: 1;
+  overflow: auto;
+  padding: 0;
+}
+
+@keyframes vizIn {
+  from { opacity: 0; transform: scale(0.92) translateY(12px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+.viz-fade-enter-active { transition: opacity 0.25s ease; }
+.viz-fade-leave-active { transition: opacity 0.2s ease; }
+.viz-fade-enter-from,
+.viz-fade-leave-to { opacity: 0; }
 
 </style>

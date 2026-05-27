@@ -26,8 +26,8 @@ const isUniversePage = computed(() => route.path === '/learning-path')
 const navItems = [
   { path: '/', label: '欢迎', icon: Home },
   { path: '/dialogue', label: '智能对话', icon: MessageCircle },
+  { path: '/learning-path', label: '星图路径', icon: Map },
   { path: '/resources', label: '资源', icon: BookOpen },
-  { path: '/learning-path', label: '路径', icon: Map },
   { path: '/tutoring', label: '辅导', icon: GraduationCap },
   { path: '/codelab', label: '代码', icon: Code },
   { path: '/mindmap', label: '图谱', icon: Layers },
