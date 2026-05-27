@@ -32,6 +32,9 @@ screenshot-*.png
 screenshot_*.png
 pet_check.png
 
+# 生成的 Tailwind CSS
+_tailwind.css
+
 # 3D 模型（根目录）
 *.blend
 *.blend1

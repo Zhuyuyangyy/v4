@@ -6,14 +6,12 @@ import { useScrollReveal } from '@/composables/useScrollReveal'
 import {
   Home,
   MessageCircle,
-  BookOpen,
   Map,
-  GraduationCap,
   BarChart3,
   Settings,
   Sparkles,
-  Code,
   Layers,
+  Library,
 } from 'lucide-vue-next'
 
 const route = useRoute()
@@ -22,14 +20,13 @@ useScrollReveal(0.12)
 
 const isHomePage = computed(() => route.path === '/')
 const isUniversePage = computed(() => route.path === '/learning-path')
+const isEduMindPage = computed(() => route.path === '/edu-mind')
 
 const navItems = [
   { path: '/', label: '欢迎', icon: Home },
   { path: '/dialogue', label: '智能对话', icon: MessageCircle },
   { path: '/learning-path', label: '星图路径', icon: Map },
-  { path: '/resources', label: '资源', icon: BookOpen },
-  { path: '/tutoring', label: '辅导', icon: GraduationCap },
-  { path: '/codelab', label: '代码', icon: Code },
+  { path: '/edu-mind', label: '辅导资源', icon: Library },
   { path: '/mindmap', label: '图谱', icon: Layers },
   { path: '/evaluation', label: '评估', icon: BarChart3 },
   { path: '/settings', label: '设置', icon: Settings },
@@ -55,7 +52,7 @@ watch(
           <span class="brand-text">EduMind</span>
         </router-link>
 
-        <nav class="topbar-nav" aria-label="������">
+        <nav class="topbar-nav" aria-label="主导航">
           <router-link
             v-for="item in navItems"
             :key="item.path"
@@ -72,8 +69,12 @@ watch(
     </header>
 
     <!-- Main Content -->
-    <main class="main-content" id="main-content" :class="{ 'has-background': !isHomePage, 'universe-active': isUniversePage }">
-      <div v-if="!isHomePage" class="background-image" />
+    <main class="main-content" id="main-content" :class="{
+      'has-background': !isHomePage && !isEduMindPage,
+      'universe-active': isUniversePage,
+      'edu-mind-active': isEduMindPage,
+    }">
+      <div v-if="!isHomePage && !isEduMindPage" class="background-image" />
       <router-view v-slot="{ Component }">
         <transition name="fade" mode="out-in">
           <component :is="Component" />
@@ -242,6 +243,11 @@ watch(
 
 .main-content.universe-active {
   overflow: hidden;
+}
+
+.main-content.edu-mind-active {
+  overflow: visible;
+  background: transparent;
 }
 
 .background-image {

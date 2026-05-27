@@ -22,19 +22,9 @@ const router = createRouter({
       redirect: '/dialogue',
     },
     {
-      path: '/resources',
-      name: 'resources',
-      component: () => import('@/views/Resources.vue'),
-    },
-    {
       path: '/learning-path',
       name: 'learning-path',
       component: () => import('@/views/LearningPath.vue'),
-    },
-    {
-      path: '/tutoring',
-      name: 'tutoring',
-      component: () => import('@/views/Tutoring.vue'),
     },
     {
       path: '/evaluation',
@@ -47,14 +37,14 @@ const router = createRouter({
       component: () => import('@/views/Settings.vue'),
     },
     {
-      path: '/codelab',
-      name: 'codelab',
-      component: () => import('@/views/CodeLab.vue'),
-    },
-    {
       path: '/mindmap',
       name: 'mindmap',
       component: () => import('@/views/MindMapView.vue'),
+    },
+    {
+      path: '/edu-mind',
+      name: 'edu-mind',
+      component: () => import('@/views/EduMind.vue'),
     },
     {
       path: '/universe',

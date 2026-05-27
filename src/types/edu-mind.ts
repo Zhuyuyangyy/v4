@@ -1,0 +1,43 @@
+export type ResourceCategory = '全部' | '文档' | '思维导图' | '流程图' | '习题' | '视频' | '代码'
+
+export type Difficulty = '全部难度' | '初级' | '中级' | '高级'
+
+export interface Resource {
+  id: string
+  title: string
+  description: string
+  category: ResourceCategory
+  tags: string[]
+  date: string
+  views: number
+  starred: boolean
+  featured?: boolean
+  difficulty: Difficulty
+  author: string
+  rating?: number
+  estimatedTime?: string
+  contentMarkdown?: string
+}
+
+export interface Recommendation {
+  id: string
+  title: string
+  category: ResourceCategory
+  views: number
+  starred: boolean
+  iconType: string
+}
+
+export interface CollectionItem {
+  id: string
+  title: string
+  category: ResourceCategory
+  date: string
+}
+
+export interface UserStats {
+  weeklyHours: number
+  goalHours: number
+  level: number
+  name: string
+}
