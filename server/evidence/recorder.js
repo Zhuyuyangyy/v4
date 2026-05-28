@@ -1,0 +1,91 @@
+import fs from 'node:fs'
+import path from 'node:path'
+import { fileURLToPath } from 'node:url'
+
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = path.dirname(__filename)
+const tracesDir = path.join(__dirname, '..', 'evidence-data')
+
+function ensureDir() {
+  if (!fs.existsSync(tracesDir)) {
+    fs.mkdirSync(tracesDir, { recursive: true })
+  }
+}
+
+function tracesPath() {
+  return path.join(tracesDir, 'traces.json')
+}
+
+function readTraces() {
+  ensureDir()
+  const fp = tracesPath()
+  if (!fs.existsSync(fp)) return []
+  try {
+    return JSON.parse(fs.readFileSync(fp, 'utf8'))
+  } catch {
+    return []
+  }
+}
+
+function writeTraces(traces) {
+  ensureDir()
+  fs.writeFileSync(tracesPath(), JSON.stringify(traces, null, 2), 'utf8')
+}
+
+export function recordTrace(trace) {
+  const traces = readTraces()
+  traces.push(trace)
+  const kept = traces.slice(-200)
+  writeTraces(kept)
+  return trace
+}
+
+export function getTraces(limit = 50, offset = 0) {
+  const traces = readTraces()
+  return traces.slice(-(limit + offset)).slice(0, limit).reverse()
+}
+
+export function getTraceSummary() {
+  const traces = readTraces()
+  const totalTraces = traces.length
+  const fallbackCount = traces.filter(t => t.fallbackUsed).length
+  const riskFlagCount = traces.filter(t => t.riskFlags && t.riskFlags.length > 0).length
+
+  const agentCounts = {}
+  let totalDurationMs = 0
+  for (const t of traces) {
+    if (t.agents) {
+      for (const a of t.agents) {
+        agentCounts[a] = (agentCounts[a] || 0) + 1
+      }
+    }
+    if (t.durationMs) {
+      totalDurationMs += t.durationMs
+    }
+  }
+
+  return {
+    totalTraces,
+    fallbackCount,
+    fallbackRate: totalTraces > 0 ? Math.round((fallbackCount / totalTraces) * 100) : 0,
+    riskFlagCount,
+    riskRate: totalTraces > 0 ? Math.round((riskFlagCount / totalTraces) * 100) : 0,
+    avgDurationMs: totalTraces > 0 ? Math.round(totalDurationMs / totalTraces) : 0,
+    agentCounts,
+    lastTraceAt: totalTraces > 0 ? traces[traces.length - 1].timestamp : null,
+  }
+}
+
+export function buildTrace({ requestId, agents, inputsSummary, outputsSummary, evidence, riskFlags, fallbackUsed, durationMs }) {
+  return {
+    requestId: requestId || `req-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+    timestamp: new Date().toISOString(),
+    agents: agents || [],
+    inputsSummary: inputsSummary || '',
+    outputsSummary: outputsSummary || '',
+    evidence: evidence || [],
+    riskFlags: riskFlags || [],
+    fallbackUsed: fallbackUsed || false,
+    durationMs: durationMs || 0,
+  }
+}
