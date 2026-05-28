@@ -109,3 +109,155 @@ export type ProfileAnalyzeResponse = ProfileResult
 export interface LatestProfileResponse {
   result: ProfileResult | null
 }
+
+export interface AgentTrace {
+  agentId: string
+  agentName: string
+  role: string
+  input: string
+  process: string
+  output: string
+  confidence: number
+  evidenceTags: string[]
+  timestamp: string
+  status: 'running' | 'completed' | 'pending' | 'error'
+}
+
+export interface LearningWorkflowResponse {
+  workflowId: string
+  startTime: string
+  endTime: string
+  agents: AgentTrace[]
+  summary: string
+  profileSnapshot: Record<string, unknown>
+}
+
+export interface GeneratedResource {
+  id: string
+  concept: string
+  example: string
+  exercise: string
+  mistakeReminder: string
+  recommendReason: string
+  evidence: {
+    profileSource: string
+    evaluationReason: string
+    pathStage: string
+    formatReason: string
+  }
+}
+
+export interface EvidenceTrace {
+  traceId: string
+  workflowId: string
+  agentId: string
+  agentName: string
+  input: string
+  output: string
+  confidence: number
+  evidenceTags: string[]
+  timestamp: string
+  duration: number
+}
+
+export interface EvidenceSummary {
+  workflowId: string
+  totalAgents: number
+  completedAgents: number
+  totalDuration: number
+  traceCount: number
+  keyFindings: string[]
+  profileUpdates: Array<{
+    field: string
+    before: string
+    after: string
+    evidence: string
+  }>
+  pathAdjustments: Array<{
+    reason: string
+    addedNodes: string[]
+    removedNodes: string[]
+  }>
+}
+
+export interface AgentResult {
+  agentName: string
+  input: string
+  output: unknown
+  confidence: number
+  evidence: string[]
+  durationMs: number
+  status: string
+  fallbackUsed: boolean
+}
+
+export interface TraceRecord {
+  requestId: string
+  timestamp: string
+  agents: string[]
+  inputsSummary: string
+  outputsSummary: string
+  evidence: string[]
+  riskFlags: string[]
+  fallbackUsed: boolean
+  durationMs: number
+}
+
+export interface ResourceGenerateRequest {
+  profile?: ProfileResult
+  weaknesses?: Array<{ tag: string; count: number }>
+  topic: string
+  resourceType: string
+}
+
+export interface ResourcePackage {
+  concept: string
+  example: { title: string; description: string; steps: string[] }
+  exercise: { title: string; questions: Array<{ question: string; options: string[]; correctAnswer: string; explanation: string }> }
+  errorTip: string
+  recommendReason: string
+  profileEvidence: string
+}
+
+export interface ResourceGenerateResponse {
+  resourcePackage: ResourcePackage
+  agentResults: AgentResult[]
+  trace: TraceRecord
+}
+
+export interface EvidenceTracesResponse {
+  items: TraceRecord[]
+  total: number
+}
+
+export interface EvidenceSummaryResponse {
+  totalTraces: number
+  fallbackCount: number
+  fallbackRate: number
+  riskFlagCount: number
+  riskRate: number
+  avgDurationMs: number
+  agentCounts: Record<string, number>
+  lastTraceAt: string | null
+  llmAvailable: boolean
+}
+
+export interface PathReplanResponse {
+  path: LearningPathResponse & { replanReason?: string }
+  evaluation: unknown
+  agentResults: AgentResult[]
+  trace: TraceRecord
+}
+
+export interface TutorAgentResponse {
+  answer: string
+  agentResults: AgentResult[]
+  trace: TraceRecord
+}
+
+export interface FullEvaluationResponse {
+  evaluation: unknown
+  reflection: unknown
+  agentResults: AgentResult[]
+  trace: TraceRecord
+}

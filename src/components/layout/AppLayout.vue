@@ -12,6 +12,7 @@ import {
   Sparkles,
   Layers,
   Library,
+  ShieldCheck,
 } from 'lucide-vue-next'
 
 const route = useRoute()
@@ -29,6 +30,7 @@ const navItems = [
   { path: '/edu-mind', label: '辅导资源', icon: Library },
   { path: '/mindmap', label: '图谱', icon: Layers },
   { path: '/evaluation', label: '评估', icon: BarChart3 },
+  { path: '/evidence', label: '证据链', icon: ShieldCheck },
   { path: '/settings', label: '设置', icon: Settings },
 ]
 watch(

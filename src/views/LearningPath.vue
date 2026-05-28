@@ -63,6 +63,10 @@
         :faq-id="modalFaqId"
         @close="activeModal = null"
       />
+
+      <transition name="path-panel">
+        <PathComparisonPanel v-if="showPathComparison" @close="showPathComparison = false" />
+      </transition>
     </div>
   </template>
 
@@ -79,6 +83,7 @@ import AssessmentModal from '../components/ui/AssessmentModal.vue'
 import LabTaskModal from '../components/ui/LabTaskModal.vue'
 import CodePlaygroundModal from '../components/ui/CodePlaygroundModal.vue'
 import FAQDetailModal from '../components/ui/FAQDetailModal.vue'
+import PathComparisonPanel from '../components/path/PathComparisonPanel.vue'
 
 const store = useUniverseStore()
 const panelMode = ref<'mini' | 'standard' | 'learning'>('standard')
@@ -87,6 +92,7 @@ const navCompassTab = ref('dashboard')
 const universeRef = ref<InstanceType<typeof UniverseCanvas> | null>(null)
 
 const activeModal = ref<'assessment' | 'lab' | 'code' | 'faq' | null>(null)
+const showPathComparison = ref(true)
 const modalCourseId = ref(0)
 const modalLabId = ref('')
 const modalCodeId = ref('')
