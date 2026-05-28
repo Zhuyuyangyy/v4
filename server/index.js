@@ -32,6 +32,8 @@ import {
   orchestrateFullEvaluation,
   orchestrateFullRun,
   orchestrateKnowledgePath,
+  runLearningWorkflow,
+  runResourceGeneration,
 } from './agents/orchestrator.js'
 import { getTraces, getTraceSummary, buildTrace, recordTrace, setTraceRecordedHook } from './evidence/recorder.js'
 import { validateResourceGenerateInput } from './schemas.js'
@@ -147,7 +149,63 @@ const server = http.createServer(async (req, res) => {
 
   try {
     if (req.method === 'GET' && pathname === '/api/health') {
-      sendJson(res, 200, { ok: true })
+      sendJson(res, 200, {
+        ok: true,
+        version: '2.0.0',
+        features: ['multi-agent', 'llm-provider', 'evidence-recorder'],
+        llmConfigured: !!(process.env.LLM_API_KEY && process.env.LLM_BASE_URL && process.env.LLM_MODEL),
+      })
+      return
+    }
+
+    if (req.method === 'POST' && pathname === '/api/agents/run') {
+      const body = await readJson(req)
+      const result = await runLearningWorkflow(body)
+      const riskFlags = result.agents
+        .filter(a => a.fallbackUsed)
+        .map(a => `agent ${a.agentName} used fallback`)
+      recordTrace({
+        requestId: result.workflowId,
+        traceId: result.traceId,
+        timestamp: new Date().toISOString(),
+        workflowType: 'learning-workflow',
+        userProfileSummary: {
+          level: body.level || 'intermediate',
+          totalScore: body.totalScore || 63,
+        },
+        agents: result.agents.map(a => ({
+          agentId: a.agentId,
+          agentName: a.agentName,
+          status: a.status,
+          confidence: a.confidence,
+          fallbackUsed: a.fallbackUsed,
+          durationMs: a.durationMs,
+        })),
+        generatedResources: result.personalizedResources,
+        riskFlags,
+        fallbackUsed: result.fallbackUsed,
+        durationMs: result.durationMs,
+      })
+      sendJson(res, 200, result)
+      return
+    }
+
+    if (req.method === 'POST' && pathname === '/api/resources/generate') {
+      const body = await readJson(req)
+      const result = await runResourceGeneration(body)
+      sendJson(res, 200, result)
+      return
+    }
+
+    if (req.method === 'GET' && pathname === '/api/evidence/traces') {
+      const limit = Math.min(Number(searchParams.get('limit')) || 50, 100)
+      const offset = Number(searchParams.get('offset')) || 0
+      sendJson(res, 200, { items: getTraces(limit, offset) })
+      return
+    }
+
+    if (req.method === 'GET' && pathname === '/api/evidence/summary') {
+      sendJson(res, 200, getTraceSummary())
       return
     }
 

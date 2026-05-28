@@ -7,6 +7,7 @@ import { runReflectionAgent } from './reflection-agent.js'
 import { runKnowledgePathAgent } from './knowledge-path-agent.js'
 import { buildTrace, recordTrace } from '../evidence/recorder.js'
 import { AGENT_NAMES } from '../schemas.js'
+import { generateStructuredJson } from '../llm/provider.js'
 
 export async function orchestrateProfileAnalysis(answers) {
   const start = Date.now()
@@ -212,5 +213,310 @@ export async function orchestrateKnowledgePath({ profile }) {
     knowledgePath: knowledgePathResult.output,
     agentResults: [knowledgePathResult],
     trace,
+  }
+}
+
+function uid() {
+  return `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`
+}
+
+function makeAgentResult(agentId, agentName, inputSummary, outputSummary, confidence, evidence, durationMs, fallbackUsed) {
+  return {
+    agentId,
+    agentName,
+    status: 'completed',
+    inputSummary,
+    outputSummary,
+    confidence,
+    evidence,
+    durationMs,
+    fallbackUsed,
+  }
+}
+
+async function runAgent(agentId, agentName, systemPrompt, userPrompt, fallbackFn) {
+  const start = Date.now()
+  const result = await generateStructuredJson({
+    systemPrompt,
+    userPrompt,
+    fallback: fallbackFn,
+    taskType: agentId,
+  })
+  return makeAgentResult(
+    agentId,
+    agentName,
+    userPrompt.slice(0, 120),
+    typeof result.data === 'object' ? JSON.stringify(result.data).slice(0, 200) : String(result.data).slice(0, 200),
+    result.data?.confidence ?? 0.8,
+    result.data?.evidence ?? [],
+    Date.now() - start,
+    result.fallbackUsed,
+  )
+}
+
+function profileFallback(input) {
+  const weaknesses = input.weaknesses || ['学习速度', '专注力', '创造力']
+  const strengths = input.strengths || ['逻辑思维']
+  return {
+    confidence: 0.75,
+    evidence: [
+      `识别薄弱点: ${weaknesses.join(', ')}`,
+      `优势维度: ${strengths.join(', ')}`,
+    ],
+    profileSummary: {
+      level: input.level || 'intermediate',
+      totalScore: input.totalScore || 63,
+      weaknesses,
+      strengths,
+      learningStyle: input.learningStyle || '视觉型',
+    },
+    recommendations: [
+      `优先巩固 ${weaknesses[0]}，每天安排 20 分钟专项训练`,
+      `继续发挥 ${strengths[0]} 优势，用在关键任务里`,
+      '建议每两周复盘一次学习进度',
+    ],
+  }
+}
+
+function resourceFallback(input) {
+  const topic = input.topic || '机器学习'
+  return {
+    confidence: 0.7,
+    evidence: [`基于主题 "${topic}" 生成个性化资源`],
+    resources: [
+      { type: 'video', title: `${topic} 入门精讲`, difficulty: 'beginner', estimatedMinutes: 45, tags: [topic, '基础'] },
+      { type: 'doc', title: `${topic} 核心概念速查`, difficulty: 'intermediate', estimatedMinutes: 20, tags: [topic, '概念'] },
+      { type: 'exercise', title: `${topic} 实战练习集`, difficulty: 'intermediate', estimatedMinutes: 60, tags: [topic, '练习'] },
+      { type: 'project', title: `${topic} 小项目实战`, difficulty: 'advanced', estimatedMinutes: 120, tags: [topic, '实战'] },
+    ],
+  }
+}
+
+function pathFallback(input) {
+  const currentPhase = input.currentPhase || '核心进阶'
+  return {
+    confidence: 0.72,
+    evidence: [`当前阶段: ${currentPhase}`, '基于画像分析调整路径'],
+    pathAdjustment: {
+      action: 'replan',
+      reason: `基于学习画像，建议在 "${currentPhase}" 阶段增加薄弱点专项训练`,
+      adjustedNodes: [
+        { name: '薄弱点专项训练', duration: '1 周', priority: 'high' },
+        { name: '核心概念巩固', duration: '1.5 周', priority: 'medium' },
+        { name: '进阶内容推进', duration: '2 周', priority: 'normal' },
+      ],
+    },
+  }
+}
+
+function tutorFallback(input) {
+  const question = input.question || '当前学习问题'
+  return {
+    confidence: 0.7,
+    evidence: [`问题: ${question}`],
+    explanation: `关于 "${question}"，建议从定义、例子、应用三个层次理解：\n\n1. 定义：用一句话说清楚核心概念\n2. 例子：找一个最小例子验证理解\n3. 应用：说明它在实际场景中解决什么问题`,
+    followUpQuestions: [
+      '用更简单的话解释一下',
+      '给我一个代码示例',
+      '出几道相关练习题',
+    ],
+  }
+}
+
+function evaluationFallback(input) {
+  const accuracy = input.accuracy ?? 82
+  return {
+    confidence: 0.68,
+    evidence: [`当前正确率: ${accuracy}%`],
+    evaluation: {
+      overallScore: accuracy,
+      strengths: ['概念理解', '基础应用'],
+      weaknesses: ['综合运用', '边界情况处理'],
+      suggestions: [
+        '增加综合练习频率',
+        '关注边界情况和异常处理',
+        '定期回顾已学内容',
+      ],
+    },
+  }
+}
+
+function reflectionFallback(input) {
+  return {
+    confidence: 0.65,
+    evidence: ['基于本次学习闭环的总结'],
+    summary: '本次学习闭环已完成画像分析、资源推荐、路径规划和评估反馈四个环节。',
+    nextActions: [
+      { action: '开始薄弱点专项训练', priority: 'high', estimatedTime: '20 分钟/天' },
+      { action: '完成推荐资源中的入门精讲', priority: 'medium', estimatedTime: '45 分钟' },
+      { action: '一周后重新评估学习进度', priority: 'normal', estimatedTime: '15 分钟' },
+    ],
+  }
+}
+
+export async function runLearningWorkflow(input = {}) {
+  const workflowId = uid()
+  const traceId = `trace-${uid()}`
+  const workflowStart = Date.now()
+
+  const profileInput = {
+    level: input.level || 'intermediate',
+    totalScore: input.totalScore || 63,
+    weaknesses: input.weaknesses || ['学习速度', '专注力'],
+    strengths: input.strengths || ['逻辑思维'],
+    learningStyle: input.learningStyle || '视觉型',
+  }
+
+  const profileResult = await runAgent(
+    'profile-agent',
+    'ProfileAgent',
+    '你是一个学习画像分析专家。根据用户的学习数据，分析学习画像并识别薄弱点。返回 JSON 格式结果，包含 confidence, evidence, profileSummary, recommendations 字段。',
+    `分析以下学习画像数据: ${JSON.stringify(profileInput)}`,
+    () => profileFallback(profileInput),
+  )
+
+  const profileData = profileResult.fallbackUsed
+    ? profileFallback(profileInput)
+    : (await extractData(profileResult)) || profileFallback(profileInput)
+
+  const resourceInput = {
+    topic: input.topic || '机器学习',
+    weaknesses: profileData.profileSummary?.weaknesses || profileInput.weaknesses,
+    level: profileData.profileSummary?.level || profileInput.level,
+  }
+
+  const resourceResult = await runAgent(
+    'resource-agent',
+    'ResourceAgent',
+    '你是一个个性化学习资源推荐专家。根据用户画像和薄弱点，生成个性化学习资源。返回 JSON 格式结果，包含 confidence, evidence, resources 字段。每个 resource 包含 type, title, difficulty, estimatedMinutes, tags。',
+    `为以下学习者生成个性化资源: ${JSON.stringify(resourceInput)}`,
+    () => resourceFallback(resourceInput),
+  )
+
+  const resourceData = resourceResult.fallbackUsed
+    ? resourceFallback(resourceInput)
+    : (await extractData(resourceResult)) || resourceFallback(resourceInput)
+
+  const pathInput = {
+    currentPhase: input.currentPhase || '核心进阶',
+    weaknesses: profileData.profileSummary?.weaknesses || profileInput.weaknesses,
+    completedTopics: input.completedTopics || ['Python 基础', '数据结构入门'],
+  }
+
+  const pathResult = await runAgent(
+    'path-agent',
+    'PathAgent',
+    '你是一个学习路径规划专家。根据用户画像和当前进度，规划或调整学习路径。返回 JSON 格式结果，包含 confidence, evidence, pathAdjustment 字段。pathAdjustment 包含 action, reason, adjustedNodes。',
+    `为以下学习者调整学习路径: ${JSON.stringify(pathInput)}`,
+    () => pathFallback(pathInput),
+  )
+
+  const pathData = pathResult.fallbackUsed
+    ? pathFallback(pathInput)
+    : (await extractData(pathResult)) || pathFallback(pathInput)
+
+  const tutorInput = {
+    question: input.question || input.topic || '当前学习问题',
+    mode: input.tutorMode || 'explain',
+    level: profileData.profileSummary?.level || profileInput.level,
+  }
+
+  const tutorResult = await runAgent(
+    'tutor-agent',
+    'TutorAgent',
+    '你是一个教学讲解专家。根据学生的问题和水平，提供清晰的讲解和答疑。返回 JSON 格式结果，包含 confidence, evidence, explanation, followUpQuestions 字段。',
+    `回答以下学习问题: ${JSON.stringify(tutorInput)}`,
+    () => tutorFallback(tutorInput),
+  )
+
+  const evaluationInput = {
+    accuracy: input.accuracy ?? 82,
+    completedLessons: input.completedLessons ?? 47,
+    totalScore: profileData.profileSummary?.totalScore || profileInput.totalScore,
+  }
+
+  const evaluationResult = await runAgent(
+    'evaluation-agent',
+    'EvaluationAgent',
+    '你是一个学习评估专家。根据学习数据评估学习效果并给出反馈。返回 JSON 格式结果，包含 confidence, evidence, evaluation 字段。evaluation 包含 overallScore, strengths, weaknesses, suggestions。',
+    `评估以下学习数据: ${JSON.stringify(evaluationInput)}`,
+    () => evaluationFallback(evaluationInput),
+  )
+
+  const evalData = evaluationResult.fallbackUsed
+    ? evaluationFallback(evaluationInput)
+    : (await extractData(evaluationResult)) || evaluationFallback(evaluationInput)
+
+  const reflectionInput = {
+    profileSummary: profileData.profileSummary || profileInput,
+    resourceCount: resourceData.resources?.length || 4,
+    pathAdjustment: pathData.pathAdjustment?.action || 'replan',
+    evaluationScore: evalData.evaluation?.overallScore || evaluationInput.accuracy,
+  }
+
+  const reflectionResult = await runAgent(
+    'reflection-agent',
+    'ReflectionAgent',
+    '你是一个学习反思专家。根据整个学习闭环的结果，总结并规划下一步行动。返回 JSON 格式结果，包含 confidence, evidence, summary, nextActions 字段。每个 nextAction 包含 action, priority, estimatedTime。',
+    `总结本次学习闭环并规划下一步: ${JSON.stringify(reflectionInput)}`,
+    () => reflectionFallback(reflectionInput),
+  )
+
+  const reflectionData = reflectionResult.fallbackUsed
+    ? reflectionFallback(reflectionInput)
+    : (await extractData(reflectionResult)) || reflectionFallback(reflectionInput)
+
+  const agents = [profileResult, resourceResult, pathResult, tutorResult, evaluationResult, reflectionResult]
+
+  const anyFallbackUsed = agents.some(a => a.fallbackUsed)
+
+  return {
+    workflowId,
+    decision: anyFallbackUsed ? 'fallback-completed' : 'llm-completed',
+    agents,
+    personalizedResources: resourceData.resources || [],
+    pathAdjustment: pathData.pathAdjustment || null,
+    evaluationUpdate: evalData.evaluation || null,
+    nextActions: reflectionData.nextActions || [],
+    traceId,
+    durationMs: Date.now() - workflowStart,
+    fallbackUsed: anyFallbackUsed,
+  }
+}
+
+function extractData(agentResult) {
+  try {
+    const raw = agentResult.outputSummary
+    if (typeof raw === 'string') {
+      return JSON.parse(raw)
+    }
+    return raw
+  } catch {
+    return null
+  }
+}
+
+export async function runResourceGeneration(input = {}) {
+  const resourceInput = {
+    topic: input.topic || '机器学习',
+    weaknesses: input.weaknesses || ['学习速度', '专注力'],
+    level: input.level || 'intermediate',
+    resourceTypes: input.resourceTypes || ['video', 'doc', 'exercise', 'project'],
+  }
+
+  const start = Date.now()
+  const result = await generateStructuredJson({
+    systemPrompt: '你是一个个性化学习资源生成专家。根据用户需求生成学习资源。返回 JSON 格式结果，包含 resources 数组，每个 resource 包含 type, title, description, difficulty, estimatedMinutes, tags 字段。',
+    userPrompt: `生成学习资源: ${JSON.stringify(resourceInput)}`,
+    fallback: () => resourceFallback(resourceInput),
+    taskType: 'resource-generation',
+  })
+
+  return {
+    resources: result.data?.resources || resourceFallback(resourceInput).resources,
+    provider: result.provider,
+    model: result.model,
+    fallbackUsed: result.fallbackUsed,
+    durationMs: Date.now() - start,
   }
 }
