@@ -15,6 +15,13 @@ import type {
   GeneratedResource,
   EvidenceTrace,
   EvidenceSummary,
+  ResourceGenerateRequest,
+  ResourceGenerateResponse,
+  EvidenceTracesResponse,
+  EvidenceSummaryResponse,
+  PathReplanResponse,
+  TutorAgentResponse,
+  FullEvaluationResponse,
 } from '@/types/api'
 import { useAppStore } from '@/store'
 
@@ -137,10 +144,41 @@ export function generateResources(topic?: string) {
   })
 }
 
-export function fetchEvidenceTraces() {
-  return requestJson<{ traces: EvidenceTrace[] }>('/api/evidence/traces')
+export function generateResource(payload: ResourceGenerateRequest) {
+  return requestJson<ResourceGenerateResponse>('/api/resources/generate', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  })
+}
+
+export function fetchEvidenceTraces(limit = 50, offset = 0) {
+  const params = new URLSearchParams()
+  params.set('limit', String(limit))
+  params.set('offset', String(offset))
+  return requestJson<EvidenceTracesResponse>(`/api/evidence/traces?${params.toString()}`)
 }
 
 export function fetchEvidenceSummary() {
-  return requestJson<EvidenceSummary>('/api/evidence/summary')
+  return requestJson<EvidenceSummaryResponse>('/api/evidence/summary')
+}
+
+export function agentPathReplan(payload: { profile?: unknown; evaluation?: unknown; currentPath?: unknown }) {
+  return requestJson<PathReplanResponse>('/api/agents/path-replan', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  })
+}
+
+export function agentTutoring(payload: { question: string; mode: string; profile?: unknown; resources?: unknown[] }) {
+  return requestJson<TutorAgentResponse>('/api/agents/tutor', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  })
+}
+
+export function agentEvaluate(payload: { profile?: unknown; learningData?: unknown; exerciseResults?: unknown }) {
+  return requestJson<FullEvaluationResponse>('/api/agents/evaluate', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  })
 }

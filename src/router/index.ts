@@ -55,6 +55,11 @@ const router = createRouter({
       path: '/universe',
       redirect: '/learning-path',
     },
+    {
+      path: '/evidence',
+      name: 'evidence',
+      component: () => import('@/views/Evidence.vue'),
+    },
   ],
 })
 

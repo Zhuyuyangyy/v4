@@ -95,5 +95,84 @@
     "originalPath": ["指针基础", "二级指针", "图基础", "BFS", "综合练习"],
     "adjustedPath": ["指针基础", "二级指针", "BFS基础", "BFS visited标记", "综合练习"],
     "adjustmentReason": "根据画像分析发现图结构薄弱点集中在BFS的visited标记逻辑，调整路径聚焦该知识点"
-  }
+  },
+  "traceRecords": {
+    "reportGeneratedAt": "2026-05-28T10:00:00.000Z",
+    "competitionTrack": "A3 - 基于大模型的个性化资源生成与学习多智能体系统",
+    "summary": {
+      "totalTraces": 8,
+      "fallbackCount": 8,
+      "fallbackRate": 100,
+      "riskFlagCount": 0,
+      "riskRate": 0,
+      "avgDurationMs": 12,
+      "agentCounts": {
+        "ProfileAgent": 4,
+        "ResourceAgent": 1,
+        "PathAgent": 1,
+        "TutorAgent": 1,
+        "EvaluationAgent": 2,
+        "ReflectionAgent": 1
+      },
+      "lastTraceAt": "2026-05-28T10:00:08.000Z"
+    },
+    "sampleTraces": [
+      {
+        "requestId": "profile-1748420400000-a1b2c3",
+        "timestamp": "2026-05-28T10:00:00.000Z",
+        "agents": ["ProfileAgent"],
+        "inputsSummary": "画像问卷: 6 个字段",
+        "outputsSummary": "综合评分: 58",
+        "evidence": ["本地规则 fallback 生成画像分析"],
+        "riskFlags": [],
+        "fallbackUsed": true,
+        "durationMs": 5
+      },
+      {
+        "requestId": "resource-1748420401000-d4e5f6",
+        "timestamp": "2026-05-28T10:00:01.000Z",
+        "agents": ["ProfileAgent", "ResourceAgent"],
+        "inputsSummary": "主题: 数据结构与算法, 类型: all",
+        "outputsSummary": "资源包: concept, example, exercise, errorTip, recommendReason, profileEvidence",
+        "evidence": ["本地规则 fallback 生成画像分析", "本地规则 fallback 生成资源包"],
+        "riskFlags": [],
+        "fallbackUsed": true,
+        "durationMs": 8
+      },
+      {
+        "requestId": "path-replan-1748420402000-g7h8i9",
+        "timestamp": "2026-05-28T10:00:02.000Z",
+        "agents": ["EvaluationAgent", "PathAgent"],
+        "inputsSummary": "重规划路径, 评分: 58",
+        "outputsSummary": "路径阶段: 3 个",
+        "evidence": ["本地规则 fallback 生成评估反馈", "本地规则 fallback 生成学习路径"],
+        "riskFlags": [],
+        "fallbackUsed": true,
+        "durationMs": 10
+      },
+      {
+        "requestId": "tutor-1748420403000-j0k1l2",
+        "timestamp": "2026-05-28T10:00:03.000Z",
+        "agents": ["ProfileAgent", "TutorAgent"],
+        "inputsSummary": "问题: 什么是二叉树的前序遍历？, 模式: explain",
+        "outputsSummary": "回答长度: 320 字符",
+        "evidence": ["本地规则 fallback 生成画像分析", "本地规则 fallback 生成辅导回答"],
+        "riskFlags": [],
+        "fallbackUsed": true,
+        "durationMs": 12
+      },
+      {
+        "requestId": "eval-1748420404000-m3n4o5",
+        "timestamp": "2026-05-28T10:00:04.000Z",
+        "agents": ["EvaluationAgent", "ReflectionAgent"],
+        "inputsSummary": "综合评估, 评分: 58",
+        "outputsSummary": "掌握度: 4 项, 风险: medium",
+        "evidence": ["本地规则 fallback 生成评估反馈", "本地规则 fallback 生成反思反馈"],
+        "riskFlags": [],
+        "fallbackUsed": true,
+        "durationMs": 9
+      }
+    ]
+  },
+  "description": "本报告展示 EduMind 系统中多智能体协作的完整证据链，包括画像分析、资源生成、路径规划、辅导回答、效果评估和反思反馈六个 Agent 的协作过程。当前为本地 fallback 模式，配置 LLM_API_URL 和 LLM_API_KEY 环境变量后可切换为真实大模型驱动。"
 }

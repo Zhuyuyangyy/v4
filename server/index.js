@@ -20,6 +20,16 @@ import {
   getEvidenceTraces,
   getEvidenceSummary,
 } from './data.js'
+import {
+  orchestrateProfileAnalysis,
+  orchestrateResourceGeneration,
+  orchestratePathReplan,
+  orchestrateTutoring,
+  orchestrateFullEvaluation,
+} from './agents/orchestrator.js'
+import { getTraces, getTraceSummary } from './evidence/recorder.js'
+import { validateResourceGenerateInput } from './schemas.js'
+import { isLlmAvailable } from './llm/provider.js'
 
 const PORT = Number(process.env.PORT || 8787)
 const MAX_BODY_SIZE = 1024 * 1024
@@ -188,17 +198,79 @@ const server = http.createServer(async (req, res) => {
 
     if (req.method === 'POST' && pathname === '/api/resources/generate') {
       const body = await readJson(req)
-      sendJson(res, 200, generateResourcesPayload(body.topic))
+      const validation = validateResourceGenerateInput(body)
+      if (!validation.valid) {
+        sendJson(res, 400, { error: 'Bad Request', details: validation.errors })
+        return
+      }
+      const profile = body.profile || getLatestProfileResult() || {}
+      const weaknesses = body.weaknesses || profile.weaknesses || []
+      const result = await orchestrateResourceGeneration({
+        profile,
+        weaknesses,
+        topic: body.topic,
+        resourceType: body.resourceType,
+      })
+      sendJson(res, 200, result)
+      return
+    }
+
+    if (req.method === 'POST' && pathname === '/api/agents/profile') {
+      const body = await readJson(req)
+      const result = await orchestrateProfileAnalysis(body)
+      saveProfileResult(result.profile)
+      sendJson(res, 200, result)
+      return
+    }
+
+    if (req.method === 'POST' && pathname === '/api/agents/path-replan') {
+      const body = await readJson(req)
+      const profile = body.profile || getLatestProfileResult() || {}
+      const result = await orchestratePathReplan({
+        profile,
+        evaluation: body.evaluation,
+        currentPath: body.currentPath,
+      })
+      sendJson(res, 200, result)
+      return
+    }
+
+    if (req.method === 'POST' && pathname === '/api/agents/tutor') {
+      const body = await readJson(req)
+      const profile = body.profile || getLatestProfileResult() || {}
+      const result = await orchestrateTutoring({
+        question: body.question,
+        mode: body.mode,
+        profile,
+        resources: body.resources,
+      })
+      sendJson(res, 200, result)
+      return
+    }
+
+    if (req.method === 'POST' && pathname === '/api/agents/evaluate') {
+      const body = await readJson(req)
+      const profile = body.profile || getLatestProfileResult() || {}
+      const result = await orchestrateFullEvaluation({
+        profile,
+        learningData: body.learningData,
+        exerciseResults: body.exerciseResults,
+      })
+      sendJson(res, 200, result)
       return
     }
 
     if (req.method === 'GET' && pathname === '/api/evidence/traces') {
-      sendJson(res, 200, getEvidenceTraces())
+      const limit = Number(searchParams.get('limit') || 50)
+      const offset = Number(searchParams.get('offset') || 0)
+      const traces = getTraces(limit, offset)
+      sendJson(res, 200, { items: traces, total: traces.length })
       return
     }
 
     if (req.method === 'GET' && pathname === '/api/evidence/summary') {
-      sendJson(res, 200, getEvidenceSummary())
+      const summary = getTraceSummary()
+      sendJson(res, 200, { ...summary, llmAvailable: isLlmAvailable() })
       return
     }
 
