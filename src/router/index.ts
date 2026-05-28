@@ -47,6 +47,11 @@ const router = createRouter({
       component: () => import('@/views/EduMind.vue'),
     },
     {
+      path: '/evidence',
+      name: 'evidence',
+      component: () => import('@/views/EvidenceTrace.vue'),
+    },
+    {
       path: '/universe',
       redirect: '/learning-path',
     },

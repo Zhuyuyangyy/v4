@@ -15,6 +15,10 @@ import {
   saveChatHistoryEntry,
   saveProfileResult,
   saveTutoringHistoryEntry,
+  getAgentWorkflow,
+  generateResourcesPayload,
+  getEvidenceTraces,
+  getEvidenceSummary,
 } from './data.js'
 
 const PORT = Number(process.env.PORT || 8787)
@@ -174,6 +178,27 @@ const server = http.createServer(async (req, res) => {
 
     if (req.method === 'GET' && pathname === '/api/evaluation') {
       sendJson(res, 200, getEvaluationPayload())
+      return
+    }
+
+    if (req.method === 'GET' && pathname === '/api/agent/workflow') {
+      sendJson(res, 200, getAgentWorkflow())
+      return
+    }
+
+    if (req.method === 'POST' && pathname === '/api/resources/generate') {
+      const body = await readJson(req)
+      sendJson(res, 200, generateResourcesPayload(body.topic))
+      return
+    }
+
+    if (req.method === 'GET' && pathname === '/api/evidence/traces') {
+      sendJson(res, 200, getEvidenceTraces())
+      return
+    }
+
+    if (req.method === 'GET' && pathname === '/api/evidence/summary') {
+      sendJson(res, 200, getEvidenceSummary())
       return
     }
 

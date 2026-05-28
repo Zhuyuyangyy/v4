@@ -22,6 +22,7 @@ import GrowthKnowledgeTree from '@/components/knowledge-tree/GrowthKnowledgeTree
 import ProfileUpdateTrace from '@/components/evaluation/ProfileUpdateTrace.vue'
 import ParticleBackground from '@/components/evaluation/ParticleBackground.vue'
 import KnowledgeConstellation from '@/components/evaluation/KnowledgeConstellation.vue'
+import EvidenceTraceView from '@/components/evidence/EvidenceTraceView.vue'
 import type { TreeNode } from '@/components/knowledge-tree/GrowthKnowledgeTree.vue'
 
 type SuggestionType = 'weakness' | 'strength' | 'positive' | 'action'
@@ -563,6 +564,15 @@ onMounted(() => {
     </div>
 
     <KnowledgeConstellation />
+
+    <section class="evidence-trace-section">
+      <div class="evidence-trace-header">
+        <div class="hero-badge" style="background: rgba(124, 58, 237, 0.08); color: #7c3aed; border-color: rgba(124, 58, 237, 0.12);">证据链追溯</div>
+        <h2 class="page-title" style="font-size: 28px;">画像更新<span class="gradient-text">证据链</span></h2>
+        <p class="page-subtitle">每个 Agent 的输入、输出、置信度和证据标签均可追溯，评委可验证多智能体协作全流程。</p>
+      </div>
+      <EvidenceTraceView />
+    </section>
 
     <section class="learning-atlas-section">
       <div class="atlas-shell">
@@ -1576,6 +1586,16 @@ onMounted(() => {
   max-width: 1320px;
   margin: 0 auto;
   padding: 18px 40px 56px;
+}
+
+.evidence-trace-section {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 40px 40px 0;
+}
+
+.evidence-trace-header {
+  margin-bottom: 24px;
 }
 
 .atlas-shell {

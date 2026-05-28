@@ -1,0 +1,99 @@
+{
+  "workflowId": "wf-demo-001",
+  "startTime": "2026-05-28T14:32:00",
+  "endTime": "2026-05-28T14:32:25",
+  "summary": "完整学习闭环：画像分析→资源生成→路径规划→辅导→评估→反馈",
+  "agents": [
+    {
+      "agentId": "profile",
+      "agentName": "画像智能体",
+      "role": "PROFILE",
+      "input": "学生答题记录 + 历史画像",
+      "process": "分析 24 维画像向量，识别薄弱维度",
+      "output": "识别指针与图结构薄弱，掌握度分别为 42% 和 38%",
+      "confidence": 0.92,
+      "evidenceTags": ["画像分析", "薄弱识别"],
+      "timestamp": "2026-05-28T14:32:03",
+      "status": "completed"
+    },
+    {
+      "agentId": "resource",
+      "agentName": "资源生成智能体",
+      "role": "RESOURCE",
+      "input": "画像智能体输出的薄弱维度 + 学习偏好",
+      "process": "基于薄弱点生成个性化学习资源：思维导图（指针）、例题拆解（BFS）、代码练习（悬空指针）",
+      "output": "生成 3 份针对性学习资源，覆盖全部薄弱点，适配学生偏好",
+      "confidence": 0.88,
+      "evidenceTags": ["资源生成", "个性化适配", "薄弱覆盖"],
+      "timestamp": "2026-05-28T14:32:07",
+      "status": "completed"
+    },
+    {
+      "agentId": "path",
+      "agentName": "路径规划智能体",
+      "role": "PATH",
+      "input": "画像数据 + 资源列表 + 知识图谱拓扑",
+      "process": "基于知识依赖关系排序学习路径，优先补齐前置知识，安排指针→图结构递进顺序",
+      "output": "规划 5 步学习路径：指针基础→二级指针→BFS基础→BFS visited标记→综合练习",
+      "confidence": 0.90,
+      "evidenceTags": ["路径规划", "依赖排序", "递进学习"],
+      "timestamp": "2026-05-28T14:32:11",
+      "status": "completed"
+    },
+    {
+      "agentId": "tutor",
+      "agentName": "辅导智能体",
+      "role": "TUTOR",
+      "input": "学习路径 + 个性化资源 + 学生实时交互",
+      "process": "按路径逐步引导，针对二级指针传参提供类比讲解，BFS visited 标记提供代码走读",
+      "output": "完成 5 步辅导，学生提问 3 次，均获得针对性解答，交互满意度 4.5/5",
+      "confidence": 0.85,
+      "evidenceTags": ["交互辅导", "类比讲解", "代码走读"],
+      "timestamp": "2026-05-28T14:32:17",
+      "status": "completed"
+    },
+    {
+      "agentId": "eval",
+      "agentName": "评估智能体",
+      "role": "EVAL",
+      "input": "辅导后答题数据 + 辅导交互记录",
+      "process": "对比辅导前后答题正确率，分析各维度掌握度变化，计算学习增益",
+      "output": "指针掌握度 42%→71%，图结构掌握度 38%→65%，整体进步 23 个百分点",
+      "confidence": 0.91,
+      "evidenceTags": ["效果评估", "掌握度对比", "学习增益"],
+      "timestamp": "2026-05-28T14:32:21",
+      "status": "completed"
+    },
+    {
+      "agentId": "feedback",
+      "agentName": "反馈智能体",
+      "role": "FEEDBACK",
+      "input": "评估结果 + 画像变化 + 学习路径执行记录",
+      "process": "汇总学习闭环结果，生成反馈报告，标注仍需巩固的知识点，建议后续学习方向",
+      "output": "生成学习反馈报告：2 项已掌握、1 项需巩固（BFS visited标记），建议进入图算法进阶模块",
+      "confidence": 0.87,
+      "evidenceTags": ["闭环反馈", "巩固建议", "后续方向"],
+      "timestamp": "2026-05-28T14:32:25",
+      "status": "completed"
+    }
+  ],
+  "profileSnapshot": {
+    "pointerMastery": 42,
+    "graphMastery": 38,
+    "overallProgress": 68,
+    "weaknesses": ["二级指针传参", "BFS visited 标记", "悬空指针"],
+    "preferences": ["思维导图", "例题拆解"]
+  },
+  "profileAfterSnapshot": {
+    "pointerMastery": 71,
+    "graphMastery": 65,
+    "overallProgress": 78,
+    "weaknesses": ["BFS visited 标记"],
+    "preferences": ["思维导图", "例题拆解"]
+  },
+  "pathAdjustment": {
+    "originalPath": ["指针基础", "二级指针", "图基础", "BFS", "综合练习"],
+    "adjustedPath": ["指针基础", "二级指针", "BFS基础", "BFS visited标记", "综合练习"],
+    "adjustmentReason": "根据画像分析发现图结构薄弱点集中在BFS的visited标记逻辑，调整路径聚焦该知识点"
+  }
+}

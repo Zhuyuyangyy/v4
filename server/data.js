@@ -219,6 +219,72 @@ function clamp(value, min, max) {
   return Math.max(min, Math.min(max, value))
 }
 
+export function getAgentWorkflow() {
+  return {
+    workflowId: 'wf-demo-001',
+    startTime: '2026-05-28T14:32:00',
+    endTime: '2026-05-28T14:32:25',
+    summary: '完整学习闭环：画像分析→资源生成→路径规划→辅导→评估→反馈',
+    profileSnapshot: { pointerMastery: 42, graphMastery: 38, overallProgress: 68 },
+    agents: [
+      { agentId: 'profile', agentName: '画像智能体', role: 'PROFILE', input: '学生答题记录 + 历史画像', process: '分析 24 维画像向量', output: '识别指针与图结构薄弱', confidence: 0.92, evidenceTags: ['画像分析', '薄弱识别'], timestamp: '2026-05-28T14:32:17', status: 'completed' },
+      { agentId: 'resource', agentName: '资源推荐智能体', role: 'RESOURCE', input: '薄弱知识点 + 偏好', process: '匹配资源库 + LLM 生成', output: '5 个个性化资源', confidence: 0.87, evidenceTags: ['资源匹配', 'LLM生成'], timestamp: '2026-05-28T14:32:19', status: 'completed' },
+      { agentId: 'path', agentName: '路径规划智能体', role: 'PATH', input: '画像 + 评估反馈', process: '路径规划 + 节点插入', output: '插入 2 个补弱节点', confidence: 0.85, evidenceTags: ['路径重排', '补弱插入'], timestamp: '2026-05-28T14:32:18', status: 'completed' },
+      { agentId: 'tutor', agentName: 'AI 辅导智能体', role: 'TUTOR', input: '学生提问 + 上下文', process: '多模式辅导生成', output: '概念讲解 + 代码示例', confidence: 0.90, evidenceTags: ['辅导生成', '多模式'], timestamp: '2026-05-28T14:32:23', status: 'completed' },
+      { agentId: 'eval', agentName: '评估智能体', role: 'EVAL', input: '练习结果 + 资源完成度', process: '多维评估 + 错因分析', output: '4 个盲点 + 错因归类', confidence: 0.88, evidenceTags: ['效果评估', '错因分析'], timestamp: '2026-05-28T14:32:20', status: 'completed' },
+      { agentId: 'feedback', agentName: '反馈智能体', role: 'FEEDBACK', input: '评估结果 + 画像变化', process: '反向传播 + 路径修正', output: '画像更新 + 路径触发', confidence: 0.83, evidenceTags: ['反向传播', '路径触发'], timestamp: '2026-05-28T14:32:21', status: 'completed' },
+    ],
+  }
+}
+
+export function generateResourcesPayload(topic) {
+  const t = topic || '指针与图结构'
+  return {
+    items: [
+      { id: 'gen-1', concept: '二级指针传参原理', example: 'swap 函数中二级指针的使用', exercise: '实现 createNode 函数使用二级指针', mistakeReminder: '混淆修改指针变量和修改指针指向的值', recommendReason: `画像显示${t}掌握度仅 42%，需要强化二级指针理解`, evidence: { profileSource: 'ProfileAgent 识别指针薄弱', evaluationReason: '测评正确率 41%', pathStage: '课后巩固阶段', formatReason: '学生偏好思维导图+例题' } },
+      { id: 'gen-2', concept: 'BFS 队列推进与 visited 标记', example: 'BFS 遍历邻接表', exercise: '实现 BFS 并正确标记 visited', mistakeReminder: '入队前后标记时机不稳定导致重复访问', recommendReason: `图结构搜索掌握度 38%，BFS visited 是核心盲点`, evidence: { profileSource: 'EvaluationAgent 发现 BFS 盲点', evaluationReason: 'BFS 相关题目正确率 38%', pathStage: '搜索训练阶段', formatReason: '队列快照动画更直观' } },
+      { id: 'gen-3', concept: '悬空指针与内存释放', example: 'free 后继续访问指针', exercise: '检测并修复悬空指针代码', mistakeReminder: '释放后未置 NULL 导致悬空引用', recommendReason: '释放后悬空指针掌握度 36%', evidence: { profileSource: 'EvaluationAgent 错因分析', evaluationReason: '悬空引用相关题目 0/3 正确', pathStage: '课后微训练', formatReason: '代码追踪练习更有效' } },
+    ],
+  }
+}
+
+export function getEvidenceTraces() {
+  return {
+    traces: [
+      { traceId: 't1', workflowId: 'wf-demo-001', agentId: 'profile', agentName: '画像智能体', input: '学生答题记录 + 历史画像', output: '识别指针与图结构薄弱', confidence: 0.92, evidenceTags: ['画像分析', '薄弱识别'], timestamp: '2026-05-28T14:32:17', duration: 320 },
+      { traceId: 't2', workflowId: 'wf-demo-001', agentId: 'resource', agentName: '资源推荐智能体', input: '薄弱知识点 + 偏好', output: '5 个个性化资源', confidence: 0.87, evidenceTags: ['资源匹配', 'LLM生成'], timestamp: '2026-05-28T14:32:19', duration: 480 },
+      { traceId: 't3', workflowId: 'wf-demo-001', agentId: 'path', agentName: '路径规划智能体', input: '画像 + 评估反馈', output: '插入 2 个补弱节点', confidence: 0.85, evidenceTags: ['路径重排', '补弱插入'], timestamp: '2026-05-28T14:32:18', duration: 290 },
+      { traceId: 't4', workflowId: 'wf-demo-001', agentId: 'tutor', agentName: 'AI 辅导智能体', input: '学生提问 + 上下文', output: '概念讲解 + 代码示例', confidence: 0.90, evidenceTags: ['辅导生成', '多模式'], timestamp: '2026-05-28T14:32:23', duration: 560 },
+      { traceId: 't5', workflowId: 'wf-demo-001', agentId: 'eval', agentName: '评估智能体', input: '练习结果 + 资源完成度', output: '4 个盲点 + 错因归类', confidence: 0.88, evidenceTags: ['效果评估', '错因分析'], timestamp: '2026-05-28T14:32:20', duration: 410 },
+      { traceId: 't6', workflowId: 'wf-demo-001', agentId: 'feedback', agentName: '反馈智能体', input: '评估结果 + 画像变化', output: '画像更新 + 路径触发', confidence: 0.83, evidenceTags: ['反向传播', '路径触发'], timestamp: '2026-05-28T14:32:21', duration: 350 },
+    ],
+  }
+}
+
+export function getEvidenceSummary() {
+  return {
+    workflowId: 'wf-demo-001',
+    totalAgents: 6,
+    completedAgents: 6,
+    totalDuration: 3200,
+    traceCount: 14,
+    keyFindings: [
+      '指针与内存掌握度仅 42%，标记为薄弱域',
+      '图结构搜索存在 BFS visited 标记时机问题',
+      '学生偏好从文本讲解转向思维导图+例题拆解',
+    ],
+    profileUpdates: [
+      { field: '图结构掌握度', before: '68%', after: '42%', evidence: '阶段测评错题 2/3 来自图结构' },
+      { field: '指针掌握度', before: '65%', after: '42%', evidence: '指针练习正确率下降至 42%' },
+      { field: '学习偏好', before: '文本讲解', after: '思维导图 + 例题拆解', evidence: '连续 3 次追问图解类资源' },
+    ],
+    pathAdjustments: [
+      { reason: '评估发现 4 个盲点', addedNodes: ['二级指针专项训练', 'BFS visited 标记专项'], removedNodes: [] },
+      { reason: '已掌握节点优化', addedNodes: [], removedNodes: ['C语言基础复习'] },
+    ],
+  }
+}
+
 function labelOf(value, options) {
   const match = options.find(item => item.value === value)
   return match ? match.label : value

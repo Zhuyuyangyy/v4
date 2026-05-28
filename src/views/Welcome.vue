@@ -6,6 +6,7 @@ import SectionLearningLoop from '@/components/homepage/SectionLearningLoop.vue'
 import SectionTelemetry from '@/components/homepage/SectionTelemetry.vue'
 import SectionSkyline from '@/components/homepage/SectionSkyline.vue'
 import SectionMissions from '@/components/homepage/SectionMissions.vue'
+import AgentChainPanel from '@/components/homepage/AgentChainPanel.vue'
 
 const loaded = ref(false)
 
@@ -30,6 +31,9 @@ onMounted(() => {
 
     <!-- Agent live ticker -->
     <AgentLiveTicker />
+
+    <!-- Multi-agent collaborative execution chain -->
+    <AgentChainPanel />
 
     <!-- Learning loop visualization -->
     <SectionLearningLoop />
