@@ -112,12 +112,24 @@ export interface LatestProfileResponse {
 
 export interface AgentResult {
   agentName: string
-  input: string
+  inputSummary: string
+  outputSummary: string
+  input: unknown
   output: unknown
   confidence: number
   evidence: string[]
   durationMs: number
   status: string
+  fallbackUsed: boolean
+}
+
+export interface TraceAgentResult {
+  agentName: string
+  inputSummary: string
+  outputSummary: string
+  confidence: number
+  evidence: string[]
+  durationMs: number
   fallbackUsed: boolean
 }
 
@@ -131,6 +143,7 @@ export interface TraceRecord {
   riskFlags: string[]
   fallbackUsed: boolean
   durationMs: number
+  agentResults: TraceAgentResult[]
 }
 
 export interface ResourceGenerateRequest {
@@ -189,5 +202,25 @@ export interface FullEvaluationResponse {
   evaluation: unknown
   reflection: unknown
   agentResults: AgentResult[]
+  trace: TraceRecord
+}
+
+export interface FullRunRequest {
+  answers?: unknown
+  topic?: string
+  resourceType?: string
+  question?: string
+  mode?: string
+}
+
+export interface FullRunResponse {
+  workflowId: string
+  agentResults: AgentResult[]
+  resourcePackage: ResourcePackage
+  tutoringAnswer: string
+  evaluation: unknown
+  path: LearningPathResponse & { replanReason?: string }
+  reflection: unknown
+  profile: ProfileResult
   trace: TraceRecord
 }

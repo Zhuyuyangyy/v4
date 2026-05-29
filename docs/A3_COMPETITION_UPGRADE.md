@@ -92,28 +92,36 @@ EduMind 是面向 **科大讯飞软件杯 A3 赛题** 的"基于大模型的个�
 # 安装依赖
 npm install
 
-# 启动开发（前端 + 后端同时启动）
+# 终端 1：启动后端 API 服务
+npm run server
+
+# 终端 2：启动前端开发环境
 npm run dev
 
-# 构建
+# 构建前端
 npm run build
 
-# 启用真实大模型（可选）
-LLM_API_URL=https://your-api/v1/chat/completions LLM_API_KEY=your-key npm run dev
+# 启用真实大模型（可选，在后端终端设置环境变量）
+LLM_API_URL=https://your-api/v1/chat/completions LLM_API_KEY=your-key npm run server
 ```
+
+说明：
+- 后端默认端口 `8787`，前端 Vite 已配置代理 `/api` → `http://localhost:8787`
+- 如果希望后端自动监听重启，可用 `npm run dev:server` 代替 `npm run server`
 
 ## 验收场景对照
 
 | 场景 | 实现方式 | 验证 |
 |---|---|---|
-| 1. 用户完成画像问卷 | ProfileAgent 分析问卷 | POST /api/agents/profile |
+| 1. 用户完成画像问卷 | ProfileAgent 分析问卷 | POST /api/profile/analyze 或 POST /api/agents/profile |
 | 2. 系统生成画像与薄弱点 | ProfileAgent 输出 dimensions + weaknesses | 同上 |
 | 3. 多 Agent 协同生成个性化资源 | ProfileAgent → ResourceAgent | POST /api/resources/generate |
 | 4. PathAgent 根据评估结果重规划路径 | EvaluationAgent → PathAgent | POST /api/agents/path-replan |
 | 5. TutorAgent 回答问题并附带资源推荐 | ProfileAgent → TutorAgent | POST /api/agents/tutor |
 | 6. EvaluationAgent 更新掌握度 | EvaluationAgent → ReflectionAgent | POST /api/agents/evaluate |
 | 7. Evidence 页面看到完整 trace | /evidence 页面 | GET /api/evidence/traces |
-| 8. 文档说明 A3 个性化资源生成 + 学习多智能体系统 | 本文档 | docs/A3_COMPETITION_UPGRADE.md |
+| 8. 一键完整闭环演示 | 6 Agent 串行闭环 | POST /api/agents/run |
+| 9. 文档说明 A3 个性化资源生成 + 学习多智能体系统 | 本文档 | docs/A3_COMPETITION_UPGRADE.md |
 
 ## 设计原则
 

@@ -22,8 +22,9 @@ import {
   orchestratePathReplan,
   orchestrateTutoring,
   orchestrateFullEvaluation,
+  orchestrateFullRun,
 } from './agents/orchestrator.js'
-import { getTraces, getTraceSummary } from './evidence/recorder.js'
+import { getTraces, getTraceSummary, buildTrace, recordTrace } from './evidence/recorder.js'
 import { validateResourceGenerateInput } from './schemas.js'
 import { isLlmAvailable } from './llm/provider.js'
 
@@ -119,9 +120,9 @@ const server = http.createServer(async (req, res) => {
 
     if (req.method === 'POST' && pathname === '/api/profile/analyze') {
       const body = await readJson(req)
-      const result = analyzeProfile(body)
-      saveProfileResult(result)
-      sendJson(res, 200, result)
+      const agentResult = await orchestrateProfileAnalysis(body)
+      saveProfileResult(agentResult.profile)
+      sendJson(res, 200, agentResult.profile)
       return
     }
 
@@ -134,6 +135,18 @@ const server = http.createServer(async (req, res) => {
       const body = await readJson(req)
       const reply = buildChatReply(body.message, body.multimodalContents)
       saveChatHistoryEntry(String(body.message || '').trim(), reply, body.multimodalContents)
+      const chatTrace = buildTrace({
+        requestId: `chat-${Date.now()}`,
+        agents: ['ChatAgent'],
+        inputsSummary: `消息: ${String(body.message || '').slice(0, 80)}`,
+        outputsSummary: `回复: ${String(reply.content || '').slice(0, 80)}`,
+        evidence: ['本地规则生成对话回复'],
+        riskFlags: [],
+        fallbackUsed: true,
+        durationMs: 0,
+        agentResults: [],
+      })
+      recordTrace(chatTrace)
       sendJson(res, 200, reply)
       return
     }
@@ -145,15 +158,22 @@ const server = http.createServer(async (req, res) => {
 
     if (req.method === 'POST' && pathname === '/api/tutoring/ask') {
       const body = await readJson(req)
-      const reply = buildTutoringReply(body.question, body.mode, body.multimodalContents)
+      const profile = getLatestProfileResult() || {}
+      const agentResult = await orchestrateTutoring({
+        question: body.question,
+        mode: body.mode,
+        profile,
+        resources: [],
+      })
+      const answer = agentResult.answer
       saveTutoringHistoryEntry({
         question: String(body.question || '').trim() || '未提供问题',
-        answer: reply.answer,
+        answer,
         mode: body.mode || 'qa',
         scenario: body.scenario || 'preview',
         multimodalContents: body.multimodalContents || [],
       })
-      sendJson(res, 200, reply)
+      sendJson(res, 200, { answer, time: new Date().toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' }) })
       return
     }
 
@@ -247,6 +267,22 @@ const server = http.createServer(async (req, res) => {
         learningData: body.learningData,
         exerciseResults: body.exerciseResults,
       })
+      sendJson(res, 200, result)
+      return
+    }
+
+    if (req.method === 'POST' && pathname === '/api/agents/run') {
+      const body = await readJson(req)
+      const result = await orchestrateFullRun({
+        answers: body.answers,
+        topic: body.topic,
+        resourceType: body.resourceType,
+        question: body.question,
+        mode: body.mode,
+      })
+      if (result.profile) {
+        saveProfileResult(result.profile)
+      }
       sendJson(res, 200, result)
       return
     }
