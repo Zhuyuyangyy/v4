@@ -200,10 +200,10 @@ function chipStyle(x: number, y: number, isHot: boolean, side: string): string {
         </p>
 
         <div class="hero-ctas">
-          <button class="btn-hp-primary" @click="router.push('/profile')">
+          <button class="btn-hp-primary" @click="router.push({ name: 'edu-mind', query: { source: 'home', focus: 'today' } })">
             开始今日学习 <span class="btn-arrow">→</span>
           </button>
-          <button class="btn-hp-ghost" @click="router.push('/learning-path')">
+          <button class="btn-hp-ghost" @click="router.push({ name: 'learning-path' })">
             查看协同实况 <span class="btn-arrow-sm">↗</span>
           </button>
         </div>
