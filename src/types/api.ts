@@ -92,6 +92,36 @@ export interface LearningPathResponse {
   }>
 }
 
+export interface EvaluationDashboardMetric {
+  key: string
+  label: string
+  stage0: number
+  stage1: number
+  stage2: number
+}
+
+export interface EvaluationDashboardWeakness {
+  id: string
+  label: string
+  severity: 'low' | 'medium' | 'high'
+  reason: string
+  impact: string
+  action: string
+}
+
+export interface EvaluationDashboardPayload {
+  flow: string[]
+  profileMetrics: EvaluationDashboardMetric[]
+  weaknesses: EvaluationDashboardWeakness[]
+  evidenceRounds: Array<{
+    stage: 0 | 1 | 2
+    trigger: string
+    evidence: string[]
+    profileUpdates: string[]
+    pathImpact: string
+  }>
+}
+
 export interface EvaluationResponse {
   generatedAt: string
   stats: Array<{
@@ -102,6 +132,7 @@ export interface EvaluationResponse {
     icon?: string
   }>
   suggestions: ApiSuggestion[]
+  dashboard?: EvaluationDashboardPayload
 }
 
 export type ProfileAnalyzeRequest = SurveyAnswers
