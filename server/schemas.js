@@ -23,8 +23,10 @@ export function validateResourceGenerateInput(input) {
 export function createAgentResult({ agentName, input, output, confidence, evidence, durationMs, status, fallbackUsed }) {
   return {
     agentName,
-    input: summarize(input),
-    output: summarize(output),
+    inputSummary: summarize(input),
+    outputSummary: summarize(output),
+    input,
+    output,
     confidence: confidence ?? 0.8,
     evidence: evidence || [],
     durationMs: durationMs ?? 0,

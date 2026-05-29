@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, computed, watch, onMounted } from 'vue'
+import { useRoute } from 'vue-router'
 import { useTheme } from '../composables/useEduMindTheme'
 import {
   FileText,
@@ -38,6 +39,7 @@ import FavoritesView from '../components/edu-mind/FavoritesView.vue'
 import NotesView from '../components/edu-mind/NotesView.vue'
 
 const { isDark } = useTheme()
+const route = useRoute()
 
 const ITEMS_PER_PAGE = 6
 
@@ -49,6 +51,12 @@ const currentTab = ref<string>((() => {
 watch(currentTab, (val) => {
   localStorage.setItem('edumind_active_tab', val)
 })
+
+watch(() => route.query, (q) => {
+  if (q.source === 'home' || q.source === 'star-map' || q.source === 'mission') {
+    currentTab.value = '资源中心'
+  }
+}, { immediate: true })
 
 const resources = ref<Resource[]>((() => {
   const saved = localStorage.getItem('resource_center_list')

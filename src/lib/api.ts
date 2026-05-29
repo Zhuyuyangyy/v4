@@ -17,6 +17,8 @@ import type {
   PathReplanResponse,
   TutorAgentResponse,
   FullEvaluationResponse,
+  FullRunRequest,
+  FullRunResponse,
 } from '@/types/api'
 import { useAppStore } from '@/store'
 
@@ -162,6 +164,13 @@ export function agentTutoring(payload: { question: string; mode: string; profile
 
 export function agentEvaluate(payload: { profile?: unknown; learningData?: unknown; exerciseResults?: unknown }) {
   return requestJson<FullEvaluationResponse>('/api/agents/evaluate', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  })
+}
+
+export function agentFullRun(payload: FullRunRequest) {
+  return requestJson<FullRunResponse>('/api/agents/run', {
     method: 'POST',
     body: JSON.stringify(payload),
   })

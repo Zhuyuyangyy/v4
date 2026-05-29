@@ -74,8 +74,31 @@ const quickQuestions = [
   '机器学习中的过拟合怎么解决？',
 ]
 
+const focusMap: Record<string, string> = {
+  '启动任务': 'remedial',
+  '直接进入': 'remedial',
+  '查看资源': 'recommended',
+  '查看测评': 'evaluation',
+}
+
 function getAgent(id: string) {
   return agentMap.find(a => a.id === id)
+}
+
+function goToResources(focus: string, extraQuery: Record<string, string> = {}) {
+  router.push({
+    name: 'edu-mind',
+    query: {
+      source: 'home',
+      focus,
+      ...extraQuery,
+    },
+  })
+}
+
+function onMissionCta(m: Mission) {
+  const focus = focusMap[m.cta] || 'today'
+  goToResources(focus, { mission: m.code })
 }
 </script>
 
@@ -154,7 +177,8 @@ function getAgent(id: string) {
           </div>
 
           <button class="mis-cta"
-            :style="`background: linear-gradient(135deg, ${m.priorityColor}, ${m.priorityColor}CC)`">
+            :style="`background: linear-gradient(135deg, ${m.priorityColor}, ${m.priorityColor}CC)`"
+            @click="onMissionCta(m)">
             ▶ {{ m.cta }}
           </button>
         </div>
