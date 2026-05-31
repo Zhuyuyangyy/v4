@@ -37,28 +37,13 @@ const router = createRouter({
       component: () => import('@/views/Settings.vue'),
     },
     {
-      path: '/mindmap',
-      name: 'mindmap',
-      component: () => import('@/views/MindMapView.vue'),
-    },
-    {
       path: '/edu-mind',
       name: 'edu-mind',
       component: () => import('@/views/EduMind.vue'),
     },
     {
-      path: '/evidence',
-      name: 'evidence',
-      component: () => import('@/views/EvidenceTrace.vue'),
-    },
-    {
       path: '/universe',
       redirect: '/learning-path',
-    },
-    {
-      path: '/evidence',
-      name: 'evidence',
-      component: () => import('@/views/Evidence.vue'),
     },
   ],
 })

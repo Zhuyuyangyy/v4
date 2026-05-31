@@ -2,7 +2,7 @@
 import { ref, onMounted } from 'vue'
 import HeroConstellation from '@/components/homepage/HeroConstellation.vue'
 import AgentLiveTicker from '@/components/homepage/AgentLiveTicker.vue'
-import SectionLearningLoop from '@/components/homepage/SectionLearningLoop.vue'
+import SectionAgentWritingFlow from '@/components/homepage/SectionAgentWritingFlow.vue'
 import SectionTelemetry from '@/components/homepage/SectionTelemetry.vue'
 import SectionSkyline from '@/components/homepage/SectionSkyline.vue'
 import SectionMissions from '@/components/homepage/SectionMissions.vue'
@@ -35,8 +35,8 @@ onMounted(() => {
     <!-- Multi-agent collaborative execution chain -->
     <AgentChainPanel />
 
-    <!-- Learning loop visualization -->
-    <SectionLearningLoop />
+    <!-- Multi-agent writing/collaboration visualization -->
+    <SectionAgentWritingFlow />
 
     <!-- Collaboration telemetry -->
     <SectionTelemetry />

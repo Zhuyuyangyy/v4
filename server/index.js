@@ -96,6 +96,21 @@ function listResources(searchParams) {
   })
 }
 
+function latestUserMessage(messages) {
+  if (!Array.isArray(messages)) return ''
+  const latest = [...messages].reverse().find(item => item?.sender === 'user' || item?.role === 'user')
+  return String(latest?.text || latest?.content || '').trim()
+}
+
+function toDialogueChatReply(reply) {
+  return {
+    reply: reply.content,
+    extractedDimensions: {},
+    capturedTags: [],
+    suggestChips: reply.suggestions ?? [],
+  }
+}
+
 const server = http.createServer(async (req, res) => {
   if (!req.url) {
     notFound(res)
@@ -136,9 +151,11 @@ const server = http.createServer(async (req, res) => {
 
     if (req.method === 'POST' && pathname === '/api/chat') {
       const body = await readJson(req)
-      const reply = buildChatReply(body.message, body.multimodalContents)
-      saveChatHistoryEntry(String(body.message || '').trim(), reply, body.multimodalContents)
-      sendJson(res, 200, reply)
+      const isDialoguePayload = Array.isArray(body.messages)
+      const message = isDialoguePayload ? latestUserMessage(body.messages) : String(body.message || '').trim()
+      const reply = buildChatReply(message, body.multimodalContents)
+      saveChatHistoryEntry(message, reply, body.multimodalContents)
+      sendJson(res, 200, isDialoguePayload ? toDialogueChatReply(reply) : reply)
       return
     }
 

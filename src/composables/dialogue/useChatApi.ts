@@ -11,6 +11,51 @@ function getTime() {
   return new Date().toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit', hour12: false })
 }
 
+async function readJsonResponse<T>(res: Response): Promise<T> {
+  const raw = await res.text()
+  const contentType = res.headers.get('Content-Type') || ''
+  const hasJsonContent = contentType.includes('application/json')
+  let data: unknown = null
+
+  if (raw && hasJsonContent) {
+    try {
+      data = JSON.parse(raw)
+    } catch {
+      throw new Error('服务返回了无法解析的 JSON')
+    }
+  }
+
+  if (!res.ok) {
+    const message = data && typeof data === 'object' && 'message' in data
+      ? String((data as { message?: unknown }).message)
+      : `请求失败：HTTP ${res.status}`
+    throw new Error(message)
+  }
+
+  if (!raw) {
+    throw new Error('服务返回为空，请确认 API 服务已启动')
+  }
+
+  if (!hasJsonContent) {
+    throw new Error('服务返回格式不是 JSON')
+  }
+
+  return data as T
+}
+
+function appendChatError(message: string) {
+  chats.value = [
+    ...chats.value,
+    {
+      id: `msg-${Date.now()}-ai-error`,
+      sender: 'ai',
+      text: message,
+      time: getTime(),
+      source: 'chat',
+    },
+  ]
+}
+
 setAvatarNlpHandler((data: any) => {
   if (!syncToMainChat.value) return
   const text = data?.payload?.choices?.text?.[0]?.content || data?.text || ''
@@ -65,7 +110,11 @@ export async function sendMessage() {
         currentDimensions: dimensions.value,
       }),
     })
-    const data: ChatResponse = await res.json()
+    const data = await readJsonResponse<ChatResponse & { content?: string; suggestions?: string[] }>(res)
+    const replyText = data.reply || data.content
+    if (!replyText) {
+      throw new Error('服务响应缺少回复内容')
+    }
 
     if (data.extractedDimensions) {
       dimensions.value = { ...dimensions.value, ...data.extractedDimensions }
@@ -73,9 +122,9 @@ export async function sendMessage() {
 
     const aiMsg: ChatMessage = {
       id: `msg-${Date.now()}-ai`, sender: 'ai',
-      text: data.reply, time: getTime(),
+      text: replyText, time: getTime(),
       capturedTags: data.capturedTags || [],
-      suggestChips: data.suggestChips || [],
+      suggestChips: data.suggestChips || data.suggestions || [],
       source: 'chat',
     }
 
@@ -87,11 +136,12 @@ export async function sendMessage() {
     if (data.report) report.value = data.report
 
     if (syncToMainChat.value && avatarStatus.value === 'connected') {
-      avatarWriteText(data.reply, false)
+      avatarWriteText(replyText, false)
       isXunfeiSpeaking.value = true
     }
   } catch (err) {
     console.error('Message transmission error:', err)
+    appendChatError(err instanceof Error ? err.message : '消息发送失败，请稍后重试')
   } finally {
     isAiLoading.value = false
   }
@@ -105,7 +155,7 @@ export async function triggerReport() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ messages: chats.value, currentDimensions: dimensions.value }),
     })
-    const data = await res.json()
+    const data = await readJsonResponse<ChatResponse>(res)
     if (data.report) {
       report.value = data.report
       showReport.value = true

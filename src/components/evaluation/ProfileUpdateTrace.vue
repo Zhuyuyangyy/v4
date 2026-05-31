@@ -1,6 +1,5 @@
 <script setup lang="ts">
-import { computed } from 'vue'
-import { ArrowDown, AlertTriangle, CheckCircle2, MoveRight } from 'lucide-vue-next'
+import { AlertTriangle, MoveRight } from 'lucide-vue-next'
 
 interface ProfileField {
   label: string

@@ -1,4 +1,4 @@
-<script setup lang="ts">
+﻿<script setup lang="ts">
 import { computed, ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import {
@@ -355,7 +355,7 @@ onMounted(() => {
           <h2 class="card-title-sm">学习状态可视化</h2>
           <span class="card-tag">3D</span>
         </div>
-        <ThreeKnowledgeTree fill :knowledge-points="fineTreeNodes" />
+        <ThreeKnowledgeTree fill :knowledge-points="fineTreeNodes" :scene-scale="6.25" :scene-offset-y="5.05" />
         <transition name="round-panel">
           <section v-if="showRoundInsight" class="round-insight-panel" aria-label="学习画像更新提示">
             <div class="round-insight-head">
