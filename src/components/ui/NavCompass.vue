@@ -183,11 +183,17 @@
           </button>
         </div>
         <div class="viz-card-body">
-          <ResourceConstellationView v-if="activeViz === 'constellation'" />
-          <ResourceMetroView v-if="activeViz === 'metro'" />
-          <ResourceMatrixView v-if="activeViz === 'matrix'" />
-          <ResourceSunburstView v-if="activeViz === 'sunburst'" />
-          <ResourceOrbitalView v-if="activeViz === 'orbital'" />
+          <ResourceConstellationView v-if="activeViz === 'constellation'" @select-node="onNodeSelect" />
+          <ResourceMetroView v-if="activeViz === 'metro'" @select-node="onNodeSelect" />
+          <ResourceMatrixView v-if="activeViz === 'matrix'" @select-node="onNodeSelect" />
+          <ResourceSunburstView v-if="activeViz === 'sunburst'" @select-node="onNodeSelect" />
+          <ResourceOrbitalView v-if="activeViz === 'orbital'" @select-node="onNodeSelect" />
+          <KnowledgeNodeDetail
+            :detail="selectedDetail"
+            :visible="!!selectedDetail"
+            :current-mode="activeViz ?? ''"
+            @close="selectedDetail = null"
+          />
         </div>
       </div>
     </div>
@@ -223,6 +229,9 @@ import ResourceMetroView from '@/components/resources/ResourceMetroView.vue'
 import ResourceMatrixView from '@/components/resources/ResourceMatrixView.vue'
 import ResourceSunburstView from '@/components/resources/ResourceSunburstView.vue'
 import ResourceOrbitalView from '@/components/resources/ResourceOrbitalView.vue'
+import KnowledgeNodeDetail from '@/components/resources/KnowledgeNodeDetail.vue'
+import { buildNodeDetail, BASE_KNOWLEDGE_ITEMS } from '@/components/resources/mapTransforms'
+import type { NodeDetail } from '@/components/resources/mapTypes'
 
 const props = withDefaults(defineProps<{
   visible: boolean
@@ -248,6 +257,7 @@ const streak = computed(() => store.learningStreak)
 const vizTabIds = ['constellation', 'metro', 'matrix', 'sunburst', 'orbital']
 const showVizOverlay = ref(false)
 const activeViz = ref<string | null>(null)
+const selectedDetail = ref<NodeDetail | null>(null)
 
 const vizTitle = computed(() => {
   const map: Record<string, string> = {
@@ -259,6 +269,26 @@ const vizTitle = computed(() => {
 function closeVizOverlay() {
   showVizOverlay.value = false
   activeViz.value = null
+  selectedDetail.value = null
+}
+
+function onNodeSelect(nodeId: string) {
+  if (!activeViz.value) return
+  const modeMap: Record<string, NodeDetail['mode']> = {
+    constellation: 'constellation',
+    metro: 'metro',
+    matrix: 'matrix',
+    sunburst: 'concentric',
+    orbital: 'orbital',
+  }
+  const mode = modeMap[activeViz.value]
+  if (!mode) return
+  let detail = buildNodeDetail(mode, nodeId, BASE_KNOWLEDGE_ITEMS)
+  if (!detail) {
+    const byLabel = BASE_KNOWLEDGE_ITEMS.find(i => i.label === nodeId)
+    if (byLabel) detail = buildNodeDetail(mode, byLabel.id, BASE_KNOWLEDGE_ITEMS)
+  }
+  selectedDetail.value = detail
 }
 
 const tabs = [
@@ -441,7 +471,7 @@ const graphEdges = computed(() => {
   scrollbar-color: rgba(255,255,255,0.06) transparent;
 }
 
-/* ─── Top center nav bar ─── */
+/* ─── Top center nav bar (deep-blue capsule) ─── */
 .nav-bar-wrapper {
   position: fixed;
   top: calc(var(--header-height) + var(--hud-height) + 8px);
@@ -454,11 +484,15 @@ const graphEdges = computed(() => {
 .nav-bar {
   display: flex;
   align-items: center;
-  gap: 2px;
-  padding: 5px;
+  gap: 3px;
+  padding: 5px 6px;
   border-radius: var(--radius-full);
   pointer-events: auto;
-  border: 1px solid var(--glass-border);
+  background: rgba(8, 16, 42, 0.72);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid rgba(0, 180, 255, 0.12);
+  box-shadow: 0 4px 24px rgba(0, 60, 140, 0.25), inset 0 1px 0 rgba(100, 180, 255, 0.08);
   max-width: 92vw;
   overflow-x: auto;
   scrollbar-width: none;
@@ -469,13 +503,13 @@ const graphEdges = computed(() => {
 .nav-btn {
   display: flex;
   align-items: center;
-  gap: 4px;
-  padding: 5px 12px;
+  gap: 6px;
+  padding: 7px 14px;
   font-size: 12px;
   font-weight: 500;
-  color: var(--text-muted);
+  color: rgba(255, 255, 255, 0.45);
   background: transparent;
-  border: none;
+  border: 1px solid transparent;
   border-radius: var(--radius-full);
   cursor: pointer;
   transition: all var(--duration-fast) var(--ease-out-expo);
@@ -485,14 +519,19 @@ const graphEdges = computed(() => {
 }
 
 .nav-btn:hover {
-  color: var(--text-secondary);
-  background: rgba(255, 255, 255, 0.04);
+  color: rgba(180, 220, 255, 0.85);
+  background: rgba(0, 140, 255, 0.1);
+  border-color: rgba(0, 160, 255, 0.15);
+  box-shadow: 0 0 12px rgba(0, 140, 255, 0.12);
 }
 
 .nav-btn.active {
-  color: var(--text-primary);
-  background: rgba(79, 195, 247, 0.12);
-  box-shadow: 0 0 12px rgba(79, 195, 247, 0.08);
+  color: #00d4ff;
+  background: rgba(0, 180, 255, 0.14);
+  border-color: rgba(0, 212, 255, 0.35);
+  box-shadow: 0 0 16px rgba(0, 180, 255, 0.15), inset 0 0 8px rgba(0, 180, 255, 0.06);
+  border-right-color: rgba(244, 63, 94, 0.4);
+  border-bottom-color: rgba(244, 63, 94, 0.25);
 }
 
 /* ─── Dashboard ─── */
@@ -716,6 +755,7 @@ const graphEdges = computed(() => {
   flex: 1;
   overflow: auto;
   padding: 0;
+  position: relative;
 }
 
 @keyframes vizIn {

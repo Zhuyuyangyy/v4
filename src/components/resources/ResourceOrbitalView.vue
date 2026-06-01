@@ -1,46 +1,64 @@
 <script setup lang="ts">
 import { onMounted, onUnmounted } from 'vue'
+import { BASE_KNOWLEDGE_ITEMS, buildOrbitView } from './mapTransforms'
+
+const emit = defineEmits<{ 'select-node': [nodeId: string] }>()
 
 const CX = 540, CY = 470
-const ORBITS = [
-  { r: 160, phase: '当前 · 课中答疑', period: 22, color: '#06d6a0' },
-  { r: 280, phase: '下一站 · 课后巩固', period: 40, color: '#00d4ff' },
-  { r: 400, phase: '远期 · 期末测评', period: 70, color: '#f59e0b' },
+
+const orbitTracks = buildOrbitView(BASE_KNOWLEDGE_ITEMS)
+
+const TRACK_RADII: { a: number; b: number }[] = [
+  { a: 120, b: 88 },
+  { a: 180, b: 132 },
+  { a: 240, b: 176 },
+  { a: 300, b: 220 },
+  { a: 360, b: 264 },
+  { a: 420, b: 308 },
 ]
-
-interface Planet {
-  o: number; angle: number; size: number; label: string;
-  state: 'done' | 'current' | 'next' | 'upcoming' | 'locked' | 'goal';
-  moons?: number; recommended?: boolean
-}
-
-const PLANETS: Planet[] = [
-  { o: 0, angle: -130, size: 12, label: '神经网络基础', state: 'done', moons: 3 },
-  { o: 0, angle: -45, size: 22, label: '卷积运算', state: 'current', moons: 4, recommended: true },
-  { o: 0, angle: 50, size: 14, label: '池化层', state: 'next', moons: 2 },
-  { o: 0, angle: 150, size: 11, label: '反向传播', state: 'upcoming', moons: 2 },
-  { o: 1, angle: -70, size: 18, label: '经典 CNN 架构', state: 'locked' },
-  { o: 1, angle: 20, size: 16, label: '调参与正则化', state: 'locked' },
-  { o: 1, angle: 130, size: 14, label: '训练技巧', state: 'locked' },
-  { o: 1, angle: -160, size: 17, label: '迁移学习', state: 'locked' },
-  { o: 2, angle: -40, size: 22, label: '综合项目', state: 'goal' },
-  { o: 2, angle: 90, size: 18, label: '期末答辩', state: 'goal' },
-  { o: 2, angle: 175, size: 20, label: '论文复现', state: 'goal' },
-  { o: 2, angle: -130, size: 16, label: '同行评审', state: 'goal' },
-]
-
-const PLANET_STYLE: Record<string, { fill: string; stroke: string; opacity: number; glow: boolean }> = {
-  done:     { fill: '#06d6a0',            stroke: '#06d6a0', opacity: 0.55, glow: false },
-  current:  { fill: '#f59e0b',            stroke: '#f59e0b', opacity: 1,    glow: true },
-  next:     { fill: 'rgba(0,212,255,0.5)', stroke: '#00d4ff', opacity: 0.85, glow: true },
-  upcoming: { fill: 'rgba(255,255,255,0.06)', stroke: '#00d4ff', opacity: 0.7, glow: false },
-  locked:   { fill: 'rgba(255,255,255,0.04)', stroke: 'rgba(255,255,255,0.25)', opacity: 0.55, glow: false },
-  goal:     { fill: 'rgba(245, 63, 94, 0.18)', stroke: '#f43f5e', opacity: 0.85, glow: true },
-}
 
 function polar(cx: number, cy: number, r: number, angleDeg: number) {
   const rad = angleDeg * Math.PI / 180
   return { x: cx + r * Math.cos(rad), y: cy + r * Math.sin(rad) }
+}
+
+function ellipsePolar(cx: number, cy: number, a: number, b: number, angleDeg: number) {
+  const rad = angleDeg * Math.PI / 180
+  return { x: cx + a * Math.cos(rad), y: cy + b * Math.sin(rad) }
+}
+
+function ellipsePath(cx: number, cy: number, a: number, b: number) {
+  return `M${cx - a},${cy} A${a},${b} 0 0,1 ${cx + a},${cy} A${a},${b} 0 0,1 ${cx - a},${cy}`
+}
+
+function nodeFill(status: string) {
+  switch (status) {
+    case 'completed': return '#06d6a0'
+    case 'in_progress': return '#f59e0b'
+    case 'upcoming': return 'rgba(255,255,255,0.06)'
+    case 'remedial': return 'rgba(244,63,94,0.18)'
+    default: return 'rgba(255,255,255,0.06)'
+  }
+}
+
+function nodeStroke(status: string) {
+  switch (status) {
+    case 'completed': return '#06d6a0'
+    case 'in_progress': return '#f59e0b'
+    case 'upcoming': return 'rgba(255,255,255,0.25)'
+    case 'remedial': return '#f43f5e'
+    default: return 'rgba(255,255,255,0.25)'
+  }
+}
+
+function nodeOpacity(status: string) {
+  switch (status) {
+    case 'completed': return 0.85
+    case 'in_progress': return 1
+    case 'upcoming': return 0.55
+    case 'remedial': return 0.85
+    default: return 0.55
+  }
 }
 
 // Background stars
@@ -53,27 +71,6 @@ const ORBITAL_STARS = (() => {
   }
   return out
 })()
-
-// Asteroid belt
-const ASTEROIDS = (() => {
-  const out: { x: number; y: number; r: number; o: number }[] = []
-  let s = 88
-  const rand = () => { s = (s * 9301 + 49297) % 233280; return s / 233280 }
-  for (let i = 0; i < 28; i++) {
-    const ang = rand() * 360
-    const rad = 215 + rand() * 30
-    const p = polar(CX, CY, rad, ang)
-    out.push({ x: p.x, y: p.y, r: 0.8 + rand() * 1.4, o: 0.2 + rand() * 0.4 })
-  }
-  return out
-})()
-
-const moonTasks = [
-  { label: '理解卷积核作用', status: 'done', time: '15min' },
-  { label: '看 CNN 原理视频', status: 'done', time: '20min' },
-  { label: '手算 3×3 卷积', status: 'now', time: '25min' },
-  { label: '代码实现简单卷积', status: 'todo', time: '40min' },
-]
 
 // Inject keyframes
 let styleEl: HTMLStyleElement | null = null
@@ -96,28 +93,17 @@ onUnmounted(() => { styleEl?.remove() })
 <template>
   <div class="orbital-view">
     <div class="orbital-banner">
-      <span class="banner-dot" style="background:#f59e0b;box-shadow:0 0 10px #f59e0b66"></span>
-      <span>中心是当下学习目标，距离越近表示越紧迫。当前阶段在最内圈快速绕转，长期目标则在外圈缓慢漂浮。</span>
+      <span class="banner-dot" style="background:#7c3aed;box-shadow:0 0 10px #7c3aed66"></span>
+      <span>六条轨道代表学习循环的六个阶段：预习 → 理解 → 练习 → 测评 → 反馈 → 补救。节点沿轨道运行，完成即变绿，进行中脉动发光。</span>
     </div>
 
     <div class="orbital-canvas">
       <svg viewBox="0 0 1400 900" class="orbital-svg">
         <defs>
-          <radialGradient id="orb-sun" cx="50%" cy="50%" r="50%">
-            <stop offset="0%" stop-color="#fff" stop-opacity="1" />
-            <stop offset="30%" stop-color="#f59e0b" stop-opacity="0.9" />
-            <stop offset="70%" stop-color="#f43f5e" stop-opacity="0.4" />
+          <radialGradient id="orb-center-glow" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stop-color="#fff" stop-opacity="0.8" />
+            <stop offset="30%" stop-color="#7c3aed" stop-opacity="0.4" />
             <stop offset="100%" stop-color="#7c3aed" stop-opacity="0" />
-          </radialGradient>
-          <radialGradient id="orb-sun-core" cx="50%" cy="50%" r="50%">
-            <stop offset="0%" stop-color="#fff" stop-opacity="1" />
-            <stop offset="60%" stop-color="#f59e0b" stop-opacity="1" />
-            <stop offset="100%" stop-color="#f43f5e" stop-opacity="0.6" />
-          </radialGradient>
-          <radialGradient id="orb-cur-planet" cx="50%" cy="50%" r="50%">
-            <stop offset="0%" stop-color="#fff" stop-opacity="1" />
-            <stop offset="50%" stop-color="#f59e0b" stop-opacity="0.9" />
-            <stop offset="100%" stop-color="#f43f5e" stop-opacity="0.6" />
           </radialGradient>
           <filter id="orb-glow-sm" x="-100%" y="-100%" width="300%" height="300%">
             <feGaussianBlur stdDeviation="3" result="blur" />
@@ -133,175 +119,140 @@ onUnmounted(() => { styleEl?.remove() })
         <circle v-for="(s, i) in ORBITAL_STARS" :key="'s'+i"
           :cx="s.x" :cy="s.y" :r="s.r" fill="#fff" :opacity="s.o" />
 
-        <!-- Sun glow -->
-        <circle :cx="CX" :cy="CY" r="200" fill="url(#orb-sun)" opacity="0.35" />
-        <circle :cx="CX" :cy="CY" r="140" fill="url(#orb-sun)" opacity="0.5" />
+        <!-- Center glow -->
+        <circle :cx="CX" :cy="CY" r="100" fill="url(#orb-center-glow)" opacity="0.5" />
 
-        <!-- Orbit paths -->
-        <g v-for="(orb, i) in ORBITS" :key="'orbit-'+i">
-          <circle :cx="CX" :cy="CY" :r="orb.r" fill="none" :stroke="orb.color"
-            stroke-opacity="0.18" stroke-width="1"
-            :stroke-dasharray="i === 0 ? '0' : i === 1 ? '4 6' : '2 8'" />
-          <circle :cx="CX" :cy="CY" :r="orb.r + 0.5" fill="none" :stroke="orb.color"
-            stroke-opacity="0.08" stroke-width="3" />
+        <!-- Track paths + particle flow -->
+        <g v-for="(track, ti) in orbitTracks" :key="'track-'+track.id">
+          <path :id="'tp-'+track.id" :d="ellipsePath(CX, CY, TRACK_RADII[ti].a, TRACK_RADII[ti].b)"
+            fill="none" :stroke="track.color" stroke-opacity="0.18" stroke-width="1"
+            :stroke-dasharray="ti < 3 ? '4 6' : '2 8'" />
+          <path :d="ellipsePath(CX, CY, TRACK_RADII[ti].a, TRACK_RADII[ti].b)"
+            fill="none" :stroke="track.color" stroke-opacity="0.06" stroke-width="3" />
+          <circle r="2" :fill="track.color" opacity="0.5">
+            <animateMotion :dur="(22 + ti * 10) + 's'" repeatCount="indefinite">
+              <mpath :href="'#tp-' + track.id" />
+            </animateMotion>
+          </circle>
+          <circle r="1.5" :fill="track.color" opacity="0.3">
+            <animateMotion :dur="(22 + ti * 10) + 's'" repeatCount="indefinite" :begin="'-' + (5 + ti * 2) + 's'">
+              <mpath :href="'#tp-' + track.id" />
+            </animateMotion>
+          </circle>
         </g>
 
-        <!-- Asteroids -->
-        <circle v-for="(a, i) in ASTEROIDS" :key="'a'+i"
-          :cx="a.x" :cy="a.y" :r="a.r" fill="#fff" :opacity="a.o" />
+        <!-- Center -->
+        <circle :cx="CX" :cy="CY" r="42" fill="rgba(124,58,237,0.12)" stroke="#7c3aed" stroke-width="1.5" stroke-opacity="0.35" />
+        <circle :cx="CX" :cy="CY" r="28" fill="rgba(124,58,237,0.2)" stroke="#7c3aed" stroke-width="1" stroke-opacity="0.5" />
 
-        <!-- Sun -->
-        <circle :cx="CX" :cy="CY" r="80" fill="url(#orb-sun-core)" filter="url(#orb-glow-md)" />
-        <circle :cx="CX" :cy="CY" r="60" fill="#f59e0b" opacity="0.9" />
-        <circle :cx="CX" :cy="CY" r="42" fill="#fff" opacity="0.85" />
-        <!-- Corona -->
-        <line v-for="i in 12" :key="'corona-'+i"
-          :x1="polar(CX, CY, 65, (i / 12) * 360).x" :y1="polar(CX, CY, 65, (i / 12) * 360).y"
-          :x2="polar(CX, CY, 88 + (i % 3) * 6, (i / 12) * 360).x" :y2="polar(CX, CY, 88 + (i % 3) * 6, (i / 12) * 360).y"
-          stroke="#f59e0b" stroke-opacity="0.5" stroke-width="1.5" stroke-linecap="round" />
-
-        <!-- Trajectory line -->
-        <line :x1="CX" :y1="CY" :x2="polar(CX, CY, ORBITS[0].r, -45).x" :y2="polar(CX, CY, ORBITS[0].r, -45).y"
-          stroke="#f59e0b" stroke-opacity="0.3" stroke-width="1.5" stroke-dasharray="2 6" />
-
-        <!-- Planets -->
-        <g v-for="(p, i) in PLANETS" :key="'p'+i">
-          <g v-if="p.state === 'current'">
-            <circle :cx="polar(CX, CY, ORBITS[p.o].r, p.angle).x" :cy="polar(CX, CY, ORBITS[p.o].r, p.angle).y" :r="p.size + 8"
-              fill="none" stroke="#f59e0b" stroke-width="1.5"
-              :style="{ transformOrigin: `${polar(CX, CY, ORBITS[p.o].r, p.angle).x}px ${polar(CX, CY, ORBITS[p.o].r, p.angle).y}px`, animation: 'orbital-pulse 2.2s ease-out infinite' }" />
-            <circle :cx="polar(CX, CY, ORBITS[p.o].r, p.angle).x" :cy="polar(CX, CY, ORBITS[p.o].r, p.angle).y" :r="p.size + 8"
-              fill="none" stroke="#f59e0b" stroke-width="1.5"
-              :style="{ transformOrigin: `${polar(CX, CY, ORBITS[p.o].r, p.angle).x}px ${polar(CX, CY, ORBITS[p.o].r, p.angle).y}px`, animation: 'orbital-pulse 2.2s ease-out 1.1s infinite' }" />
+        <!-- Nodes -->
+        <g v-for="(track, ti) in orbitTracks" :key="'nodes-'+track.id">
+          <g v-for="node in track.nodes" :key="node.id" class="orbital-planet" @click="emit('select-node', node.id)">
+            <circle v-if="node.status === 'in_progress'"
+              :cx="ellipsePolar(CX, CY, TRACK_RADII[ti].a, TRACK_RADII[ti].b, node.angle).x"
+              :cy="ellipsePolar(CX, CY, TRACK_RADII[ti].a, TRACK_RADII[ti].b, node.angle).y"
+              r="20" fill="#f59e0b" opacity="0.2" filter="url(#orb-glow-md)" />
+            <circle v-if="node.status === 'remedial'"
+              :cx="ellipsePolar(CX, CY, TRACK_RADII[ti].a, TRACK_RADII[ti].b, node.angle).x"
+              :cy="ellipsePolar(CX, CY, TRACK_RADII[ti].a, TRACK_RADII[ti].b, node.angle).y"
+              r="18" fill="#f43f5e" opacity="0.15" filter="url(#orb-glow-md)" />
+            <circle v-if="node.status === 'in_progress'"
+              :cx="ellipsePolar(CX, CY, TRACK_RADII[ti].a, TRACK_RADII[ti].b, node.angle).x"
+              :cy="ellipsePolar(CX, CY, TRACK_RADII[ti].a, TRACK_RADII[ti].b, node.angle).y"
+              r="14" fill="none" stroke="#f59e0b" stroke-width="1.5"
+              :style="{ transformOrigin: `${ellipsePolar(CX, CY, TRACK_RADII[ti].a, TRACK_RADII[ti].b, node.angle).x}px ${ellipsePolar(CX, CY, TRACK_RADII[ti].a, TRACK_RADII[ti].b, node.angle).y}px`, animation: 'orbital-pulse 2.2s ease-out infinite' }" />
+            <circle
+              :cx="ellipsePolar(CX, CY, TRACK_RADII[ti].a, TRACK_RADII[ti].b, node.angle).x"
+              :cy="ellipsePolar(CX, CY, TRACK_RADII[ti].a, TRACK_RADII[ti].b, node.angle).y"
+              :r="node.status === 'in_progress' ? 10 : 8"
+              :fill="nodeFill(node.status)"
+              :stroke="nodeStroke(node.status)"
+              :stroke-width="node.status === 'remedial' ? 1.5 : 1"
+              :opacity="nodeOpacity(node.status)" />
+            <text v-if="node.status === 'completed'"
+              :x="ellipsePolar(CX, CY, TRACK_RADII[ti].a, TRACK_RADII[ti].b, node.angle).x"
+              :y="ellipsePolar(CX, CY, TRACK_RADII[ti].a, TRACK_RADII[ti].b, node.angle).y + 1"
+              fill="#fff" font-size="10" text-anchor="middle" dominant-baseline="middle" opacity="0.85">✓</text>
+            <text v-if="node.entersNextCycle"
+              :x="ellipsePolar(CX, CY, TRACK_RADII[ti].a, TRACK_RADII[ti].b, node.angle).x + 14"
+              :y="ellipsePolar(CX, CY, TRACK_RADII[ti].a, TRACK_RADII[ti].b, node.angle).y - 10"
+              fill="#7c3aed" font-size="11" opacity="0.8">↻</text>
+            <text v-if="node.triggeredResource"
+              :x="ellipsePolar(CX, CY, TRACK_RADII[ti].a, TRACK_RADII[ti].b, node.angle).x - 14"
+              :y="ellipsePolar(CX, CY, TRACK_RADII[ti].a, TRACK_RADII[ti].b, node.angle).y - 10"
+              fill="#00d4ff" font-size="9" opacity="0.7">◆</text>
           </g>
-
-          <!-- Moon orbits + moons for current -->
-          <g v-if="p.moons && p.state === 'current'">
-            <circle :cx="polar(CX, CY, ORBITS[p.o].r, p.angle).x" :cy="polar(CX, CY, ORBITS[p.o].r, p.angle).y" :r="p.size + 18"
-              fill="none" stroke="#f59e0b" stroke-opacity="0.18" stroke-width="1" stroke-dasharray="2 3" />
-            <circle v-for="mi in p.moons" :key="'mc'+i+'-'+mi"
-              :cx="polar(polar(CX, CY, ORBITS[p.o].r, p.angle).x, polar(CX, CY, ORBITS[p.o].r, p.angle).y, p.size + 18, (mi / p.moons) * 360 + 30).x"
-              :cy="polar(polar(CX, CY, ORBITS[p.o].r, p.angle).x, polar(CX, CY, ORBITS[p.o].r, p.angle).y, p.size + 18, (mi / p.moons) * 360 + 30).y"
-              r="2.5" fill="#f59e0b" filter="url(#orb-glow-sm)" />
-          </g>
-          <g v-if="p.moons && p.state !== 'current' && p.state !== 'locked' && p.state !== 'goal'">
-            <circle v-for="mi in p.moons" :key="'mo'+i+'-'+mi"
-              :cx="polar(polar(CX, CY, ORBITS[p.o].r, p.angle).x, polar(CX, CY, ORBITS[p.o].r, p.angle).y, p.size + 12, (mi / p.moons) * 360 + 30).x"
-              :cy="polar(polar(CX, CY, ORBITS[p.o].r, p.angle).x, polar(CX, CY, ORBITS[p.o].r, p.angle).y, p.size + 12, (mi / p.moons) * 360 + 30).y"
-              r="1.5" :fill="PLANET_STYLE[p.state].stroke" opacity="0.4" />
-          </g>
-
-          <!-- Planet glow -->
-          <circle v-if="PLANET_STYLE[p.state].glow"
-            :cx="polar(CX, CY, ORBITS[p.o].r, p.angle).x" :cy="polar(CX, CY, ORBITS[p.o].r, p.angle).y"
-            :r="p.size * 1.8" :fill="PLANET_STYLE[p.state].stroke" opacity="0.25" filter="url(#orb-glow-md)" />
-
-          <!-- Planet body -->
-          <circle v-if="p.state === 'current'"
-            :cx="polar(CX, CY, ORBITS[p.o].r, p.angle).x" :cy="polar(CX, CY, ORBITS[p.o].r, p.angle).y"
-            :r="p.size" fill="url(#orb-cur-planet)" />
-          <circle v-else
-            :cx="polar(CX, CY, ORBITS[p.o].r, p.angle).x" :cy="polar(CX, CY, ORBITS[p.o].r, p.angle).y"
-            :r="p.size" :fill="PLANET_STYLE[p.state].fill" :stroke="PLANET_STYLE[p.state].stroke"
-            :stroke-width="p.state === 'goal' || p.state === 'upcoming' ? 1.5 : 1"
-            :stroke-dasharray="p.state === 'locked' ? '2 2' : 'none'"
-            :opacity="PLANET_STYLE[p.state].opacity" />
-
-          <!-- Checkmark for done -->
-          <text v-if="p.state === 'done'"
-            :x="polar(CX, CY, ORBITS[p.o].r, p.angle).x" :y="polar(CX, CY, ORBITS[p.o].r, p.angle).y + 1"
-            fill="#fff" font-size="12" text-anchor="middle" dominant-baseline="middle" opacity="0.85">✓</text>
-          <text v-if="p.state === 'goal'"
-            :x="polar(CX, CY, ORBITS[p.o].r, p.angle).x" :y="polar(CX, CY, ORBITS[p.o].r, p.angle).y + 1"
-            fill="#f43f5e" font-size="14" text-anchor="middle" dominant-baseline="middle">★</text>
-        </g>
-
-        <!-- Comet -->
-        <g :style="{ transformOrigin: `${CX}px ${CY}px`, animation: 'orbital-spin 60s linear infinite' }">
-          <g :transform="`translate(${CX + 400}, ${CY})`">
-            <line x1="-22" y1="0" x2="0" y2="0" stroke="#00d4ff" stroke-width="2" stroke-linecap="round" opacity="0.7" />
-            <line x1="-44" y1="0" x2="-12" y2="0" stroke="#00d4ff" stroke-width="1" stroke-linecap="round" opacity="0.3" />
-            <circle cx="0" cy="0" r="3" fill="#fff" filter="url(#orb-glow-sm)" />
-          </g>
-        </g>
-
-        <!-- Orbiting particle -->
-        <g :style="{ transformOrigin: `${CX}px ${CY}px`, animation: 'orbital-spin-rev 38s linear infinite' }">
-          <circle :cx="CX + 280" :cy="CY" r="1.5" fill="#00d4ff" opacity="0.5" />
         </g>
       </svg>
 
-      <!-- Sun label -->
+      <!-- Center label -->
       <div class="sun-label">
-        <div class="sun-label-tag">★ CURRENT GOAL</div>
-        <div class="sun-label-title">完成深度学习路径</div>
-        <div class="sun-label-date">截止 2026-06-30 · 26 天后</div>
+        <div class="sun-label-tag">LEARNING GOAL</div>
+        <div class="sun-label-title">当前学习目标</div>
       </div>
 
-      <!-- Orbit phase labels -->
-      <div v-for="(orb, i) in ORBITS" :key="'ol'+i" class="orbit-label"
-        :style="{ left: ((polar(CX, CY, orb.r, 180).x - 26) / 1400 * 100) + '%', top: ((polar(CX, CY, orb.r, 180).y - 30) / 900 * 100) + '%' }">
-        <div class="orbit-label-tag" :style="{ color: orb.color }">ORBIT {{ i + 1 }}</div>
-        <div class="orbit-label-name">{{ orb.phase }}</div>
+      <!-- Track labels -->
+      <div v-for="(track, ti) in orbitTracks" :key="'tl'+ti" class="orbit-label"
+        :style="{ left: ((CX - TRACK_RADII[ti].a - 30) / 1400 * 100) + '%', top: ((CY - 10) / 900 * 100) + '%' }">
+        <div class="orbit-label-tag" :style="{ color: track.color }">TRACK {{ ti + 1 }}</div>
+        <div class="orbit-label-name">{{ track.name }}</div>
       </div>
 
-      <!-- Planet labels -->
-      <div v-for="(p, i) in PLANETS" :key="'pl'+i" class="planet-label"
-        :style="{
-          left: (polar(CX, CY, ORBITS[p.o].r + p.size + 18 + (p.state === 'current' ? 14 : 0), p.angle).x / 1400 * 100) + '%',
-          top: (polar(CX, CY, ORBITS[p.o].r + p.size + 18 + (p.state === 'current' ? 14 : 0), p.angle).y / 900 * 100) + '%',
-          transform: `translate(${polar(CX, CY, ORBITS[p.o].r + p.size + 18, p.angle).x > CX ? '0' : '-100%'}, -50%)`,
-          textAlign: polar(CX, CY, ORBITS[p.o].r + p.size + 18, p.angle).x > CX ? 'left' : 'right',
-        }">
-        <div class="planet-name" :style="{
-          fontSize: p.state === 'current' ? '13px' : '11.5px',
-          fontWeight: p.state === 'current' ? 600 : 500,
-          color: p.state === 'locked' ? '#8892b0' : p.state === 'current' ? '#f59e0b' : p.state === 'goal' ? '#f43f5e' : '#e8edf5',
-        }">{{ p.label }}</div>
-        <div v-if="p.state === 'current'" class="planet-sub" style="color:#f59e0b">现在 · 4 任务</div>
-        <div v-if="p.state === 'next'" class="planet-sub" style="color:#00d4ff">下一站</div>
-        <div v-if="p.state === 'goal'" class="planet-sub" style="color:#f43f5e">远期 · 锁定</div>
-      </div>
+      <!-- Node labels -->
+      <template v-for="(track, ti) in orbitTracks" :key="'nl-wrap-'+track.id">
+        <div v-for="node in track.nodes" :key="'nl-'+node.id" class="planet-label"
+          :style="{
+            left: (ellipsePolar(CX, CY, TRACK_RADII[ti].a, TRACK_RADII[ti].b, node.angle).x / 1400 * 100) + '%',
+            top: (ellipsePolar(CX, CY, TRACK_RADII[ti].a, TRACK_RADII[ti].b, node.angle).y / 900 * 100) + '%',
+            transform: 'translate(-50%, -50%) translateY(-18px)',
+          }">
+          <div class="planet-name" :style="{
+            fontSize: node.status === 'in_progress' ? '12px' : '10.5px',
+            fontWeight: node.status === 'in_progress' ? 600 : 500,
+            color: node.status === 'completed' ? '#06d6a0' : node.status === 'in_progress' ? '#f59e0b' : node.status === 'remedial' ? '#f43f5e' : '#8892b0',
+          }">{{ node.label }}</div>
+          <div v-if="node.agentInvolved" class="planet-sub" :style="{ color: track.color }">{{ node.agentInvolved }}</div>
+        </div>
+      </template>
 
       <!-- Detail panel -->
       <div class="orbital-detail">
         <div class="detail-header">
-          <span class="detail-chip" style="background:rgba(245,158,11,0.12);border-color:#f59e0b33;color:#f59e0b">正在执行</span>
-          <span class="detail-orbit">ORBIT 1 · NOW</span>
+          <span class="detail-chip" style="background:rgba(124,58,237,0.12);border-color:#7c3aed33;color:#7c3aed">学习循环</span>
+          <span class="detail-orbit">ORBITAL · LOOP</span>
         </div>
-        <div class="detail-title">卷积运算</div>
-        <div class="detail-sub">4 个微任务围绕这颗行星 · 完成 2 个</div>
-        <div class="moons-title">MOONS · 微任务</div>
+        <div class="detail-title">六轨学习循环</div>
+        <div class="detail-sub">预习 → 理解 → 练习 → 测评 → 反馈 → 补救</div>
+        <div class="moons-title">TRACKS · 轨道状态</div>
         <div class="moons-list">
-          <div v-for="(task, i) in moonTasks" :key="i" :class="['moon-task', task.status]">
-            <div :class="['moon-check', task.status]">
-              <span v-if="task.status === 'done'">✓</span>
-              <span v-if="task.status === 'now'">●</span>
+          <div v-for="track in orbitTracks" :key="track.id" class="moon-task" :class="{ now: track.nodes.some(n => n.status === 'in_progress') }">
+            <div :class="['moon-check', track.nodes.some(n => n.status === 'in_progress') ? 'now' : track.nodes.every(n => n.status === 'completed') ? 'done' : 'todo']">
+              <span v-if="track.nodes.every(n => n.status === 'completed')">✓</span>
+              <span v-else-if="track.nodes.some(n => n.status === 'in_progress')">●</span>
             </div>
-            <span class="moon-label">{{ task.label }}</span>
-            <span class="moon-time">{{ task.time }}</span>
+            <span class="moon-label">{{ track.name }}</span>
+            <span class="moon-time">{{ track.nodes.filter(n => n.status === 'completed').length }}/{{ track.nodes.length }}</span>
           </div>
         </div>
-        <button class="detail-btn" style="background:linear-gradient(135deg,#f59e0b,#f43f5e);box-shadow:0 4px 20px #f59e0b55">继续手算 3×3 卷积 →</button>
       </div>
 
       <!-- Legend -->
       <div class="orbital-legend">
-        <div class="legend-title">PLANET · 状态</div>
+        <div class="legend-title">NODE · 节点状态</div>
         <div class="legend-items">
           <div v-for="d in [
-            { c: '#06d6a0', sz: 9, label: '已完成', desc: 'past · ✓', opacity: 0.55 },
-            { c: '#f59e0b', sz: 12, label: '当前任务', desc: 'current · ★', glow: true },
-            { c: '#00d4ff', sz: 10, label: '下一颗', desc: 'next', opacity: 0.85 },
-            { c: 'rgba(255,255,255,0.25)', sz: 10, label: '锁定中', desc: 'locked · 待解锁', dashed: true },
-            { c: '#f43f5e', sz: 11, label: '远期目标', desc: 'goal · ★' },
+            { c: '#06d6a0', label: '已完成', desc: 'completed · ✓' },
+            { c: '#f59e0b', label: '进行中', desc: 'in_progress', glow: true },
+            { c: 'rgba(255,255,255,0.25)', label: '待开始', desc: 'upcoming' },
+            { c: '#f43f5e', label: '需补救', desc: 'remedial' },
+            { c: '#7c3aed', label: '循环衔接', desc: '↻ entersNextCycle' },
+            { c: '#00d4ff', label: '触发资源', desc: '◆ triggeredResource' },
           ]" :key="d.label" class="legend-item">
             <svg width="28" height="20">
-              <circle v-if="d.glow" cx="14" cy="10" :r="d.sz + 4" :fill="d.c" opacity="0.3" />
-              <circle cx="14" cy="10" :r="d.sz"
-                :fill="d.dashed ? 'rgba(255,255,255,0.04)' : d.c" :stroke="d.c"
-                stroke-width="1.5" :stroke-dasharray="d.dashed ? '2 2' : 'none'"
-                :opacity="d.opacity ?? 1" />
+              <circle v-if="d.glow" cx="14" cy="10" r="12" :fill="d.c" opacity="0.3" />
+              <circle cx="14" cy="10" r="7"
+                :fill="d.c.startsWith('rgba') ? 'rgba(255,255,255,0.06)' : d.c" :stroke="d.c"
+                stroke-width="1.5" />
             </svg>
             <span class="legend-label-text">{{ d.label }}</span>
             <span class="legend-desc">{{ d.desc }}</span>
@@ -347,13 +298,14 @@ onUnmounted(() => { styleEl?.remove() })
   border: 1px solid rgba(255, 255, 255, 0.06); overflow: hidden;
 }
 .orbital-svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+.orbital-planet { cursor: pointer; }
 
 .sun-label {
   position: absolute; left: calc(540 / 1400 * 100%); top: calc((470 + 110) / 900 * 100%);
   transform: translateX(-50%); z-index: 5; text-align: center; pointer-events: none;
 }
-.sun-label-tag { font-size: 10px; color: #f59e0b; letter-spacing: 0.22em; font-family: var(--font-mono); margin-bottom: 4px; }
-.sun-label-title { font-family: var(--font-display); font-size: 22px; color: #e8edf5; line-height: 1.1; text-shadow: 0 0 20px #f59e0b88; }
+.sun-label-tag { font-size: 10px; color: #7c3aed; letter-spacing: 0.22em; font-family: var(--font-mono); margin-bottom: 4px; }
+.sun-label-title { font-family: var(--font-display); font-size: 22px; color: #e8edf5; line-height: 1.1; text-shadow: 0 0 20px #7c3aed88; }
 .sun-label-date { font-size: 11px; color: #8892b0; margin-top: 4px; font-family: var(--font-mono); letter-spacing: 0.05em; }
 
 .orbit-label {

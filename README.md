@@ -1,17 +1,19 @@
 # EduMind — 多智能体个性化学习闭环
 
-基于 `Vue 3 + Vite + TypeScript` 的多智能体个性化学习平台前端项目，配备轻量本地 API 服务。
+基于 `Vue 3 + Vite + TypeScript` 的多智能体个性化学习平台，面向 **科大讯飞软件杯 A3 赛题**——"基于大模型的个性化资源生成与学习多智能体系统"。
 
 ## 推荐演示流程
 
 ```text
 1. 首页 → 查看学习闭环驾驶舱（画像摘要、今日路径、评估反馈、下一步推荐）
 2. 首页 → 浏览多智能体执行链（每个节点显示输入/处理/输出/状态）
-3. 资源页 → 点击任意资源卡片的"为什么推荐？"，查看推荐证据链
-4. 路径页 → 查看评估后路径重规划对比（评估前路径 vs 评估后路径）
-5. 评估页 → 查看画像更新记录（更新前 → 评估证据 → 更新后）
-6. 评估页 → 点击成长知识树红色薄弱节点，查看错因、补救资源、路径影响
-7. 评估页 → 点击"加入下一轮路径"，触发前端模拟反馈
+3. 画像页 → 完成问卷，触发 ProfileAgent 分析（自动生成 trace）
+4. 资源页 → 点击任意资源卡片的"为什么推荐？"，查看推荐证据链
+5. 路径页 → 查看评估后路径重规划对比（评估前路径 vs 评估后路径）
+6. 评估页 → 查看画像更新记录（更新前 → 评估证据 → 更新后）
+7. 评估页 → 点击成长知识树红色薄弱节点，查看错因、补救资源、路径影响
+8. 证据链页 → 查看所有 Agent 协作 trace、Agent 统计、fallback 率、LLM 状态
+9. 一键闭环 → POST /api/agents/run 触发 6 Agent 完整闭环
 ```
 
 ## 核心叙事闭环
@@ -21,10 +23,12 @@
 | 页面     | 叙事重点           | 可交互证据         |
 | -------- | ------------------ | ------------------ |
 | 首页     | 闭环驾驶舱         | 实时画像 + 今日路径 |
+| 画像页   | 画像如何生成       | ProfileAgent trace |
 | 资源页   | 为什么推荐这个资源 | 推荐证据链弹窗     |
 | 路径页   | 为什么路径改变     | 评估前后路径对比   |
 | 评估页   | 为什么画像更新     | 画像更新记录       |
 | 知识树   | 薄弱点触发补救     | 点击查看详情+按钮  |
+| 证据链页 | Agent 协作全过程   | trace + Agent 统计 |
 | Agent 图 | 谁处理了什么数据   | 输入/处理/输出/状态|
 
 ## 项目结构
@@ -37,6 +41,16 @@
 - [server/index.js](D:/ZYY_Project/v4/server/index.js) 轻量本地 API 服务入口
 - [server/data.js](D:/ZYY_Project/v4/server/data.js) 当前接口 mock 数据与简单业务逻辑
 - [server/content](D:/ZYY_Project/v4/server/content) JSON 数据源
+- [server/agents/orchestrator.js](D:/ZYY_Project/v4/server/agents/orchestrator.js) Agent 调度器
+- [server/agents/profile-agent.js](D:/ZYY_Project/v4/server/agents/profile-agent.js) 画像分析 Agent
+- [server/agents/resource-agent.js](D:/ZYY_Project/v4/server/agents/resource-agent.js) 资源生成 Agent
+- [server/agents/path-agent.js](D:/ZYY_Project/v4/server/agents/path-agent.js) 路径规划 Agent
+- [server/agents/tutor-agent.js](D:/ZYY_Project/v4/server/agents/tutor-agent.js) 辅导 Agent
+- [server/agents/evaluation-agent.js](D:/ZYY_Project/v4/server/agents/evaluation-agent.js) 评估 Agent
+- [server/agents/reflection-agent.js](D:/ZYY_Project/v4/server/agents/reflection-agent.js) 反思 Agent
+- [server/llm/provider.js](D:/ZYY_Project/v4/server/llm/provider.js) LLM 统一接入层
+- [server/evidence/recorder.js](D:/ZYY_Project/v4/server/evidence/recorder.js) 证据记录器
+- [server/schemas.js](D:/ZYY_Project/v4/server/schemas.js) Agent 输入输出 Schema
 
 ## 启动方式
 
@@ -65,15 +79,34 @@ npm run dev:server
 
 ## 已提供 API
 
+### 基础接口
+
 - `GET /api/health`
-- `POST /api/profile/analyze`
-- `POST /api/chat`
-- `POST /api/tutoring/ask`
+- `POST /api/profile/analyze` — 画像分析（已接入 ProfileAgent + trace）
+- `POST /api/chat` — 自由对话（已接入 trace 记录）
+- `POST /api/tutoring/ask` — 智能辅导（已接入 TutorAgent + trace）
 - `GET /api/tutoring/topics`
 - `GET /api/resources`
 - `GET /api/resources/recommended`
 - `GET /api/learning-path`
 - `GET /api/evaluation`
+- `GET /api/profile/latest`
+- `GET /api/chat/history`
+- `GET /api/tutoring/history`
+
+### A3 多智能体接口
+
+- `POST /api/agents/profile` — ProfileAgent 画像分析
+- `POST /api/resources/generate` — ProfileAgent → ResourceAgent 个性化资源生成
+- `POST /api/agents/tutor` — ProfileAgent → TutorAgent 智能辅导
+- `POST /api/agents/evaluate` — EvaluationAgent → ReflectionAgent 综合评估
+- `POST /api/agents/path-replan` — EvaluationAgent → PathAgent 路径重规划
+- `POST /api/agents/run` — 一键完整闭环（6 Agent 串行）
+
+### 证据链接口
+
+- `GET /api/evidence/traces` — 查询 trace 列表
+- `GET /api/evidence/summary` — trace 统计摘要（含 LLM 状态）
 
 ## 页面接入说明
 
@@ -117,11 +150,13 @@ npm run dev:server
 
 ## 后端说明
 
-当前后端是轻量 Node HTTP 服务，做了以下增强：
+当前后端是轻量 Node HTTP 服务，已接入多智能体系统：
 
 - 接口数据从 [server/content](D:/ZYY_Project/v4/server/content) 下的 JSON 文件读取，改数据不需要改代码
 - `readJson` 增加了 1MB body 大小限制，并对非法 JSON 返回 `400`
 - 新增 [server/store.json](D:/ZYY_Project/v4/server/store.json) 作为轻量持久化文件
+- 6 个专业 Agent + Orchestrator，每个 Agent 支持 LLM 调用 + 本地 fallback
+- 证据链自动记录，主流程（画像、辅导、对话）均已接入 trace
 
 当前持久化接口：
 
@@ -130,8 +165,6 @@ npm run dev:server
 - `GET /api/tutoring/history`
 
 ## 校验
-
-当前已通过：
 
 ```bash
 ./node_modules/.bin/vue-tsc --noEmit
@@ -143,12 +176,21 @@ npm run dev:server
 curl -s http://localhost:8787/api/health
 curl -s http://localhost:8787/api/learning-path
 curl -s http://localhost:8787/api/evaluation
+
+# 测试 A3 多智能体接口
+curl -s -X POST http://localhost:8787/api/agents/run -H 'Content-Type: application/json' -d '{}'
+curl -s http://localhost:8787/api/evidence/summary
+curl -s http://localhost:8787/api/evidence/traces
 ```
+
+## A3 升级详情
+
+详见 [docs/A3_COMPETITION_UPGRADE.md](D:/ZYY_Project/v4/docs/A3_COMPETITION_UPGRADE.md)
 
 ## 下一步建议
 
-- 给后端补最轻量的持久化，例如 `store.json`
-- 明确 `Chat` 和 `Tutoring` 的长期分工
 - 补齐 empty / error / retry 状态
-- 继续把评估、路径、画像里的重复规则抽成共享逻辑
-- 统一前后端的画像分析逻辑，减少重复实现
+- 接入真实 LLM API Key，提升 Agent 输出质量
+- 前端资源页、路径页增加调用 `/api/resources/generate` 和 `/api/agents/path-replan` 的按钮
+- 证据链页面增加按 Agent 筛选、时间范围筛选
+- 增加前端"一键闭环"演示按钮，调用 `/api/agents/run`
