@@ -1,4 +1,4 @@
-﻿<script setup lang="ts">
+<script setup lang="ts">
 import { computed, ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import {
@@ -18,7 +18,6 @@ import {
 } from 'lucide-vue-next'
 import { fetchEvaluation } from '@/lib/api'
 import ThreeKnowledgeTree from '@/components/knowledge-tree/ThreeKnowledgeTree.vue'
-import GrowthKnowledgeTree from '@/components/knowledge-tree/GrowthKnowledgeTree.vue'
 import ProfileUpdateTrace from '@/components/evaluation/ProfileUpdateTrace.vue'
 import ParticleBackground from '@/components/evaluation/ParticleBackground.vue'
 import KnowledgeConstellation from '@/components/evaluation/KnowledgeConstellation.vue'
@@ -47,7 +46,6 @@ const isLoading = ref(false)
 const showReportModal = ref(false)
 const showRoundInsight = ref(false)
 const reportDate = ref('2026-05-12')
-const selectedWeakNode = ref<TreeNode | null>(null)
 
 const roundInsight = {
   title: '这一轮学习画像已更新',
@@ -71,18 +69,6 @@ const roundInsight = {
 function acceptRoundAdjustment() {
   showRoundInsight.value = false
   router.push({ path: '/learning-path', query: { focus: 'round-adjustment' } })
-}
-
-function onTreeNodeClick(node: TreeNode) {
-  if (node.status === 'weak') {
-    selectedWeakNode.value = node
-  }
-}
-
-function addToNextPath() {
-  if (selectedWeakNode.value) {
-    alert(`已将"${selectedWeakNode.value.name}"的补救任务加入下一轮学习路径`)
-  }
 }
 
 const defaultStats: StatItem[] = [
@@ -152,15 +138,6 @@ const pathStages = [
   { label: '下一路径', value: 64, tone: '#7c3aed' },
 ]
 
-const treeNodes: TreeNode[] = [
-  { name: 'C / Python 编程基础', status: 'mastered', progress: 92 },
-  { name: '数据结构与算法', status: 'learning', progress: 68 },
-  { name: '指针与内存', status: 'weak', progress: 42, issue: '指针传递与内存分配理解不稳定', cause: '概念混淆', remedialResources: ['指针内存图解卡片', '指针专项练习 5 题'], pathImpact: '已插入课后巩固阶段' },
-  { name: '图结构与搜索', status: 'weak', progress: 38, issue: '节点关系理解不稳定', cause: '概念混淆', remedialResources: ['图结构思维导图', '专项练习 3 题'], pathImpact: '已插入课后巩固阶段' },
-  { name: '操作系统原理', status: 'learning', progress: 55 },
-  { name: '机器学习实践', status: 'next', progress: 20 },
-]
-
 const fineTreeNodes: TreeNode[] = [
   { name: '栈帧与地址生命周期', status: 'mastered', progress: 86 },
   { name: 'malloc / free 配对', status: 'learning', progress: 58 },
@@ -199,6 +176,38 @@ const profileTrace = {
     { label: '新增偏好', value: '思维导图 + 例题拆解' },
   ],
   nextAction: '下一轮路径插入图结构补弱与指针训练资源',
+}
+
+const selectedNode = ref<TreeNode | null>(null)
+
+const selectedNodeDetail = computed(() => {
+  const node = selectedNode.value
+  if (!node) return null
+  return {
+    name: node.name,
+    status: node.status,
+    progress: node.progress,
+    issue: node.issue ?? null,
+    cause: node.cause ?? null,
+    remedialResources: node.remedialResources ?? [],
+    pathImpact: node.pathImpact ?? null,
+  }
+})
+
+function handleMarkerSelect(marker: any) {
+  const point = fineTreeNodes.find(n => n.name === marker?.label)
+  if (point) {
+    selectedNode.value = point
+  }
+}
+
+function closeNodeDetail() {
+  selectedNode.value = null
+}
+
+function addToNextPath() {
+  if (!selectedNode.value) return
+  showRoundInsight.value = true
 }
 
 const iconMap = {
@@ -311,346 +320,326 @@ onMounted(() => {
 <template>
   <div class="evaluation">
     <ParticleBackground />
-    <div class="eval-page-header">
-      <div class="header-left">
-        <div class="hero-badge">效果评估</div>
-        <h1 class="page-title">学习效果<span class="gradient-text">数据洞察</span></h1>
-        <p class="page-subtitle">从测评结果、资源完成度和知识树变化中识别薄弱点，并反向更新学生画像。</p>
-        <p v-if="isLoading" class="page-status">正在同步评估数据...</p>
-      </div>
-      <div class="header-right">
-        <button class="report-btn" @click="showReportModal = true">
-          <FileBarChart :size="16" stroke-width="1.5" />
-          <span>生成评估报告</span>
-        </button>
-      </div>
-    </div>
-
-    <div class="eval-summary-cards">
-      <div v-for="item in stats" :key="item.label" class="summary-card" :style="{ '--s-color': item.color }">
-        <div class="summary-icon">
-          <component :is="item.icon" :size="20" stroke-width="1.5" />
-        </div>
-        <div class="summary-body">
-          <div class="summary-top">
-            <span class="summary-value">{{ item.value }}</span>
-            <span class="summary-change">{{ item.change }}</span>
+    <div class="eval-split-layout">
+      <div class="eval-left-panel">
+        <div class="card three-mini-card">
+          <div class="card-head">
+            <h2 class="card-title-sm">学习状态可视化</h2>
+            <span class="card-tag">3D</span>
           </div>
-          <span class="summary-label">{{ item.label }}</span>
+          <ThreeKnowledgeTree fill :knowledge-points="fineTreeNodes" :scene-scale="7.5" :scene-offset-y="5.05" @marker-select="handleMarkerSelect" />
+          <transition name="node-panel">
+            <aside v-if="selectedNodeDetail" class="node-eval-panel" :class="selectedNodeDetail.status">
+              <button class="node-eval-close" type="button" aria-label="关闭" @click="closeNodeDetail">×</button>
+              <div class="node-eval-head">
+                <span class="node-eval-badge" :class="selectedNodeDetail.status">
+                  {{ selectedNodeDetail.status === 'mastered' ? '已掌握' : selectedNodeDetail.status === 'weak' ? '薄弱点' : selectedNodeDetail.status === 'learning' ? '学习中' : '待学习' }}
+                </span>
+                <span class="node-eval-pct">{{ selectedNodeDetail.progress }}%</span>
+              </div>
+              <h3 class="node-eval-title">{{ selectedNodeDetail.name }}</h3>
+              <div class="node-eval-meter">
+                <i :style="{ width: `${Math.max(4, selectedNodeDetail.progress)}%` }" />
+              </div>
+              <div v-if="selectedNodeDetail.issue" class="node-eval-block">
+                <span class="node-eval-label">问题诊断</span>
+                <p>{{ selectedNodeDetail.issue }}</p>
+              </div>
+              <div v-if="selectedNodeDetail.cause" class="node-eval-block">
+                <span class="node-eval-label">根因分析</span>
+                <p>{{ selectedNodeDetail.cause }}</p>
+              </div>
+              <div v-if="selectedNodeDetail.remedialResources.length" class="node-eval-block">
+                <span class="node-eval-label">补救资源</span>
+                <ul>
+                  <li v-for="res in selectedNodeDetail.remedialResources" :key="res">{{ res }}</li>
+                </ul>
+              </div>
+              <div v-if="selectedNodeDetail.pathImpact" class="node-eval-block">
+                <span class="node-eval-label">路径影响</span>
+                <p>{{ selectedNodeDetail.pathImpact }}</p>
+              </div>
+              <div class="node-eval-actions">
+                <button type="button" class="node-eval-secondary" @click="goToTutoring(selectedNodeDetail.name)">进入辅导</button>
+                <button type="button" class="node-eval-primary" @click="addToNextPath">加入路径</button>
+              </div>
+            </aside>
+          </transition>
+          <transition name="round-panel">
+            <section v-if="showRoundInsight" class="round-insight-panel" aria-label="学习画像更新提示">
+              <div class="round-insight-head">
+                <div class="round-chip">
+                  <Sparkles :size="15" stroke-width="1.8" />
+                  <span>大树更新</span>
+                </div>
+                <button class="round-close" type="button" aria-label="关闭学习画像更新提示" @click="showRoundInsight = false">×</button>
+              </div>
+
+              <h3>{{ roundInsight.title }}</h3>
+              <p class="round-copy">{{ roundInsight.subtitle }}</p>
+
+              <div class="round-metrics">
+                <div v-for="item in roundInsight.metrics" :key="item.label" class="round-metric" :style="{ '--round-tone': item.tone }">
+                  <strong>{{ item.value }}</strong>
+                  <span>{{ item.label }}</span>
+                </div>
+              </div>
+
+              <div class="round-profile-shift">
+                <div v-for="item in roundInsight.profile" :key="item.label" class="shift-row">
+                  <span>{{ item.label }}</span>
+                  <strong>{{ item.before }}</strong>
+                  <ArrowRight :size="13" stroke-width="1.6" />
+                  <em>{{ item.after }}</em>
+                </div>
+              </div>
+
+              <div class="round-route">
+                <span class="route-title">下一轮侧重路线</span>
+                <button v-for="item in roundInsight.route" :key="item" type="button" class="route-node" @click="goToTutoring(item)">
+                  <span class="route-dot" />
+                  <span>{{ item }}</span>
+                </button>
+              </div>
+
+              <div class="round-actions">
+                <button class="round-secondary" type="button" @click="showRoundInsight = false">稍后查看</button>
+                <button class="round-primary" type="button" @click="acceptRoundAdjustment">
+                  接受调整路线
+                  <ArrowRight :size="14" stroke-width="1.7" />
+                </button>
+              </div>
+            </section>
+          </transition>
         </div>
       </div>
-    </div>
 
-    <div class="eval-main-grid">
-      <div class="card profile-trace-card">
-        <div class="card-head">
-          <h2 class="card-title-sm">画像更新记录</h2>
-          <span class="card-tag">反向更新</span>
-        </div>
-        <ProfileUpdateTrace :data="profileTrace" />
-      </div>
+      <div class="eval-right-panel">
+        <div class="right-scroll-area">
+          <div class="right-header">
+            <div class="hero-badge">效果评估</div>
+            <h1 class="page-title">学习效果<span class="gradient-text">数据洞察</span></h1>
+            <p class="page-subtitle">从测评结果、资源完成度和知识树变化中识别薄弱点，并反向更新学生画像。</p>
+            <p v-if="isLoading" class="page-status">正在同步评估数据...</p>
+          </div>
 
-      <div class="card three-mini-card">
-        <div class="card-head">
-          <h2 class="card-title-sm">学习状态可视化</h2>
-          <span class="card-tag">3D</span>
-        </div>
-        <ThreeKnowledgeTree fill :knowledge-points="fineTreeNodes" :scene-scale="6.25" :scene-offset-y="5.05" />
-        <transition name="round-panel">
-          <section v-if="showRoundInsight" class="round-insight-panel" aria-label="学习画像更新提示">
-            <div class="round-insight-head">
-              <div class="round-chip">
-                <Sparkles :size="15" stroke-width="1.8" />
-                <span>大树更新</span>
+          <div class="eval-summary-cards">
+            <div v-for="item in stats" :key="item.label" class="summary-card" :style="{ '--s-color': item.color }">
+              <div class="summary-icon">
+                <component :is="item.icon" :size="18" stroke-width="1.5" />
               </div>
-              <button class="round-close" type="button" aria-label="关闭学习画像更新提示" @click="showRoundInsight = false">×</button>
-            </div>
-
-            <h3>{{ roundInsight.title }}</h3>
-            <p class="round-copy">{{ roundInsight.subtitle }}</p>
-
-            <div class="round-metrics">
-              <div v-for="item in roundInsight.metrics" :key="item.label" class="round-metric" :style="{ '--round-tone': item.tone }">
-                <strong>{{ item.value }}</strong>
-                <span>{{ item.label }}</span>
+              <div class="summary-body">
+                <div class="summary-top">
+                  <span class="summary-value">{{ item.value }}</span>
+                  <span class="summary-change">{{ item.change }}</span>
+                </div>
+                <span class="summary-label">{{ item.label }}</span>
               </div>
             </div>
+          </div>
 
-            <div class="round-profile-shift">
-              <div v-for="item in roundInsight.profile" :key="item.label" class="shift-row">
-                <span>{{ item.label }}</span>
-                <strong>{{ item.before }}</strong>
-                <ArrowRight :size="13" stroke-width="1.6" />
-                <em>{{ item.after }}</em>
+          <div class="card profile-trace-card">
+            <div class="card-head">
+              <h2 class="card-title-sm">画像更新记录</h2>
+              <span class="card-tag">反向更新</span>
+            </div>
+            <ProfileUpdateTrace :data="profileTrace" />
+          </div>
+
+          <div class="card mastery-card">
+            <div class="card-head">
+              <h2 class="card-title-sm">知识掌握度</h2>
+              <span class="mastery-avg">平均 {{ averageMastery }}%</span>
+            </div>
+            <div class="mastery-list">
+              <div v-for="subject in subjects" :key="subject.name" class="mastery-row">
+                <div class="mastery-top">
+                  <span class="mastery-name">{{ subject.name }}</span>
+                  <span class="mastery-pct" :style="{ color: masteryColor(subject.mastery) }">{{ subject.mastery }}%</span>
+                </div>
+                <div class="mastery-track">
+                  <div
+                    class="mastery-fill"
+                    :style="{
+                      width: loaded ? `${subject.mastery}%` : '0%',
+                      background: masteryColor(subject.mastery),
+                    }"
+                  />
+                </div>
               </div>
             </div>
+          </div>
 
-            <div class="round-route">
-              <span class="route-title">下一轮侧重路线</span>
-              <button v-for="item in roundInsight.route" :key="item" type="button" class="route-node" @click="goToTutoring(item)">
-                <span class="route-dot" />
-                <span>{{ item }}</span>
-              </button>
+          <div class="card suggest-card">
+            <div class="card-head">
+              <h2 class="card-title-sm">学习建议</h2>
+              <span class="suggest-count">{{ suggestions.length }} 条</span>
             </div>
+            <div class="suggest-list">
+              <div
+                v-for="(item, index) in suggestions"
+                :key="index"
+                :class="['suggest-item', item.type]"
+                @click="goToTutoring(item.text)"
+              >
+                <div class="suggest-icon">
+                  <component :is="item.icon" :size="15" stroke-width="1.5" :style="suggestIconColor(item.type)" />
+                </div>
+                <span class="suggest-text">{{ item.text }}</span>
+                <ArrowRight :size="13" stroke-width="1.5" class="suggest-arrow" />
+              </div>
+            </div>
+          </div>
 
-            <div class="round-actions">
-              <button class="round-secondary" type="button" @click="showRoundInsight = false">稍后查看</button>
-              <button class="round-primary" type="button" @click="acceptRoundAdjustment">
-                接受调整路线
-                <ArrowRight :size="14" stroke-width="1.7" />
-              </button>
+          <div class="card badge-card">
+            <div class="card-head">
+              <h2 class="card-title-sm">成就徽章</h2>
+              <span class="suggest-count">{{ badges.filter(b => b.earned).length }}/{{ badges.length }}</span>
+            </div>
+            <div class="badge-grid">
+              <div
+                v-for="badge in badges"
+                :key="badge.name"
+                :class="['badge-item', { earned: badge.earned }]"
+                :style="{ '--b-color': badge.color }"
+              >
+                <component :is="badge.icon" v-if="badge.earned" :size="18" stroke-width="2" />
+                <span v-else class="badge-locked">•</span>
+                <span class="badge-name">{{ badge.name }}</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="card chart-card">
+            <div class="card-head">
+              <h2 class="card-title-sm">能力成长曲线</h2>
+              <div class="chart-legend">
+                <span class="legend-item"><span class="legend-dot cyan" />我的</span>
+                <span class="legend-item"><span class="legend-dot dim" />平均</span>
+              </div>
+            </div>
+            <div class="chart-body">
+              <svg viewBox="0 0 350 120" class="trend-svg">
+                <line x1="0" y1="30" x2="350" y2="30" stroke="rgba(0,212,255,0.04)" stroke-width="1" />
+                <line x1="0" y1="60" x2="350" y2="60" stroke="rgba(0,212,255,0.04)" stroke-width="1" />
+                <line x1="0" y1="90" x2="350" y2="90" stroke="rgba(0,212,255,0.04)" stroke-width="1" />
+                <polyline :points="chartPoints.avgPoints" fill="none" stroke="rgba(255,255,255,0.15)" stroke-width="2" stroke-dasharray="5 4" />
+                <polyline :points="chartPoints.youPoints" fill="none" stroke="url(#trendLine)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" />
+                <defs>
+                  <linearGradient id="trendLine" x1="0" y1="0" x2="1" y2="0">
+                    <stop offset="0%" stop-color="#00d4ff" />
+                    <stop offset="100%" stop-color="#7c3aed" />
+                  </linearGradient>
+                </defs>
+              </svg>
+              <div class="chart-labels">
+                <span v-for="item in weeklyTrend" :key="item.week">{{ item.week }}</span>
+              </div>
+              <div class="chart-footer">
+                <span>累计提升 <strong>23%</strong></span>
+                <span>较上周 <strong class="up">+12%</strong></span>
+              </div>
+            </div>
+          </div>
+
+          <KnowledgeConstellation compact />
+
+          <section class="evidence-trace-section">
+            <div class="evidence-trace-header">
+              <div class="hero-badge evidence-badge">证据链追溯</div>
+              <h2 class="page-title section-title">画像更新<span class="gradient-text">证据链</span></h2>
+              <p class="page-subtitle">每个 Agent 的输入、输出、置信度和证据标签均可追溯，评委可验证多智能体协作全流程。</p>
+            </div>
+            <EvidenceTraceView />
+          </section>
+
+          <section class="learning-atlas-section">
+            <div class="atlas-shell">
+              <div class="atlas-head">
+                <div>
+                  <span class="atlas-kicker">Knowledge Atlas</span>
+                  <h2>学习星图</h2>
+                </div>
+                <div class="atlas-score">
+                  <strong>{{ averageMastery }}%</strong>
+                  <span>综合掌握</span>
+                </div>
+              </div>
+
+              <div class="atlas-layout">
+                <div class="mindmap-canvas">
+                  <svg class="mindmap-lines" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+                    <path d="M50 48 C50 34 50 26 50 16" />
+                    <path d="M50 48 C62 42 68 36 78 34" />
+                    <path d="M50 48 C63 54 68 62 72 68" />
+                    <path d="M50 48 C40 56 34 63 27 68" />
+                    <path d="M50 48 C38 42 30 36 22 32" />
+                  </svg>
+                  <button
+                    v-for="node in atlasNodes"
+                    :key="node.label"
+                    class="atlas-node"
+                    :class="node.kind"
+                    :style="{ left: `${node.x}%`, top: `${node.y}%`, '--node-color': node.tone, '--node-progress': `${node.progress}%` }"
+                    type="button"
+                  >
+                    <span class="node-orbit" />
+                    <strong>{{ node.label }}</strong>
+                    <em>{{ node.detail }}</em>
+                    <small>{{ node.progress }}%</small>
+                  </button>
+                </div>
+
+                <div class="atlas-side">
+                  <div v-for="stream in learningStreams" :key="stream.label" class="stream-row" :style="{ '--stream-color': stream.tone }">
+                    <span class="stream-pin" />
+                    <div>
+                      <span class="stream-label">{{ stream.label }}</span>
+                      <strong>{{ stream.value }}</strong>
+                      <p>{{ stream.text }}</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="path-console">
+                <div class="path-rail">
+                  <div
+                    v-for="stage in pathStages"
+                    :key="stage.label"
+                    class="path-stage"
+                    :style="{ '--stage-color': stage.tone, '--stage-value': `${stage.value}%` }"
+                  >
+                    <span>{{ stage.label }}</span>
+                    <strong>{{ stage.value }}%</strong>
+                  </div>
+                </div>
+                <div class="path-suggestions">
+                  <button
+                    v-for="(item, index) in suggestions.slice(0, 3)"
+                    :key="index"
+                    :class="['path-suggestion', item.type]"
+                    type="button"
+                    @click="goToTutoring(item.text)"
+                  >
+                    <component :is="item.icon" :size="15" stroke-width="1.5" :style="suggestIconColor(item.type)" />
+                    <span>{{ item.text }}</span>
+                    <ArrowRight :size="13" stroke-width="1.5" />
+                  </button>
+                </div>
+              </div>
             </div>
           </section>
-        </transition>
-      </div>
-    </div>
 
-    <div class="eval-knowledge-section">
-      <div class="card growth-tree-card">
-        <div class="card-head">
-          <h2 class="card-title-sm">成长知识树</h2>
-          <span class="card-tag">评估反馈</span>
-        </div>
-        <GrowthKnowledgeTree :nodes="treeNodes" @node-click="onTreeNodeClick" />
-        <div class="tree-feedback">
-          <div class="tree-fb-item weak">
-            <AlertTriangle :size="14" stroke-width="1.5" />
-            <span>指针与内存、图结构为薄弱点，已自动生成补救资源</span>
-          </div>
-          <div class="tree-fb-item action">
-            <ArrowRight :size="14" stroke-width="1.5" />
-            <span>下一轮学习路径将优先安排薄弱知识点的复习任务</span>
-          </div>
-        </div>
-      </div>
-
-      <div v-if="selectedWeakNode" class="card weak-detail-card">
-        <div class="weak-detail-header">
-          <AlertTriangle :size="16" stroke-width="1.5" />
-          <span>{{ selectedWeakNode.name }}</span>
-          <button class="weak-detail-close" @click="selectedWeakNode = null">✕</button>
-        </div>
-        <div class="weak-detail-grid">
-          <div class="weak-detail-item">
-            <span class="weak-detail-label">薄弱点名称</span>
-            <span class="weak-detail-value">{{ selectedWeakNode.name }}</span>
-          </div>
-          <div class="weak-detail-item">
-            <span class="weak-detail-label">错因</span>
-            <span class="weak-detail-value">{{ selectedWeakNode.cause }}</span>
-          </div>
-          <div class="weak-detail-item">
-            <span class="weak-detail-label">问题描述</span>
-            <span class="weak-detail-value">{{ selectedWeakNode.issue }}</span>
-          </div>
-          <div class="weak-detail-item">
-            <span class="weak-detail-label">补救资源</span>
-            <span class="weak-detail-value">{{ selectedWeakNode.remedialResources?.join('、') }}</span>
-          </div>
-          <div class="weak-detail-item full-width">
-            <span class="weak-detail-label">路径影响</span>
-            <span class="weak-detail-value">{{ selectedWeakNode.pathImpact }}</span>
-          </div>
-        </div>
-        <div class="weak-detail-actions">
-          <button class="weak-btn primary" @click="router.push('/resources')">
-            查看补救资源
-            <ArrowRight :size="12" stroke-width="1.5" />
-          </button>
-          <button class="weak-btn secondary" @click="addToNextPath()">
-            加入下一轮路径
-            <ArrowRight :size="12" stroke-width="1.5" />
-          </button>
-        </div>
-      </div>
-    </div>
-
-    <div class="eval-bottom-grid">
-      <div class="card chart-card">
-        <div class="card-head">
-          <h2 class="card-title-sm">能力成长曲线</h2>
-          <div class="chart-legend">
-            <span class="legend-item"><span class="legend-dot cyan" />我的</span>
-            <span class="legend-item"><span class="legend-dot dim" />平均</span>
-          </div>
-        </div>
-        <div class="chart-body">
-          <svg viewBox="0 0 350 120" class="trend-svg">
-            <line x1="0" y1="30" x2="350" y2="30" stroke="rgba(0,212,255,0.04)" stroke-width="1" />
-            <line x1="0" y1="60" x2="350" y2="60" stroke="rgba(0,212,255,0.04)" stroke-width="1" />
-            <line x1="0" y1="90" x2="350" y2="90" stroke="rgba(0,212,255,0.04)" stroke-width="1" />
-            <polyline :points="chartPoints.avgPoints" fill="none" stroke="rgba(255,255,255,0.15)" stroke-width="2" stroke-dasharray="5 4" />
-            <polyline :points="chartPoints.youPoints" fill="none" stroke="url(#trendLine)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" />
-            <defs>
-              <linearGradient id="trendLine" x1="0" y1="0" x2="1" y2="0">
-                <stop offset="0%" stop-color="#00d4ff" />
-                <stop offset="100%" stop-color="#7c3aed" />
-              </linearGradient>
-            </defs>
-          </svg>
-          <div class="chart-labels">
-            <span v-for="item in weeklyTrend" :key="item.week">{{ item.week }}</span>
-          </div>
-          <div class="chart-footer">
-            <span>累计提升 <strong>23%</strong></span>
-            <span>较上周 <strong class="up">+12%</strong></span>
-          </div>
-        </div>
-      </div>
-
-      <div class="card mastery-card">
-        <div class="card-head">
-          <h2 class="card-title-sm">知识掌握度</h2>
-          <span class="mastery-avg">平均 {{ averageMastery }}%</span>
-        </div>
-        <div class="mastery-list">
-          <div v-for="subject in subjects" :key="subject.name" class="mastery-row">
-            <div class="mastery-top">
-              <span class="mastery-name">{{ subject.name }}</span>
-              <span class="mastery-pct" :style="{ color: masteryColor(subject.mastery) }">{{ subject.mastery }}%</span>
-            </div>
-            <div class="mastery-track">
-              <div
-                class="mastery-fill"
-                :style="{
-                  width: loaded ? `${subject.mastery}%` : '0%',
-                  background: masteryColor(subject.mastery),
-                }"
-              />
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div class="card suggest-card">
-        <div class="card-head">
-          <h2 class="card-title-sm">学习建议</h2>
-          <span class="suggest-count">{{ suggestions.length }} 条</span>
-        </div>
-        <div class="suggest-list">
-          <div
-            v-for="(item, index) in suggestions"
-            :key="index"
-            :class="['suggest-item', item.type]"
-            @click="goToTutoring(item.text)"
-          >
-            <div class="suggest-icon">
-              <component :is="item.icon" :size="15" stroke-width="1.5" :style="suggestIconColor(item.type)" />
-            </div>
-            <span class="suggest-text">{{ item.text }}</span>
-            <ArrowRight :size="13" stroke-width="1.5" class="suggest-arrow" />
-          </div>
-        </div>
-      </div>
-
-      <div class="card badge-card">
-        <div class="card-head">
-          <h2 class="card-title-sm">成就徽章</h2>
-          <span class="suggest-count">{{ badges.filter(b => b.earned).length }}/{{ badges.length }}</span>
-        </div>
-        <div class="badge-grid">
-          <div
-            v-for="badge in badges"
-            :key="badge.name"
-            :class="['badge-item', { earned: badge.earned }]"
-            :style="{ '--b-color': badge.color }"
-          >
-            <component :is="badge.icon" v-if="badge.earned" :size="18" stroke-width="2" />
-            <span v-else class="badge-locked">•</span>
-            <span class="badge-name">{{ badge.name }}</span>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <KnowledgeConstellation />
-
-    <section class="evidence-trace-section">
-      <div class="evidence-trace-header">
-        <div class="hero-badge" style="background: rgba(124, 58, 237, 0.08); color: #7c3aed; border-color: rgba(124, 58, 237, 0.12);">证据链追溯</div>
-        <h2 class="page-title" style="font-size: 28px;">画像更新<span class="gradient-text">证据链</span></h2>
-        <p class="page-subtitle">每个 Agent 的输入、输出、置信度和证据标签均可追溯，评委可验证多智能体协作全流程。</p>
-      </div>
-      <EvidenceTraceView />
-    </section>
-
-    <section class="learning-atlas-section">
-      <div class="atlas-shell">
-        <div class="atlas-head">
-          <div>
-            <span class="atlas-kicker">Knowledge Atlas</span>
-            <h2>学习星图</h2>
-          </div>
-          <div class="atlas-score">
-            <strong>{{ averageMastery }}%</strong>
-            <span>综合掌握</span>
-          </div>
-        </div>
-
-        <div class="atlas-layout">
-          <div class="mindmap-canvas">
-            <svg class="mindmap-lines" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
-              <path d="M50 48 C50 34 50 26 50 16" />
-              <path d="M50 48 C62 42 68 36 78 34" />
-              <path d="M50 48 C63 54 68 62 72 68" />
-              <path d="M50 48 C40 56 34 63 27 68" />
-              <path d="M50 48 C38 42 30 36 22 32" />
-            </svg>
-            <button
-              v-for="node in atlasNodes"
-              :key="node.label"
-              class="atlas-node"
-              :class="node.kind"
-              :style="{ left: `${node.x}%`, top: `${node.y}%`, '--node-color': node.tone, '--node-progress': `${node.progress}%` }"
-              type="button"
-            >
-              <span class="node-orbit" />
-              <strong>{{ node.label }}</strong>
-              <em>{{ node.detail }}</em>
-              <small>{{ node.progress }}%</small>
-            </button>
-          </div>
-
-          <div class="atlas-side">
-            <div v-for="stream in learningStreams" :key="stream.label" class="stream-row" :style="{ '--stream-color': stream.tone }">
-              <span class="stream-pin" />
-              <div>
-                <span class="stream-label">{{ stream.label }}</span>
-                <strong>{{ stream.value }}</strong>
-                <p>{{ stream.text }}</p>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div class="path-console">
-          <div class="path-rail">
-            <div
-              v-for="stage in pathStages"
-              :key="stage.label"
-              class="path-stage"
-              :style="{ '--stage-color': stage.tone, '--stage-value': `${stage.value}%` }"
-            >
-              <span>{{ stage.label }}</span>
-              <strong>{{ stage.value }}%</strong>
-            </div>
-          </div>
-          <div class="path-suggestions">
-            <button
-              v-for="(item, index) in suggestions.slice(0, 3)"
-              :key="index"
-              :class="['path-suggestion', item.type]"
-              type="button"
-              @click="goToTutoring(item.text)"
-            >
-              <component :is="item.icon" :size="15" stroke-width="1.5" :style="suggestIconColor(item.type)" />
-              <span>{{ item.text }}</span>
-              <ArrowRight :size="13" stroke-width="1.5" />
+          <div class="right-footer">
+            <button class="report-btn" @click="showReportModal = true">
+              <FileBarChart :size="16" stroke-width="1.5" />
+              <span>生成评估报告</span>
             </button>
           </div>
         </div>
       </div>
-    </section>
+    </div>
 
     <transition name="scale-in">
       <div v-if="showReportModal" class="modal-overlay" @click.self="showReportModal = false">
@@ -720,18 +709,48 @@ onMounted(() => {
   min-height: 100vh;
 }
 
-.eval-page-header {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 40px 40px 0;
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  gap: 24px;
+.eval-split-layout {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  min-height: 100vh;
 }
 
-.header-left {
-  max-width: 600px;
+.eval-left-panel {
+  position: relative;
+  overflow: hidden;
+}
+
+.eval-right-panel {
+  position: relative;
+  border-left: 1px solid var(--color-border);
+  background: rgba(8, 11, 28, 0.6);
+  backdrop-filter: blur(12px);
+}
+
+.right-scroll-area {
+  height: 100vh;
+  overflow-y: auto;
+  padding: 32px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.right-scroll-area::-webkit-scrollbar {
+  width: 4px;
+}
+
+.right-scroll-area::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.right-scroll-area::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+}
+
+.right-header {
+  margin-bottom: 4px;
 }
 
 .hero-badge {
@@ -746,12 +765,22 @@ onMounted(() => {
   margin-bottom: 12px;
 }
 
+.evidence-badge {
+  background: rgba(124, 58, 237, 0.08);
+  color: #7c3aed;
+  border-color: rgba(124, 58, 237, 0.12);
+}
+
 .page-title {
   margin: 0 0 8px;
   color: #fff;
-  font-size: 34px;
+  font-size: 26px;
   font-family: var(--font-display);
   font-weight: 400;
+}
+
+.section-title {
+  font-size: 22px;
 }
 
 .gradient-text {
@@ -763,7 +792,7 @@ onMounted(() => {
 
 .page-subtitle {
   color: var(--color-text-secondary);
-  font-size: 14px;
+  font-size: 13px;
   line-height: 1.6;
   margin: 0;
 }
@@ -771,54 +800,29 @@ onMounted(() => {
 .page-status {
   margin-top: 8px;
   color: var(--color-accent-cyan);
-  font-size: 14px;
-}
-
-.header-right {
-  flex-shrink: 0;
-  padding-top: 28px;
-}
-
-.report-btn {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 10px 20px;
-  border-radius: 10px;
-  background: linear-gradient(135deg, rgba(0, 212, 255, 0.1), rgba(124, 58, 237, 0.1));
-  border: 1px solid rgba(0, 212, 255, 0.15);
-  color: var(--color-accent-cyan);
-  white-space: nowrap;
-  transition: all 0.2s var(--ease-out);
-}
-
-.report-btn:hover {
-  background: linear-gradient(135deg, rgba(0, 212, 255, 0.16), rgba(124, 58, 237, 0.16));
+  font-size: 13px;
 }
 
 .eval-summary-cards {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 24px 40px 0;
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 12px;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
 }
 
 .summary-card {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 16px 18px;
+  gap: 10px;
+  padding: 12px 14px;
   background: var(--color-bg-card);
   border: 1px solid var(--color-border);
-  border-radius: 16px;
+  border-radius: 14px;
 }
 
 .summary-icon {
-  width: 40px;
-  height: 40px;
-  border-radius: 12px;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -829,56 +833,46 @@ onMounted(() => {
 
 .summary-body {
   flex: 1;
+  min-width: 0;
 }
 
 .summary-top {
   display: flex;
   align-items: baseline;
-  gap: 8px;
+  gap: 6px;
   justify-content: space-between;
 }
 
 .summary-value {
   color: #fff;
-  font-size: 22px;
+  font-size: 18px;
   font-family: var(--font-display);
 }
 
 .summary-change {
   color: var(--color-accent-emerald);
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 600;
   font-family: var(--font-mono);
 }
 
 .summary-label {
   color: var(--color-text-tertiary);
-  font-size: 11px;
-}
-
-.eval-main-grid {
-  max-width: none;
-  margin: 0 auto;
-  padding: 0 8px;
-  transform: translateY(-176px);
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 20px;
-  margin-bottom: -156px;
+  font-size: 10px;
 }
 
 .card {
   background: var(--color-bg-card);
   border: 1px solid var(--color-border);
-  border-radius: 16px;
-  padding: 24px;
+  border-radius: 14px;
+  padding: 18px;
 }
 
 .card-head {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 20px;
+  margin-bottom: 14px;
 }
 
 .card-title-sm {
@@ -886,60 +880,279 @@ onMounted(() => {
   color: #fff;
   font-family: var(--font-display);
   font-weight: 400;
-  font-size: 20px;
+  font-size: 16px;
 }
 
 .card-tag {
-  font-size: 11px;
+  font-size: 10px;
   color: var(--color-text-tertiary);
-  padding: 2px 10px;
+  padding: 2px 8px;
   border-radius: 999px;
   border: 1px solid var(--color-border);
   background: rgba(255, 255, 255, 0.02);
 }
 
-.three-mini-card :deep(.three-tree-wrapper) {
-  border-radius: 0;
-}
-
 .three-mini-card {
   position: relative;
-  order: -1;
-  min-height: calc(100vh - 64px);
+  min-height: 100vh;
   padding: 0;
   overflow: hidden;
   background: transparent;
   border: 0;
+  border-radius: 0;
 }
 
 .three-mini-card .card-head {
   position: absolute;
   top: 10px;
-  left: 34px;
-  right: 34px;
+  left: 24px;
+  right: 24px;
   z-index: 2;
   margin-bottom: 0;
   pointer-events: none;
 }
 
 .three-mini-card :deep(.three-tree-wrapper) {
-  height: calc(100vh - 42px);
+  height: 100vh;
   min-height: 760px;
   border: 0;
+  border-radius: 0;
 }
 
 .three-mini-card :deep(.three-tree-canvas) {
   min-height: 760px;
 }
 
+.node-eval-panel {
+  position: absolute;
+  top: 60px;
+  right: 24px;
+  z-index: 6;
+  width: min(380px, calc(100% - 48px));
+  padding: 20px;
+  border-radius: 18px;
+  border: 1px solid rgba(0, 212, 255, 0.18);
+  background:
+    radial-gradient(circle at 100% 0%, rgba(0, 212, 255, 0.16), transparent 38%),
+    linear-gradient(180deg, rgba(9, 12, 28, 0.92), rgba(7, 9, 20, 0.88));
+  backdrop-filter: blur(18px);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.42);
+  color: #fff;
+}
+
+.node-eval-panel.weak {
+  border-color: rgba(244, 63, 94, 0.28);
+  background:
+    radial-gradient(circle at 100% 0%, rgba(244, 63, 94, 0.14), transparent 38%),
+    linear-gradient(180deg, rgba(18, 8, 14, 0.92), rgba(10, 9, 20, 0.88));
+}
+
+.node-eval-panel.mastered {
+  border-color: rgba(219, 63, 54, 0.28);
+  background:
+    radial-gradient(circle at 100% 0%, rgba(219, 63, 54, 0.14), transparent 38%),
+    linear-gradient(180deg, rgba(18, 10, 8, 0.92), rgba(10, 9, 20, 0.88));
+}
+
+.node-eval-close {
+  position: absolute;
+  top: 12px;
+  right: 14px;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.04);
+  color: rgba(255, 255, 255, 0.66);
+  font-size: 16px;
+  cursor: pointer;
+  transition: all 0.2s var(--ease-out);
+}
+
+.node-eval-close:hover {
+  color: #fff;
+  border-color: rgba(0, 212, 255, 0.32);
+  background: rgba(0, 212, 255, 0.08);
+}
+
+.node-eval-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.node-eval-badge {
+  display: inline-flex;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 600;
+  background: rgba(0, 212, 255, 0.12);
+  color: #9ee7ff;
+  border: 1px solid rgba(0, 212, 255, 0.2);
+}
+
+.node-eval-badge.weak {
+  background: rgba(244, 63, 94, 0.12);
+  color: #ff9aae;
+  border-color: rgba(244, 63, 94, 0.2);
+}
+
+.node-eval-badge.mastered {
+  background: rgba(219, 63, 54, 0.12);
+  color: #ffb0a2;
+  border-color: rgba(219, 63, 54, 0.2);
+}
+
+.node-eval-badge.learning {
+  background: rgba(0, 212, 255, 0.12);
+  color: #9ee7ff;
+  border-color: rgba(0, 212, 255, 0.2);
+}
+
+.node-eval-badge.next {
+  background: rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.52);
+  border-color: rgba(255, 255, 255, 0.12);
+}
+
+.node-eval-pct {
+  margin-left: auto;
+  font-family: var(--font-mono);
+  font-size: 18px;
+  font-weight: 700;
+  color: #ffe58f;
+}
+
+.node-eval-title {
+  margin: 0 0 12px;
+  font-size: 20px;
+  font-family: var(--font-display);
+  font-weight: 500;
+}
+
+.node-eval-meter {
+  height: 6px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.07);
+  margin-bottom: 16px;
+}
+
+.node-eval-meter i {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #00d4ff, #ffe58f);
+  box-shadow: 0 0 14px rgba(0, 212, 255, 0.5);
+  transition: width 0.4s var(--ease-out);
+}
+
+.node-eval-block {
+  margin-bottom: 12px;
+}
+
+.node-eval-label {
+  display: block;
+  margin-bottom: 4px;
+  color: rgba(0, 212, 255, 0.82);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+}
+
+.node-eval-block p {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.72);
+  font-size: 13px;
+  line-height: 1.65;
+}
+
+.node-eval-block ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.node-eval-block li {
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.05);
+  color: rgba(255, 255, 255, 0.72);
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.2s var(--ease-out);
+}
+
+.node-eval-block li:hover {
+  background: rgba(0, 212, 255, 0.08);
+  color: #fff;
+}
+
+.node-eval-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.node-eval-secondary,
+.node-eval-primary {
+  flex: 1;
+  min-height: 36px;
+  border-radius: 10px;
+  font-weight: 700;
+  font-size: 13px;
+  transition: all 0.2s var(--ease-out);
+}
+
+.node-eval-secondary {
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.04);
+  color: rgba(255, 255, 255, 0.62);
+}
+
+.node-eval-secondary:hover {
+  border-color: rgba(0, 212, 255, 0.28);
+  color: var(--color-accent-cyan);
+}
+
+.node-eval-primary {
+  border: 1px solid rgba(0, 212, 255, 0.28);
+  background: rgba(0, 212, 255, 0.1);
+  color: var(--color-accent-cyan);
+}
+
+.node-eval-primary:hover {
+  background: rgba(0, 212, 255, 0.18);
+  transform: translateY(-1px);
+}
+
+.node-panel-enter-active,
+.node-panel-leave-active {
+  transition: opacity 0.3s var(--ease-out), transform 0.3s var(--ease-out);
+}
+
+.node-panel-enter-from,
+.node-panel-leave-to {
+  opacity: 0;
+  transform: translateX(20px);
+}
+
 .round-insight-panel {
   position: absolute;
-  left: 34px;
-  bottom: 42px;
+  left: 24px;
+  bottom: 36px;
   z-index: 5;
-  width: min(430px, calc(100vw - 80px));
-  padding: 18px;
-  border-radius: 22px;
+  width: min(400px, calc(100% - 48px));
+  padding: 16px;
+  border-radius: 20px;
   border: 1px solid rgba(255, 229, 143, 0.2);
   background:
     radial-gradient(circle at 16% 0%, rgba(255, 229, 143, 0.18), transparent 32%),
@@ -1015,7 +1228,7 @@ onMounted(() => {
 
 .round-insight-panel h3 {
   margin: 0;
-  font-size: 22px;
+  font-size: 20px;
   font-family: var(--font-display);
   font-weight: 500;
   letter-spacing: 0;
@@ -1036,9 +1249,9 @@ onMounted(() => {
 }
 
 .round-metric {
-  min-height: 62px;
-  padding: 10px;
-  border-radius: 14px;
+  min-height: 56px;
+  padding: 8px;
+  border-radius: 12px;
   border: 1px solid color-mix(in srgb, var(--round-tone) 26%, transparent);
   background: linear-gradient(180deg, color-mix(in srgb, var(--round-tone) 12%, transparent), rgba(255, 255, 255, 0.025));
 }
@@ -1047,15 +1260,15 @@ onMounted(() => {
   display: block;
   color: var(--round-tone);
   font-family: var(--font-mono);
-  font-size: 19px;
+  font-size: 17px;
   line-height: 1;
 }
 
 .round-metric span {
   display: block;
-  margin-top: 8px;
+  margin-top: 6px;
   color: rgba(255, 255, 255, 0.6);
-  font-size: 11px;
+  font-size: 10px;
 }
 
 .round-profile-shift {
@@ -1191,251 +1404,13 @@ onMounted(() => {
 }
 
 .profile-trace-card {
-  display: none;
-}
-
-.eval-knowledge-section {
-  display: none !important;
-}
-
-.growth-tree-card {
-  grid-column: 1;
-}
-
-.tree-feedback {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  margin-top: 16px;
-  padding-top: 16px;
-  border-top: 1px solid var(--color-border);
-}
-
-.tree-fb-item {
-  display: flex;
-  align-items: flex-start;
-  gap: 10px;
-  padding: 10px 14px;
-  border-radius: 10px;
-  font-size: 13px;
-  color: var(--color-text-secondary);
-  line-height: 1.6;
-}
-
-.tree-fb-item.weak {
-  background: rgba(244, 63, 94, 0.05);
-  border: 1px solid rgba(244, 63, 94, 0.1);
-  color: rgba(255, 255, 255, 0.8);
-}
-
-.tree-fb-item.action {
-  background: rgba(0, 212, 255, 0.05);
-  border: 1px solid rgba(0, 212, 255, 0.1);
-  color: rgba(255, 255, 255, 0.8);
-}
-
-.tree-fb-item.weak svg {
-  color: var(--color-accent-rose);
-  flex-shrink: 0;
-  margin-top: 2px;
-}
-
-.tree-fb-item.action svg {
-  color: var(--color-accent-cyan);
-  flex-shrink: 0;
-  margin-top: 2px;
-}
-
-.weak-detail-card {
-  border-color: rgba(244, 63, 94, 0.15);
-  background: rgba(244, 63, 94, 0.02);
-  animation: slideDown 0.25s ease-out;
-}
-
-.weak-detail-header {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-bottom: 16px;
-  font-size: 15px;
-  font-weight: 600;
-  color: #fff;
-}
-
-.weak-detail-header svg {
-  color: #f43f5e;
-}
-
-.weak-detail-close {
-  margin-left: auto;
-  padding: 2px 8px;
-  border-radius: 6px;
-  font-size: 14px;
-  color: rgba(255, 255, 255, 0.4);
-  cursor: pointer;
-  transition: color 0.2s;
-}
-
-.weak-detail-close:hover {
-  color: #fff;
-}
-
-.weak-detail-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 10px;
-}
-
-.weak-detail-item {
-  padding: 12px 14px;
-  border-radius: 10px;
-  background: rgba(255, 255, 255, 0.02);
-  border: 1px solid rgba(255, 255, 255, 0.05);
-}
-
-.weak-detail-item.full-width {
-  grid-column: 1 / -1;
-}
-
-.weak-detail-label {
   display: block;
-  font-size: 10px;
-  color: rgba(255, 255, 255, 0.35);
-  margin-bottom: 4px;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-
-.weak-detail-value {
-  display: block;
-  font-size: 13px;
-  color: rgba(255, 255, 255, 0.8);
-  line-height: 1.5;
-}
-
-.weak-detail-actions {
-  display: flex;
-  gap: 10px;
-  margin-top: 16px;
-  padding-top: 16px;
-  border-top: 1px solid rgba(255, 255, 255, 0.05);
-}
-
-.weak-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 9px 18px;
-  border-radius: 8px;
-  font-size: 13px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.weak-btn.primary {
-  background: rgba(0, 212, 255, 0.12);
-  border: 1px solid rgba(0, 212, 255, 0.2);
-  color: var(--color-accent-cyan);
-}
-
-.weak-btn.primary:hover {
-  background: rgba(0, 212, 255, 0.2);
-  border-color: rgba(0, 212, 255, 0.35);
-}
-
-.weak-btn.secondary {
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  color: rgba(255, 255, 255, 0.55);
-}
-
-.weak-btn.secondary:hover {
-  background: rgba(255, 255, 255, 0.06);
-  border-color: rgba(255, 255, 255, 0.15);
-  color: #fff;
-}
-
-@keyframes slideDown {
-  from { opacity: 0; transform: translateY(-8px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-.eval-bottom-grid {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 20px 40px 40px;
-  display: none !important;
-  grid-template-columns: 1.4fr 1fr;
-  gap: 20px;
-}
-
-.chart-card {
-  grid-column: 1 / -1;
-}
-
-.chart-legend {
-  display: flex;
-  gap: 14px;
-  font-size: 12px;
-  color: var(--color-text-tertiary);
-}
-
-.legend-item {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.legend-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-}
-
-.legend-dot.cyan {
-  background: var(--color-accent-cyan);
-}
-
-.legend-dot.dim {
-  background: rgba(255, 255, 255, 0.2);
-}
-
-.trend-svg {
-  width: 100%;
-  height: 120px;
-}
-
-.chart-labels {
-  display: flex;
-  justify-content: space-between;
-  margin-top: 6px;
-  color: var(--color-text-tertiary);
-  font-size: 11px;
-}
-
-.chart-footer {
-  display: flex;
-  justify-content: space-between;
-  margin-top: 12px;
-  padding-top: 12px;
-  border-top: 1px solid var(--color-border);
-  color: var(--color-text-secondary);
-  font-size: 13px;
-}
-
-.chart-footer strong {
-  color: #fff;
-}
-
-.chart-footer .up {
-  color: var(--color-accent-emerald);
 }
 
 .mastery-list {
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 12px;
 }
 
 .mastery-row {
@@ -1451,17 +1426,17 @@ onMounted(() => {
 
 .mastery-name {
   color: var(--color-text-secondary);
-  font-size: 13px;
+  font-size: 12px;
 }
 
 .mastery-pct {
   font-family: var(--font-mono);
   font-weight: 600;
-  font-size: 13px;
+  font-size: 12px;
 }
 
 .mastery-track {
-  height: 6px;
+  height: 5px;
   border-radius: 999px;
   background: rgba(255, 255, 255, 0.05);
   overflow: hidden;
@@ -1476,11 +1451,7 @@ onMounted(() => {
 .mastery-avg {
   font-family: var(--font-mono);
   color: var(--color-text-tertiary);
-  font-size: 12px;
-}
-
-.suggest-card {
-  grid-column: 1 / -1;
+  font-size: 11px;
 }
 
 .suggest-list {
@@ -1492,9 +1463,9 @@ onMounted(() => {
 .suggest-item {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 12px 14px;
-  border-radius: 12px;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 10px;
   cursor: pointer;
   transition: all 0.2s var(--ease-out);
 }
@@ -1531,6 +1502,7 @@ onMounted(() => {
 .suggest-text {
   color: var(--color-text-secondary);
   flex: 1;
+  font-size: 12px;
 }
 
 .suggest-count {
@@ -1538,26 +1510,22 @@ onMounted(() => {
   font-size: 11px;
 }
 
-.badge-card {
-  grid-column: 1 / -1;
-}
-
 .badge-grid {
   display: flex;
   flex-wrap: wrap;
-  gap: 12px;
+  gap: 10px;
 }
 
 .badge-item {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 6px;
-  padding: 14px 18px;
-  border-radius: 12px;
+  gap: 5px;
+  padding: 10px 14px;
+  border-radius: 10px;
   border: 1px solid var(--color-border);
   background: rgba(255, 255, 255, 0.02);
-  min-width: 80px;
+  min-width: 70px;
   transition: all 0.2s;
 }
 
@@ -1576,34 +1544,87 @@ onMounted(() => {
 }
 
 .badge-name {
-  font-size: 11px;
+  font-size: 10px;
   color: rgba(255, 255, 255, 0.6);
   white-space: nowrap;
 }
 
-.learning-atlas-section {
-  display: none;
-  max-width: 1320px;
-  margin: 0 auto;
-  padding: 18px 40px 56px;
+.chart-legend {
+  display: flex;
+  gap: 12px;
+  font-size: 11px;
+  color: var(--color-text-tertiary);
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.legend-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+}
+
+.legend-dot.cyan {
+  background: var(--color-accent-cyan);
+}
+
+.legend-dot.dim {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.trend-svg {
+  width: 100%;
+  height: 100px;
+}
+
+.chart-labels {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 4px;
+  color: var(--color-text-tertiary);
+  font-size: 10px;
+}
+
+.chart-footer {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid var(--color-border);
+  color: var(--color-text-secondary);
+  font-size: 12px;
+}
+
+.chart-footer strong {
+  color: #fff;
+}
+
+.chart-footer .up {
+  color: var(--color-accent-emerald);
 }
 
 .evidence-trace-section {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 40px 40px 0;
+  padding: 0;
 }
 
 .evidence-trace-header {
-  margin-bottom: 24px;
+  margin-bottom: 16px;
+}
+
+.learning-atlas-section {
+  padding: 0;
 }
 
 .atlas-shell {
   position: relative;
   overflow: hidden;
-  padding: 28px;
+  padding: 20px;
   border: 1px solid rgba(0, 212, 255, 0.13);
-  border-radius: 18px;
+  border-radius: 16px;
   background:
     linear-gradient(135deg, rgba(0, 212, 255, 0.08), transparent 30%),
     linear-gradient(315deg, rgba(124, 58, 237, 0.1), transparent 34%),
@@ -1634,14 +1655,14 @@ onMounted(() => {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
-  gap: 24px;
-  margin-bottom: 18px;
+  gap: 20px;
+  margin-bottom: 14px;
 }
 
 .atlas-kicker {
   display: inline-flex;
   color: rgba(126, 231, 255, 0.72);
-  font-size: 11px;
+  font-size: 10px;
   font-family: var(--font-mono);
   text-transform: uppercase;
 }
@@ -1649,13 +1670,13 @@ onMounted(() => {
 .atlas-head h2 {
   margin: 4px 0 0;
   color: #fff;
-  font-size: 28px;
+  font-size: 22px;
   font-family: var(--font-display);
   font-weight: 400;
 }
 
 .atlas-score {
-  min-width: 112px;
+  min-width: 90px;
   text-align: right;
 }
 
@@ -1663,26 +1684,26 @@ onMounted(() => {
   display: block;
   color: #ffe58f;
   font-family: var(--font-display);
-  font-size: 34px;
+  font-size: 28px;
   font-weight: 400;
 }
 
 .atlas-score span {
   color: rgba(255, 255, 255, 0.48);
-  font-size: 12px;
+  font-size: 11px;
 }
 
 .atlas-layout {
   display: grid;
-  grid-template-columns: minmax(0, 1.5fr) minmax(280px, 0.62fr);
-  gap: 26px;
+  grid-template-columns: 1fr;
+  gap: 20px;
   align-items: stretch;
 }
 
 .mindmap-canvas {
   position: relative;
-  min-height: 460px;
-  border-radius: 16px;
+  min-height: 320px;
+  border-radius: 14px;
   background:
     radial-gradient(circle at 50% 48%, rgba(0, 212, 255, 0.13), transparent 24%),
     radial-gradient(circle at 78% 34%, rgba(59, 130, 246, 0.1), transparent 18%),
@@ -1709,16 +1730,16 @@ onMounted(() => {
 
 .atlas-node {
   position: absolute;
-  width: clamp(118px, 13vw, 172px);
-  min-height: 76px;
+  width: clamp(100px, 11vw, 150px);
+  min-height: 66px;
   transform: translate(-50%, -50%);
   display: flex;
   flex-direction: column;
   justify-content: center;
-  gap: 4px;
-  padding: 12px 14px 12px 16px;
+  gap: 3px;
+  padding: 10px 12px 10px 14px;
   border: 1px solid color-mix(in srgb, var(--node-color) 36%, rgba(255, 255, 255, 0.08));
-  border-radius: 14px;
+  border-radius: 12px;
   background:
     linear-gradient(135deg, color-mix(in srgb, var(--node-color) 17%, transparent), transparent 64%),
     rgba(4, 8, 20, 0.72);
@@ -1729,8 +1750,8 @@ onMounted(() => {
 }
 
 .atlas-node.core {
-  width: clamp(150px, 15vw, 206px);
-  min-height: 96px;
+  width: clamp(120px, 13vw, 170px);
+  min-height: 80px;
   border-color: rgba(0, 212, 255, 0.5);
   background:
     radial-gradient(circle at 18% 12%, rgba(255, 229, 143, 0.2), transparent 30%),
@@ -1738,30 +1759,30 @@ onMounted(() => {
 }
 
 .atlas-node strong {
-  font-size: 14px;
+  font-size: 12px;
   font-weight: 650;
   line-height: 1.25;
 }
 
 .atlas-node em {
   color: rgba(255, 255, 255, 0.55);
-  font-size: 11px;
+  font-size: 10px;
   font-style: normal;
 }
 
 .atlas-node small {
   position: absolute;
-  right: 12px;
-  bottom: 10px;
+  right: 10px;
+  bottom: 8px;
   color: var(--node-color);
   font-family: var(--font-mono);
-  font-size: 12px;
+  font-size: 11px;
 }
 
 .node-orbit {
   position: absolute;
-  inset: -7px;
-  border-radius: 16px;
+  inset: -6px;
+  border-radius: 14px;
   border: 1px solid color-mix(in srgb, var(--node-color) 24%, transparent);
   opacity: 0.42;
 }
@@ -1770,14 +1791,14 @@ onMounted(() => {
   display: flex;
   flex-direction: column;
   justify-content: center;
-  gap: 16px;
+  gap: 14px;
 }
 
 .stream-row {
   display: grid;
-  grid-template-columns: 28px 1fr;
-  gap: 12px;
-  padding: 4px 0 18px;
+  grid-template-columns: 24px 1fr;
+  gap: 10px;
+  padding: 4px 0 14px;
   border-bottom: 1px solid rgba(255, 255, 255, 0.07);
 }
 
@@ -1786,40 +1807,40 @@ onMounted(() => {
 }
 
 .stream-pin {
-  width: 12px;
-  height: 12px;
-  margin-top: 7px;
+  width: 10px;
+  height: 10px;
+  margin-top: 6px;
   border-radius: 50%;
   background: var(--stream-color);
-  box-shadow: 0 0 22px color-mix(in srgb, var(--stream-color) 82%, transparent);
+  box-shadow: 0 0 18px color-mix(in srgb, var(--stream-color) 82%, transparent);
 }
 
 .stream-label {
   display: block;
-  margin-bottom: 5px;
+  margin-bottom: 4px;
   color: rgba(255, 255, 255, 0.42);
-  font-size: 11px;
+  font-size: 10px;
 }
 
 .stream-row strong {
   display: block;
   color: #fff;
-  font-size: 18px;
+  font-size: 15px;
 }
 
 .stream-row p {
-  margin: 6px 0 0;
+  margin: 4px 0 0;
   color: rgba(255, 255, 255, 0.62);
-  font-size: 13px;
-  line-height: 1.65;
+  font-size: 12px;
+  line-height: 1.6;
 }
 
 .path-console {
   display: grid;
-  grid-template-columns: 0.95fr 1.05fr;
-  gap: 24px;
-  margin-top: 24px;
-  padding-top: 22px;
+  grid-template-columns: 1fr;
+  gap: 16px;
+  margin-top: 18px;
+  padding-top: 18px;
   border-top: 1px solid rgba(255, 255, 255, 0.08);
 }
 
@@ -1827,17 +1848,17 @@ onMounted(() => {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   align-items: end;
-  gap: 12px;
+  gap: 10px;
 }
 
 .path-stage {
   position: relative;
-  min-height: 112px;
+  min-height: 90px;
   display: flex;
   flex-direction: column;
   justify-content: flex-end;
-  gap: 8px;
-  padding-top: 24px;
+  gap: 6px;
+  padding-top: 20px;
 }
 
 .path-stage::before {
@@ -1845,9 +1866,9 @@ onMounted(() => {
   position: absolute;
   left: 0;
   right: 0;
-  bottom: 42px;
+  bottom: 36px;
   height: var(--stage-value);
-  max-height: 84px;
+  max-height: 70px;
   border-radius: 999px 999px 4px 4px;
   background: linear-gradient(180deg, color-mix(in srgb, var(--stage-color) 72%, transparent), rgba(255, 255, 255, 0.025));
   opacity: 0.74;
@@ -1861,29 +1882,29 @@ onMounted(() => {
 
 .path-stage span {
   color: rgba(255, 255, 255, 0.56);
-  font-size: 12px;
+  font-size: 11px;
 }
 
 .path-stage strong {
   color: #fff;
   font-family: var(--font-mono);
-  font-size: 13px;
+  font-size: 12px;
 }
 
 .path-suggestions {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 6px;
 }
 
 .path-suggestion {
   display: grid;
-  grid-template-columns: 22px minmax(0, 1fr) 14px;
+  grid-template-columns: 20px minmax(0, 1fr) 14px;
   align-items: center;
-  gap: 10px;
-  min-height: 44px;
-  padding: 10px 12px;
-  border-radius: 10px;
+  gap: 8px;
+  min-height: 38px;
+  padding: 8px 10px;
+  border-radius: 8px;
   background: rgba(255, 255, 255, 0.035);
   border: 1px solid rgba(255, 255, 255, 0.07);
   color: rgba(255, 255, 255, 0.7);
@@ -1894,7 +1915,32 @@ onMounted(() => {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  font-size: 12px;
+  font-size: 11px;
+}
+
+.right-footer {
+  margin-top: 8px;
+  padding-top: 12px;
+  border-top: 1px solid var(--color-border);
+}
+
+.report-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 18px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, rgba(0, 212, 255, 0.1), rgba(124, 58, 237, 0.1));
+  border: 1px solid rgba(0, 212, 255, 0.15);
+  color: var(--color-accent-cyan);
+  white-space: nowrap;
+  width: 100%;
+  justify-content: center;
+  transition: all 0.2s var(--ease-out);
+}
+
+.report-btn:hover {
+  background: linear-gradient(135deg, rgba(0, 212, 255, 0.16), rgba(124, 58, 237, 0.16));
 }
 
 .modal-overlay {
@@ -2078,30 +2124,34 @@ onMounted(() => {
 }
 
 @media (max-width: 900px) {
-  .eval-page-header {
-    padding: 28px 20px 0;
-    flex-direction: column;
-  }
-
-  .header-right {
-    padding-top: 0;
-  }
-
-  .eval-summary-cards {
-    padding: 20px 20px 0;
-    grid-template-columns: repeat(2, 1fr);
-  }
-
-  .eval-main-grid {
-    padding: 16px 20px 0;
+  .eval-split-layout {
     grid-template-columns: 1fr;
   }
 
+  .eval-left-panel {
+    min-height: 60vh;
+  }
+
+  .eval-right-panel {
+    border-left: 0;
+    border-top: 1px solid var(--color-border);
+  }
+
+  .right-scroll-area {
+    height: auto;
+    max-height: none;
+    overflow-y: visible;
+  }
+
+  .three-mini-card :deep(.three-tree-wrapper) {
+    height: 60vh;
+    min-height: 500px;
+  }
+
   .round-insight-panel {
-    top: 92px;
-    bottom: auto;
-    left: 20px;
-    width: min(420px, calc(100vw - 40px));
+    left: 16px;
+    right: 16px;
+    width: auto;
   }
 
   .round-insight-panel::before,
@@ -2109,36 +2159,24 @@ onMounted(() => {
     display: none;
   }
 
-  .eval-knowledge-section {
-    padding: 16px 20px 0;
+  .eval-summary-cards {
+    grid-template-columns: repeat(2, 1fr);
   }
 
-  .eval-bottom-grid {
-    padding: 16px 20px 40px;
-    grid-template-columns: 1fr;
-  }
-
-  .learning-atlas-section {
-    padding: 16px 20px 44px;
-  }
-
-  .atlas-shell {
-    padding: 22px;
-  }
-
-  .atlas-layout,
-  .path-console {
+  .atlas-layout {
     grid-template-columns: 1fr;
   }
 
   .mindmap-canvas {
-    min-height: 430px;
+    min-height: 300px;
   }
 
-  .chart-card,
-  .suggest-card,
-  .badge-card {
-    grid-column: 1;
+  .path-console {
+    grid-template-columns: 1fr;
+  }
+
+  .path-rail {
+    grid-template-columns: repeat(2, 1fr);
   }
 }
 
@@ -2147,25 +2185,8 @@ onMounted(() => {
     grid-template-columns: 1fr;
   }
 
-  .eval-main-grid {
-    transform: translateY(-132px);
-    margin-bottom: -112px;
-  }
-
-  .three-mini-card :deep(.three-tree-wrapper),
-  .three-mini-card :deep(.three-tree-canvas) {
-    min-height: 660px;
-  }
-
-  .round-insight-panel {
-    left: 16px;
-    right: 16px;
-    width: auto;
-    padding: 15px;
-  }
-
   .round-insight-panel h3 {
-    font-size: 19px;
+    font-size: 17px;
   }
 
   .round-metrics {
@@ -2195,7 +2216,7 @@ onMounted(() => {
   }
 
   .mindmap-canvas {
-    min-height: 500px;
+    min-height: 400px;
   }
 
   .mindmap-lines {
@@ -2208,22 +2229,6 @@ onMounted(() => {
 
   .atlas-node.core {
     width: 54%;
-  }
-
-  .path-rail {
-    grid-template-columns: repeat(2, 1fr);
-  }
-
-  .weak-detail-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .weak-detail-item.full-width {
-    grid-column: 1;
-  }
-
-  .report-summary {
-    flex-direction: column;
   }
 
   .modal-overlay {

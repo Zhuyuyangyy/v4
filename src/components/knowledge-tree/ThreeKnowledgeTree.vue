@@ -172,8 +172,7 @@ function pointIsWeak(point?: KnowledgePoint) {
 
 function starColorForPoint(point?: KnowledgePoint) {
   if (pointIsComplete(point)) return 0xdb3f36
-  if (pointIsWeak(point) || (point?.progress ?? 0) < 60) return 0x65dca2
-  return 0xf0b45b
+  return 0x65dca2
 }
 
 function createAppleMesh(size: number, color: number, complete: boolean) {
@@ -419,52 +418,6 @@ function createEnergyAura(model: THREE.Group) {
   rootPool.renderOrder = 2
   auraGroup.add(rootPool)
 
-  const streamPaths = [
-    [
-      new THREE.Vector3(0.02, 0.45, 1.18),
-      new THREE.Vector3(-0.08, 1.8, 1.1),
-      new THREE.Vector3(0.12, 3.35, 1.0),
-      new THREE.Vector3(-0.08, 5.05, 0.82),
-      new THREE.Vector3(0.08, 6.65, 0.58),
-    ],
-    [
-      new THREE.Vector3(-0.38, 0.55, 1.04),
-      new THREE.Vector3(-0.55, 2.1, 0.98),
-      new THREE.Vector3(-0.32, 4.15, 0.82),
-      new THREE.Vector3(-1.35, 5.55, 0.64),
-      new THREE.Vector3(-2.8, 6.3, 0.48),
-    ],
-    [
-      new THREE.Vector3(0.4, 0.58, 1.02),
-      new THREE.Vector3(0.56, 2.15, 0.94),
-      new THREE.Vector3(0.34, 4.05, 0.78),
-      new THREE.Vector3(1.32, 5.55, 0.62),
-      new THREE.Vector3(2.85, 6.28, 0.48),
-    ],
-    [
-      new THREE.Vector3(0.18, 0.9, 1.24),
-      new THREE.Vector3(0.02, 2.7, 1.1),
-      new THREE.Vector3(0.18, 4.75, 0.88),
-      new THREE.Vector3(0.42, 6.3, 0.56),
-    ],
-    [
-      new THREE.Vector3(-0.18, 0.95, 1.18),
-      new THREE.Vector3(-0.28, 2.35, 1.08),
-      new THREE.Vector3(-0.15, 3.85, 0.92),
-      new THREE.Vector3(-0.55, 5.45, 0.64),
-    ],
-    [
-      new THREE.Vector3(0.62, 0.85, 0.86),
-      new THREE.Vector3(0.45, 2.2, 0.88),
-      new THREE.Vector3(0.58, 3.7, 0.72),
-      new THREE.Vector3(0.92, 5.25, 0.56),
-    ],
-  ]
-
-  streamPaths.forEach((path, index) => {
-    auraGroup!.add(createEnergyStream(path, index === 0 ? 0.014 : 0.01, index === 0 ? 0.62 : 0.44))
-  })
-
   const canopyGlow = new THREE.Mesh(
     new THREE.SphereGeometry(4.6, 48, 20),
     new THREE.MeshBasicMaterial({
@@ -519,7 +472,7 @@ function addGraphMarkers(model: THREE.Group) {
       items: group.points.map(point => `${point.name} · ${markerStatusLabel(point.status)} · ${point.progress ?? 0}%`),
     }
 
-    markerGroup!.add(createMarkerStar(branchAnchors[index] ?? branchAnchors[0], 0.3, progress >= 70 ? 0xdb3f36 : 0x65dca2, marker, index * 0.22))
+    markerGroup!.add(createMarkerStar(branchAnchors[index] ?? branchAnchors[0], 0.3, progress >= 80 ? 0xdb3f36 : 0x65dca2, marker, index * 0.22))
   })
 
   model.add(markerGroup)
@@ -534,32 +487,28 @@ function addAttachedStars(model: THREE.Group) {
   starGroup = new THREE.Group()
   starGroup.name = 'AttachedKnowledgeStars'
 
-  const starAnchors = [
-    { position: [-5.4, 10.7, 3.3], size: 0.28, rotation: 0.2 },
-    { position: [-4.45, 12.35, 3.42], size: 0.29, rotation: -0.16 },
-    { position: [-3.52, 13.55, 3.36], size: 0.27, rotation: 0.42 },
-    { position: [-2.55, 11.25, 3.26], size: 0.29, rotation: 0.22 },
-    { position: [-1.55, 12.95, 3.46], size: 0.27, rotation: -0.36 },
-    { position: [-0.62, 10.62, 3.1], size: 0.28, rotation: -0.12 },
-    { position: [0.52, 13.62, 3.42], size: 0.27, rotation: 0.3 },
-    { position: [1.55, 11.45, 3.28], size: 0.29, rotation: -0.28 },
-    { position: [2.52, 12.9, 3.54], size: 0.27, rotation: -0.18 },
-    { position: [3.45, 10.92, 3.4], size: 0.29, rotation: 0.14 },
-    { position: [4.45, 12.35, 3.58], size: 0.27, rotation: -0.42 },
-    { position: [5.45, 10.95, 3.42], size: 0.28, rotation: 0.34 },
-    { position: [-4.95, 11.55, 3.58], size: 0.25, rotation: 0.48 },
-    { position: [-3.95, 13.15, 3.5], size: 0.25, rotation: -0.5 },
-    { position: [-3.05, 10.05, 3.02], size: 0.25, rotation: 0.08 },
-    { position: [-2.05, 13.9, 3.42], size: 0.24, rotation: -0.24 },
-    { position: [-1.05, 11.95, 3.34], size: 0.25, rotation: 0.56 },
-    { position: [0.05, 10.02, 2.98], size: 0.24, rotation: -0.46 },
-    { position: [1.05, 12.6, 3.48], size: 0.25, rotation: 0.18 },
-    { position: [2.1, 14.0, 3.42], size: 0.24, rotation: -0.5 },
-    { position: [3.05, 10.15, 3.1], size: 0.25, rotation: 0.54 },
-    { position: [3.9, 13.35, 3.62], size: 0.24, rotation: -0.08 },
-    { position: [4.95, 11.62, 3.52], size: 0.25, rotation: 0.38 },
-    { position: [5.95, 12.42, 3.45], size: 0.24, rotation: -0.32 },
-  ]
+  const count = Math.max(props.knowledgePoints.length, 18)
+  const starAnchors: Array<{ position: number[]; size: number; rotation: number }> = []
+  const cols = 6
+  const rows = Math.ceil(count / cols)
+  const xRange = 10.8
+  const yMin = 10.0
+  const yMax = 14.2
+  const zBase = 3.3
+
+  for (let i = 0; i < count; i++) {
+    const col = i % cols
+    const row = Math.floor(i / cols)
+    const xCenter = 0
+    const colSpacing = xRange / (cols - 1)
+    const rowSpacing = (yMax - yMin) / Math.max(rows - 1, 1)
+    const x = xCenter - xRange / 2 + col * colSpacing + (row % 2 === 1 ? colSpacing * 0.5 : 0) + (Math.sin(i * 2.37) * 0.35)
+    const y = yMin + row * rowSpacing + (Math.cos(i * 1.83) * 0.25)
+    const z = zBase + Math.sin(i * 1.47) * 0.28
+    const size = 0.24 + (i % 3) * 0.02
+    const rotation = (i * 0.73) % (Math.PI * 2) - Math.PI
+    starAnchors.push({ position: [x, y, z], size, rotation })
+  }
 
   starAnchors.forEach((anchor, index) => {
     const [x, y, z] = anchor.position
@@ -743,9 +692,9 @@ function fitBackgroundStageToScene(model: THREE.Group, role: StagePieceRole) {
   const size = box.getSize(new THREE.Vector3())
   const maxDim = Math.max(size.x, size.y, size.z)
   const config = {
-    main: { scale: 14.1, x: 0, y: 7.35, z: -4.8, ry: Math.PI / 6, rz: 0 },
-    left: { scale: 8.4, x: -8.8, y: 5.8, z: -11.6, ry: 0.14, rz: 0 },
-    right: { scale: 8.4, x: 8.8, y: 5.8, z: -11.6, ry: -0.14, rz: 0 },
+    main: { scale: 14.1, x: -1.0, y: 7.35, z: -2.3, ry: Math.PI / 6, rz: 0 },
+    left: { scale: 8.4, x: -7.2, y: 7.0, z: 0.8, ry: 0.42, rz: 0 },
+    right: { scale: 8.4, x: 7.2, y: 7.0, z: 0.8, ry: -0.42, rz: 0 },
   }[role]
   const scale = config.scale / Math.max(0.001, maxDim)
 
@@ -938,6 +887,7 @@ function fitModelToScene(model: THREE.Group) {
   model.position.sub(center.multiplyScalar(scale))
   model.position.y -= box.min.y * scale
   model.position.y += props.sceneOffsetY
+  model.position.z += 2.5
 }
 
 function loadModel(modelUrl = props.modelUrl, hasTriedFallback = false) {
@@ -1301,7 +1251,7 @@ watch(() => props.knowledgePoints, () => {
 .tree-index-panel-v2 {
   position: absolute;
   top: 88px;
-  left: 24px;
+  right: 24px;
   z-index: 4;
   width: min(33%, 390px);
   min-width: 300px;
@@ -1459,8 +1409,8 @@ watch(() => props.knowledgePoints, () => {
 @media (max-width: 900px) {
   .tree-index-panel,
   .tree-index-panel-v2 {
-    left: 16px;
     right: 16px;
+    left: 16px;
     width: auto;
     min-width: 0;
   }
