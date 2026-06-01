@@ -1,4 +1,4 @@
-<script setup lang="ts">
+﻿<script setup lang="ts">
 import { useRoute } from 'vue-router'
 import { computed, watch } from 'vue'
 import { useAppStore } from '@/store'
@@ -10,9 +10,7 @@ import {
   BarChart3,
   Settings,
   Sparkles,
-  Layers,
   Library,
-  ShieldCheck,
 } from 'lucide-vue-next'
 
 const route = useRoute()
@@ -28,9 +26,7 @@ const navItems = [
   { path: '/dialogue', label: '智能对话', icon: MessageCircle },
   { path: '/learning-path', label: '星图路径', icon: Map },
   { path: '/edu-mind', label: '辅导资源', icon: Library },
-  { path: '/mindmap', label: '图谱', icon: Layers },
   { path: '/evaluation', label: '评估', icon: BarChart3 },
-  { path: '/evidence', label: '证据链', icon: ShieldCheck },
   { path: '/settings', label: '设置', icon: Settings },
 ]
 watch(

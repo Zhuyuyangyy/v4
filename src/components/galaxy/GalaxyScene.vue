@@ -681,13 +681,20 @@ defineExpose({ scene, camera, css2dRenderer, composer, galaxyEntities })
 </script>
 
 <template>
-  <div ref="labelContainerRef" class="label-container" />
-  <div class="canvas-container">
-    <canvas ref="canvasRef" role="img" aria-label="学习路径星系可视化" />
+  <div class="galaxy-scene-root">
+    <div ref="labelContainerRef" class="label-container" />
+    <div class="canvas-container">
+      <canvas ref="canvasRef" role="img" aria-label="学习路径星系可视化" />
+    </div>
   </div>
 </template>
 
 <style scoped>
+.galaxy-scene-root {
+  width: 100%;
+  height: 100%;
+  position: relative;
+}
 .canvas-container {
   position: absolute;
   inset: 0;

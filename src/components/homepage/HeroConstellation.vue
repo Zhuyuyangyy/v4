@@ -380,7 +380,7 @@ function chipStyle(x: number, y: number, isHot: boolean, side: string): string {
         <div class="sphere-label">
           <div class="sphere-eyebrow">STUDENT PROFILE</div>
           <div class="sphere-title">知识宇宙</div>
-          <div class="sphere-sub">张同学 · 大二 · 计算机</div>
+          <div class="sphere-sub">学习者 · 画像驱动 · 个性化路径</div>
           <div class="sphere-stats">
             <div v-for="s in [{ l: '画像维度', v: '24' }, { l: '掌握度', v: '38%' }, { l: '连续', v: '5 天' }]" :key="s.l" class="sphere-stat">
               <div class="sphere-stat-val">{{ s.v }}</div>

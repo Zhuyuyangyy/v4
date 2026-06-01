@@ -141,6 +141,76 @@ export interface LatestProfileResponse {
   result: ProfileResult | null
 }
 
+export interface AgentTrace {
+  agentId: string
+  agentName: string
+  role: string
+  input: string
+  process: string
+  output: string
+  confidence: number
+  evidenceTags: string[]
+  timestamp: string
+  status: 'running' | 'completed' | 'pending' | 'error'
+}
+
+export interface LearningWorkflowResponse {
+  workflowId: string
+  startTime: string
+  endTime: string
+  agents: AgentTrace[]
+  summary: string
+  profileSnapshot: Record<string, unknown>
+}
+
+export interface GeneratedResource {
+  id: string
+  concept: string
+  example: string
+  exercise: string
+  mistakeReminder: string
+  recommendReason: string
+  evidence: {
+    profileSource: string
+    evaluationReason: string
+    pathStage: string
+    formatReason: string
+  }
+}
+
+export interface EvidenceTrace {
+  traceId: string
+  workflowId: string
+  agentId: string
+  agentName: string
+  input: string
+  output: string
+  confidence: number
+  evidenceTags: string[]
+  timestamp: string
+  duration: number
+}
+
+export interface EvidenceSummary {
+  workflowId: string
+  totalAgents: number
+  completedAgents: number
+  totalDuration: number
+  traceCount: number
+  keyFindings: string[]
+  profileUpdates: Array<{
+    field: string
+    before: string
+    after: string
+    evidence: string
+  }>
+  pathAdjustments: Array<{
+    reason: string
+    addedNodes: string[]
+    removedNodes: string[]
+  }>
+}
+
 export interface AgentResult {
   agentName: string
   inputSummary: string

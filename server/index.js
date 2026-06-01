@@ -15,6 +15,10 @@ import {
   saveChatHistoryEntry,
   saveProfileResult,
   saveTutoringHistoryEntry,
+  getAgentWorkflow,
+  generateResourcesPayload,
+  getEvidenceTraces,
+  getEvidenceSummary,
 } from './data.js'
 import {
   orchestrateProfileAnalysis,
@@ -93,6 +97,21 @@ function listResources(searchParams) {
   })
 }
 
+function latestUserMessage(messages) {
+  if (!Array.isArray(messages)) return ''
+  const latest = [...messages].reverse().find(item => item?.sender === 'user' || item?.role === 'user')
+  return String(latest?.text || latest?.content || '').trim()
+}
+
+function toDialogueChatReply(reply) {
+  return {
+    reply: reply.content,
+    extractedDimensions: {},
+    capturedTags: [],
+    suggestChips: reply.suggestions ?? [],
+  }
+}
+
 const server = http.createServer(async (req, res) => {
   if (!req.url) {
     notFound(res)
@@ -133,12 +152,14 @@ const server = http.createServer(async (req, res) => {
 
     if (req.method === 'POST' && pathname === '/api/chat') {
       const body = await readJson(req)
-      const reply = buildChatReply(body.message, body.multimodalContents)
-      saveChatHistoryEntry(String(body.message || '').trim(), reply, body.multimodalContents)
+      const isDialoguePayload = Array.isArray(body.messages)
+      const message = isDialoguePayload ? latestUserMessage(body.messages) : String(body.message || '').trim()
+      const reply = buildChatReply(message, body.multimodalContents)
+      saveChatHistoryEntry(message, reply, body.multimodalContents)
       const chatTrace = buildTrace({
         requestId: `chat-${Date.now()}`,
         agents: ['ChatAgent'],
-        inputsSummary: `消息: ${String(body.message || '').slice(0, 80)}`,
+        inputsSummary: `消息: ${String(message || '').slice(0, 80)}`,
         outputsSummary: `回复: ${String(reply.content || '').slice(0, 80)}`,
         evidence: ['本地规则生成对话回复'],
         riskFlags: [],
@@ -147,7 +168,7 @@ const server = http.createServer(async (req, res) => {
         agentResults: [],
       })
       recordTrace(chatTrace)
-      sendJson(res, 200, reply)
+      sendJson(res, 200, isDialoguePayload ? toDialogueChatReply(reply) : reply)
       return
     }
 
@@ -204,6 +225,11 @@ const server = http.createServer(async (req, res) => {
 
     if (req.method === 'GET' && pathname === '/api/evaluation') {
       sendJson(res, 200, getEvaluationPayload())
+      return
+    }
+
+    if (req.method === 'GET' && pathname === '/api/agent/workflow') {
+      sendJson(res, 200, getAgentWorkflow())
       return
     }
 

@@ -10,6 +10,11 @@ import type {
   TutoringHistoryItem,
   TutoringReply,
   MultimodalContent,
+  AgentTrace,
+  LearningWorkflowResponse,
+  GeneratedResource,
+  EvidenceTrace,
+  EvidenceSummary,
   ResourceGenerateRequest,
   ResourceGenerateResponse,
   EvidenceTracesResponse,
@@ -128,6 +133,17 @@ export function fetchLearningPath() {
 
 export function fetchEvaluation() {
   return requestJson<EvaluationResponse>('/api/evaluation')
+}
+
+export function fetchAgentWorkflow() {
+  return requestJson<LearningWorkflowResponse>('/api/agent/workflow')
+}
+
+export function generateResources(topic?: string) {
+  return requestJson<{ items: GeneratedResource[] }>('/api/resources/generate', {
+    method: 'POST',
+    body: JSON.stringify({ topic }),
+  })
 }
 
 export function generateResource(payload: ResourceGenerateRequest) {

@@ -37,6 +37,7 @@ import MindMapView from '../components/edu-mind/MindMapView.vue'
 import StudyRecordView from '../components/edu-mind/StudyRecordView.vue'
 import FavoritesView from '../components/edu-mind/FavoritesView.vue'
 import NotesView from '../components/edu-mind/NotesView.vue'
+import ResourceGeneratePanel from '../components/resource/ResourceGeneratePanel.vue'
 
 const { isDark } = useTheme()
 const route = useRoute()
@@ -376,6 +377,7 @@ const isUnimplementedTab = computed(() => {
 
         <div v-if="currentTab === '资源中心'" class="flex flex-col lg:flex-row gap-6">
           <div class="flex-1 min-w-0 flex flex-col gap-5">
+            <ResourceGeneratePanel />
             <div class="flex flex-wrap gap-2" id="filter-tabs-container">
               <button
                 v-for="(cat, idx) in categoriesList"
