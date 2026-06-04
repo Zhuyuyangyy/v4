@@ -106,8 +106,8 @@ onMounted(async () => {
       fetchEvidenceSummary(),
       fetchEvidenceTraces(),
     ])
-    summary.value = summaryRes
-    traces.value = tracesRes.traces
+    summary.value = summaryRes as any
+    traces.value = (tracesRes as any).traces || (tracesRes as any).items || []
   } catch {
     summary.value = FALLBACK_SUMMARY
     traces.value = FALLBACK_TRACES
