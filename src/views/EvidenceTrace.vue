@@ -48,8 +48,8 @@ onMounted(async () => {
       fetchEvidenceSummary(),
       fetchEvidenceTraces(),
     ])
-    summary.value = summaryData
-    traces.value = tracesData.traces
+    summary.value = summaryData as any
+    traces.value = (tracesData as any).traces || (tracesData as any).items || []
   } catch {
     isFallback.value = true
   } finally {

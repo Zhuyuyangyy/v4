@@ -1,70 +1,21 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { BASE_KNOWLEDGE_ITEMS, buildConstellationView, getDomainMeta } from './mapTransforms'
+import type { ConstellationNode, ConstellationEdge } from './mapTypes'
 
-interface CNode {
-  id: string; d: string; label: string; x: number; y: number; m: number; recommended?: boolean
-}
-interface CEdge { from: string; to: string }
+const emit = defineEmits<{ 'select-node': [nodeId: string] }>()
 
-const DOMAIN: Record<string, { name: string; color: string; short: string }> = {
-  math: { name: '数学基础', color: '#00d4ff', short: 'MATH' },
-  ml:   { name: '机器学习', color: '#7c3aed', short: 'ML' },
-  dl:   { name: '深度学习', color: '#06d6a0', short: 'DL' },
-  algo: { name: '算法与数据结构', color: '#f59e0b', short: 'ALGO' },
-  eng:  { name: '工程实践', color: '#3b82f6', short: 'ENG' },
-  nlp:  { name: 'NLP 与应用', color: '#f43f5e', short: 'NLP' },
-}
-
-const nodes = ref<CNode[]>([
-  { id: 'm1', d: 'math', label: '矩阵运算', x: 195, y: 360, m: 0.95 },
-  { id: 'm2', d: 'math', label: '特征值与分解', x: 330, y: 285, m: 0.82 },
-  { id: 'm3', d: 'math', label: '概率论', x: 240, y: 470, m: 0.78 },
-  { id: 'm4', d: 'math', label: '微积分', x: 410, y: 410, m: 0.66 },
-  { id: 'm5', d: 'math', label: '凸优化', x: 470, y: 510, m: 0.32 },
-  { id: 'ml1', d: 'ml', label: '监督学习', x: 600, y: 230, m: 0.88 },
-  { id: 'ml2', d: 'ml', label: '无监督学习', x: 745, y: 195, m: 0.62 },
-  { id: 'ml3', d: 'ml', label: '决策树 / RF', x: 655, y: 335, m: 0.78 },
-  { id: 'ml4', d: 'ml', label: 'SVM', x: 800, y: 320, m: 0.55 },
-  { id: 'ml5', d: 'ml', label: '集成学习', x: 570, y: 385, m: 0.48 },
-  { id: 'dl1', d: 'dl', label: '神经网络', x: 945, y: 270, m: 0.58 },
-  { id: 'dl2', d: 'dl', label: 'CNN', x: 1080, y: 225, m: 0.32 },
-  { id: 'dl3', d: 'dl', label: 'RNN / LSTM', x: 1160, y: 345, m: 0.20 },
-  { id: 'dl4', d: 'dl', label: 'Transformer', x: 1020, y: 410, m: 0.10, recommended: true },
-  { id: 'dl5', d: 'dl', label: 'Attention', x: 1175, y: 460, m: 0.18 },
-  { id: 'a1', d: 'algo', label: '排序与查找', x: 220, y: 650, m: 0.92 },
-  { id: 'a2', d: 'algo', label: '数据结构', x: 340, y: 705, m: 0.78 },
-  { id: 'a3', d: 'algo', label: '图算法', x: 215, y: 775, m: 0.42 },
-  { id: 'a4', d: 'algo', label: '动态规划', x: 380, y: 820, m: 0.30 },
-  { id: 'e1', d: 'eng', label: 'Python 工程', x: 590, y: 680, m: 0.72 },
-  { id: 'e2', d: 'eng', label: '版本控制', x: 700, y: 760, m: 0.65 },
-  { id: 'e3', d: 'eng', label: '模型部署', x: 815, y: 700, m: 0.30 },
-  { id: 'n1', d: 'nlp', label: '词向量', x: 985, y: 645, m: 0.40 },
-  { id: 'n2', d: 'nlp', label: 'LLM', x: 1135, y: 660, m: 0.18 },
-  { id: 'n3', d: 'nlp', label: '微调与对齐', x: 1220, y: 770, m: 0.08 },
-  { id: 'n4', d: 'nlp', label: '检索增强', x: 1065, y: 790, m: 0.12 },
-])
-
-const edges = ref<CEdge[]>([
-  { from: 'm1', to: 'm2' }, { from: 'm1', to: 'm3' }, { from: 'm2', to: 'm4' },
-  { from: 'm3', to: 'm4' }, { from: 'm4', to: 'm5' }, { from: 'm3', to: 'm5' },
-  { from: 'ml1', to: 'ml2' }, { from: 'ml1', to: 'ml3' }, { from: 'ml2', to: 'ml4' },
-  { from: 'ml3', to: 'ml4' }, { from: 'ml3', to: 'ml5' }, { from: 'ml1', to: 'ml5' },
-  { from: 'dl1', to: 'dl2' }, { from: 'dl1', to: 'dl3' }, { from: 'dl2', to: 'dl4' },
-  { from: 'dl3', to: 'dl4' }, { from: 'dl4', to: 'dl5' }, { from: 'dl3', to: 'dl5' },
-  { from: 'a1', to: 'a2' }, { from: 'a2', to: 'a3' }, { from: 'a2', to: 'a4' }, { from: 'a3', to: 'a4' },
-  { from: 'e1', to: 'e2' }, { from: 'e2', to: 'e3' }, { from: 'e1', to: 'e3' },
-  { from: 'n1', to: 'n2' }, { from: 'n2', to: 'n3' }, { from: 'n2', to: 'n4' }, { from: 'n3', to: 'n4' },
-  { from: 'm1', to: 'dl1' }, { from: 'm3', to: 'ml1' }, { from: 'ml1', to: 'dl1' },
-  { from: 'a2', to: 'ml5' }, { from: 'dl4', to: 'n2' }, { from: 'a2', to: 'e1' }, { from: 'm4', to: 'ml3' },
-])
+const { nodes: constellationNodes, edges: constellationEdges } = buildConstellationView(BASE_KNOWLEDGE_ITEMS)
+const nodes = ref<ConstellationNode[]>(constellationNodes)
+const edges = ref<ConstellationEdge[]>(constellationEdges)
 
 const domainLabels = [
-  { d: 'math', x: 105, y: 230 },
-  { d: 'ml', x: 545, y: 145 },
-  { d: 'dl', x: 990, y: 155 },
-  { d: 'algo', x: 140, y: 595 },
-  { d: 'eng', x: 555, y: 620 },
-  { d: 'nlp', x: 970, y: 595 },
+  { domain: 'math', x: 105, y: 230 },
+  { domain: 'ml', x: 545, y: 145 },
+  { domain: 'dl', x: 990, y: 155 },
+  { domain: 'algo', x: 140, y: 595 },
+  { domain: 'eng', x: 555, y: 620 },
+  { domain: 'nlp', x: 970, y: 595 },
 ]
 
 // Deterministic starfield
@@ -82,16 +33,16 @@ function nodeRadius(m: number) { return 4 + m * 7 }
 function nodeOpacity(m: number) { return 0.35 + m * 0.65 }
 
 const byId = computed(() => Object.fromEntries(nodes.value.map(n => [n.id, n])))
-const focused = computed(() => nodes.value.find(n => n.recommended))
+const focused = computed(() => nodes.value.find(n => n.mastery < 0.2 && n.importance > 0.8))
 
 // Cluster halos
 const clusterHalos = computed(() => {
   return domainLabels.map(dl => {
-    const cluster = nodes.value.filter(n => n.d === dl.d)
+    const cluster = nodes.value.filter(n => n.domain === dl.domain)
     const cx = cluster.reduce((s, n) => s + n.x, 0) / cluster.length
     const cy = cluster.reduce((s, n) => s + n.y, 0) / cluster.length
     const r = Math.max(...cluster.map(n => Math.hypot(n.x - cx, n.y - cy))) + 60
-    return { d: dl.d, cx, cy, r, color: DOMAIN[dl.d].color }
+    return { domain: dl.domain, cx, cy, r, color: getDomainMeta(dl.domain).color }
   })
 })
 
@@ -142,46 +93,46 @@ onUnmounted(() => { styleEl?.remove() })
           :style="s.tw ? { animation: `constellation-twinkle ${2 + (i % 5)}s ease-in-out ${i * 0.13}s infinite` } : undefined" />
 
         <!-- Cluster halos -->
-        <circle v-for="h in clusterHalos" :key="h.d"
+        <circle v-for="h in clusterHalos" :key="h.domain"
           :cx="h.cx" :cy="h.cy" :r="h.r" :fill="h.color" opacity="0.04" />
 
         <!-- Edges -->
         <line v-for="(e, i) in edges" :key="'e'+i"
           :x1="byId[e.from]?.x" :y1="byId[e.from]?.y"
           :x2="byId[e.to]?.x" :y2="byId[e.to]?.y"
-          :stroke="byId[e.from]?.d === byId[e.to]?.d ? DOMAIN[byId[e.from]!.d].color : '#8892b0'"
-          :stroke-opacity="byId[e.from]?.d === byId[e.to]?.d ? 0.35 + Math.min(byId[e.from]!.m, byId[e.to]!.m) * 0.3 : 0.14"
-          :stroke-width="byId[e.from]?.d === byId[e.to]?.d ? 1.3 : 0.8"
-          :stroke-dasharray="byId[e.from]?.d !== byId[e.to]?.d ? '3 4' : 'none'" />
+          :stroke="byId[e.from]?.domain === byId[e.to]?.domain ? getDomainMeta(byId[e.from]!.domain).color : '#8892b0'"
+          :stroke-opacity="byId[e.from]?.domain === byId[e.to]?.domain ? 0.35 + Math.min(byId[e.from]!.mastery, byId[e.to]!.mastery) * 0.3 : 0.14"
+          :stroke-width="byId[e.from]?.domain === byId[e.to]?.domain ? 1.3 : 0.8"
+          :stroke-dasharray="byId[e.from]?.domain !== byId[e.to]?.domain ? '3 4' : 'none'" />
 
         <!-- Nodes -->
-        <g v-for="n in nodes" :key="n.id">
-          <circle :cx="n.x" :cy="n.y" :r="nodeRadius(n.m) * 3.2"
-            fill="url(#c-star-bright)" :opacity="n.m * 0.4" />
-          <circle :cx="n.x" :cy="n.y" :r="nodeRadius(n.m) * 1.9"
-            :fill="DOMAIN[n.d].color" :opacity="n.m * 0.25" filter="url(#c-glow-md)" />
-          <circle :cx="n.x" :cy="n.y" :r="nodeRadius(n.m)"
-            :fill="DOMAIN[n.d].color" :opacity="nodeOpacity(n.m)" filter="url(#c-glow-sm)" />
-          <circle :cx="n.x" :cy="n.y" :r="Math.max(1.5, nodeRadius(n.m) * 0.45)"
-            fill="#fff" :opacity="0.55 + n.m * 0.45" />
+        <g v-for="n in nodes" :key="n.id" class="graph-node" @click="emit('select-node', n.id)">
+          <circle :cx="n.x" :cy="n.y" :r="nodeRadius(n.mastery) * 3.2"
+            fill="url(#c-star-bright)" :opacity="n.mastery * 0.4" />
+          <circle :cx="n.x" :cy="n.y" :r="nodeRadius(n.mastery) * 1.9"
+            :fill="getDomainMeta(n.domain).color" :opacity="n.mastery * 0.25" filter="url(#c-glow-md)" />
+          <circle :cx="n.x" :cy="n.y" :r="nodeRadius(n.mastery)"
+            :fill="getDomainMeta(n.domain).color" :opacity="nodeOpacity(n.mastery)" filter="url(#c-glow-sm)" />
+          <circle :cx="n.x" :cy="n.y" :r="Math.max(1.5, nodeRadius(n.mastery) * 0.45)"
+            fill="#fff" :opacity="0.55 + n.mastery * 0.45" />
           <!-- Recommended pulse -->
-          <g v-if="n.recommended" :style="{ transformOrigin: `${n.x}px ${n.y}px`, animation: 'constellation-pulse 2.4s ease-out infinite' }">
-            <circle :cx="n.x" :cy="n.y" :r="nodeRadius(n.m) + 6"
-              fill="none" :stroke="DOMAIN[n.d].color" stroke-width="1.5" />
+          <g v-if="n.mastery < 0.2 && n.importance > 0.8" :style="{ transformOrigin: `${n.x}px ${n.y}px`, animation: 'constellation-pulse 2.4s ease-out infinite' }">
+            <circle :cx="n.x" :cy="n.y" :r="nodeRadius(n.mastery) + 6"
+              fill="none" :stroke="getDomainMeta(n.domain).color" stroke-width="1.5" />
           </g>
         </g>
       </svg>
 
       <!-- Domain labels -->
-      <div v-for="dl in domainLabels" :key="dl.d" class="domain-label"
-        :style="{ left: (dl.x / 1400 * 100) + '%', top: (dl.y / 900 * 100) + '%', color: DOMAIN[dl.d].color }">
-        <div class="domain-short">{{ DOMAIN[dl.d].short }}</div>
-        {{ DOMAIN[dl.d].name }}
+      <div v-for="dl in domainLabels" :key="dl.domain" class="domain-label"
+        :style="{ left: (dl.x / 1400 * 100) + '%', top: (dl.y / 900 * 100) + '%', color: getDomainMeta(dl.domain).color }">
+        <div class="domain-short">{{ getDomainMeta(dl.domain).short }}</div>
+        {{ getDomainMeta(dl.domain).name }}
       </div>
 
       <!-- Node labels -->
       <div v-for="n in nodes" :key="'l'+n.id" class="node-label-overlay"
-        :style="{ left: (n.x / 1400 * 100) + '%', top: ((n.y + nodeRadius(n.m) + 8) / 900 * 100) + '%', opacity: 0.4 + n.m * 0.55 }">
+        :style="{ left: (n.x / 1400 * 100) + '%', top: ((n.y + nodeRadius(n.mastery) + 8) / 900 * 100) + '%', opacity: 0.4 + n.mastery * 0.55 }">
         {{ n.label }}
       </div>
 
@@ -230,9 +181,9 @@ onUnmounted(() => { styleEl?.remove() })
         </div>
         <div class="legend-divider"></div>
         <div class="legend-domains">
-          <div v-for="(v, k) in DOMAIN" :key="k" class="legend-domain-item">
-            <span class="legend-dot" :style="{ background: v.color, boxShadow: `0 0 6px ${v.color}` }"></span>
-            {{ v.name }}
+          <div v-for="dl in domainLabels" :key="dl.domain" class="legend-domain-item">
+            <span class="legend-dot" :style="{ background: getDomainMeta(dl.domain).color, boxShadow: `0 0 6px ${getDomainMeta(dl.domain).color}` }"></span>
+            {{ getDomainMeta(dl.domain).name }}
           </div>
         </div>
       </div>
@@ -275,6 +226,7 @@ onUnmounted(() => { styleEl?.remove() })
   border: 1px solid rgba(255, 255, 255, 0.06); overflow: hidden;
 }
 .constellation-svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+.graph-node { cursor: pointer; }
 
 .domain-label {
   position: absolute; pointer-events: none;

@@ -13,6 +13,7 @@ export interface TreeNode {
   name: string
   status: 'mastered' | 'learning' | 'weak' | 'next'
   progress: number
+  course?: string
   issue?: string
   cause?: string
   remedialResources?: string[]

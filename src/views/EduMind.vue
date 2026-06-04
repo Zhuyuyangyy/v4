@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, computed, watch, onMounted } from 'vue'
+import { useRoute } from 'vue-router'
 import { useTheme } from '../composables/useEduMindTheme'
 import {
   FileText,
@@ -20,6 +21,7 @@ import {
   INITIAL_COLLECTIONS,
   SHUFFLED_RECOMMENDATIONS_GROUPS
 } from '../data/edu-mind-data'
+import { fetchResources, fetchRecommendedResources } from '@/lib/api'
 
 import Sidebar from '../components/edu-mind/Sidebar.vue'
 import Header from '../components/edu-mind/Header.vue'
@@ -39,6 +41,7 @@ import NotesView from '../components/edu-mind/NotesView.vue'
 import ResourceGeneratePanel from '../components/resource/ResourceGeneratePanel.vue'
 
 const { isDark } = useTheme()
+const route = useRoute()
 
 const ITEMS_PER_PAGE = 6
 
@@ -50,6 +53,12 @@ const currentTab = ref<string>((() => {
 watch(currentTab, (val) => {
   localStorage.setItem('edumind_active_tab', val)
 })
+
+watch(() => route.query, (q) => {
+  if (q.source === 'home' || q.source === 'star-map' || q.source === 'mission') {
+    currentTab.value = '资源中心'
+  }
+}, { immediate: true })
 
 const resources = ref<Resource[]>((() => {
   const saved = localStorage.getItem('resource_center_list')
@@ -303,6 +312,42 @@ const handleCardClick = (id: string) => {
 
 const isUnimplementedTab = computed(() => {
   return !['首页', '学习路径', '课程', '资源中心', '练习中心', '思维导图', '学习记录', '收藏夹', '笔记'].includes(currentTab.value)
+})
+
+onMounted(async () => {
+  try {
+    const items = await fetchResources()
+    if (items && items.length > 0) {
+      resources.value = items.map((item, i) => ({
+        id: String(item.id || i + 1),
+        title: item.title,
+        category: (item.type === 'doc' ? '文档' : item.type === 'mindmap' ? '思维导图' : item.type === 'exercise' ? '习题' : item.type === 'video' ? '视频' : item.type === 'code' ? '代码' : '文档') as ResourceCategory,
+        description: item.desc,
+        tags: item.tags,
+        date: item.date,
+        views: item.reads,
+        starred: false,
+        difficulty: '中级' as Difficulty,
+        author: '系统推荐',
+        estimatedTime: item.estTime || '30分钟',
+        contentMarkdown: item.reason || item.desc,
+      }))
+    }
+  } catch { /* keep local data */ }
+
+  try {
+    const recItems = await fetchRecommendedResources()
+    if (recItems && recItems.length > 0) {
+      recommendations.value = recItems.map((item, i) => ({
+        id: String(item.id || i + 1),
+        title: item.title,
+        category: (item.type === 'doc' ? '文档' : item.type === 'mindmap' ? '思维导图' : item.type === 'exercise' ? '习题' : item.type === 'video' ? '视频' : item.type === 'code' ? '代码' : '文档') as ResourceCategory,
+        views: item.reads,
+        starred: false,
+        iconType: item.type || 'doc',
+      }))
+    }
+  } catch { /* keep local data */ }
 })
 </script>
 

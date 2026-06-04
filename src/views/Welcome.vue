@@ -2,11 +2,10 @@
 import { ref, onMounted } from 'vue'
 import HeroConstellation from '@/components/homepage/HeroConstellation.vue'
 import AgentLiveTicker from '@/components/homepage/AgentLiveTicker.vue'
-import SectionAgentWritingFlow from '@/components/homepage/SectionAgentWritingFlow.vue'
 import SectionTelemetry from '@/components/homepage/SectionTelemetry.vue'
 import SectionSkyline from '@/components/homepage/SectionSkyline.vue'
 import SectionMissions from '@/components/homepage/SectionMissions.vue'
-import AgentChainPanel from '@/components/homepage/AgentChainPanel.vue'
+import TrainFlow from '@/views/TrainFlow.vue'
 
 const loaded = ref(false)
 
@@ -29,14 +28,11 @@ onMounted(() => {
     <!-- Hero constellation -->
     <HeroConstellation />
 
+    <!-- TrainFlow: Multi-agent collaboration visualization -->
+    <TrainFlow />
+
     <!-- Agent live ticker -->
     <AgentLiveTicker />
-
-    <!-- Multi-agent collaborative execution chain -->
-    <AgentChainPanel />
-
-    <!-- Multi-agent writing/collaboration visualization -->
-    <SectionAgentWritingFlow />
 
     <!-- Collaboration telemetry -->
     <SectionTelemetry />
