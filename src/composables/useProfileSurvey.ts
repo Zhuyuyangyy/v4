@@ -1,5 +1,5 @@
 import { ref, computed } from 'vue'
-import { analyzeProfile as analyzeProfileRequest, fetchLatestProfile } from '@/lib/api'
+import { analyzeProfile as analyzeProfileRequest, fetchLatestProfile, agentProfileAnalyze } from '@/lib/api'
 
 export interface SurveyAnswers {
   role: string
@@ -593,9 +593,18 @@ export function useProfileSurvey() {
     }
 
     try {
-      result.value = await analyzeProfileRequest(answers.value)
+      const agentResult = await agentProfileAnalyze(answers.value)
+      if (agentResult.profile) {
+        result.value = agentResult.profile as ProfileResult
+      } else {
+        result.value = await analyzeProfileRequest(answers.value)
+      }
     } catch {
-      result.value = generateResult(answers.value)
+      try {
+        result.value = await analyzeProfileRequest(answers.value)
+      } catch {
+        result.value = generateResult(answers.value)
+      }
     }
     saveToStorage(result.value)
     phase.value = 'results'

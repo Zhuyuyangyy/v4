@@ -84,6 +84,22 @@ const branchGroups = computed(() => {
         { name: '图结构与搜索', status: 'weak' as const, progress: 38 },
       ]
 
+  // 按 course 字段分组
+  const courseMap = new Map<string, KnowledgePoint[]>()
+  points.forEach(p => {
+    const course = (p as any).course ?? '未分类'
+    if (!courseMap.has(course)) courseMap.set(course, [])
+    courseMap.get(course)!.push(p)
+  })
+
+  if (courseMap.size > 0) {
+    return Array.from(courseMap.entries()).map(([label, pts]) => ({
+      label,
+      points: pts,
+    }))
+  }
+
+  // fallback: 如果没有 course 字段，按3等分
   return [
     { label: '课程主干', points: points.slice(0, 2) },
     { label: '能力分支', points: points.slice(2, 4) },
@@ -488,32 +504,60 @@ function addAttachedStars(model: THREE.Group) {
   starGroup.name = 'AttachedKnowledgeStars'
 
   const count = Math.max(props.knowledgePoints.length, 18)
-  const starAnchors: Array<{ position: number[]; size: number; rotation: number }> = []
-  const cols = 6
-  const rows = Math.ceil(count / cols)
-  const xRange = 10.8
-  const yMin = 10.0
-  const yMax = 14.2
-  const zBase = 3.3
 
-  for (let i = 0; i < count; i++) {
-    const col = i % cols
-    const row = Math.floor(i / cols)
-    const xCenter = 0
-    const colSpacing = xRange / (cols - 1)
-    const rowSpacing = (yMax - yMin) / Math.max(rows - 1, 1)
-    const x = xCenter - xRange / 2 + col * colSpacing + (row % 2 === 1 ? colSpacing * 0.5 : 0) + (Math.sin(i * 2.37) * 0.35)
-    const y = yMin + row * rowSpacing + (Math.cos(i * 1.83) * 0.25)
-    const z = zBase + Math.sin(i * 1.47) * 0.28
-    const size = 0.24 + (i % 3) * 0.02
-    const rotation = (i * 0.73) % (Math.PI * 2) - Math.PI
-    starAnchors.push({ position: [x, y, z], size, rotation })
+  // Collect all leaf mesh vertices in world space
+  const leafVertices: THREE.Vector3[] = []
+  model.updateMatrixWorld(true)
+  model.traverse((child) => {
+    if (!(child instanceof THREE.Mesh)) return
+    const name = child.name.toLowerCase()
+    const matName = (Array.isArray(child.material) ? child.material[0] : child.material)?.name?.toLowerCase() ?? ''
+    if (!name.includes('leaf') && !matName.includes('leaf')) return
+    const geom = child.geometry
+    const pos = geom.attributes.position
+    if (!pos) return
+    const v = new THREE.Vector3()
+    for (let i = 0; i < pos.count; i++) {
+      v.fromBufferAttribute(pos, i).applyMatrix4(child.matrixWorld)
+      leafVertices.push(v.clone())
+    }
+  })
+
+  // If no leaf vertices found, fall back to bounding box sampling
+  if (leafVertices.length === 0) {
+    const box = new THREE.Box3().setFromObject(model)
+    const size = box.getSize(new THREE.Vector3())
+    const center = box.getCenter(new THREE.Vector3())
+    // Generate points in upper 60% of the model (foliage area)
+    for (let i = 0; i < count * 10; i++) {
+      const x = center.x + (Math.random() - 0.5) * size.x * 0.8
+      const y = center.y + size.y * 0.1 + Math.random() * size.y * 0.5
+      const z = center.z + (Math.random() - 0.5) * size.z * 0.8
+      leafVertices.push(new THREE.Vector3(x, y, z))
+    }
   }
 
-  starAnchors.forEach((anchor, index) => {
-    const [x, y, z] = anchor.position
+  // Sample 'count' vertices evenly from the collected leaf vertices
+  const step = Math.max(1, Math.floor(leafVertices.length / count))
+  const sampledPositions: THREE.Vector3[] = []
+  for (let i = 0; i < count && i * step < leafVertices.length; i++) {
+    const idx = i * step + Math.floor(Math.random() * Math.min(step, 3))
+    const safeIdx = Math.min(idx, leafVertices.length - 1)
+    sampledPositions.push(leafVertices[safeIdx])
+  }
+  // Fill remaining if needed
+  while (sampledPositions.length < count) {
+    sampledPositions.push(leafVertices[Math.floor(Math.random() * leafVertices.length)])
+  }
+
+  sampledPositions.forEach((position, index) => {
     const point = props.knowledgePoints[index % Math.max(props.knowledgePoints.length, 1)]
-    starGroup!.add(createAttachedStar(new THREE.Vector3(x, y, z), anchor.size, point, anchor.rotation))
+    const size = 0.2 + (index % 3) * 0.03 + Math.random() * 0.05
+    const rotation = Math.random() * Math.PI * 2
+    // Convert world position to model local space
+    const localPos = position.clone()
+    model.worldToLocal(localPos)
+    starGroup!.add(createAttachedStar(localPos, size, point, rotation))
   })
 
   model.add(starGroup)
@@ -656,7 +700,7 @@ function enhanceBackgroundStage(model: THREE.Group) {
 
     child.castShadow = false
     child.receiveShadow = true
-    child.frustumCulled = true
+    child.frustumCulled = false
     child.matrixAutoUpdate = false
 
     const materials = Array.isArray(child.material) ? child.material : [child.material]
@@ -692,9 +736,9 @@ function fitBackgroundStageToScene(model: THREE.Group, role: StagePieceRole) {
   const size = box.getSize(new THREE.Vector3())
   const maxDim = Math.max(size.x, size.y, size.z)
   const config = {
-    main: { scale: 14.1, x: -1.0, y: 7.35, z: -2.3, ry: Math.PI / 6, rz: 0 },
-    left: { scale: 8.4, x: -7.2, y: 7.0, z: 0.8, ry: 0.42, rz: 0 },
-    right: { scale: 8.4, x: 7.2, y: 7.0, z: 0.8, ry: -0.42, rz: 0 },
+    main: { scale: 14.1, x: -1.0, y: 5.0, z: -1.0, ry: Math.PI / 6, rz: 0 },
+    left: { scale: 10.5, x: -6.5, y: 4.8, z: 1.5, ry: 0.42 + Math.PI / 4, rz: 0 },
+    right: { scale: 10.08, x: 4.5, y: 5.34, z: -5.0, ry: -0.42 + 15 * Math.PI / 180, rz: 0 },
   }[role]
   const scale = config.scale / Math.max(0.001, maxDim)
 
@@ -844,6 +888,18 @@ function optimizeModelForRuntime(model: THREE.Group) {
 }
 
 function enhanceOriginalModel(model: THREE.Group) {
+  // 统计知识点状态分布
+  const weakCount = props.knowledgePoints.filter(p => p.status === 'weak').length
+  const masteredCount = props.knowledgePoints.filter(p => p.status === 'mastered').length
+  const learningCount = props.knowledgePoints.filter(p => p.status === 'learning').length
+  const total = Math.max(props.knowledgePoints.length, 1)
+
+  // 根据掌握度比例决定树叶整体色调
+  // mastered多→偏绿, weak多→偏红, learning多→偏蓝
+  const weakRatio = weakCount / total
+  const masteredRatio = masteredCount / total
+  const learningRatio = learningCount / total
+
   model.traverse((child) => {
     if (!(child instanceof THREE.Mesh)) return
 
@@ -862,8 +918,13 @@ function enhanceOriginalModel(model: THREE.Group) {
           material.side = THREE.DoubleSide
           material.transparent = true
           material.opacity = 0.96
-          material.emissive = new THREE.Color(0x301010)
-          material.emissiveIntensity = 0.08
+
+          // 根据掌握度分布混合颜色
+          const r = weakRatio * 0.6 + learningRatio * 0.1 + masteredRatio * 0.05
+          const g = masteredRatio * 0.5 + learningRatio * 0.2 + weakRatio * 0.05
+          const b = learningRatio * 0.5 + masteredRatio * 0.1 + weakRatio * 0.1
+          material.emissive = new THREE.Color(r, g, b)
+          material.emissiveIntensity = 0.15 + weakRatio * 0.2
         }
 
         if (name.includes('trunk') || name.includes('branch') || material.name.toLowerCase().includes('wood')) {
@@ -877,6 +938,34 @@ function enhanceOriginalModel(model: THREE.Group) {
 }
 
 function fitModelToScene(model: THREE.Group) {
+  function clipRootGeometry(geom: THREE.BufferGeometry) {
+    const pos = geom.attributes.position
+    const norm = geom.attributes.normal
+    const idx = geom.index
+    if (!pos || !norm || !idx) return
+    const clipThresholdY = -2.5
+    const keepMask = new Uint8Array(pos.count)
+    for (let i = 0; i < pos.count; i++) {
+      keepMask[i] = pos.getY(i) >= clipThresholdY ? 1 : 0
+    }
+    const newIdxArr: number[] = []
+    for (let i = 0; i < idx.count; i += 3) {
+      const a = idx.getX(i), b = idx.getX(i + 1), c = idx.getX(i + 2)
+      if (keepMask[a] && keepMask[b] && keepMask[c]) {
+        newIdxArr.push(a, b, c)
+      }
+    }
+    if (newIdxArr.length > 0) {
+      geom.setIndex(newIdxArr)
+      geom.computeBoundingBox()
+      geom.computeBoundingSphere()
+    }
+  }
+  model.traverse(obj => {
+    if (obj instanceof THREE.Mesh && obj.geometry) {
+      clipRootGeometry(obj.geometry)
+    }
+  })
   const box = new THREE.Box3().setFromObject(model)
   const center = box.getCenter(new THREE.Vector3())
   const size = box.getSize(new THREE.Vector3())
@@ -886,8 +975,9 @@ function fitModelToScene(model: THREE.Group) {
   model.scale.setScalar(scale)
   model.position.sub(center.multiplyScalar(scale))
   model.position.y -= box.min.y * scale
-  model.position.y += props.sceneOffsetY
-  model.position.z += 2.5
+  model.position.y += props.sceneOffsetY - 3.2
+  model.position.x += 0.5
+  model.position.z += 0.3
 }
 
 function loadModel(modelUrl = props.modelUrl, hasTriedFallback = false) {
@@ -903,9 +993,9 @@ function loadModel(modelUrl = props.modelUrl, hasTriedFallback = false) {
 
         enhanceOriginalModel(rootGroup)
         createEnergyAura(rootGroup)
+        fitModelToScene(rootGroup)
         addGraphMarkers(rootGroup)
         addAttachedStars(rootGroup)
-        fitModelToScene(rootGroup)
 
         scene!.add(rootGroup)
         loadError.value = false
@@ -1117,6 +1207,8 @@ watch(() => props.knowledgePoints, () => {
   interactiveObjects = []
   addGraphMarkers(rootGroup)
   addAttachedStars(rootGroup)
+  // 动态更新树叶颜色
+  enhanceOriginalModel(rootGroup)
 }, { deep: true })
 </script>
 
@@ -1133,49 +1225,6 @@ watch(() => props.knowledgePoints, () => {
     <div class="three-tree-hint">
       <span>拖拽旋转 · 滚轮缩放</span>
     </div>
-    <aside v-if="activeMarker" class="tree-index-panel-v2" :class="activeMarkerView.status">
-      <button class="tree-index-close" type="button" @click="activeMarker = null">x</button>
-      <div class="tree-index-head">
-        <span class="tree-index-type">
-          {{ activeMarkerView.type === 'course' ? '课程主干' : activeMarkerView.type === 'branch' ? '分支索引' : '知识点星标' }}
-        </span>
-        <span v-if="activeMarkerView.status" class="tree-index-status" :class="activeMarkerView.status">
-          {{ markerStatusLabel(activeMarkerView.status) }}
-        </span>
-      </div>
-      <h3>{{ activeMarkerView.label }}</h3>
-      <p>{{ activeMarkerView.description }}</p>
-      <div v-if="typeof activeMarkerView.progress === 'number'" class="tree-index-progress">
-        <div>
-          <span>掌握度</span>
-          <strong>{{ activeMarkerView.progress }}%</strong>
-        </div>
-        <div class="tree-index-meter">
-          <i :style="{ width: `${Math.max(4, activeMarkerView.progress ?? 0)}%` }" />
-        </div>
-      </div>
-      <ul v-if="activeMarkerView.items?.length" class="tree-index-list">
-        <li v-for="item in activeMarkerView.items" :key="item">{{ item }}</li>
-      </ul>
-    </aside>
-    <aside v-if="false && activeMarker" class="tree-index-panel" :class="activeMarkerView.status">
-      <button class="tree-index-close" type="button" @click="activeMarker = null">×</button>
-      <span class="tree-index-type">
-        {{ activeMarker.type === 'course' ? '课程节点' : activeMarker.type === 'branch' ? '树枝索引' : '知识点' }}
-      </span>
-      <h3>{{ activeMarkerView.label }}</h3>
-      <p>{{ activeMarkerView.description }}</p>
-      <div v-if="typeof activeMarkerView.progress === 'number'" class="tree-index-progress">
-        <span>掌握度</span>
-        <strong>{{ activeMarkerView.progress }}%</strong>
-      </div>
-      <ul v-if="activeMarkerView.items?.length" class="tree-index-list">
-        <li v-for="item in activeMarkerView.items" :key="item">{{ item }}</li>
-      </ul>
-      <span v-if="activeMarkerView.status" class="tree-index-status" :class="activeMarkerView.status">
-        {{ markerStatusLabel(activeMarkerView.status) }}
-      </span>
-    </aside>
   </div>
 </template>
 
@@ -1245,174 +1294,5 @@ watch(() => props.knowledgePoints, () => {
 
 .three-tree-wrapper:hover .three-tree-hint {
   opacity: 1;
-}
-
-.tree-index-panel,
-.tree-index-panel-v2 {
-  position: absolute;
-  top: 88px;
-  right: 24px;
-  z-index: 4;
-  width: min(33%, 390px);
-  min-width: 300px;
-  padding: 20px;
-  border-radius: 14px;
-  background: rgba(6, 8, 18, 0.78);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  backdrop-filter: blur(14px);
-  color: #fff;
-  box-shadow: 0 18px 50px rgba(0, 0, 0, 0.34);
-}
-
-.tree-index-panel-v2 {
-  width: min(33%, 390px);
-  padding: 18px;
-  border-radius: 18px;
-  background:
-    radial-gradient(circle at 0 0, rgba(0, 212, 255, 0.16), transparent 38%),
-    linear-gradient(180deg, rgba(9, 12, 28, 0.88), rgba(7, 9, 20, 0.72));
-  border-color: rgba(126, 231, 255, 0.18);
-}
-
-.tree-index-panel-v2.weak {
-  border-color: rgba(101, 220, 162, 0.34);
-  background:
-    radial-gradient(circle at 0 0, rgba(101, 220, 162, 0.2), transparent 38%),
-    linear-gradient(180deg, rgba(16, 8, 20, 0.9), rgba(7, 9, 20, 0.72));
-}
-
-.tree-index-head {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding-right: 34px;
-}
-
-.tree-index-close {
-  position: absolute;
-  top: 10px;
-  right: 12px;
-  width: 28px;
-  height: 28px;
-  border: 0;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.08);
-  color: rgba(255, 255, 255, 0.72);
-  cursor: pointer;
-}
-
-.tree-index-type,
-.tree-index-status {
-  display: inline-flex;
-  align-items: center;
-  width: fit-content;
-  padding: 4px 10px;
-  border-radius: 999px;
-  font-size: 11px;
-  color: #9ee7ff;
-  background: rgba(120, 217, 255, 0.12);
-  border: 1px solid rgba(120, 217, 255, 0.2);
-}
-
-.tree-index-panel h3,
-.tree-index-panel-v2 h3 {
-  margin: 14px 0 8px;
-  font-size: 20px;
-  font-weight: 600;
-}
-
-.tree-index-panel p,
-.tree-index-panel-v2 p {
-  margin: 0;
-  color: rgba(255, 255, 255, 0.68);
-  font-size: 13px;
-  line-height: 1.7;
-}
-
-.tree-index-progress {
-  display: grid;
-  grid-template-columns: 86px minmax(0, 1fr);
-  gap: 12px;
-  align-items: end;
-  margin-top: 16px;
-  padding-top: 14px;
-  border-top: 1px solid rgba(255, 255, 255, 0.08);
-  color: rgba(255, 255, 255, 0.62);
-  font-size: 12px;
-}
-
-.tree-index-progress span {
-  display: block;
-  margin-bottom: 3px;
-}
-
-.tree-index-progress strong {
-  color: #ffe58f;
-  font-size: 20px;
-}
-
-.tree-index-meter {
-  height: 7px;
-  margin-bottom: 5px;
-  overflow: hidden;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.07);
-}
-
-.tree-index-meter i {
-  display: block;
-  height: 100%;
-  border-radius: inherit;
-  background: linear-gradient(90deg, #00d4ff, #ffe58f);
-  box-shadow: 0 0 16px rgba(0, 212, 255, 0.55);
-}
-
-.tree-index-list {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  margin: 14px 0 0;
-  padding: 0;
-  list-style: none;
-}
-
-.tree-index-list li {
-  padding: 9px 10px;
-  border-radius: 8px;
-  background: rgba(255, 255, 255, 0.055);
-  color: rgba(255, 255, 255, 0.72);
-  font-size: 12px;
-}
-
-.tree-index-status {
-  margin-top: 0;
-}
-
-.tree-index-status.mastered {
-  color: #ffb0a2;
-  background: rgba(219, 63, 54, 0.14);
-  border-color: rgba(219, 63, 54, 0.28);
-}
-
-.tree-index-status.weak {
-  color: #9ff0bd;
-  background: rgba(101, 220, 162, 0.14);
-  border-color: rgba(101, 220, 162, 0.28);
-}
-
-.tree-index-status.next {
-  color: rgba(255, 255, 255, 0.52);
-  background: rgba(255, 255, 255, 0.08);
-  border-color: rgba(255, 255, 255, 0.12);
-}
-
-@media (max-width: 900px) {
-  .tree-index-panel,
-  .tree-index-panel-v2 {
-    right: 16px;
-    left: 16px;
-    width: auto;
-    min-width: 0;
-  }
 }
 </style>

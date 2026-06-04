@@ -69,8 +69,28 @@ async function handleGenerate() {
   loading.value = true
   error.value = null
   try {
-    const result = await generateResources()
-    resources.value = result.items
+    const result = await generateResources() as any
+    if (result.items && Array.isArray(result.items)) {
+      resources.value = result.items
+    } else if (result.resourcePackage) {
+      const rp = result.resourcePackage
+      resources.value = [{
+        id: '1',
+        concept: rp.concept || '',
+        example: rp.example?.title ? `${rp.example.title}: ${rp.example.description}` : '',
+        exercise: rp.exercise?.title || '',
+        mistakeReminder: rp.errorTip || '',
+        recommendReason: rp.recommendReason || '',
+        evidence: {
+          profileSource: rp.profileEvidence || '',
+          evaluationReason: rp.recommendReason || '',
+          pathStage: '',
+          formatReason: '',
+        },
+      }]
+    } else {
+      resources.value = FALLBACK_DATA
+    }
     generated.value = true
   } catch (e: any) {
     error.value = e?.message || '生成失败，已使用示例数据'

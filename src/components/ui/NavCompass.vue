@@ -217,11 +217,12 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue'
+import { ref, computed, watch, onMounted } from 'vue'
 import { X, BarChart3, Map, GitBranch, Search, Compass, Route, Network, Sparkles, Orbit } from '@lucide/vue'
 import { useUniverseStore } from '../../stores/universeStore'
 import { courses } from '../../data/courses'
 import { learningPaths } from '../../data/learningPaths'
+import { fetchLearningPath } from '@/lib/api'
 import type { LearningPath } from '../../types'
 import RadarChart from './RadarChart.vue'
 import ResourceConstellationView from '@/components/resources/ResourceConstellationView.vue'
@@ -358,6 +359,14 @@ function formatTime(ts: number) {
   if (diff < 86400000) return `${Math.floor(diff / 3600000)}小时前`
   return `${Math.floor(diff / 86400000)}天前`
 }
+
+const backendPathData = ref<Awaited<ReturnType<typeof fetchLearningPath>> | null>(null)
+
+onMounted(async () => {
+  try {
+    backendPathData.value = await fetchLearningPath()
+  } catch { /* keep local data */ }
+})
 
 const recommendedPaths = computed(() => learningPaths.slice(0, 4))
 

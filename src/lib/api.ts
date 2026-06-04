@@ -35,7 +35,9 @@ async function requestJson<T>(input: string, init?: RequestInit): Promise<T> {
     (
       input.startsWith('/api/chat') ||
       input.startsWith('/api/tutoring') ||
-      input.startsWith('/api/profile/analyze')
+      input.startsWith('/api/profile/analyze') ||
+      input.startsWith('/api/agents/') ||
+      input.startsWith('/api/resources/generate')
     )
 
   if (isAiRequest) {
@@ -139,10 +141,13 @@ export function fetchAgentWorkflow() {
   return requestJson<LearningWorkflowResponse>('/api/agent/workflow')
 }
 
-export function generateResources(topic?: string) {
+export function generateResources(topic?: string, resourceType?: string) {
   return requestJson<{ items: GeneratedResource[] }>('/api/resources/generate', {
     method: 'POST',
-    body: JSON.stringify({ topic }),
+    body: JSON.stringify({
+      topic: topic || '综合学习',
+      resourceType: resourceType || 'concept',
+    }),
   })
 }
 
@@ -162,6 +167,17 @@ export function fetchEvidenceTraces(limit = 50, offset = 0) {
 
 export function fetchEvidenceSummary() {
   return requestJson<EvidenceSummaryResponse>('/api/evidence/summary')
+}
+
+export function agentProfileAnalyze(payload: unknown) {
+  return requestJson<{ profile: ProfileAnalyzeResponse; agentResults: unknown[]; trace: unknown }>('/api/agents/profile', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  })
+}
+
+export function fetchTutoringTopics() {
+  return requestJson<{ topics: Array<{ id: string; label: string; category: string }> }>('/api/tutoring/topics')
 }
 
 export function agentPathReplan(payload: { profile?: unknown; evaluation?: unknown; currentPath?: unknown }) {
