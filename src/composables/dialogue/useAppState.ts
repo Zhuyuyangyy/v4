@@ -5,7 +5,7 @@ export const activeMenu = ref<'chat' | 'portrait-report' | 'history' | 'recommen
 export const isSidebarCollapsed = ref(false)
 export const isRightSidebarCollapsed = ref(true)
 export const isMetricCollapsed = ref(false)
-export const themeAccent = ref<ThemeAccent>('gold')
+export const themeAccent = ref<ThemeAccent>('blue')
 
 export const dimensions = ref<DimensionMap>({
   identity: '学生',
@@ -65,10 +65,10 @@ export const collectedCount = computed(() =>
 export const canUnlockReport = computed(() => collectedCount.value >= 4)
 
 const colorsMap = {
-  gold: { text: 'text-amber-300', textHover: 'hover:text-amber-200', indicator: 'bg-amber-400', accentGlow: 'amber-400', bgBtn: 'bg-gradient-to-r from-amber-600 to-yellow-500 hover:from-amber-700 hover:to-yellow-600 text-white border border-amber-500/25 shadow-lg', bgBadge: 'bg-amber-950/50 text-amber-300 border-amber-800/40' },
+  blue: { text: 'text-blue-300', textHover: 'hover:text-blue-200', indicator: 'bg-blue-400', accentGlow: 'blue-400', bgBtn: 'bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-700 hover:to-cyan-600 text-white border border-blue-500/25 shadow-lg', bgBadge: 'bg-blue-950/50 text-blue-300 border-blue-800/40' },
   teal: { text: 'text-teal-400', textHover: 'hover:text-teal-300', indicator: 'bg-teal-400', accentGlow: 'teal-400', bgBtn: 'bg-gradient-to-r from-teal-600 to-emerald-500 hover:from-teal-700 hover:to-emerald-600 text-white border border-teal-500/25 shadow-lg', bgBadge: 'bg-teal-950/50 text-teal-400 border-teal-800/40' },
-  ruby: { text: 'text-rose-400', textHover: 'hover:text-rose-300', indicator: 'bg-rose-400', accentGlow: 'rose-400', bgBtn: 'bg-gradient-to-r from-rose-600 to-pink-500 hover:from-rose-700 hover:to-pink-600 text-white border border-rose-500/25 shadow-lg', bgBadge: 'bg-rose-950/50 text-rose-400 border-rose-800/40' },
-  amber: { text: 'text-amber-400', textHover: 'hover:text-amber-300', indicator: 'bg-amber-500', accentGlow: 'amber-500', bgBtn: 'bg-gradient-to-r from-amber-600 to-orange-500 hover:from-amber-700 hover:to-orange-600 text-white border border-amber-500/25 shadow-lg', bgBadge: 'bg-amber-950/50 text-amber-400 border-amber-800/40' },
+  ruby: { text: 'text-indigo-400', textHover: 'hover:text-indigo-300', indicator: 'bg-indigo-400', accentGlow: 'indigo-400', bgBtn: 'bg-gradient-to-r from-indigo-600 to-blue-500 hover:from-indigo-700 hover:to-blue-600 text-white border border-indigo-500/25 shadow-lg', bgBadge: 'bg-indigo-950/50 text-indigo-400 border-indigo-800/40' },
+  cyan: { text: 'text-cyan-400', textHover: 'hover:text-cyan-300', indicator: 'bg-cyan-400', accentGlow: 'cyan-400', bgBtn: 'bg-gradient-to-r from-cyan-600 to-sky-500 hover:from-cyan-700 hover:to-sky-600 text-white border border-cyan-500/25 shadow-lg', bgBadge: 'bg-cyan-950/50 text-cyan-400 border-cyan-800/40' },
 }
 
 export const colors = computed(() => ({

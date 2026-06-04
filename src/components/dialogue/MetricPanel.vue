@@ -114,7 +114,7 @@
           <span class="text-cyan-400 font-black">87</span>
         </div>
         <div class="flex gap-0.5">
-          <Sparkles v-for="i in 5" :key="'star-' + i" class="w-3.5 h-3.5" :class="i < 4 ? 'text-amber-400 fill-amber-400' : 'text-slate-800'" />
+          <Sparkles v-for="i in 5" :key="'star-' + i" class="w-3.5 h-3.5" :class="i < 4 ? 'text-blue-400 fill-blue-400' : 'text-slate-800'" />
         </div>
         <div class="space-y-1 text-xs text-slate-400">
           <div v-for="(score, label) in sampleScores" :key="label" class="flex justify-between items-center gap-2">

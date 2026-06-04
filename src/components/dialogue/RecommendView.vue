@@ -6,14 +6,14 @@
       <div class="flex flex-col md:flex-row md:items-center justify-between border-b border-slate-900 pb-4 shrink-0 gap-4 text-left">
         <div>
           <h1 class="font-extrabold text-white text-xl tracking-tight font-display flex items-center gap-2">
-            <GraduationCap class="w-6 h-6 text-amber-300" />
+            <GraduationCap class="w-6 h-6 text-blue-300" />
             <span>EduMind 课程体系</span>
           </h1>
-          <p class="text-sm text-slate-400 mt-1">涵盖 <strong class="text-amber-300">5 大方向、24 门课程</strong>，从基础到前沿逐步深入</p>
+          <p class="text-sm text-slate-400 mt-1">涵盖 <strong class="text-blue-300">5 大方向、24 门课程</strong>，从基础到前沿逐步深入</p>
         </div>
         <div class="flex items-center gap-2.5 shrink-0 self-start md:self-center">
           <span class="text-xs font-bold px-3 py-1 rounded bg-emerald-950/40 text-emerald-400 border border-emerald-900/40">{{ totalCourses }} 门课程</span>
-          <span class="text-sm font-bold px-3 py-1.5 rounded-full bg-slate-900/40 backdrop-blur-md text-amber-300 border border-slate-800/40">已测定 {{ collectedCount }} / 9 维指标</span>
+          <span class="text-sm font-bold px-3 py-1.5 rounded-full bg-slate-900/40 backdrop-blur-md text-blue-300 border border-slate-800/40">已测定 {{ collectedCount }} / 9 维指标</span>
         </div>
       </div>
 
@@ -25,7 +25,7 @@
             @click="selectedDirection = dir.id"
             class="py-2 px-4 rounded-lg text-sm font-bold transition-all cursor-pointer"
             :class="selectedDirection === dir.id
-              ? 'bg-amber-500/20 text-white border border-amber-500/30'
+              ? 'bg-blue-500/20 text-white border border-blue-500/30'
               : 'text-slate-400 hover:text-white border border-transparent hover:bg-slate-900/40'"
           >
             {{ dir.name }}
@@ -92,7 +92,7 @@
               v-for="(chip, i) in qaChips" :key="i"
               @click="handleSendRecommendQaLocal(chip)"
               :disabled="isRecommendQaLoading"
-              class="py-1.5 px-3 bg-slate-950 hover:bg-slate-900 text-slate-400 hover:text-amber-300 border border-slate-900 disabled:opacity-40 text-xs font-bold rounded-lg transition-all cursor-pointer select-none truncate max-w-full text-left"
+              class="py-1.5 px-3 bg-slate-950 hover:bg-slate-900 text-slate-400 hover:text-blue-300 border border-slate-900 disabled:opacity-40 text-xs font-bold rounded-lg transition-all cursor-pointer select-none truncate max-w-full text-left"
             >
             {{ chip }}
           </button>
@@ -107,7 +107,7 @@
             class="flex-1 bg-slate-950 border border-slate-900 text-slate-200 placeholder:text-slate-600 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:border-cyan-500/50 transition-colors disabled:opacity-50" />
           <button type="submit" :disabled="isRecommendQaLoading || !recommendQaInput.trim()"
             class="p-2.5 rounded-xl shrink-0 transition-opacity disabled:opacity-45"
-            :class="recommendQaInput.trim() ? 'bg-cyan-500/20 text-amber-300 border border-cyan-500/30' : 'bg-slate-950 text-slate-600 border border-slate-900'">
+            :class="recommendQaInput.trim() ? 'bg-cyan-500/20 text-blue-300 border border-cyan-500/30' : 'bg-slate-950 text-slate-600 border border-slate-900'">
             <Send class="w-4 h-4" />
           </button>
         </div>

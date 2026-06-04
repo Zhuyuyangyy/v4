@@ -5,8 +5,8 @@
       <!-- Header -->
       <header class="px-6 py-4 flex items-center justify-between bg-transparent shrink-0" style="border-bottom: 1px solid var(--border-subtle)">
         <div class="flex items-center gap-3">
-          <div class="w-12 h-12 rounded-full flex items-center justify-center border" style="background: rgba(201, 168, 76, 0.1); border-color: rgba(201, 168, 76, 0.2)">
-            <span class="w-6 h-6 block rounded-full" style="background: radial-gradient(circle at 30% 30%, #e8d48b, #c9a84c)" />
+          <div class="w-12 h-12 rounded-full flex items-center justify-center border" style="background: rgba(59, 130, 246, 0.1); border-color: rgba(59, 130, 246, 0.2)">
+            <span class="w-6 h-6 block rounded-full" style="background: radial-gradient(circle at 30% 30%, #93c5fd, #3b82f6)" />
           </div>
           <div>
             <h1 class="font-bold text-xl leading-tight" style="font-family: var(--font-display); color: var(--text-primary)">AI 学习导师</h1>
@@ -14,7 +14,7 @@
           </div>
         </div>
         <div class="flex items-center gap-2">
-          <button @click="isSidebarCollapsed = !isSidebarCollapsed" class="text-sm font-semibold px-3 py-2 rounded-xl transition-all cursor-pointer flex items-center gap-1 shrink-0" style="color: var(--gold-400); border: 1px solid var(--border-subtle); background: rgba(201, 168, 76, 0.06)">
+          <button @click="isSidebarCollapsed = !isSidebarCollapsed" class="text-sm font-semibold px-3 py-2 rounded-xl transition-all cursor-pointer flex items-center gap-1 shrink-0" style="color: var(--gold-400); border: 1px solid var(--border-subtle); background: rgba(59, 130, 246, 0.06)">
             <span>{{ isSidebarCollapsed ? '展开 ➔' : '⮨ 收入' }}</span>
           </button>
           <button @click="isXunfeiSidebarOpen = !isXunfeiSidebarOpen" class="text-sm font-semibold px-3 py-2 rounded-xl transition-all cursor-pointer flex items-center gap-1 shrink-0" style="color: var(--teal-400); border: 1px solid rgba(45, 212, 184, 0.2); background: rgba(45, 212, 184, 0.06)">
@@ -40,8 +40,8 @@
             </div>
             <!-- AI 学习导师 -->
             <div v-else class="w-10 h-10 relative">
-              <div class="absolute inset-0 rounded-xl bg-gradient-to-br from-amber-400 to-yellow-600 opacity-20 blur-sm" />
-              <div class="relative w-full h-full rounded-xl flex items-center justify-center text-white shadow-lg" style="background: linear-gradient(135deg, #d4a84b, #b8922e); box-shadow: 0 2px 12px rgba(201, 168, 76, 0.3)">
+              <div class="absolute inset-0 rounded-xl bg-gradient-to-br from-blue-400 to-cyan-600 opacity-20 blur-sm" />
+              <div class="relative w-full h-full rounded-xl flex items-center justify-center text-white shadow-lg" style="background: linear-gradient(135deg, #60a5fa, #3b82f6); box-shadow: 0 2px 12px rgba(59, 130, 246, 0.3)">
                 <Brain class="w-5 h-5" />
               </div>
             </div>
@@ -49,7 +49,7 @@
 
           <!-- User icon (simplified, for ASR only) -->
           <div v-if="chat.sender === 'user' && chat.source === 'asr'" class="shrink-0">
-            <div class="w-10 h-10 rounded-xl flex items-center justify-center text-white shadow-sm" style="background: linear-gradient(135deg, #d4a84b, #b8923a); box-shadow: 0 2px 8px rgba(201, 168, 76, 0.15)">
+            <div class="w-10 h-10 rounded-xl flex items-center justify-center text-white shadow-sm" style="background: linear-gradient(135deg, #60a5fa, #3b82f6); box-shadow: 0 2px 8px rgba(59, 130, 246, 0.15)">
               <Mic class="w-5 h-5" />
             </div>
           </div>
@@ -63,7 +63,7 @@
                 <Tv class="w-3 h-3" /> 虚拟导师
               </span>
               <span v-else-if="chat.source === 'asr'"
-                class="text-[11px] px-2 py-0.5 rounded-full flex items-center gap-1" style="color: var(--gold-400); background: rgba(201, 168, 76, 0.1); border: 1px solid rgba(201, 168, 76, 0.2)">
+                class="text-[11px] px-2 py-0.5 rounded-full flex items-center gap-1" style="color: var(--gold-400); background: rgba(59, 130, 246, 0.1); border: 1px solid rgba(59, 130, 246, 0.2)">
                 <Mic class="w-3 h-3" /> 语音输入
               </span>
               <span v-else-if="chat.source === 'xunfei' && chat.sender === 'user'"
@@ -77,19 +77,19 @@
                 ? 'rounded-tr-none text-white'
                 : 'rounded-tl-none'"
               :style="chat.sender === 'user'
-                ? { background: 'linear-gradient(135deg, rgba(201, 168, 76, 0.25), rgba(184, 146, 58, 0.2))', border: '1px solid rgba(201, 168, 76, 0.2)' }
+                ? { background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.25), rgba(37, 99, 235, 0.2))', border: '1px solid rgba(59, 130, 246, 0.2)' }
                 : { background: 'rgba(22, 18, 32, 0.5)', border: '1px solid var(--border-subtle)', backdropFilter: 'blur(8px)' }">
               {{ chat.text }}
             </div>
 
             <div v-if="chat.sender === 'user' && chat.capturedTags?.length" class="flex flex-wrap items-center gap-1.5 justify-end pt-1">
-              <span v-for="tag in chat.capturedTags" :key="tag" class="inline-flex items-center gap-1 text-xs font-bold px-2.5 py-1 rounded-full border animate-fade-in" style="color: var(--gold-400); background: rgba(201, 168, 76, 0.1); border-color: rgba(201, 168, 76, 0.25)">
+              <span v-for="tag in chat.capturedTags" :key="tag" class="inline-flex items-center gap-1 text-xs font-bold px-2.5 py-1 rounded-full border animate-fade-in" style="color: var(--gold-400); background: rgba(59, 130, 246, 0.1); border-color: rgba(59, 130, 246, 0.25)">
                 <span>+</span><span>{{ tag }}</span>
               </span>
             </div>
 
             <div v-if="chat.sender === 'ai' && chat.suggestChips?.length" class="flex flex-wrap gap-2 pt-2 pb-0.5">
-              <button v-for="chip in chat.suggestChips" :key="chip" @click="handleChipClick(chip)" class="text-sm font-medium px-4 py-2 rounded-full border transition-all text-left shadow-sm hover:shadow cursor-pointer" style="color: var(--gold-400); border-color: rgba(201, 168, 76, 0.2); background: rgba(201, 168, 76, 0.05); backdrop-filter: blur(4px)">
+              <button v-for="chip in chat.suggestChips" :key="chip" @click="handleChipClick(chip)" class="text-sm font-medium px-4 py-2 rounded-full border transition-all text-left shadow-sm hover:shadow cursor-pointer" style="color: var(--gold-400); border-color: rgba(59, 130, 246, 0.2); background: rgba(59, 130, 246, 0.05); backdrop-filter: blur(4px)">
                 {{ chip }}
               </button>
             </div>
@@ -145,7 +145,7 @@
             :disabled="!inputText.trim() || isAiLoading"
             class="p-2.5 rounded-xl transition-all shadow-md focus:outline-none flex items-center justify-center shrink-0 cursor-pointer"
             :style="inputText.trim() && !isAiLoading
-              ? { background: 'linear-gradient(135deg, var(--gold-500), var(--gold-600))', color: '#fff', boxShadow: '0 4px 12px rgba(201, 168, 76, 0.25)' }
+              ? { background: 'linear-gradient(135deg, var(--gold-500), var(--gold-600))', color: '#fff', boxShadow: '0 4px 12px rgba(59, 130, 246, 0.25)' }
               : { background: 'rgba(22, 18, 32, 0.8)', color: 'var(--text-dim)', border: '1px solid var(--border-subtle)' }"
           >
             <Send class="w-4 h-4" />
