@@ -1,5 +1,5 @@
 <template>
-  <header class="bg-white dark:bg-[#0f172a] px-4 sm:px-6 py-4 flex items-center justify-between border-b border-[#e8e8e8] dark:border-slate-700 sticky top-0 z-30" id="main-header">
+  <header class="bg-white dark:bg-[#080b16] px-4 sm:px-6 py-4 flex items-center justify-between border-b border-[#e8e8e8] dark:border-[rgba(59,130,246,0.08)] sticky top-0 z-30" id="main-header">
     <button
       @click="emit('toggleSidebar')"
       class="lg:hidden mr-3 p-1.5 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg text-slate-500 dark:text-slate-400 cursor-pointer shrink-0 transition-all border-none"
@@ -13,7 +13,7 @@
       <p class="text-[13px] sm:text-[14px] text-slate-400 dark:text-slate-400 mt-0.5 hidden md:block">汇集平台所有学习材料，助力你的学习之旅</p>
     </div>
 
-    <div class="flex items-center bg-[#f5f7fa] dark:bg-slate-800/60 border border-[#e8e8e8] dark:border-slate-600 rounded-lg px-2 sm:px-3 py-1.5 flex-1 max-w-[160px] xs:max-w-[240px] sm:max-w-[280px] md:max-w-[360px] ml-2 sm:ml-4 focus-within:border-[#4a6cf7] focus-within:bg-white focus-within:dark:bg-slate-700 focus-within:ring-2 focus-within:ring-[#4a6cf7]/10 transition-all duration-200" id="header-search-box">
+    <div class="flex items-center bg-[#f5f7fa] dark:bg-[rgba(14,18,34,0.6)] border border-[#e8e8e8] dark:border-[rgba(59,130,246,0.1)] rounded-lg px-2 sm:px-3 py-1.5 flex-1 max-w-[160px] xs:max-w-[240px] sm:max-w-[280px] md:max-w-[360px] ml-2 sm:ml-4 focus-within:border-[#3b82f6] focus-within:bg-white focus-within:dark:bg-[rgba(14,18,34,0.8)] focus-within:ring-2 focus-within:ring-[#3b82f6]/10 transition-all duration-200" id="header-search-box">
       <Search class="w-4 h-4 text-slate-400 dark:text-slate-400 mr-1.5 sm:mr-2 shrink-0" />
       <input
         ref="searchInputRef"
@@ -31,7 +31,7 @@
     <div class="flex items-center gap-4 ml-auto shrink-0">
       <button
         @click="emit('addNewResourceClick')"
-        class="flex items-center gap-1 bg-[#4a6cf7] hover:bg-[#3b5bdb] text-white font-medium text-[14px] px-2.5 sm:px-3 py-1.5 rounded-lg border border-[#4a6cf7] hover:border-[#3b5bdb] cursor-pointer shadow-sm active:transform active:scale-95 transition-all"
+        class="flex items-center gap-1 bg-[#3b82f6] hover:bg-[#2563eb] text-white font-medium text-[14px] px-2.5 sm:px-3 py-1.5 rounded-lg border border-[#3b82f6] hover:border-[#2563eb] cursor-pointer shadow-sm active:transform active:scale-95 transition-all"
         id="add-resource-btn"
       >
         <span>+</span>
@@ -89,7 +89,7 @@
                 </p>
                 <span class="text-[11px] text-slate-400 dark:text-slate-500 mt-1 block">{{ item.time }}</span>
               </div>
-              <span v-if="!item.read" class="w-1.5 h-1.5 rounded-full bg-[#4a6cf7] mt-1.5"></span>
+              <span v-if="!item.read" class="w-1.5 h-1.5 rounded-full bg-[#3b82f6] mt-1.5"></span>
             </div>
           </div>
         </div>

@@ -204,8 +204,8 @@ const getTypeBadgeClass = (type: string) => {
                 class="flex-1 flex flex-col items-center justify-end h-full group"
               >
                 <!-- 堆叠柱子 -->
-                <div class="relative w-full max-w-[2px] flex flex-col justify-end transition-all duration-500 ease-out"
-                  :style="{ height: `${(item.total / maxWeeklyHours) * 100}%`, minHeight: item.total > 0 ? '8px' : 0 }">
+                <div class="relative flex flex-col justify-end transition-all duration-500 ease-out"
+                  :style="{ height: `${(item.total / maxWeeklyHours) * 100}%`, minHeight: item.total > 0 ? '8px' : 0, width: '56px' }">
 
                   <!-- 每个柱子的悬浮提示（极简） -->
                   <div class="absolute -top-2 left-1/2 -translate-x-1/2 -translate-y-full opacity-0 group-hover:opacity-100 transition-all duration-200 pointer-events-none z-10">

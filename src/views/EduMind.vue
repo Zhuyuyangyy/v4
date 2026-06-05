@@ -352,7 +352,7 @@ onMounted(async () => {
 </script>
 
 <template>
-  <div id="edu-mind-app" class="w-full max-w-full min-h-screen bg-white dark:bg-[#0f172a] font-sans flex antialiased select-none">
+  <div id="edu-mind-app" class="w-full max-w-full min-h-screen bg-white font-sans flex antialiased select-none" style="background-color: var(--edu-bg-page); color: var(--edu-text-main);">
     <Sidebar
       :weeklyHours="weeklyHours"
       :goalHours="goalHours"
@@ -648,7 +648,7 @@ onMounted(async () => {
   transition: all 0.2s ease-out;
 }
 
-#edu-mind-app.dark {
+html.dark #edu-mind-app {
   color-scheme: dark;
 }
 
@@ -685,7 +685,7 @@ onMounted(async () => {
   border-radius: 4px;
 }
 
-#edu-mind-app.dark ::-webkit-scrollbar-thumb {
+html.dark #edu-mind-app ::-webkit-scrollbar-thumb {
   background: #475569;
 }
 
@@ -693,7 +693,7 @@ onMounted(async () => {
   background: #94a3b8;
 }
 
-#edu-mind-app.dark ::-webkit-scrollbar-thumb:hover {
+html.dark #edu-mind-app ::-webkit-scrollbar-thumb:hover {
   background: #64748b;
 }
 
@@ -721,14 +721,14 @@ onMounted(async () => {
 #edu-mind-app #app-sidebar {
   border-right-color: var(--edu-border-subtle) !important;
 }
-#edu-mind-app.dark #app-sidebar {
+html.dark #edu-mind-app #app-sidebar {
   border-right-color: var(--edu-border-dark-subtle) !important;
 }
 
 #edu-mind-app #main-header {
   border-bottom-color: var(--edu-border-default) !important;
 }
-#edu-mind-app.dark #main-header {
+html.dark #edu-mind-app #main-header {
   border-bottom-color: var(--edu-border-dark) !important;
 }
 
@@ -736,7 +736,7 @@ onMounted(async () => {
 #edu-mind-app .border-\[#e8e8e8\] {
   border-color: var(--edu-border-default) !important;
 }
-#edu-mind-app.dark .border-\[#e8e8e8\] {
+html.dark #edu-mind-app .border-\[#e8e8e8\] {
   border-color: var(--edu-border-dark) !important;
 }
 #edu-mind-app .border-\[#bfbfbf\],
@@ -751,9 +751,9 @@ onMounted(async () => {
 #edu-mind-app .border-\[#fafafa\] {
   border-color: var(--edu-border-subtle) !important;
 }
-#edu-mind-app.dark .border-\[#f0f0f0\],
-#edu-mind-app.dark .border-\[#f1f1f5\],
-#edu-mind-app.dark .border-\[#fafafa\] {
+html.dark #edu-mind-app .border-\[#f0f0f0\],
+html.dark #edu-mind-app .border-\[#f1f1f5\],
+html.dark #edu-mind-app .border-\[#fafafa\] {
   border-color: var(--edu-border-dark-subtle) !important;
 }
 
@@ -765,11 +765,11 @@ onMounted(async () => {
 #edu-mind-app .border-gray-200 {
   border-color: var(--edu-border-default) !important;
 }
-#edu-mind-app.dark .border-slate-600,
-#edu-mind-app.dark .border-slate-700 {
+html.dark #edu-mind-app .border-slate-600,
+html.dark #edu-mind-app .border-slate-700 {
   border-color: var(--edu-border-dark) !important;
 }
-#edu-mind-app.dark .border-slate-800 {
+html.dark #edu-mind-app .border-slate-800 {
   border-color: var(--edu-border-dark-subtle) !important;
 }
 
@@ -777,8 +777,8 @@ onMounted(async () => {
 #edu-mind-app .hover\:border-\[#bfbfbf\]:hover {
   border-color: var(--edu-border-hover) !important;
 }
-#edu-mind-app.dark .hover\:border-gray-300:hover,
-#edu-mind-app.dark .dark\:hover\:border-slate-600:hover {
+html.dark #edu-mind-app .hover\:border-gray-300:hover,
+html.dark #edu-mind-app .dark\:hover\:border-slate-600:hover {
   border-color: var(--edu-border-dark-hover) !important;
 }
 
@@ -808,6 +808,125 @@ onMounted(async () => {
 .animate-pulse {
   animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
+
+/* ===== CSS Variables for dark theme ===== */
+#edu-mind-app {
+  --edu-bg-page: #ffffff;
+  --edu-bg-card: #ffffff;
+  --edu-bg-inset: #f9fafb;
+  --edu-bg-elevated: #f5f7fa;
+  --edu-bg-deep: #f0f4ff;
+  --edu-border: #e8e8e8;
+  --edu-border-subtle: #f0f0f0;
+  --edu-text-main: #1a1a2e;
+  --edu-text-muted: #8c8c8c;
+  --edu-text-dim: #bfbfbf;
+  --edu-accent: #4a6cf7;
+  --edu-accent-soft: rgba(74, 108, 247, 0.15);
+}
+html.dark #edu-mind-app {
+  --edu-bg-page: #080b16;
+  --edu-bg-card: #111630;
+  --edu-bg-inset: #141a32;
+  --edu-bg-elevated: #161d3a;
+  --edu-bg-deep: rgba(59, 130, 246, 0.12);
+  --edu-border: rgba(59, 130, 246, 0.1);
+  --edu-border-subtle: rgba(59, 130, 246, 0.06);
+  --edu-text-main: #e0e7ff;
+  --edu-text-muted: #6880a8;
+  --edu-text-dim: #4d6590;
+  --edu-accent: #60a5fa;
+  --edu-accent-soft: rgba(96, 165, 250, 0.12);
+  background: var(--edu-bg-page);
+  color: var(--edu-text-main);
+}
+
+/* All dark: bg overrides */
+html.dark #edu-mind-app .dark\:bg-\[#0f172a\],
+html.dark #edu-mind-app .dark\:bg-\[\#0f172a\] { background-color: var(--edu-bg-page) !important; }
+html.dark #edu-mind-app .dark\:bg-\[#1e293b\],
+html.dark #edu-mind-app .dark\:bg-\[\#1e293b\] { background-color: var(--edu-bg-card) !important; }
+html.dark #edu-mind-app .dark\:bg-slate-800 { background-color: var(--edu-bg-inset) !important; }
+html.dark #edu-mind-app .dark\:bg-slate-700 { background-color: var(--edu-bg-elevated) !important; }
+html.dark #edu-mind-app .dark\:bg-slate-800\/60 { background-color: rgba(20, 26, 50, 0.7) !important; }
+html.dark #edu-mind-app .dark\:bg-slate-900\/60 { background-color: rgba(10, 14, 26, 0.85) !important; }
+html.dark #edu-mind-app .dark\:bg-slate-950 { background-color: #06080f !important; }
+html.dark #edu-mind-app .dark\:bg-slate-950\/40 { background-color: rgba(6, 8, 18, 0.6) !important; }
+html.dark #edu-mind-app .dark\:bg-slate-950\/80 { background-color: rgba(6, 8, 18, 0.9) !important; }
+html.dark #edu-mind-app .dark\:bg-slate-900\/40 { background-color: rgba(10, 14, 26, 0.6) !important; }
+html.dark #edu-mind-app .dark\:bg-slate-600 { background-color: var(--edu-bg-elevated) !important; }
+html.dark #edu-mind-app .dark\:bg-blue-900\/30 { background-color: rgba(30, 58, 138, 0.25) !important; }
+html.dark #edu-mind-app .bg-white { background-color: var(--edu-bg-card) !important; }
+html.dark #edu-mind-app .bg-slate-50 { background-color: var(--edu-bg-inset) !important; }
+html.dark #edu-mind-app .bg-slate-100 { background-color: var(--edu-bg-elevated) !important; }
+html.dark #edu-mind-app .bg-gray-50 { background-color: var(--edu-bg-inset) !important; }
+html.dark #edu-mind-app .bg-\[#f0f4ff\] { background-color: var(--edu-accent-soft) !important; }
+html.dark #edu-mind-app .bg-\[#f9fafb\] { background-color: var(--edu-bg-inset) !important; }
+html.dark #edu-mind-app .bg-\[#f5f7fa\] { background-color: var(--edu-bg-inset) !important; }
+html.dark #edu-mind-app .bg-\[#f0f2f5\] { background-color: var(--edu-bg-inset) !important; }
+html.dark #edu-mind-app .bg-\[#fafbff\] { background-color: var(--edu-bg-card) !important; }
+html.dark #edu-mind-app .bg-red-50 { background-color: rgba(120, 28, 28, 0.15) !important; }
+html.dark #edu-mind-app .bg-green-50 { background-color: rgba(6, 78, 59, 0.15) !important; }
+html.dark #edu-mind-app .bg-orange-50 { background-color: rgba(120, 53, 15, 0.15) !important; }
+html.dark #edu-mind-app .bg-slate-50\/50 { background-color: rgba(20, 26, 50, 0.5) !important; }
+html.dark #edu-mind-app .bg-slate-50\/70 { background-color: rgba(20, 26, 50, 0.7) !important; }
+html.dark #edu-mind-app .bg-slate-50\/90 { background-color: rgba(20, 26, 50, 0.9) !important; }
+html.dark #edu-mind-app [class*="bg-white/"] { background-color: var(--edu-bg-card) !important; }
+
+/* Accent */
+html.dark #edu-mind-app .bg-\[#4a6cf7\] { background-color: #3b82f6 !important; }
+html.dark #edu-mind-app .dark\:bg-\[#4a6cf7\]\/15 { background-color: rgba(59, 130, 246, 0.12) !important; }
+html.dark #edu-mind-app .dark\:bg-\[#4a6cf7\]\/20 { background-color: rgba(59, 130, 246, 0.15) !important; }
+html.dark #edu-mind-app .dark\:bg-\[#4a6cf7\]\/5 { background-color: rgba(59, 130, 246, 0.04) !important; }
+html.dark #edu-mind-app .dark\:bg-\[#4a6cf7\]\/10 { background-color: rgba(59, 130, 246, 0.08) !important; }
+html.dark #edu-mind-app .from-\[#4a6cf7\] { --tw-gradient-from: #3b82f6 !important; }
+html.dark #edu-mind-app .to-\[#6a8cff\] { --tw-gradient-to: #60a5fa !important; }
+html.dark #edu-mind-app .hover\:bg-\[#4a6cf7\]:hover { background-color: rgba(59, 130, 246, 0.15) !important; }
+html.dark #edu-mind-app .hover\:bg-\[#3555db\]:hover { background-color: #2563eb !important; }
+
+/* Text */
+html.dark #edu-mind-app .text-accent { color: var(--edu-accent) !important; }
+html.dark #edu-mind-app .text-\[#4a6cf7\] { color: var(--edu-accent) !important; }
+html.dark #edu-mind-app .dark\:text-\[#6a8cff\] { color: #93c5fd !important; }
+html.dark #edu-mind-app .dark\:text-white { color: var(--edu-text-main) !important; }
+html.dark #edu-mind-app .dark\:text-slate-200 { color: #b8c4dc !important; }
+html.dark #edu-mind-app .dark\:text-slate-300 { color: #8b9bc0 !important; }
+html.dark #edu-mind-app .dark\:text-slate-400 { color: var(--edu-text-muted) !important; }
+html.dark #edu-mind-app .dark\:text-slate-500 { color: var(--edu-text-dim) !important; }
+html.dark #edu-mind-app .hover\:text-\[#4a6cf7\]:hover { color: var(--edu-accent) !important; }
+html.dark #edu-mind-app .hover\:text-accent:hover { color: var(--edu-accent) !important; }
+html.dark #edu-mind-app .group:hover .group-hover\:text-accent { color: var(--edu-accent) !important; }
+html.dark #edu-mind-app .dark\:hover\:text-\[#6a8cff\]:hover { color: #93c5fd !important; }
+html.dark #edu-mind-app .dark\:group-hover\:text-\[#6a8cff\] { color: #93c5fd !important; }
+
+/* Border */
+html.dark #edu-mind-app .dark\:border-slate-700 { border-color: var(--edu-border) !important; }
+html.dark #edu-mind-app .dark\:border-slate-700\/60 { border-color: var(--edu-border-subtle) !important; }
+html.dark #edu-mind-app .dark\:border-slate-600 { border-color: rgba(59, 130, 246, 0.14) !important; }
+html.dark #edu-mind-app .dark\:border-slate-800 { border-color: var(--edu-border-subtle) !important; }
+html.dark #edu-mind-app .dark\:border-\[#6a8cff\]\/20 { border-color: rgba(96, 165, 250, 0.15) !important; }
+html.dark #edu-mind-app .dark\:border-\[#6a8cff\]\/40 { border-color: rgba(96, 165, 250, 0.25) !important; }
+html.dark #edu-mind-app .dark\:border-\[#4a6cf7\]\/30 { border-color: rgba(59, 130, 246, 0.2) !important; }
+html.dark #edu-mind-app .hover\:border-\[\#4a6cf7\]\/30:hover { border-color: rgba(59, 130, 246, 0.22) !important; }
+
+/* Hover */
+html.dark #edu-mind-app .dark\:hover\:bg-slate-700:hover { background-color: rgba(22, 28, 50, 0.5) !important; }
+html.dark #edu-mind-app .dark\:hover\:bg-slate-800\/80:hover { background-color: rgba(20, 26, 50, 0.8) !important; }
+html.dark #edu-mind-app .dark\:hover\:border-slate-600:hover { border-color: rgba(59, 130, 246, 0.2) !important; }
+html.dark #edu-mind-app .dark\:focus\:border-\[#6a8cff\]:focus { border-color: #60a5fa !important; }
+html.dark #edu-mind-app .focus\:border-\[#4a6cf7\]:focus { border-color: #3b82f6 !important; }
+html.dark #edu-mind-app .focus\:ring-\[#4a6cf7\]\/10 { --tw-ring-color: rgba(59, 130, 246, 0.1) !important; }
+
+/* Sidebar & header */
+html.dark #edu-mind-app #app-sidebar { background-color: var(--edu-bg-page) !important; border-right-color: var(--edu-border-subtle) !important; }
+html.dark #edu-mind-app #main-header { border-bottom-color: var(--edu-border-subtle) !important; }
+html.dark #edu-mind-app ::-webkit-scrollbar-thumb { background: rgba(59, 130, 246, 0.15) !important; }
+html.dark #edu-mind-app ::-webkit-scrollbar-thumb:hover { background: rgba(59, 130, 246, 0.25) !important; }
+html.dark #edu-mind-app ::selection { background: rgba(59, 130, 246, 0.25); color: #fff; }
+html.dark #edu-mind-app input::placeholder { color: rgba(104, 128, 168, 0.7) !important; }
+
+/* Smooth transition */
+html.dark #edu-mind-app * { transition-property: background-color, border-color, color; transition-duration: 0.15s; transition-timing-function: ease-out; }
 </style>
 
 <style scoped>
