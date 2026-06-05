@@ -1,7 +1,11 @@
 <script setup lang="ts">
-import { ref, computed, watch, onMounted } from 'vue'
+import { ref, computed, watch, onMounted, onBeforeUnmount } from 'vue'
 import { useRoute } from 'vue-router'
-import { useTheme } from '../composables/useEduMindTheme'
+import {
+  useTheme,
+  activateEduMindTheme,
+  deactivateEduMindTheme,
+} from '../composables/useEduMindTheme'
 import {
   FileText,
   Network,
@@ -315,6 +319,10 @@ const isUnimplementedTab = computed(() => {
 })
 
 onMounted(async () => {
+  // 进入 /edu-mind 时把 html.dark class 挂上(如果当前模式是 dark)
+  // 离开时撤回,避免污染其他路由页面
+  activateEduMindTheme()
+
   try {
     const items = await fetchResources()
     if (items && items.length > 0) {
@@ -348,6 +356,10 @@ onMounted(async () => {
       }))
     }
   } catch { /* keep local data */ }
+})
+
+onBeforeUnmount(() => {
+  deactivateEduMindTheme()
 })
 </script>
 
@@ -927,6 +939,87 @@ html.dark #edu-mind-app input::placeholder { color: rgba(104, 128, 168, 0.7) !im
 
 /* Smooth transition */
 html.dark #edu-mind-app * { transition-property: background-color, border-color, color; transition-duration: 0.15s; transition-timing-function: ease-out; }
+
+/* ===== PracticeView 硬编码颜色对齐(三元运算符产生的非 dark: class) ===== */
+/* 背景层 — 收敛到主色板 */
+html.dark #edu-mind-app .bg-\[\#141625\],
+html.dark #edu-mind-app .bg-\[\#10121d\],
+html.dark #edu-mind-app .bg-\[\#11131c\],
+html.dark #edu-mind-app .bg-\[\#12131f\],
+html.dark #edu-mind-app .bg-\[\#121421\],
+html.dark #edu-mind-app .bg-\[\#131522\],
+html.dark #edu-mind-app .bg-\[\#151722\]\/60,
+html.dark #edu-mind-app .bg-\[\#171a29\]\/90 { background-color: var(--edu-bg-card) !important; }
+
+/* 更深的代码块/测试输入背景 — 用 inset 层 */
+html.dark #edu-mind-app .bg-\[\#0a0c12\] { background-color: var(--edu-bg-page) !important; }
+html.dark #edu-mind-app .bg-\[\#151926\] { background-color: rgba(96, 165, 250, 0.08) !important; }
+
+/* 边框 — 收敛到统一的蓝紫边框 */
+html.dark #edu-mind-app .border-\[\#1d2136\],
+html.dark #edu-mind-app .border-\[\#1a1c27\],
+html.dark #edu-mind-app .border-\[\#202538\],
+html.dark #edu-mind-app .border-\[\#22253c\],
+html.dark #edu-mind-app .border-\[\#222638\],
+html.dark #edu-mind-app .border-\[\#222736\],
+html.dark #edu-mind-app .border-\[\#2d324d\],
+html.dark #edu-mind-app .border-\[\#2d3350\] { border-color: var(--edu-border) !important; }
+
+/* 分割线 */
+html.dark #edu-mind-app .bg-\[\#252940\] { background-color: var(--edu-border) !important; }
+
+/* 文字 */
+html.dark #edu-mind-app .text-\[\#f0f6fc\],
+html.dark #edu-mind-app .text-\[\#f0f3f6\] { color: var(--edu-text-main) !important; }
+html.dark #edu-mind-app .text-\[\#8c9ba5\] { color: var(--edu-text-muted) !important; }
+
+/* ===== 主色统一收敛 — 所有蓝色在 dark 下指向同一套 ===== */
+/* 残留的浅色主色 #4a6cf7 在深色下应该 → --edu-accent (#60a5fa) */
+html.dark #edu-mind-app .text-\[\#4a6cf7\],
+html.dark #edu-mind-app .text-accent { color: var(--edu-accent) !important; }
+html.dark #edu-mind-app .border-\[\#4a6cf7\] { border-color: var(--edu-accent) !important; }
+html.dark #edu-mind-app .bg-\[\#4a6cf7\] { background-color: var(--edu-accent) !important; }
+html.dark #edu-mind-app .bg-\[\#3b82f6\] { background-color: var(--edu-accent) !important; }
+/* 过深的偏紫蓝 #6a8cff → 统一到亮蓝 #93c5fd 用于 hover/亮态 */
+html.dark #edu-mind-app .text-\[\#6a8cff\] { color: #93c5fd !important; }
+/* 主按钮悬停 */
+html.dark #edu-mind-app .hover\:bg-\[\#3555db\]:hover,
+html.dark #edu-mind-app .hover\:bg-\[\#2563eb\]:hover { background-color: #3b82f6 !important; }
+
+/* ===== 卡片在深色下加强分层(发光感) ===== */
+html.dark #edu-mind-app .shadow-xs,
+html.dark #edu-mind-app .shadow-sm {
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(96, 165, 250, 0.03) !important;
+}
+html.dark #edu-mind-app .shadow-md {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(96, 165, 250, 0.05) !important;
+}
+html.dark #edu-mind-app .shadow-xl,
+html.dark #edu-mind-app .shadow-2xl {
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.55), 0 0 0 1px rgba(96, 165, 250, 0.08) !important;
+}
+
+/* 卡片 hover 加微微极光感 */
+html.dark #edu-mind-app .hover\:shadow-md:hover {
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.45), 0 0 24px rgba(96, 165, 250, 0.06) !important;
+}
+
+/* ===== Input / Select / Textarea 在深色下的可读性 ===== */
+html.dark #edu-mind-app input,
+html.dark #edu-mind-app select,
+html.dark #edu-mind-app textarea {
+  color: var(--edu-text-main);
+}
+html.dark #edu-mind-app input:focus,
+html.dark #edu-mind-app select:focus,
+html.dark #edu-mind-app textarea:focus {
+  outline: none;
+  border-color: var(--edu-accent) !important;
+  box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.12) !important;
+}
+
+/* ===== 模态遮罩在深色下更深、更模糊 ===== */
+html.dark #edu-mind-app .bg-slate-900\/60 { background-color: rgba(0, 0, 0, 0.75) !important; backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); }
 </style>
 
 <style scoped>
