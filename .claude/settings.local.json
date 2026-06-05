@@ -13,7 +13,11 @@
       "Bash(git restore *)",
       "Bash(git add *)",
       "Bash(git commit *)",
-      "Bash(git push *)"
+      "Bash(git push *)",
+      "WebFetch(domain:www.bilibili.com)",
+      "Bash(curl *)",
+      "mcp__playwright__browser_navigate",
+      "mcp__playwright__browser_run_code_unsafe"
     ]
   }
 }
