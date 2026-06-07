@@ -27,6 +27,11 @@ interface Station {
 }
 interface Beat { id: string; station: number; title: string; desc?: string; mastery: number }
 
+const props = defineProps<{
+  embeddedStageOnly?: boolean
+  activeBeatId?: string
+}>()
+
 const TF_STATIONS: Station[] = [
   {
     id: 'profile', name: '画像智能体', role: 'PROFILE', color: TF.purple, glyph: '◉', station: '画像站',
@@ -114,6 +119,7 @@ const beat = ref(0)
 const revealed = ref(0)
 const done = ref(false)
 let timer: ReturnType<typeof setInterval> | null = null
+let revealTimer: ReturnType<typeof setInterval> | null = null
 
 const curBeat = computed(() => TF_BEATS[beat.value])
 const sIdx = computed(() => curBeat.value.station)
@@ -128,6 +134,7 @@ const nextStation = computed(() => {
 const accent = computed(() => station.value ? station.value.color : (curBeat.value.id === 'loop' ? TF.emerald : TF.cyan))
 
 function startTimer() {
+  if (props.activeBeatId) return
   stopTimer()
   timer = setInterval(() => {
     beat.value = (beat.value + 1) % TF_BEATS.length
@@ -138,20 +145,47 @@ function stopTimer() {
 }
 
 watch(beat, () => {
+  if (revealTimer) { clearInterval(revealTimer); revealTimer = null }
   revealed.value = 0
   done.value = false
   if (!station.value) return
   let i = 0
-  const id = setInterval(() => {
+  revealTimer = setInterval(() => {
     i++; revealed.value = i
-    if (i >= station.value!.think.length) { clearInterval(id); setTimeout(() => done.value = true, 360) }
+    if (i >= station.value!.think.length) {
+      if (revealTimer) { clearInterval(revealTimer); revealTimer = null }
+      setTimeout(() => done.value = true, 360)
+    }
   }, 480)
 })
 
-onMounted(() => { startTimer(); mountBlackhole() })
-onBeforeUnmount(() => { stopTimer() })
+watch(
+  () => props.activeBeatId,
+  (id) => {
+    if (!id) {
+      startTimer()
+      return
+    }
+    stopTimer()
+    const nextBeat = TF_BEATS.findIndex(item => item.id === id)
+    if (nextBeat >= 0) beat.value = nextBeat
+  },
+  { immediate: true },
+)
 
-function onJump(b: number) { beat.value = b }
+onMounted(() => {
+  startTimer()
+  if (!props.embeddedStageOnly) mountBlackhole()
+})
+onBeforeUnmount(() => {
+  stopTimer()
+  if (revealTimer) { clearInterval(revealTimer); revealTimer = null }
+})
+
+function onJump(b: number) {
+  if (props.activeBeatId) return
+  beat.value = b
+}
 
 // ====== 3D Scene helpers ======
 const SCENE_W = 1320, SCENE_H = 500
@@ -270,11 +304,11 @@ const contrib = [
 </script>
 
 <template>
-  <div class="trainflow-page">
-    <div class="tf-bg-grid" />
+  <div class="trainflow-page" :class="{ 'stage-only': embeddedStageOnly }">
+    <div v-if="!embeddedStageOnly" class="tf-bg-grid" />
 
     <div class="tf-container">
-      <header class="tf-header">
+      <header v-if="!embeddedStageOnly" class="tf-header">
         <div>
           <div class="tf-badge">
             <span class="tf-badge-dot" />
@@ -287,7 +321,7 @@ const contrib = [
         </div>
       </header>
 
-      <div class="tf-status-strip" :style="{ borderColor: accent + '44' }">
+      <div v-if="!embeddedStageOnly" class="tf-status-strip" :style="{ borderColor: accent + '44' }">
         <span class="tf-step" :style="{ color: accent }">{{ beat + 1 }}/{{ TF_BEATS.length }}</span>
         <span class="tf-beat-title">{{ curBeat.title }}</span>
         <span v-if="curBeat.desc" class="tf-beat-desc">· {{ curBeat.desc }}</span>
@@ -299,7 +333,7 @@ const contrib = [
       </div>
 
       <!-- 3D Scene -->
-      <div ref="bhHostRef" class="tf-scene-host">
+      <div v-if="!embeddedStageOnly" ref="bhHostRef" class="tf-scene-host">
         <div class="tf-scene-inner">
           <svg :viewBox="`0 0 ${SCENE_W} ${SCENE_H}`" class="tf-scene-svg">
             <defs>
@@ -628,6 +662,16 @@ const contrib = [
   color: #eaf2ff;
   padding: 0 36px 40px;
 }
+
+.trainflow-page.stage-only {
+  padding: 0 36px 52px;
+  background: transparent;
+}
+
+.trainflow-page.stage-only .agent-stage {
+  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.28);
+}
+
 .tf-bg-grid {
   position: fixed; inset: 0; opacity: 0.4; pointer-events: none; z-index: 0;
   background-image: linear-gradient(rgba(0,212,255,0.03) 1px,transparent 1px),linear-gradient(90deg,rgba(0,212,255,0.03) 1px,transparent 1px);

@@ -3,6 +3,7 @@ import { useRoute } from 'vue-router'
 import { computed, watch } from 'vue'
 import { useAppStore } from '@/store'
 import { useScrollReveal } from '@/composables/useScrollReveal'
+import CosmicPageBackground from './CosmicPageBackground.vue'
 import {
   Home,
   MessageCircle,
@@ -23,13 +24,13 @@ const isUniversePage = computed(() => route.path === '/learning-path')
 const isEduMindPage = computed(() => route.path === '/edu-mind')
 
 const navItems = [
-  { path: '/', label: '娆㈣繋', icon: Home },
-  { path: '/dialogue', label: '鏅鸿兘瀵硅瘽', icon: MessageCircle },
-  { path: '/learning-path', label: '鏄熷浘璺緞', icon: Map },
-  { path: '/edu-mind', label: '杈呭璧勬簮', icon: Library },
-  { path: '/evaluation', label: '璇勪及', icon: BarChart3 },
-  { path: '/knowledge-base', label: '知识库', icon: Database },
-  { path: '/settings', label: '璁剧疆', icon: Settings },
+  { path: '/', label: '欢迎', icon: Home },
+  { path: '/dialogue', label: '智能对话', icon: MessageCircle },
+  { path: '/learning-path', label: '星图路径', icon: Map },
+  { path: '/edu-mind', label: '辅导资源', icon: Library },
+  { path: '/evaluation', label: '评估', icon: BarChart3 },
+  { path: '/reverse-evaluation', label: '反向评估', icon: Database },
+  { path: '/settings', label: '设置', icon: Settings },
 ]
 watch(
   () => route.fullPath,
@@ -45,7 +46,7 @@ watch(
     <!-- Top Navigation Bar -->
     <header class="topbar" role="banner">
       <div class="topbar-inner">
-        <router-link to="/" class="topbar-brand" aria-label="EduMind 棣栭〉">
+        <router-link to="/" class="topbar-brand" aria-label="EduMind 首页">
           <span class="brand-icon">
             <Sparkles :size="18" stroke-width="1.5" />
           </span>
@@ -70,16 +71,18 @@ watch(
 
     <!-- Main Content -->
     <main class="main-content" id="main-content" :class="{
-      'has-background': !isHomePage && !isEduMindPage,
+      'home-active': isHomePage,
       'universe-active': isUniversePage,
       'edu-mind-active': isEduMindPage,
     }">
-      <div v-if="!isHomePage && !isEduMindPage" class="background-image" />
-      <router-view v-slot="{ Component }">
-        <transition name="fade" mode="out-in">
-          <component :is="Component" />
-        </transition>
-      </router-view>
+      <CosmicPageBackground />
+      <div class="page-content">
+        <router-view v-slot="{ Component }">
+          <transition name="fade" mode="out-in">
+            <component :is="Component" />
+          </transition>
+        </router-view>
+      </div>
     </main>
   </div>
 </template>
@@ -98,7 +101,7 @@ watch(
   left: 0;
   right: 0;
   height: var(--header-height);
-  background: rgba(7, 7, 13, 0.82);
+  background: rgba(7, 7, 13, 0.46);
   backdrop-filter: blur(30px) saturate(1.3);
   -webkit-backdrop-filter: blur(30px) saturate(1.3);
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
@@ -235,10 +238,13 @@ watch(
   min-height: calc(100vh - var(--header-height));
   position: relative;
   overflow: hidden;
+  background: transparent;
+  isolation: isolate;
 }
 
-.main-content.has-background {
-  background: transparent;
+.main-content.home-active {
+  margin-top: 0;
+  min-height: 100vh;
 }
 
 .main-content.universe-active {
@@ -247,22 +253,12 @@ watch(
 
 .main-content.edu-mind-active {
   overflow: visible;
-  background: transparent;
 }
 
-.background-image {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-image: url('/all-background.png');
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
-  background-attachment: fixed;
-  opacity: 0.35;
-  z-index: 0;
+.page-content {
+  position: relative;
+  z-index: 1;
+  min-height: inherit;
 }
 </style>
 
