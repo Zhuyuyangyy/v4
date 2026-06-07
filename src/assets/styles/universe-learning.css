@@ -180,17 +180,23 @@
 
 /* ─── Design System Additions ─── */
 :root {
-  --glass-bg: rgba(10, 14, 39, 0.75);
+  /* Glass layers — premium frosted effect */
+  --glass-bg: rgba(10, 14, 39, 0.72);
   --glass-bg-strong: rgba(10, 14, 39, 0.88);
-  --glass-bg-light: rgba(10, 14, 39, 0.55);
-  --glass-border: rgba(255, 255, 255, 0.06);
-  --glass-border-hover: rgba(255, 255, 255, 0.12);
-  --glass-border-active: rgba(79, 195, 247, 0.2);
-  --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.45);
-  --glass-shadow-lg: 0 16px 48px rgba(0, 0, 0, 0.5);
-  --glass-shadow-sm: 0 4px 16px rgba(0, 0, 0, 0.3);
+  --glass-bg-light: rgba(10, 14, 39, 0.50);
+  --glass-border: rgba(255, 255, 255, 0.08);
+  --glass-border-hover: rgba(255, 255, 255, 0.15);
+  --glass-border-active: rgba(79, 195, 247, 0.25);
+  --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  --glass-shadow-lg: 0 16px 48px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  --glass-shadow-sm: 0 4px 16px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.03);
   --glass-blur: 30px;
   --glass-blur-strong: 40px;
+  /* Premium edge glow — subtle aurora rim */
+  --glass-rim: inset 0 0 0 1px rgba(0, 212, 255, 0.04);
+  --glass-rim-hover: inset 0 0 0 1px rgba(0, 212, 255, 0.08);
+  /* Noise texture overlay for premium matte feel */
+  --glass-noise: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.015'/%3E%3C/svg%3E");
 
   --glow-programming: 0 0 24px rgba(79, 195, 247, 0.25);
   --glow-systems: 0 0 24px rgba(129, 199, 132, 0.25);
@@ -211,7 +217,17 @@
   backdrop-filter: blur(var(--glass-blur));
   -webkit-backdrop-filter: blur(var(--glass-blur));
   border: 1px solid var(--glass-border);
-  box-shadow: var(--glass-shadow);
+  box-shadow: var(--glass-shadow), var(--glass-rim);
+}
+
+.glass-panel::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: var(--glass-noise);
+  pointer-events: none;
+  opacity: 0.6;
 }
 
 .glass-panel-strong {
@@ -219,7 +235,17 @@
   backdrop-filter: blur(var(--glass-blur-strong));
   -webkit-backdrop-filter: blur(var(--glass-blur-strong));
   border: 1px solid var(--glass-border);
-  box-shadow: var(--glass-shadow-lg);
+  box-shadow: var(--glass-shadow-lg), var(--glass-rim);
+}
+
+.glass-panel-strong::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: var(--glass-noise);
+  pointer-events: none;
+  opacity: 0.6;
 }
 
 .glass-panel-light {
@@ -227,7 +253,17 @@
   backdrop-filter: blur(var(--glass-blur));
   -webkit-backdrop-filter: blur(var(--glass-blur));
   border: 1px solid var(--glass-border);
-  box-shadow: var(--glass-shadow-sm);
+  box-shadow: var(--glass-shadow-sm), var(--glass-rim);
+}
+
+.glass-panel-light::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: var(--glass-noise);
+  pointer-events: none;
+  opacity: 0.5;
 }
 
 .glass-button {

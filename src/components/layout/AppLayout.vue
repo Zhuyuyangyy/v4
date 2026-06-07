@@ -11,6 +11,7 @@ import {
   Settings,
   Sparkles,
   Library,
+  Database,
 } from 'lucide-vue-next'
 
 const route = useRoute()
@@ -22,12 +23,13 @@ const isUniversePage = computed(() => route.path === '/learning-path')
 const isEduMindPage = computed(() => route.path === '/edu-mind')
 
 const navItems = [
-  { path: '/', label: '欢迎', icon: Home },
-  { path: '/dialogue', label: '智能对话', icon: MessageCircle },
-  { path: '/learning-path', label: '星图路径', icon: Map },
-  { path: '/edu-mind', label: '辅导资源', icon: Library },
-  { path: '/evaluation', label: '评估', icon: BarChart3 },
-  { path: '/settings', label: '设置', icon: Settings },
+  { path: '/', label: '娆㈣繋', icon: Home },
+  { path: '/dialogue', label: '鏅鸿兘瀵硅瘽', icon: MessageCircle },
+  { path: '/learning-path', label: '鏄熷浘璺緞', icon: Map },
+  { path: '/edu-mind', label: '杈呭璧勬簮', icon: Library },
+  { path: '/evaluation', label: '璇勪及', icon: BarChart3 },
+  { path: '/knowledge-base', label: '知识库', icon: Database },
+  { path: '/settings', label: '璁剧疆', icon: Settings },
 ]
 watch(
   () => route.fullPath,
@@ -43,7 +45,7 @@ watch(
     <!-- Top Navigation Bar -->
     <header class="topbar" role="banner">
       <div class="topbar-inner">
-        <router-link to="/" class="topbar-brand" aria-label="EduMind 首页">
+        <router-link to="/" class="topbar-brand" aria-label="EduMind 棣栭〉">
           <span class="brand-icon">
             <Sparkles :size="18" stroke-width="1.5" />
           </span>
@@ -96,11 +98,11 @@ watch(
   left: 0;
   right: 0;
   height: var(--header-height);
-  background: rgba(7, 7, 13, 0.85);
-  backdrop-filter: blur(24px);
-  -webkit-backdrop-filter: blur(24px);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.3);
+  background: rgba(7, 7, 13, 0.82);
+  backdrop-filter: blur(30px) saturate(1.3);
+  -webkit-backdrop-filter: blur(30px) saturate(1.3);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.04);
   z-index: var(--z-dropdown);
 }
 
@@ -263,3 +265,4 @@ watch(
   z-index: 0;
 }
 </style>
+

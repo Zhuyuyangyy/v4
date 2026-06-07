@@ -1,12 +1,12 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
+import ThreeParticleBackground from '@/components/homepage/ThreeParticleBackground.vue'
 import HeroConstellation from '@/components/homepage/HeroConstellation.vue'
 import AgentLiveTicker from '@/components/homepage/AgentLiveTicker.vue'
-import SectionAgentWritingFlow from '@/components/homepage/SectionAgentWritingFlow.vue'
 import SectionTelemetry from '@/components/homepage/SectionTelemetry.vue'
 import SectionSkyline from '@/components/homepage/SectionSkyline.vue'
 import SectionMissions from '@/components/homepage/SectionMissions.vue'
-import AgentChainPanel from '@/components/homepage/AgentChainPanel.vue'
+import TrainFlow from '@/views/TrainFlow.vue'
 
 const loaded = ref(false)
 
@@ -18,6 +18,7 @@ onMounted(() => {
 <template>
   <div class="welcome">
     <div class="cosmos-bg">
+      <ThreeParticleBackground />
       <div class="cosmos-bg-image" />
       <div class="cosmos-nebula nebula-1" />
       <div class="cosmos-nebula nebula-2" />
@@ -29,14 +30,11 @@ onMounted(() => {
     <!-- Hero constellation -->
     <HeroConstellation />
 
+    <!-- TrainFlow: Multi-agent collaboration visualization -->
+    <TrainFlow />
+
     <!-- Agent live ticker -->
     <AgentLiveTicker />
-
-    <!-- Multi-agent collaborative execution chain -->
-    <AgentChainPanel />
-
-    <!-- Multi-agent writing/collaboration visualization -->
-    <SectionAgentWritingFlow />
 
     <!-- Collaboration telemetry -->
     <SectionTelemetry />
@@ -58,6 +56,7 @@ onMounted(() => {
   position: relative;
   min-height: 100vh;
   background: transparent;
+  isolation: isolate;
 }
 
 /* ── Cosmic background ── */
@@ -76,7 +75,8 @@ onMounted(() => {
   background-size: cover;
   background-position: center top;
   background-repeat: no-repeat;
-  opacity: 0.45;
+  mix-blend-mode: screen;
+  opacity: 0.14;
 }
 
 .cosmos-nebula {
@@ -142,6 +142,7 @@ onMounted(() => {
     radial-gradient(1px 1px at 20% 95%, rgba(255, 255, 255, 0.4), transparent),
     radial-gradient(1px 1px at 75% 5%, rgba(0, 212, 255, 0.4), transparent),
     radial-gradient(1px 1px at 60% 50%, rgba(255, 255, 255, 0.3), transparent);
+  opacity: 0.52;
   animation: twinkle 8s ease-in-out infinite alternate;
 }
 
@@ -154,7 +155,61 @@ onMounted(() => {
 .cosmos-vignette {
   position: absolute;
   inset: 0;
-  background: radial-gradient(ellipse at center, transparent 40%, rgba(5, 5, 16, 0.6) 100%);
+  background:
+    linear-gradient(90deg, rgba(2, 4, 12, 0.46) 0%, transparent 34%, rgba(2, 4, 12, 0.14) 100%),
+    radial-gradient(ellipse at center, transparent 32%, rgba(3, 4, 12, 0.56) 100%);
+}
+
+:deep(.hero-constellation),
+:deep(.tf-section),
+:deep(.trainflow-page),
+:deep(.section-telemetry),
+:deep(.section-skyline),
+:deep(.section-missions),
+:deep(.section-loop),
+:deep(.section-schematic),
+:deep(.section-agent-chain),
+:deep(.agent-writing-section) {
+  background: transparent !important;
+}
+
+:deep(.trainflow-page) {
+  position: relative;
+  z-index: 1;
+}
+
+:deep(.hero-constellation) {
+  overflow: visible;
+}
+
+:deep(.hero-grid),
+:deep(.hero-starfield) {
+  opacity: 0.46;
+}
+
+:deep(.sky-canvas),
+:deep(.mission-rail),
+:deep(.mission-rail-shell),
+:deep(.tele-chart),
+:deep(.loop-stage),
+:deep(.schematic-stage),
+:deep(.chain-board),
+:deep(.tf-shell),
+:deep(.log-container) {
+  background:
+    radial-gradient(ellipse at 62% 20%, rgba(0, 212, 255, 0.07), transparent 58%),
+    linear-gradient(145deg, rgba(7, 10, 24, 0.42), rgba(4, 7, 18, 0.18)) !important;
+  backdrop-filter: blur(10px);
+}
+
+:deep(.sky-callout),
+:deep(.activity-chip .chip-card),
+:deep(.tele-detail-card),
+:deep(.tele-stats),
+:deep(.sky-stats),
+:deep(.mis-quota) {
+  background: rgba(8, 12, 30, 0.58) !important;
+  backdrop-filter: blur(14px);
 }
 
 /* ── Section headers ── */

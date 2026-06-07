@@ -280,9 +280,8 @@ const completedTasks = 47
               <div class="detail-agents-label">调用智能体</div>
               <div class="detail-agents">
                 <span v-for="aid in currentPhase.agents" :key="aid" class="detail-agent-chip"
-                  :style="`color: ${agentColors[aid]}; background: ${agentColors[aid]}12; border-color: ${agentColors[aid]}33`">
-                  <span class="detail-agent-dot" :style="`background: ${agentColors[aid]}`" />
-                  {{ agentNames[aid] }}
+                  :style="`color: ${agentColors[aid]}; background: ${agentColors[aid]}0a; border-color: ${agentColors[aid]}22`">
+                  {{ agentNames[aid] }}智能体
                 </span>
               </div>
 
@@ -626,20 +625,18 @@ const completedTasks = 47
 .detail-agent-chip {
   display: inline-flex;
   align-items: center;
-  gap: 5px;
-  padding: 4px 10px;
-  border-radius: 100px;
+  padding: 8px 14px;
+  border-radius: 8px;
   border: 1px solid;
-  font-size: 11px;
-  font-family: 'JetBrains Mono', monospace;
-  letter-spacing: 0.08em;
+  font-size: 12px;
+  font-family: 'Outfit', sans-serif;
   font-weight: 500;
+  transition: all 0.25s ease;
 }
 
-.detail-agent-dot {
-  width: 5px;
-  height: 5px;
-  border-radius: 50%;
+.detail-agent-chip:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
 }
 
 .detail-info {

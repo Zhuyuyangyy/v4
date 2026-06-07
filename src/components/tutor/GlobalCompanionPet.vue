@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { resolveDesktopPetAnimation } from '@/config/desktopPet'
 import { useAppStore, type CompanionState } from '@/store'
+import { sendChatMessage } from '@/lib/api'
 import AiriLive2DRenderer from './live2d/AiriLive2DRenderer.vue'
 
 const appStore = useAppStore()
@@ -40,6 +41,59 @@ const LOOK_OFFSET_Y = 6
 const LOOK_ROTATION = 7
 const LOOK_LERP = 0.18
 
+/* ── Chat panel state ── */
+const showChat = ref(false)
+const chatMessages = ref<{ role: 'user' | 'assistant'; text: string }[]>([])
+const chatInput = ref('')
+const isChatSending = ref(false)
+const chatPanelRef = ref<HTMLElement | null>(null)
+const chatInputRef = ref<HTMLInputElement | null>(null)
+
+function toggleChat() {
+  showChat.value = !showChat.value
+  if (showChat.value && chatMessages.value.length === 0) {
+    chatMessages.value.push({
+      role: 'assistant',
+      text: '你好！我是你的学习伙伴，有什么问题可以问我~',
+    })
+  }
+  if (showChat.value) {
+    nextTick(() => chatInputRef.value?.focus())
+  }
+}
+
+async function sendChat() {
+  const text = chatInput.value.trim()
+  if (!text || isChatSending.value) return
+
+  chatMessages.value.push({ role: 'user', text })
+  chatInput.value = ''
+  isChatSending.value = true
+  interactionState.value = 'thinking'
+  playCurrentState()
+
+  try {
+    const reply = await sendChatMessage(text)
+    const content = reply.content ?? '抱歉，我暂时无法回答这个问题。'
+    chatMessages.value.push({ role: 'assistant', text: content })
+    interactionState.value = 'cheer'
+  } catch {
+    chatMessages.value.push({ role: 'assistant', text: '网络似乎有点问题，稍后再试试吧~' })
+    interactionState.value = 'error'
+  } finally {
+    isChatSending.value = false
+    playCurrentState()
+    setTimeout(() => {
+      interactionState.value = null
+      playCurrentState()
+    }, 1200)
+    nextTick(() => {
+      if (chatPanelRef.value) chatPanelRef.value.scrollTop = chatPanelRef.value.scrollHeight
+    })
+  }
+}
+
+/* ── Pet animation state ── */
 const stateMap: Record<CompanionState, 'idle' | 'thinking' | 'typing' | 'cheer' | 'error'> = {
   idle: 'idle',
   thinking: 'thinking',
@@ -91,6 +145,18 @@ const spriteStyle = computed(() => {
     ...frameStyle.value,
     transform: `translate(${translateX}px, ${translateY}px) scaleX(${movementDirection.value}) scaleY(${scaleY}) rotate(${tilt}deg)`,
     transformOrigin: 'center bottom',
+  }
+})
+
+/* Chat panel position: always above the pet */
+const chatPanelStyle = computed(() => {
+  const metrics = getPetMetrics()
+  const petOnLeft = position.value.x < window.innerWidth / 2
+  return {
+    bottom: `${window.innerHeight - position.value.y + 8}px`,
+    ...(petOnLeft
+      ? { left: `${position.value.x}px` }
+      : { right: `${window.innerWidth - position.value.x - metrics.width}px` }),
   }
 })
 
@@ -293,7 +359,7 @@ function endDrag(event?: PointerEvent) {
     snapToEdge()
     playCurrentState()
   } else if (displayState.value === 'idle') {
-    triggerInteraction()
+    toggleChat()
   }
 
   persistPosition()
@@ -354,6 +420,39 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
+  <!-- Chat panel (above pet) -->
+  <transition name="chat-pop">
+    <div v-if="showChat" class="pet-chat-panel" :style="chatPanelStyle" @pointerdown.stop>
+      <div class="chat-panel-header">
+        <span class="chat-panel-title">学习助手</span>
+        <button class="chat-panel-close" type="button" @click="showChat = false">✕</button>
+      </div>
+      <div ref="chatPanelRef" class="chat-panel-body">
+        <div v-for="(msg, i) in chatMessages" :key="i" :class="['chat-msg', msg.role]">
+          <div class="chat-msg-bubble">{{ msg.text }}</div>
+        </div>
+        <div v-if="isChatSending" class="chat-msg assistant">
+          <div class="chat-msg-bubble typing-dots">
+            <span /><span /><span />
+          </div>
+        </div>
+      </div>
+      <div class="chat-panel-input">
+        <input
+          ref="chatInputRef"
+          v-model="chatInput"
+          type="text"
+          placeholder="问我任何学习问题..."
+          :disabled="isChatSending"
+          @keydown.enter="sendChat"
+        />
+        <button type="button" class="chat-send-btn" :disabled="isChatSending || !chatInput.trim()" @click="sendChat">
+          ↑
+        </button>
+      </div>
+    </div>
+  </transition>
+
   <div class="global-pet" :class="{ dragging: isDragging, snapping: isSnapping }" :style="petStyle" @pointerdown="startDrag">
     <div v-if="useLive2D" class="global-pet-live2d">
       <AiriLive2DRenderer
@@ -429,6 +528,220 @@ onBeforeUnmount(() => {
     top 0.22s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
+/* ── Chat panel ── */
+.pet-chat-panel {
+  position: fixed;
+  z-index: 41;
+  width: 340px;
+  max-width: calc(100vw - 32px);
+  border-radius: 16px;
+  background: rgba(10, 14, 39, 0.72);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow:
+    0 16px 48px rgba(0, 0, 0, 0.5),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05),
+    inset 0 0 0 1px rgba(0, 212, 255, 0.04);
+  backdrop-filter: blur(30px) saturate(1.3);
+  -webkit-backdrop-filter: blur(30px) saturate(1.3);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.pet-chat-panel::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.015'/%3E%3C/svg%3E");
+  pointer-events: none;
+  opacity: 0.6;
+}
+
+.chat-panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 14px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.chat-panel-title {
+  color: #fff;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+.chat-panel-close {
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
+  border: none;
+  background: rgba(255, 255, 255, 0.06);
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 12px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s;
+}
+
+.chat-panel-close:hover {
+  background: rgba(255, 255, 255, 0.12);
+  color: #fff;
+}
+
+.chat-panel-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 12px 14px;
+  max-height: 320px;
+  min-height: 120px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.chat-panel-body::-webkit-scrollbar {
+  width: 3px;
+}
+
+.chat-panel-body::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 3px;
+}
+
+.chat-msg {
+  display: flex;
+}
+
+.chat-msg.user {
+  justify-content: flex-end;
+}
+
+.chat-msg.assistant {
+  justify-content: flex-start;
+}
+
+.chat-msg-bubble {
+  max-width: 85%;
+  padding: 8px 12px;
+  border-radius: 12px;
+  font-size: 12px;
+  line-height: 1.6;
+  word-break: break-word;
+}
+
+.chat-msg.user .chat-msg-bubble {
+  background: rgba(0, 212, 255, 0.15);
+  color: #e0f4ff;
+  border-bottom-right-radius: 4px;
+}
+
+.chat-msg.assistant .chat-msg-bubble {
+  background: rgba(255, 255, 255, 0.06);
+  color: rgba(255, 255, 255, 0.85);
+  border-bottom-left-radius: 4px;
+}
+
+.typing-dots {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 10px 14px;
+}
+
+.typing-dots span {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: rgba(0, 212, 255, 0.6);
+  animation: dot-bounce 1.2s ease-in-out infinite;
+}
+
+.typing-dots span:nth-child(2) { animation-delay: 0.15s; }
+.typing-dots span:nth-child(3) { animation-delay: 0.3s; }
+
+@keyframes dot-bounce {
+  0%, 60%, 100% { opacity: 0.3; transform: translateY(0); }
+  30% { opacity: 1; transform: translateY(-4px); }
+}
+
+.chat-panel-input {
+  display: flex;
+  gap: 6px;
+  padding: 10px 12px;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.chat-panel-input input {
+  flex: 1;
+  min-width: 0;
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.04);
+  color: #fff;
+  font-size: 12px;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.chat-panel-input input::placeholder {
+  color: rgba(255, 255, 255, 0.3);
+}
+
+.chat-panel-input input:focus {
+  border-color: rgba(0, 212, 255, 0.3);
+}
+
+.chat-send-btn {
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  border: 1px solid rgba(0, 212, 255, 0.2);
+  background: rgba(0, 212, 255, 0.1);
+  color: #00d4ff;
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s;
+  flex-shrink: 0;
+}
+
+.chat-send-btn:hover:not(:disabled) {
+  background: rgba(0, 212, 255, 0.2);
+}
+
+.chat-send-btn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+/* Chat panel transition */
+.chat-pop-enter-active {
+  transition: opacity 0.25s ease, transform 0.25s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.chat-pop-leave-active {
+  transition: opacity 0.18s ease, transform 0.18s ease;
+}
+
+.chat-pop-enter-from {
+  opacity: 0;
+  transform: translateY(12px) scale(0.96);
+}
+
+.chat-pop-leave-to {
+  opacity: 0;
+  transform: translateY(6px) scale(0.98);
+}
+
 @media (max-width: 900px) {
   .global-pet-live2d {
     width: 150px;
@@ -440,6 +753,9 @@ onBeforeUnmount(() => {
   }
   .global-pet-aura {
     width: 72px;
+  }
+  .pet-chat-panel {
+    width: 290px;
   }
 }
 </style>

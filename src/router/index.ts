@@ -32,6 +32,16 @@ const router = createRouter({
       component: () => import('@/views/Evaluation.vue'),
     },
     {
+      path: '/knowledge-base',
+      name: 'knowledge-base',
+      component: () => import('@/views/KnowledgeBase.vue'),
+    },
+    {
+      path: '/tutoring',
+      name: 'tutoring',
+      component: () => import('@/views/Tutoring.vue'),
+    },
+    {
       path: '/settings',
       name: 'settings',
       component: () => import('@/views/Settings.vue'),
@@ -42,8 +52,18 @@ const router = createRouter({
       component: () => import('@/views/EduMind.vue'),
     },
     {
+      path: '/resources',
+      name: 'Resources',
+      component: () => import('@/views/EduMind.vue'),
+    },
+    {
       path: '/universe',
       redirect: '/learning-path',
+    },
+    {
+      path: '/trainflow',
+      name: 'trainflow',
+      component: () => import('@/views/TrainFlow.vue'),
     },
   ],
 })

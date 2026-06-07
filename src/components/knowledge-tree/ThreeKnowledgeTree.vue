@@ -41,6 +41,7 @@ const props = withDefaults(
     fill?: boolean
     knowledgePoints?: KnowledgePoint[]
     sceneScale?: number
+    sceneHeightScale?: number
     sceneOffsetY?: number
   }>(),
   {
@@ -49,6 +50,7 @@ const props = withDefaults(
     fill: false,
     knowledgePoints: () => [],
     sceneScale: 11.4,
+    sceneHeightScale: 1,
     sceneOffsetY: 4.35,
   },
 )
@@ -84,6 +86,22 @@ const branchGroups = computed(() => {
         { name: '图结构与搜索', status: 'weak' as const, progress: 38 },
       ]
 
+  // 按 course 字段分组
+  const courseMap = new Map<string, KnowledgePoint[]>()
+  points.forEach(p => {
+    const course = (p as any).course ?? '未分类'
+    if (!courseMap.has(course)) courseMap.set(course, [])
+    courseMap.get(course)!.push(p)
+  })
+
+  if (courseMap.size > 0) {
+    return Array.from(courseMap.entries()).map(([label, pts]) => ({
+      label,
+      points: pts,
+    }))
+  }
+
+  // fallback: 如果没有 course 字段，按3等分
   return [
     { label: '课程主干', points: points.slice(0, 2) },
     { label: '能力分支', points: points.slice(2, 4) },
@@ -101,6 +119,7 @@ let backgroundStageGroup: THREE.Group | null = null
 let starGroup: THREE.Group | null = null
 let markerGroup: THREE.Group | null = null
 let auraGroup: THREE.Group | null = null
+let selectionGroup: THREE.Group | null = null
 let raycaster: THREE.Raycaster | null = null
 const pointer = new THREE.Vector2()
 let interactiveObjects: THREE.Object3D[] = []
@@ -109,6 +128,7 @@ let fluidGlowTexture: THREE.CanvasTexture | null = null
 let fluidBumpTexture: THREE.CanvasTexture | null = null
 const fluidMaterials: THREE.MeshStandardMaterial[] = []
 const streamMaterials: THREE.MeshBasicMaterial[] = []
+const selectionMaterials: THREE.Material[] = []
 
 type DisposableObject = THREE.Object3D & {
   geometry?: THREE.BufferGeometry
@@ -162,6 +182,22 @@ function setMarkerData(object: THREE.Object3D, marker: GraphMarker) {
   interactiveObjects.push(object)
 }
 
+function createAppleHitTarget(size: number, marker: GraphMarker) {
+  const picker = new THREE.Mesh(
+    new THREE.SphereGeometry(size * 2.25, 18, 12),
+    new THREE.MeshBasicMaterial({
+      transparent: true,
+      opacity: 0,
+      depthWrite: false,
+    }),
+  )
+  picker.name = `AppleHitTarget-${marker.id}`
+  picker.position.y = size * 0.22
+  picker.userData.marker = marker
+  picker.renderOrder = 40
+  return picker
+}
+
 function pointIsComplete(point?: KnowledgePoint) {
   return point?.status === 'mastered' || (point?.progress ?? 0) >= 80
 }
@@ -172,8 +208,7 @@ function pointIsWeak(point?: KnowledgePoint) {
 
 function starColorForPoint(point?: KnowledgePoint) {
   if (pointIsComplete(point)) return 0xdb3f36
-  if (pointIsWeak(point) || (point?.progress ?? 0) < 60) return 0x65dca2
-  return 0xf0b45b
+  return 0x65dca2
 }
 
 function createAppleMesh(size: number, color: number, complete: boolean) {
@@ -295,6 +330,7 @@ function createAttachedStar(position: THREE.Vector3, size: number, point: Knowle
   apple.position.z = 0.01
   apple.scale.setScalar(weak ? 1.06 : 1)
   group.add(apple)
+  group.add(createAppleHitTarget(size, marker))
 
   setMarkerData(group, marker)
   return group
@@ -327,6 +363,7 @@ function createMarkerStar(position: THREE.Vector3, size: number, color: number, 
   const apple = createAppleMesh(size, color, marker.type === 'course')
   apple.renderOrder = 20
   group.add(apple)
+  group.add(createAppleHitTarget(size, marker))
 
   setMarkerData(group, marker)
   return group
@@ -419,52 +456,6 @@ function createEnergyAura(model: THREE.Group) {
   rootPool.renderOrder = 2
   auraGroup.add(rootPool)
 
-  const streamPaths = [
-    [
-      new THREE.Vector3(0.02, 0.45, 1.18),
-      new THREE.Vector3(-0.08, 1.8, 1.1),
-      new THREE.Vector3(0.12, 3.35, 1.0),
-      new THREE.Vector3(-0.08, 5.05, 0.82),
-      new THREE.Vector3(0.08, 6.65, 0.58),
-    ],
-    [
-      new THREE.Vector3(-0.38, 0.55, 1.04),
-      new THREE.Vector3(-0.55, 2.1, 0.98),
-      new THREE.Vector3(-0.32, 4.15, 0.82),
-      new THREE.Vector3(-1.35, 5.55, 0.64),
-      new THREE.Vector3(-2.8, 6.3, 0.48),
-    ],
-    [
-      new THREE.Vector3(0.4, 0.58, 1.02),
-      new THREE.Vector3(0.56, 2.15, 0.94),
-      new THREE.Vector3(0.34, 4.05, 0.78),
-      new THREE.Vector3(1.32, 5.55, 0.62),
-      new THREE.Vector3(2.85, 6.28, 0.48),
-    ],
-    [
-      new THREE.Vector3(0.18, 0.9, 1.24),
-      new THREE.Vector3(0.02, 2.7, 1.1),
-      new THREE.Vector3(0.18, 4.75, 0.88),
-      new THREE.Vector3(0.42, 6.3, 0.56),
-    ],
-    [
-      new THREE.Vector3(-0.18, 0.95, 1.18),
-      new THREE.Vector3(-0.28, 2.35, 1.08),
-      new THREE.Vector3(-0.15, 3.85, 0.92),
-      new THREE.Vector3(-0.55, 5.45, 0.64),
-    ],
-    [
-      new THREE.Vector3(0.62, 0.85, 0.86),
-      new THREE.Vector3(0.45, 2.2, 0.88),
-      new THREE.Vector3(0.58, 3.7, 0.72),
-      new THREE.Vector3(0.92, 5.25, 0.56),
-    ],
-  ]
-
-  streamPaths.forEach((path, index) => {
-    auraGroup!.add(createEnergyStream(path, index === 0 ? 0.014 : 0.01, index === 0 ? 0.62 : 0.44))
-  })
-
   const canopyGlow = new THREE.Mesh(
     new THREE.SphereGeometry(4.6, 48, 20),
     new THREE.MeshBasicMaterial({
@@ -519,7 +510,7 @@ function addGraphMarkers(model: THREE.Group) {
       items: group.points.map(point => `${point.name} · ${markerStatusLabel(point.status)} · ${point.progress ?? 0}%`),
     }
 
-    markerGroup!.add(createMarkerStar(branchAnchors[index] ?? branchAnchors[0], 0.3, progress >= 70 ? 0xdb3f36 : 0x65dca2, marker, index * 0.22))
+    markerGroup!.add(createMarkerStar(branchAnchors[index] ?? branchAnchors[0], 0.3, progress >= 80 ? 0xdb3f36 : 0x65dca2, marker, index * 0.22))
   })
 
   model.add(markerGroup)
@@ -534,37 +525,61 @@ function addAttachedStars(model: THREE.Group) {
   starGroup = new THREE.Group()
   starGroup.name = 'AttachedKnowledgeStars'
 
-  const starAnchors = [
-    { position: [-5.4, 10.7, 3.3], size: 0.28, rotation: 0.2 },
-    { position: [-4.45, 12.35, 3.42], size: 0.29, rotation: -0.16 },
-    { position: [-3.52, 13.55, 3.36], size: 0.27, rotation: 0.42 },
-    { position: [-2.55, 11.25, 3.26], size: 0.29, rotation: 0.22 },
-    { position: [-1.55, 12.95, 3.46], size: 0.27, rotation: -0.36 },
-    { position: [-0.62, 10.62, 3.1], size: 0.28, rotation: -0.12 },
-    { position: [0.52, 13.62, 3.42], size: 0.27, rotation: 0.3 },
-    { position: [1.55, 11.45, 3.28], size: 0.29, rotation: -0.28 },
-    { position: [2.52, 12.9, 3.54], size: 0.27, rotation: -0.18 },
-    { position: [3.45, 10.92, 3.4], size: 0.29, rotation: 0.14 },
-    { position: [4.45, 12.35, 3.58], size: 0.27, rotation: -0.42 },
-    { position: [5.45, 10.95, 3.42], size: 0.28, rotation: 0.34 },
-    { position: [-4.95, 11.55, 3.58], size: 0.25, rotation: 0.48 },
-    { position: [-3.95, 13.15, 3.5], size: 0.25, rotation: -0.5 },
-    { position: [-3.05, 10.05, 3.02], size: 0.25, rotation: 0.08 },
-    { position: [-2.05, 13.9, 3.42], size: 0.24, rotation: -0.24 },
-    { position: [-1.05, 11.95, 3.34], size: 0.25, rotation: 0.56 },
-    { position: [0.05, 10.02, 2.98], size: 0.24, rotation: -0.46 },
-    { position: [1.05, 12.6, 3.48], size: 0.25, rotation: 0.18 },
-    { position: [2.1, 14.0, 3.42], size: 0.24, rotation: -0.5 },
-    { position: [3.05, 10.15, 3.1], size: 0.25, rotation: 0.54 },
-    { position: [3.9, 13.35, 3.62], size: 0.24, rotation: -0.08 },
-    { position: [4.95, 11.62, 3.52], size: 0.25, rotation: 0.38 },
-    { position: [5.95, 12.42, 3.45], size: 0.24, rotation: -0.32 },
-  ]
+  const count = Math.max(props.knowledgePoints.length, 18)
 
-  starAnchors.forEach((anchor, index) => {
-    const [x, y, z] = anchor.position
+  // Collect all leaf mesh vertices in world space
+  const leafVertices: THREE.Vector3[] = []
+  model.updateMatrixWorld(true)
+  model.traverse((child) => {
+    if (!(child instanceof THREE.Mesh)) return
+    const name = child.name.toLowerCase()
+    const matName = (Array.isArray(child.material) ? child.material[0] : child.material)?.name?.toLowerCase() ?? ''
+    if (!name.includes('leaf') && !matName.includes('leaf')) return
+    const geom = child.geometry
+    const pos = geom.attributes.position
+    if (!pos) return
+    const v = new THREE.Vector3()
+    for (let i = 0; i < pos.count; i++) {
+      v.fromBufferAttribute(pos, i).applyMatrix4(child.matrixWorld)
+      leafVertices.push(v.clone())
+    }
+  })
+
+  // If no leaf vertices found, fall back to bounding box sampling
+  if (leafVertices.length === 0) {
+    const box = new THREE.Box3().setFromObject(model)
+    const size = box.getSize(new THREE.Vector3())
+    const center = box.getCenter(new THREE.Vector3())
+    // Generate points in upper 60% of the model (foliage area)
+    for (let i = 0; i < count * 10; i++) {
+      const x = center.x + (Math.random() - 0.5) * size.x * 0.8
+      const y = center.y + size.y * 0.1 + Math.random() * size.y * 0.5
+      const z = center.z + (Math.random() - 0.5) * size.z * 0.8
+      leafVertices.push(new THREE.Vector3(x, y, z))
+    }
+  }
+
+  // Sample 'count' vertices evenly from the collected leaf vertices
+  const step = Math.max(1, Math.floor(leafVertices.length / count))
+  const sampledPositions: THREE.Vector3[] = []
+  for (let i = 0; i < count && i * step < leafVertices.length; i++) {
+    const idx = i * step + Math.floor(Math.random() * Math.min(step, 3))
+    const safeIdx = Math.min(idx, leafVertices.length - 1)
+    sampledPositions.push(leafVertices[safeIdx])
+  }
+  // Fill remaining if needed
+  while (sampledPositions.length < count) {
+    sampledPositions.push(leafVertices[Math.floor(Math.random() * leafVertices.length)])
+  }
+
+  sampledPositions.forEach((position, index) => {
     const point = props.knowledgePoints[index % Math.max(props.knowledgePoints.length, 1)]
-    starGroup!.add(createAttachedStar(new THREE.Vector3(x, y, z), anchor.size, point, anchor.rotation))
+    const size = 0.2 + (index % 3) * 0.03 + Math.random() * 0.05
+    const rotation = Math.random() * Math.PI * 2
+    // Convert world position to model local space
+    const localPos = position.clone()
+    model.worldToLocal(localPos)
+    starGroup!.add(createAttachedStar(localPos, size, point, rotation))
   })
 
   model.add(starGroup)
@@ -707,7 +722,7 @@ function enhanceBackgroundStage(model: THREE.Group) {
 
     child.castShadow = false
     child.receiveShadow = true
-    child.frustumCulled = true
+    child.frustumCulled = false
     child.matrixAutoUpdate = false
 
     const materials = Array.isArray(child.material) ? child.material : [child.material]
@@ -743,9 +758,9 @@ function fitBackgroundStageToScene(model: THREE.Group, role: StagePieceRole) {
   const size = box.getSize(new THREE.Vector3())
   const maxDim = Math.max(size.x, size.y, size.z)
   const config = {
-    main: { scale: 14.1, x: 0, y: 7.35, z: -4.8, ry: Math.PI / 6, rz: 0 },
-    left: { scale: 8.4, x: -8.8, y: 5.8, z: -11.6, ry: 0.14, rz: 0 },
-    right: { scale: 8.4, x: 8.8, y: 5.8, z: -11.6, ry: -0.14, rz: 0 },
+    main: { scale: 14.1, x: -1.0, y: 5.0, z: -1.0, ry: Math.PI / 6, rz: 0 },
+    left: { scale: 10.5, x: -6.5, y: 4.8, z: 1.5, ry: 0.42 + Math.PI / 4, rz: 0 },
+    right: { scale: 10.08, x: 4.5, y: 5.34, z: -5.0, ry: -0.42 + 15 * Math.PI / 180, rz: 0 },
   }[role]
   const scale = config.scale / Math.max(0.001, maxDim)
 
@@ -895,6 +910,18 @@ function optimizeModelForRuntime(model: THREE.Group) {
 }
 
 function enhanceOriginalModel(model: THREE.Group) {
+  // 统计知识点状态分布
+  const weakCount = props.knowledgePoints.filter(p => p.status === 'weak').length
+  const masteredCount = props.knowledgePoints.filter(p => p.status === 'mastered').length
+  const learningCount = props.knowledgePoints.filter(p => p.status === 'learning').length
+  const total = Math.max(props.knowledgePoints.length, 1)
+
+  // 根据掌握度比例决定树叶整体色调
+  // mastered多→偏绿, weak多→偏红, learning多→偏蓝
+  const weakRatio = weakCount / total
+  const masteredRatio = masteredCount / total
+  const learningRatio = learningCount / total
+
   model.traverse((child) => {
     if (!(child instanceof THREE.Mesh)) return
 
@@ -913,8 +940,13 @@ function enhanceOriginalModel(model: THREE.Group) {
           material.side = THREE.DoubleSide
           material.transparent = true
           material.opacity = 0.96
-          material.emissive = new THREE.Color(0x301010)
-          material.emissiveIntensity = 0.08
+
+          // 根据掌握度分布混合颜色
+          const r = weakRatio * 0.6 + learningRatio * 0.1 + masteredRatio * 0.05
+          const g = masteredRatio * 0.5 + learningRatio * 0.2 + weakRatio * 0.05
+          const b = learningRatio * 0.5 + masteredRatio * 0.1 + weakRatio * 0.1
+          material.emissive = new THREE.Color(r, g, b)
+          material.emissiveIntensity = 0.15 + weakRatio * 0.2
         }
 
         if (name.includes('trunk') || name.includes('branch') || material.name.toLowerCase().includes('wood')) {
@@ -928,16 +960,47 @@ function enhanceOriginalModel(model: THREE.Group) {
 }
 
 function fitModelToScene(model: THREE.Group) {
+  function clipRootGeometry(geom: THREE.BufferGeometry) {
+    const pos = geom.attributes.position
+    const norm = geom.attributes.normal
+    const idx = geom.index
+    if (!pos || !norm || !idx) return
+    const clipThresholdY = -2.5
+    const keepMask = new Uint8Array(pos.count)
+    for (let i = 0; i < pos.count; i++) {
+      keepMask[i] = pos.getY(i) >= clipThresholdY ? 1 : 0
+    }
+    const newIdxArr: number[] = []
+    for (let i = 0; i < idx.count; i += 3) {
+      const a = idx.getX(i), b = idx.getX(i + 1), c = idx.getX(i + 2)
+      if (keepMask[a] && keepMask[b] && keepMask[c]) {
+        newIdxArr.push(a, b, c)
+      }
+    }
+    if (newIdxArr.length > 0) {
+      geom.setIndex(newIdxArr)
+      geom.computeBoundingBox()
+      geom.computeBoundingSphere()
+    }
+  }
+  model.traverse(obj => {
+    if (obj instanceof THREE.Mesh && obj.geometry) {
+      clipRootGeometry(obj.geometry)
+    }
+  })
   const box = new THREE.Box3().setFromObject(model)
   const center = box.getCenter(new THREE.Vector3())
   const size = box.getSize(new THREE.Vector3())
   const maxDim = Math.max(size.x, size.y, size.z)
   const scale = props.sceneScale / maxDim
+  const scaleY = scale * props.sceneHeightScale
 
-  model.scale.setScalar(scale)
-  model.position.sub(center.multiplyScalar(scale))
-  model.position.y -= box.min.y * scale
-  model.position.y += props.sceneOffsetY
+  model.scale.set(scale, scaleY, scale)
+  model.position.sub(center.multiply(new THREE.Vector3(scale, scaleY, scale)))
+  model.position.y -= box.min.y * scaleY
+  model.position.y += props.sceneOffsetY - 3.2
+  model.position.x += 0.5
+  model.position.z += 0.3
 }
 
 function loadModel(modelUrl = props.modelUrl, hasTriedFallback = false) {
@@ -953,9 +1016,9 @@ function loadModel(modelUrl = props.modelUrl, hasTriedFallback = false) {
 
         enhanceOriginalModel(rootGroup)
         createEnergyAura(rootGroup)
+        fitModelToScene(rootGroup)
         addGraphMarkers(rootGroup)
         addAttachedStars(rootGroup)
-        fitModelToScene(rootGroup)
 
         scene!.add(rootGroup)
         loadError.value = false
@@ -1028,7 +1091,91 @@ function initRenderer() {
   canvasRef.value.addEventListener('click', handleCanvasClick)
 }
 
-function markerFromIntersection(event: PointerEvent) {
+interface MarkerHit {
+  marker: GraphMarker
+  object: THREE.Object3D
+  point: THREE.Vector3
+}
+
+function clearSelectionEffect() {
+  if (!selectionGroup || !rootGroup) return
+  rootGroup.remove(selectionGroup)
+  selectionGroup.traverse(child => disposeObject(child as DisposableObject))
+  selectionMaterials.forEach(material => material.dispose())
+  selectionMaterials.length = 0
+  selectionGroup = null
+}
+
+function createSelectionEffect(hit: MarkerHit) {
+  if (!rootGroup) return
+  clearSelectionEffect()
+
+  const localPoint = hit.point.clone()
+  rootGroup.worldToLocal(localPoint)
+
+  const tone = hit.marker.status === 'weak'
+    ? 0xff4b6a
+    : hit.marker.status === 'mastered'
+      ? 0xffc145
+      : 0x72ffd0
+
+  selectionGroup = new THREE.Group()
+  selectionGroup.name = 'KnowledgeAppleSelection'
+  selectionGroup.position.copy(localPoint)
+  selectionGroup.userData.birth = performance.now()
+
+  const ringMaterial = new THREE.MeshBasicMaterial({
+    color: tone,
+    transparent: true,
+    opacity: 0.82,
+    depthWrite: false,
+    depthTest: false,
+    side: THREE.DoubleSide,
+    blending: THREE.AdditiveBlending,
+  })
+  selectionMaterials.push(ringMaterial)
+
+  for (let i = 0; i < 3; i++) {
+    const ring = new THREE.Mesh(
+      new THREE.RingGeometry(0.34 + i * 0.18, 0.39 + i * 0.18, 64),
+      ringMaterial.clone(),
+    )
+    selectionMaterials.push(ring.material as THREE.Material)
+    ring.rotation.set(-0.16, 0.12, 0)
+    ring.position.z = 0.03 + i * 0.012
+    ring.userData.phase = i * 0.32
+    ring.renderOrder = 60 + i
+    selectionGroup.add(ring)
+  }
+
+  const beamMaterial = new THREE.MeshBasicMaterial({
+    color: tone,
+    transparent: true,
+    opacity: 0.22,
+    depthWrite: false,
+    depthTest: false,
+    blending: THREE.AdditiveBlending,
+  })
+  selectionMaterials.push(beamMaterial)
+
+  const beam = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.025, 0.18, 3.4, 24, 1, true),
+    beamMaterial,
+  )
+  beam.position.y = 1.55
+  beam.renderOrder = 58
+  beam.userData.isBeam = true
+  selectionGroup.add(beam)
+
+  const core = new THREE.PointLight(tone, 2.2, 4.5)
+  core.position.set(0, 0.25, 0.2)
+  core.userData.isCoreLight = true
+  selectionGroup.add(core)
+
+  rootGroup.add(selectionGroup)
+}
+
+function markerFromIntersection(event: PointerEvent): MarkerHit | null {
   if (!canvasRef.value || !camera || !raycaster || !interactiveObjects.length) return null
 
   const rect = canvasRef.value.getBoundingClientRect()
@@ -1038,19 +1185,26 @@ function markerFromIntersection(event: PointerEvent) {
 
   const hits = raycaster.intersectObjects(interactiveObjects, true)
   const hit = hits.find(item => item.object.userData.marker)
-  return (hit?.object.userData.marker ?? null) as GraphMarker | null
+  if (!hit?.object.userData.marker) return null
+  return {
+    marker: hit.object.userData.marker as GraphMarker,
+    object: hit.object,
+    point: hit.point.clone(),
+  }
 }
 
 function handlePointerMove(event: PointerEvent) {
   if (!canvasRef.value) return
-  canvasRef.value.style.cursor = markerFromIntersection(event) ? 'pointer' : 'grab'
+  const hit = markerFromIntersection(event)
+  canvasRef.value.style.cursor = hit ? 'pointer' : 'grab'
 }
 
 function handleCanvasClick(event: PointerEvent) {
-  const marker = markerFromIntersection(event)
-  if (marker) {
-    activeMarker.value = marker
-    emit('markerSelect', marker)
+  const hit = markerFromIntersection(event)
+  if (hit) {
+    activeMarker.value = hit.marker
+    createSelectionEffect(hit)
+    emit('markerSelect', hit.marker)
   }
 }
 
@@ -1082,6 +1236,27 @@ function animate() {
       const pulse = 1 + Math.sin(t * 0.65 + index * 1.2) * 0.055
       aura.scale.setScalar(pulse)
     })
+    if (selectionGroup) {
+      const age = performance.now() - (selectionGroup.userData.birth ?? performance.now())
+      selectionGroup.children.forEach((child, index) => {
+        if (child instanceof THREE.Mesh) {
+          const material = child.material as THREE.MeshBasicMaterial
+          if (child.userData.isBeam) {
+            material.opacity = 0.16 + Math.sin(t * 1.45) * 0.06
+            child.scale.set(1 + Math.sin(t * 1.2) * 0.18, 1, 1 + Math.sin(t * 1.2) * 0.18)
+            return
+          }
+          const phase = child.userData.phase ?? 0
+          const wave = ((age * 0.0014 + phase) % 1)
+          const scale = 1 + wave * 2.25
+          child.scale.setScalar(scale)
+          material.opacity = Math.max(0, 0.82 * (1 - wave))
+        }
+        if (child instanceof THREE.PointLight) {
+          child.intensity = 1.5 + Math.sin(t * 1.8 + index) * 0.7
+        }
+      })
+    }
   }
 
   controls?.update()
@@ -1110,6 +1285,7 @@ function disposeObject(object: DisposableObject) {
 }
 
 function removeCurrentModel() {
+  clearSelectionEffect()
   if (rootGroup && scene) {
     scene.remove(rootGroup)
     rootGroup.traverse(child => disposeObject(child as DisposableObject))
@@ -1118,6 +1294,7 @@ function removeCurrentModel() {
   starGroup = null
   markerGroup = null
   auraGroup = null
+  selectionGroup = null
   interactiveObjects = []
   fluidMaterials.length = 0
   streamMaterials.length = 0
@@ -1164,9 +1341,13 @@ watch(() => props.modelUrl, () => {
 
 watch(() => props.knowledgePoints, () => {
   if (!rootGroup) return
+  activeMarker.value = null
+  clearSelectionEffect()
   interactiveObjects = []
   addGraphMarkers(rootGroup)
   addAttachedStars(rootGroup)
+  // 动态更新树叶颜色
+  enhanceOriginalModel(rootGroup)
 }, { deep: true })
 </script>
 
@@ -1183,49 +1364,14 @@ watch(() => props.knowledgePoints, () => {
     <div class="three-tree-hint">
       <span>拖拽旋转 · 滚轮缩放</span>
     </div>
-    <aside v-if="activeMarker" class="tree-index-panel-v2" :class="activeMarkerView.status">
-      <button class="tree-index-close" type="button" @click="activeMarker = null">x</button>
-      <div class="tree-index-head">
-        <span class="tree-index-type">
-          {{ activeMarkerView.type === 'course' ? '课程主干' : activeMarkerView.type === 'branch' ? '分支索引' : '知识点星标' }}
-        </span>
-        <span v-if="activeMarkerView.status" class="tree-index-status" :class="activeMarkerView.status">
-          {{ markerStatusLabel(activeMarkerView.status) }}
-        </span>
+    <div v-if="activeMarker" class="three-tree-selection-card" :class="activeMarkerView.status">
+      <span class="selection-kicker">{{ activeMarkerView.type === 'knowledge' ? 'Apple selected' : 'Branch selected' }}</span>
+      <strong>{{ activeMarkerView.label }}</strong>
+      <div class="selection-progress">
+        <i :style="{ width: `${Math.max(6, activeMarkerView.progress ?? 0)}%` }" />
       </div>
-      <h3>{{ activeMarkerView.label }}</h3>
-      <p>{{ activeMarkerView.description }}</p>
-      <div v-if="typeof activeMarkerView.progress === 'number'" class="tree-index-progress">
-        <div>
-          <span>掌握度</span>
-          <strong>{{ activeMarkerView.progress }}%</strong>
-        </div>
-        <div class="tree-index-meter">
-          <i :style="{ width: `${Math.max(4, activeMarkerView.progress ?? 0)}%` }" />
-        </div>
-      </div>
-      <ul v-if="activeMarkerView.items?.length" class="tree-index-list">
-        <li v-for="item in activeMarkerView.items" :key="item">{{ item }}</li>
-      </ul>
-    </aside>
-    <aside v-if="false && activeMarker" class="tree-index-panel" :class="activeMarkerView.status">
-      <button class="tree-index-close" type="button" @click="activeMarker = null">×</button>
-      <span class="tree-index-type">
-        {{ activeMarker.type === 'course' ? '课程节点' : activeMarker.type === 'branch' ? '树枝索引' : '知识点' }}
-      </span>
-      <h3>{{ activeMarkerView.label }}</h3>
-      <p>{{ activeMarkerView.description }}</p>
-      <div v-if="typeof activeMarkerView.progress === 'number'" class="tree-index-progress">
-        <span>掌握度</span>
-        <strong>{{ activeMarkerView.progress }}%</strong>
-      </div>
-      <ul v-if="activeMarkerView.items?.length" class="tree-index-list">
-        <li v-for="item in activeMarkerView.items" :key="item">{{ item }}</li>
-      </ul>
-      <span v-if="activeMarkerView.status" class="tree-index-status" :class="activeMarkerView.status">
-        {{ markerStatusLabel(activeMarkerView.status) }}
-      </span>
-    </aside>
+      <span class="selection-meta">{{ activeMarkerView.progress ?? 0 }}% · {{ markerStatusLabel(activeMarkerView.status) }}</span>
+    </div>
   </div>
 </template>
 
@@ -1297,172 +1443,86 @@ watch(() => props.knowledgePoints, () => {
   opacity: 1;
 }
 
-.tree-index-panel,
-.tree-index-panel-v2 {
+.three-tree-selection-card {
   position: absolute;
-  top: 88px;
-  left: 24px;
-  z-index: 4;
-  width: min(33%, 390px);
-  min-width: 300px;
-  padding: 20px;
-  border-radius: 14px;
-  background: rgba(6, 8, 18, 0.78);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  backdrop-filter: blur(14px);
-  color: #fff;
-  box-shadow: 0 18px 50px rgba(0, 0, 0, 0.34);
-}
-
-.tree-index-panel-v2 {
-  width: min(33%, 390px);
-  padding: 18px;
-  border-radius: 18px;
+  left: 22px;
+  bottom: 24px;
+  width: min(270px, calc(100% - 44px));
+  padding: 12px 14px;
+  border: 1px solid rgba(255, 205, 120, 0.22);
+  border-radius: 10px;
   background:
-    radial-gradient(circle at 0 0, rgba(0, 212, 255, 0.16), transparent 38%),
-    linear-gradient(180deg, rgba(9, 12, 28, 0.88), rgba(7, 9, 20, 0.72));
-  border-color: rgba(126, 231, 255, 0.18);
+    linear-gradient(135deg, rgba(255, 190, 88, 0.15), rgba(8, 13, 26, 0.7) 54%),
+    rgba(4, 9, 18, 0.72);
+  box-shadow:
+    0 18px 46px rgba(0, 0, 0, 0.36),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    0 0 28px rgba(255, 185, 84, 0.12);
+  backdrop-filter: blur(14px) saturate(1.25);
+  color: rgba(255, 255, 255, 0.9);
+  pointer-events: none;
+  animation: selection-card-in 0.28s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
-.tree-index-panel-v2.weak {
-  border-color: rgba(101, 220, 162, 0.34);
-  background:
-    radial-gradient(circle at 0 0, rgba(101, 220, 162, 0.2), transparent 38%),
-    linear-gradient(180deg, rgba(16, 8, 20, 0.9), rgba(7, 9, 20, 0.72));
+.three-tree-selection-card.weak {
+  border-color: rgba(255, 75, 106, 0.28);
+  box-shadow:
+    0 18px 46px rgba(0, 0, 0, 0.36),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    0 0 30px rgba(255, 75, 106, 0.16);
 }
 
-.tree-index-head {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding-right: 34px;
-}
-
-.tree-index-close {
-  position: absolute;
-  top: 10px;
-  right: 12px;
-  width: 28px;
-  height: 28px;
-  border: 0;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.08);
-  color: rgba(255, 255, 255, 0.72);
-  cursor: pointer;
-}
-
-.tree-index-type,
-.tree-index-status {
-  display: inline-flex;
-  align-items: center;
-  width: fit-content;
-  padding: 4px 10px;
-  border-radius: 999px;
-  font-size: 11px;
-  color: #9ee7ff;
-  background: rgba(120, 217, 255, 0.12);
-  border: 1px solid rgba(120, 217, 255, 0.2);
-}
-
-.tree-index-panel h3,
-.tree-index-panel-v2 h3 {
-  margin: 14px 0 8px;
-  font-size: 20px;
-  font-weight: 600;
-}
-
-.tree-index-panel p,
-.tree-index-panel-v2 p {
-  margin: 0;
-  color: rgba(255, 255, 255, 0.68);
-  font-size: 13px;
-  line-height: 1.7;
-}
-
-.tree-index-progress {
-  display: grid;
-  grid-template-columns: 86px minmax(0, 1fr);
-  gap: 12px;
-  align-items: end;
-  margin-top: 16px;
-  padding-top: 14px;
-  border-top: 1px solid rgba(255, 255, 255, 0.08);
-  color: rgba(255, 255, 255, 0.62);
-  font-size: 12px;
-}
-
-.tree-index-progress span {
+.selection-kicker {
   display: block;
-  margin-bottom: 3px;
-}
-
-.tree-index-progress strong {
-  color: #ffe58f;
-  font-size: 20px;
-}
-
-.tree-index-meter {
-  height: 7px;
   margin-bottom: 5px;
+  color: rgba(255, 214, 150, 0.72);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.three-tree-selection-card strong {
+  display: block;
+  overflow: hidden;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 650;
+  line-height: 1.35;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.selection-progress {
+  height: 4px;
+  margin: 9px 0 6px;
   overflow: hidden;
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.07);
+  background: rgba(255, 255, 255, 0.09);
 }
 
-.tree-index-meter i {
+.selection-progress i {
   display: block;
   height: 100%;
   border-radius: inherit;
-  background: linear-gradient(90deg, #00d4ff, #ffe58f);
-  box-shadow: 0 0 16px rgba(0, 212, 255, 0.55);
+  background: linear-gradient(90deg, #ffb84d, #72ffd0);
+  box-shadow: 0 0 14px rgba(255, 204, 120, 0.5);
 }
 
-.tree-index-list {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  margin: 14px 0 0;
-  padding: 0;
-  list-style: none;
+.selection-meta {
+  color: rgba(255, 255, 255, 0.56);
+  font-family: var(--font-mono, monospace);
+  font-size: 10px;
 }
 
-.tree-index-list li {
-  padding: 9px 10px;
-  border-radius: 8px;
-  background: rgba(255, 255, 255, 0.055);
-  color: rgba(255, 255, 255, 0.72);
-  font-size: 12px;
-}
-
-.tree-index-status {
-  margin-top: 0;
-}
-
-.tree-index-status.mastered {
-  color: #ffb0a2;
-  background: rgba(219, 63, 54, 0.14);
-  border-color: rgba(219, 63, 54, 0.28);
-}
-
-.tree-index-status.weak {
-  color: #9ff0bd;
-  background: rgba(101, 220, 162, 0.14);
-  border-color: rgba(101, 220, 162, 0.28);
-}
-
-.tree-index-status.next {
-  color: rgba(255, 255, 255, 0.52);
-  background: rgba(255, 255, 255, 0.08);
-  border-color: rgba(255, 255, 255, 0.12);
-}
-
-@media (max-width: 900px) {
-  .tree-index-panel,
-  .tree-index-panel-v2 {
-    left: 16px;
-    right: 16px;
-    width: auto;
-    min-width: 0;
+@keyframes selection-card-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
   }
 }
 </style>

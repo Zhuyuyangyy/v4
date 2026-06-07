@@ -157,16 +157,22 @@ const legend = [
             <line :x1="LEFT_PAD" :y1="agentLaneY(i)" :x2="W - RIGHT_PAD" :y2="agentLaneY(i)"
               :stroke="a.color" stroke-opacity="0.12" stroke-width="1" />
             <!-- Label -->
-            <g :transform="`translate(16, ${agentLaneY(i)})`">
-              <rect x="0" y="-16" width="130" height="32" rx="8"
-                :fill="`${a.color}10`" :stroke="`${a.color}33`" stroke-width="1" />
-              <circle cx="14" cy="0" r="4" :fill="a.color" />
-              <text x="26" y="-2" :fill="T.text" font-size="11.5" :font-family="T.sans" font-weight="500">
+            <g class="agent-lane-label" :transform="`translate(18, ${agentLaneY(i)})`">
+              <text x="0" y="4" :fill="a.color" fill-opacity="0.45"
+                font-size="10" :font-family="T.mono" letter-spacing="0.08em" font-weight="600">
+                0{{ i + 1 }}
+              </text>
+              <text x="116" y="-5" :fill="T.text" font-size="12" :font-family="T.sans"
+                text-anchor="end" font-weight="600" letter-spacing="0.02em">
                 {{ a.name }}
               </text>
-              <text x="26" y="11" :fill="a.color" font-size="8.5" :font-family="T.mono" letter-spacing="0.14em">
+              <text x="116" y="11" :fill="a.color" fill-opacity="0.9"
+                font-size="8" :font-family="T.mono" text-anchor="end" letter-spacing="0.2em" font-weight="600">
                 {{ a.role }}
               </text>
+              <line x1="126" y1="0" x2="151" y2="0"
+                :stroke="a.color" stroke-width="1" stroke-opacity="0.42" stroke-linecap="round" />
+              <circle cx="154" cy="0" r="2" :fill="a.color" fill-opacity="0.9" />
             </g>
           </g>
 
