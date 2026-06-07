@@ -114,10 +114,10 @@ export async function orchestrateTutoring({ question, mode, profile, resources }
   }
 }
 
-export async function orchestrateFullEvaluation({ profile, learningData, exerciseResults }) {
+export async function orchestrateFullEvaluation({ profile, learningData, exerciseResults, knowledgeContext }) {
   const start = Date.now()
 
-  const evalResult = await runEvaluationAgent({ profile, learningData, exerciseResults })
+  const evalResult = await runEvaluationAgent({ profile, learningData, exerciseResults, knowledgeContext })
   const reflectResult = await runReflectionAgent({ profile, evaluation: evalResult.output })
   const durationMs = Date.now() - start
 

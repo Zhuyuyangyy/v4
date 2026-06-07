@@ -1,0 +1,541 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>智能体枢纽 · 多智能体协同</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Noto+Serif+SC:wght@400;500;600&family=Noto+Sans+SC:wght@300;400;500&display=swap" rel="stylesheet" />
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body { background: transparent; min-height: 100vh; }
+    body { font-family: 'Outfit', 'PingFang SC', sans-serif; -webkit-font-smoothing: antialiased; overflow-x: hidden; }
+    ::-webkit-scrollbar { width: 10px; height: 10px; }
+    ::-webkit-scrollbar-track { background: #070b18; }
+    ::-webkit-scrollbar-thumb { background: rgba(120,160,220,0.2); border-radius: 5px; }
+    ::-webkit-scrollbar-thumb:hover { background: rgba(120,160,220,0.35); }
+
+    @keyframes tf-pulse { 0%,100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.5; transform: scale(0.85); } }
+    @keyframes tf-spin { to { transform: rotate(360deg); } }
+    @keyframes tf-twinkle { 0%,100% { opacity: 0.25; } 50% { opacity: 1; } }
+    @keyframes tf-railflow { to { background-position: 22px 0; } }
+    @keyframes tf-standby { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
+    @keyframes tf-baton { 0% { transform: translateX(0); opacity: 1; } 80% { opacity: 1; } 100% { transform: translateX(26px); opacity: 0; } }
+    @keyframes wb-rise { 0% { opacity: 0; transform: translate(-50%,-36%); } 100% { opacity: 1; transform: translate(-50%,-50%); } }
+  </style>
+</head>
+<body>
+  <div id="root">
+    <section class="agenthub-embed">
+      <div id="hubwrap" class="agenthub-scene">
+        <div id="hud" class="agenthub-hud">
+          <div class="agenthub-hud-state">LEVEL 03 - RESOURCE 处理中</div>
+        </div>
+        <div id="loadtip" class="agenthub-loading">
+          <div class="agenthub-spinner"></div>
+          正在加载三维枢纽
+        </div>
+        <div class="agenthub-help">拖动旋转 - 滚轮缩放</div>
+      </div>
+    </section>
+  </div>
+
+  <style>
+    html, body, #root { width: 100%; height: 100%; min-height: 0; overflow: hidden; }
+    body { margin: 0; background: transparent; }
+    .agenthub-embed {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      min-height: 0;
+      padding: 0;
+      background: transparent;
+    }
+    .agenthub-scene {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      min-height: 0;
+      overflow: hidden;
+      border: 1px solid rgba(120,160,220,0.16);
+      border-radius: 18px;
+      background: rgba(5, 6, 16, 0.18);
+      touch-action: none;
+    }
+    .agenthub-scene canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+    }
+    .agenthub-hud {
+      position: absolute;
+      bottom: 18px;
+      left: 18px;
+      z-index: 2;
+      pointer-events: none;
+      text-shadow: 0 1px 6px rgba(0,0,0,0.9);
+    }
+    .agenthub-hud-state {
+      display: inline-flex;
+      align-items: center;
+      min-height: 30px;
+      padding: 7px 12px;
+      border: 1px solid rgba(6, 214, 160, 0.28);
+      border-radius: 999px;
+      background: rgba(4, 8, 18, 0.58);
+      font-size: 14px;
+      letter-spacing: 0.1em;
+      color: #06d6a0;
+      font-family: 'JetBrains Mono', monospace;
+      backdrop-filter: blur(10px);
+    }
+    .agenthub-loading {
+      position: absolute;
+      inset: 0;
+      z-index: 3;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      color: #9fb6dc;
+      font-size: 13px;
+      background: rgba(5,6,16,0.35);
+    }
+    .agenthub-spinner {
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      border: 2px solid rgba(0,212,255,0.2);
+      border-top-color: #00d4ff;
+      animation: tf-spin 0.8s linear infinite;
+    }
+    .agenthub-help {
+      position: absolute;
+      right: 18px;
+      bottom: 16px;
+      z-index: 2;
+      pointer-events: none;
+      color: #8aa0c4;
+      font-size: 12px;
+      font-family: 'JetBrains Mono', monospace;
+    }
+  </style>
+
+  <!-- 3D hub — INLINED module (no separate cacheable file; exactly one evaluation, one HUB closure) -->
+  <script type="module">
+  // ===== 智能体枢纽 3D · build HUB_BUILD = 16 =====
+  {
+    if (window.__hubRAF) { cancelAnimationFrame(window.__hubRAF); window.__hubRAF = null; }
+    const HUB_BUILD = 17;
+    const BEAT_LABELS = {
+      depart: 'LEVEL 00 - 系统待命',
+      profile: 'LEVEL 01 - PROFILE 画像识别',
+      path: 'LEVEL 02 - PATH 路径规划',
+      resource: 'LEVEL 03 - RESOURCE 资源匹配',
+      tutor: 'LEVEL 04 - TUTOR 辅导讲解',
+      eval: 'LEVEL 05 - EVAL 掌握评估',
+      loop: 'A1 - WRITE-BACK 反馈回写',
+    };
+
+    const HUB = {
+      state: { beat: 0, id: 'depart', ready: false },
+      _readyCbs: [],
+      setBeat(i, id) {
+        this.state.beat = i;
+        this.state.id = id;
+        const stateEl = document.querySelector('.agenthub-hud-state');
+        if (stateEl) stateEl.textContent = BEAT_LABELS[id] || BEAT_LABELS.depart;
+        window.parent?.postMessage({ type: 'agenthub:beat', beat: i, id }, '*');
+        if (this._apply) this._apply();
+      },
+      onReady(cb) { if (this.state.ready) cb(); else this._readyCbs.push(cb); },
+    };
+    window.AgentHub = HUB;
+
+    function startAgentHubCycle() {
+      const beats = [
+        [0, 'profile'],
+        [1, 'path'],
+        [2, 'resource'],
+        [3, 'tutor'],
+        [4, 'eval'],
+        [5, 'loop'],
+      ];
+      let index = 0;
+      const scheduleCycle = () => {
+        clearInterval(window.__agentHubCycle);
+        window.__agentHubCycle = setInterval(() => {
+          index = (index + 1) % beats.length;
+          HUB.setBeat(...beats[index]);
+        }, 5200);
+      };
+      const jumpToBeat = (id) => {
+        const next = beats.findIndex(([, beatId]) => beatId === id);
+        if (next < 0) return;
+        index = next;
+        HUB.setBeat(...beats[index]);
+        scheduleCycle();
+      };
+      window.__agentHubJumpToBeat = jumpToBeat;
+      HUB.setBeat(...beats[index]);
+      scheduleCycle();
+    }
+
+    window.addEventListener('message', (event) => {
+      if (event.data?.type !== 'agenthub:setBeat') return;
+      window.__agentHubJumpToBeat?.(event.data.id);
+    });
+
+    (async function () {
+      function waitFor(id) {
+        return new Promise((resolve) => {
+          const tryGet = () => {
+            const el = document.getElementById(id);
+            if (el && el.clientWidth > 0) return resolve(el);
+            setTimeout(tryGet, 60);
+          };
+          tryGet();
+        });
+      }
+      const wrap = await waitFor('hubwrap');
+      if (!wrap) return;
+      wrap.querySelectorAll('canvas').forEach(c => c.remove()); // 清除上一次加载的画布(防僵尸)
+      try {
+        const THREE = await import('https://esm.sh/three@0.160.0');
+        let composer = null, RenderPass, UnrealBloomPass, EffectComposer;
+        try {
+          ({ EffectComposer } = await import('https://esm.sh/three@0.160.0/examples/jsm/postprocessing/EffectComposer.js'));
+          ({ RenderPass } = await import('https://esm.sh/three@0.160.0/examples/jsm/postprocessing/RenderPass.js'));
+          ({ UnrealBloomPass } = await import('https://esm.sh/three@0.160.0/examples/jsm/postprocessing/UnrealBloomPass.js'));
+        } catch (e) { composer = 'fail'; }
+
+        const W = () => wrap.clientWidth, H = () => wrap.clientHeight || 520;
+        const scene = new THREE.Scene();
+        // 渐变天幕背景
+        const bgC = document.createElement('canvas'); bgC.width = 16; bgC.height = 256;
+        const bgx = bgC.getContext('2d');
+        const bgg = bgx.createLinearGradient(0, 0, 0, 256);
+        bgg.addColorStop(0, '#020308'); bgg.addColorStop(0.45, '#03040a'); bgg.addColorStop(1, '#020207');
+        bgx.fillStyle = bgg; bgx.fillRect(0, 0, 16, 256);
+        scene.background = null;
+        scene.fog = new THREE.Fog(0x070b14, 40, 92);
+        const camera = new THREE.PerspectiveCamera(40, W() / H(), 0.1, 220);
+        const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+        renderer.setPixelRatio(Math.min(devicePixelRatio, 1.7));
+        renderer.setSize(W(), H());
+        renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+        renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = 1.06;
+        renderer.outputColorSpace = THREE.SRGBColorSpace;
+        wrap.appendChild(renderer.domElement);
+        const tip = document.getElementById('loadtip'); if (tip) tip.remove();
+
+        scene.add(new THREE.HemisphereLight(0x2a3c58, 0x080b12, 0.55));
+        // 远景星点
+        { const sg = new THREE.BufferGeometry(); const sn = 240; const sp = new Float32Array(sn * 3);
+          for (let i = 0; i < sn; i++) { const r = 62 + Math.random() * 38, th = Math.random() * Math.PI * 2, ph = Math.random() * Math.PI;
+            sp[i*3] = r*Math.sin(ph)*Math.cos(th); sp[i*3+1] = Math.abs(r*Math.cos(ph))*0.55 + 5; sp[i*3+2] = r*Math.sin(ph)*Math.sin(th); }
+          sg.setAttribute('position', new THREE.BufferAttribute(sp, 3));
+          scene.add(new THREE.Points(sg, new THREE.PointsMaterial({ color: 0x9fc4ff, size: 0.42, transparent: true, opacity: 0.7, blending: THREE.AdditiveBlending, depthWrite: false }))); }
+        const key = new THREE.DirectionalLight(0xaec6f0, 1.12); key.position.set(16, 30, 14);
+        key.castShadow = true; key.shadow.mapSize.set(2048, 2048);
+        key.shadow.camera.near = 2; key.shadow.camera.far = 80;
+        key.shadow.camera.left = -22; key.shadow.camera.right = 22; key.shadow.camera.top = 22; key.shadow.camera.bottom = -22;
+        key.shadow.bias = -0.0004; scene.add(key);
+        const fill = new THREE.PointLight(0x6fd0ff, 0.6, 40); fill.position.set(0, 3, 0); scene.add(fill);
+        scene.add(new THREE.PointLight(0xff9a6a, 0.4, 30, 2));
+
+        const concrete = new THREE.MeshStandardMaterial({ color: 0x787d86, roughness: 0.82, metalness: 0.08 });
+        const concreteDark = new THREE.MeshStandardMaterial({ color: 0x565b64, roughness: 0.85, metalness: 0.06 });
+        const warm = 0xFFE6BE;
+        function strip(rad, y, col, tube, inten) {
+          const m = new THREE.Mesh(new THREE.TorusGeometry(rad, tube || 0.045, 8, 140),
+            new THREE.MeshStandardMaterial({ color: col, emissive: col, emissiveIntensity: inten || 2.4, roughness: 0.4 }));
+          m.rotation.x = Math.PI / 2; m.position.y = y; return m;
+        }
+        function glowTex(rgba) {
+          const c = document.createElement('canvas'); c.width = c.height = 128;
+          const ctx = c.getContext('2d');
+          const g = ctx.createRadialGradient(64, 64, 0, 64, 64, 64);
+          g.addColorStop(0, rgba); g.addColorStop(.35, rgba); g.addColorStop(1, 'rgba(0,0,0,0)');
+          ctx.fillStyle = g; ctx.fillRect(0, 0, 128, 128); return new THREE.CanvasTexture(c);
+        }
+        function glowSprite(rgba, sz) {
+          const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: glowTex(rgba), blending: THREE.AdditiveBlending, transparent: true, depthWrite: false }));
+          s.scale.set(sz, sz, 1); return s;
+        }
+        function rgbStr(col, a) { return 'rgba(' + (col >> 16 & 255) + ',' + (col >> 8 & 255) + ',' + (col & 255) + ',' + a + ')'; }
+        function labelSprite(num, code, name, colHex) {
+          const c = document.createElement('canvas'); c.width = 320; c.height = 160; const x = c.getContext('2d');
+          x.fillStyle = colHex; x.font = 'bold 78px sans-serif'; x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillText(num, 160, 52);
+          x.fillStyle = '#cfe0f5'; x.font = '22px sans-serif'; x.fillText(code, 160, 104);
+          x.font = '28px sans-serif'; x.fillStyle = colHex; x.fillText(name, 160, 138);
+          const t = new THREE.CanvasTexture(c); t.anisotropy = 4;
+          const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: t, transparent: true, depthWrite: false, depthTest: false }));
+          s.scale.set(3.6, 1.8, 1); return s;
+        }
+
+        const deckW = 1.6, plazaR = 3.5, plazaY = -5.05;
+        const levels = [
+          { r: 11.0, y: 0.0, col: 0x9B8CFF, num: '01', code: 'PROFILE', name: '画像', ang: 1.7 },
+          { r: 8.9, y: -1.5, col: 0x35E0D8, num: '02', code: 'PATH', name: '路径', ang: 0.2 },
+          { r: 6.9, y: -2.9, col: 0x2BD66F, num: '03', code: 'RESOURCE', name: '资源', ang: -1.4 },
+          { r: 5.0, y: -4.1, col: 0xF0B24A, num: '04', code: 'TUTOR', name: '辅导', ang: -3.0 },
+        ];
+        const nodes = [];
+
+        levels.forEach((L) => {
+          const deck = new THREE.Mesh(new THREE.RingGeometry(L.r - deckW, L.r, 120, 1), concrete);
+          deck.rotation.x = -Math.PI / 2; deck.position.y = L.y; deck.receiveShadow = true; deck.castShadow = true; scene.add(deck);
+          const wall = new THREE.Mesh(new THREE.CylinderGeometry(L.r, L.r, 0.55, 120, 1, true), concreteDark);
+          wall.position.y = L.y + 0.27; wall.castShadow = true; wall.receiveShadow = true; scene.add(wall);
+          const iwall = new THREE.Mesh(new THREE.CylinderGeometry(L.r - deckW, L.r - deckW, 0.32, 120, 1, true), concreteDark);
+          iwall.position.y = L.y + 0.16; iwall.castShadow = true; scene.add(iwall);
+          scene.add(strip(L.r - 0.02, L.y + 0.56, warm, 0.05, 2.2));
+          scene.add(strip(L.r - deckW + 0.02, L.y + 0.33, warm, 0.038, 1.9));
+          scene.add(strip(L.r - deckW * 0.5, L.y + 0.03, warm, 0.02, 1.2));
+          const colHex = '#' + L.col.toString(16).padStart(6, '0');
+          const mx = Math.cos(L.ang) * (L.r - deckW * 0.5), mz = Math.sin(L.ang) * (L.r - deckW * 0.5);
+          const beacon = new THREE.Mesh(new THREE.CylinderGeometry(0.22, 0.3, 0.5, 16),
+            new THREE.MeshStandardMaterial({ color: L.col, emissive: L.col, emissiveIntensity: 3, roughness: 0.3 }));
+          beacon.position.set(mx, L.y + 0.3, mz); scene.add(beacon);
+          const beam = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.08, 6, 10),
+            new THREE.MeshBasicMaterial({ color: L.col, transparent: true, opacity: 0.32, blending: THREE.AdditiveBlending }));
+          beam.position.set(mx, L.y + 3, mz); scene.add(beam);
+          const g = glowSprite(rgbStr(L.col, 0.9), 2.4); g.position.set(mx, L.y + 0.5, mz); scene.add(g);
+          const lab = labelSprite(L.num, L.code, L.name, colHex); lab.position.set(mx, L.y + 5.2, mz); scene.add(lab);
+          nodes.push({ beacon, beam, glow: g, lab, col: L.col, pos: { x: mx, y: L.y, z: mz }, baseGlow: 2.4 });
+        });
+
+        const plazaFloor = new THREE.Mesh(new THREE.CylinderGeometry(plazaR + 0.4, plazaR + 0.4, 0.25, 96),
+          new THREE.MeshStandardMaterial({ color: 0x8a8f98, roughness: 0.7, metalness: 0.12 }));
+        plazaFloor.position.y = plazaY; plazaFloor.receiveShadow = true; scene.add(plazaFloor);
+        for (let k = 0; k < 4; k++) scene.add(strip(0.7 + k * 0.7, plazaY + 0.14, 0xBFF4FF, 0.025, 1.6));
+        const coreRing = strip(0.42, plazaY + 0.2, 0xCFF6FF, 0.06, 3.2); scene.add(coreRing);
+        const coreBall = new THREE.Mesh(new THREE.SphereGeometry(0.28, 20, 20),
+          new THREE.MeshStandardMaterial({ color: 0xEFFFFF, emissive: 0x9fe8ff, emissiveIntensity: 3.4, roughness: 0.2 }));
+        coreBall.position.y = plazaY + 0.3; scene.add(coreBall);
+        const coreGlow = glowSprite('rgba(150,235,255,0.95)', 4.2); coreGlow.position.y = plazaY + 0.4; scene.add(coreGlow);
+        const lab5 = labelSprite('05', 'EVAL', '评估', '#F0586E'); lab5.position.set(0, plazaY + 2.4, 0); scene.add(lab5);
+        const evalGlow = glowSprite(rgbStr(0xF0586E, 0.85), 3.6); evalGlow.position.set(0, plazaY + 0.6, 0); scene.add(evalGlow);
+        nodes.push({ beacon: coreBall, beam: null, glow: evalGlow, lab: lab5, col: 0xF0586E, pos: { x: 0, y: plazaY, z: 0 }, baseGlow: 3.6, isEval: true });
+
+        const kioskMat = new THREE.MeshStandardMaterial({ color: 0x20303f, roughness: 0.5, metalness: 0.3 });
+        const screenMat = new THREE.MeshStandardMaterial({ color: 0x35E0D8, emissive: 0x2fbfd0, emissiveIntensity: 2.2, roughness: 0.4 });
+        for (let k = 0; k < 9; k++) {
+          const a = k / 9 * Math.PI * 2; const kx = Math.cos(a) * (plazaR - 0.6), kz = Math.sin(a) * (plazaR - 0.6);
+          const box = new THREE.Mesh(new THREE.BoxGeometry(0.32, 0.7, 0.18), kioskMat); box.position.set(kx, plazaY + 0.45, kz); box.lookAt(0, plazaY + 0.45, 0); box.castShadow = true; scene.add(box);
+          const scr = new THREE.Mesh(new THREE.PlaneGeometry(0.24, 0.4), screenMat); scr.position.set(kx * 0.93, plazaY + 0.5, kz * 0.93); scr.lookAt(0, plazaY + 0.5, 0); scene.add(scr);
+        }
+
+        const elevR = 1.45, elevTop = 2.6, elevBot = plazaY + 0.1;
+        const glass = new THREE.Mesh(new THREE.CylinderGeometry(elevR, elevR, elevTop - elevBot, 40, 1, true),
+          new THREE.MeshStandardMaterial({ color: 0x9ec4ec, transparent: true, opacity: 0.16, roughness: 0.08, metalness: 0.2, side: THREE.DoubleSide }));
+        glass.position.y = (elevTop + elevBot) / 2; scene.add(glass);
+        const innerGlow = new THREE.Mesh(new THREE.CylinderGeometry(elevR * 0.5, elevR * 0.5, elevTop - elevBot, 24, 1, true),
+          new THREE.MeshBasicMaterial({ color: 0xbfe0ff, transparent: true, opacity: 0.1, blending: THREE.AdditiveBlending }));
+        innerGlow.position.y = (elevTop + elevBot) / 2; scene.add(innerGlow);
+        const frameMat = new THREE.MeshStandardMaterial({ color: 0xcfe0f0, emissive: 0x3a5a7a, emissiveIntensity: 1.2, roughness: 0.3, metalness: 0.6 });
+        for (let yy = elevBot; yy <= elevTop + 0.01; yy += 1.1) { const ring = new THREE.Mesh(new THREE.TorusGeometry(elevR, 0.04, 8, 40), frameMat); ring.rotation.x = Math.PI / 2; ring.position.y = yy; scene.add(ring); }
+        for (let b = 0; b < 6; b++) { const a = b / 6 * Math.PI * 2; const bar = new THREE.Mesh(new THREE.CylinderGeometry(0.035, 0.035, elevTop - elevBot, 6), frameMat); bar.position.set(Math.cos(a) * elevR, (elevTop + elevBot) / 2, Math.sin(a) * elevR); scene.add(bar); }
+        scene.add(strip(elevR, elevTop + 0.15, warm, 0.05, 2.6)); // 井口开光环(不封顶,回写球可升出)
+        const capsule = new THREE.Mesh(new THREE.SphereGeometry(0.76, 30, 30),
+          new THREE.MeshStandardMaterial({ color: 0xFFEFCB, emissive: 0xFFD27A, emissiveIntensity: 3, roughness: 0.22 }));
+        capsule.position.y = elevBot + 0.4; scene.add(capsule);
+        const capGlow = glowSprite('rgba(255,220,140,0.95)', 3.2); scene.add(capGlow);
+        // 回写球外层光环
+        const capHalo = new THREE.Mesh(new THREE.TorusGeometry(1.05, 0.05, 10, 60),
+          new THREE.MeshBasicMaterial({ color: 0xFFD27A, transparent: true, opacity: 0.5, blending: THREE.AdditiveBlending }));
+        capHalo.rotation.x = Math.PI / 2; scene.add(capHalo);
+        const a1 = labelSprite('A1', 'CORE ELEV', '回写', '#FFD78A'); a1.position.set(0, elevTop + 1.5, 0); a1.scale.set(3.4, 1.7, 1); scene.add(a1);
+
+        const ground = new THREE.Mesh(new THREE.CircleGeometry(46, 72), new THREE.MeshStandardMaterial({ color: 0x12161f, roughness: 0.95 }));
+        ground.rotation.x = -Math.PI / 2; ground.position.y = plazaY - 0.55; ground.receiveShadow = true; scene.add(ground);
+        scene.add(strip(13.4, plazaY - 0.5, 0x2a3850, 0.03, 0.7));
+        const green = new THREE.MeshStandardMaterial({ color: 0x2c5e3a, roughness: 0.9 });
+        let seed = 7; const rnd = () => { seed = (seed * 9301 + 49297) % 233280; return seed / 233280; };
+        levels.forEach((L) => { for (let g = 0; g < 5; g++) { const a = rnd() * Math.PI * 2; const rr = L.r - deckW - 0.5 - rnd() * 0.6; const bush = new THREE.Mesh(new THREE.IcosahedronGeometry(0.25 + rnd() * 0.2, 0), green); bush.position.set(Math.cos(a) * rr, L.y + 0.1, Math.sin(a) * rr); bush.castShadow = true; scene.add(bush); } });
+        for (let c = 0; c < 26; c++) { const a = rnd() * Math.PI * 2, d = 18 + rnd() * 22; const h = 1 + rnd() * 5; const bld = new THREE.Mesh(new THREE.BoxGeometry(1.2 + rnd() * 2, h, 1.2 + rnd() * 2), new THREE.MeshStandardMaterial({ color: 0x0e131c, emissive: 0x16243a, emissiveIntensity: 0.5, roughness: 0.8 })); bld.position.set(Math.cos(a) * d, plazaY - 0.55 + h / 2, Math.sin(a) * d); scene.add(bld); }
+
+        // task packet
+        const packet = new THREE.Mesh(new THREE.SphereGeometry(0.32, 18, 18),
+          new THREE.MeshStandardMaterial({ color: 0xffffff, emissive: 0xbfe8ff, emissiveIntensity: 3.2, roughness: 0.2 }));
+        scene.add(packet);
+        const packetGlow = glowSprite('rgba(190,232,255,0.95)', 2.2); scene.add(packetGlow);
+        const packetGoal = new THREE.Vector3(0, 6, 0);
+        packet.position.set(0, 6, 0);
+
+        // spiral flow particles
+        const flowCount = 70;
+        const flowGeo = new THREE.BufferGeometry();
+        const flowPos = new Float32Array(flowCount * 3);
+        const flowT = new Float32Array(flowCount);
+        for (let i = 0; i < flowCount; i++) { flowT[i] = i / flowCount; }
+        flowGeo.setAttribute('position', new THREE.BufferAttribute(flowPos, 3));
+        const flowMat = new THREE.PointsMaterial({ size: 0.16, color: 0xBFF4FF, transparent: true, opacity: 0.8, blending: THREE.AdditiveBlending, depthWrite: false });
+        const flow = new THREE.Points(flowGeo, flowMat); scene.add(flow);
+        function spiralAt(t) {
+          const span = t * (levels.length);
+          const i = Math.min(levels.length - 1, Math.floor(span));
+          const f = span - i;
+          const L = levels[i];
+          const Lr = L.r - deckW * 0.5, Ly = L.y;
+          const nextR = i < levels.length - 1 ? levels[i + 1].r - deckW * 0.5 : plazaR * 0.4;
+          const nextY = i < levels.length - 1 ? levels[i + 1].y : plazaY + 0.3;
+          const ang = L.ang + f * 2.4;
+          const r = Lr + (nextR - Lr) * f;
+          const y = Ly + (nextY - Ly) * f;
+          return new THREE.Vector3(Math.cos(ang) * r, y + 0.25, Math.sin(ang) * r);
+        }
+
+        if (composer !== 'fail' && EffectComposer) {
+          composer = new EffectComposer(renderer);
+          composer.addPass(new RenderPass(scene, camera));
+          const bloom = new UnrealBloomPass(new THREE.Vector2(W(), H()), 0.82, 0.55, 0.62);
+          composer.addPass(bloom);
+        }
+
+        // camera + choreography
+        let theta = 0.9, phi = 0.95, rad = 38, drag = false, px = 0, py = 0, userControl = false;
+        const tgt = new THREE.Vector3(0, -2.2, 0);
+        const goal = { theta: 0.9, phi: 0.95, rad: 38, ty: -2.2, tx: 0, tz: 0, auto: true, loop: false };
+        let loopT0 = 0, loopSphY = elevBot + 0.5, loopAngStart = 0.5;
+        const loopCamGoal = new THREE.Vector3(), loopLookGoal = new THREE.Vector3(), loopLookCur = new THREE.Vector3(0, plazaY, 0);
+        const dom = renderer.domElement;
+        dom.style.cursor = 'grab';
+        dom.addEventListener('pointerdown', e => { drag = true; userControl = true; px = e.clientX; py = e.clientY; dom.setPointerCapture(e.pointerId); dom.style.cursor = 'grabbing'; });
+        dom.addEventListener('pointerup', () => { drag = false; dom.style.cursor = 'grab'; });
+        dom.addEventListener('pointermove', e => { if (!drag) return; theta -= (e.clientX - px) * 0.005; phi = Math.max(0.2, Math.min(1.35, phi - (e.clientY - py) * 0.005)); px = e.clientX; py = e.clientY; });
+        dom.addEventListener('wheel', e => { e.preventDefault(); rad = Math.max(16, Math.min(64, rad * (1 + e.deltaY * 0.0009))); userControl = true; }, { passive: false });
+        addEventListener('resize', () => { camera.aspect = W() / H(); camera.updateProjectionMatrix(); renderer.setSize(W(), H()); if (composer && composer.setSize) composer.setSize(W(), H()); });
+
+        function applyBeat() {
+          const id = HUB.state.id;
+          userControl = false;
+          const li = ['profile', 'path', 'resource', 'tutor', 'eval'].indexOf(id);
+          if (id === 'depart') {
+            Object.assign(goal, { theta: 0.7, phi: 1.0, rad: 40, tx: 0, ty: -2.0, tz: 0, auto: true, loop: false });
+            packetGoal.set(0, 6, 0);
+          } else if (id === 'loop') {
+            Object.assign(goal, { loop: true, auto: true });
+            loopT0 = clock.getElapsedTime();
+            loopAngStart = Math.atan2(camera.position.z, camera.position.x); // 从当前方位起步,避免方位跳变
+            loopLookCur.set(0, plazaY + 0.6, 0);
+            packetGoal.set(0, elevTop, 0);
+          } else if (li >= 0) {
+            const n = nodes[li];
+            const beaconAng = Math.atan2(n.pos.z, n.pos.x);
+            const closeR = li === 4 ? 22 : 17 + (levels[Math.min(li, 3)].r) * 0.7;
+            Object.assign(goal, {
+              theta: beaconAng - 0.35,
+              phi: li === 4 ? 0.62 : 0.86,
+              rad: li === 4 ? 21 : closeR,
+              tx: n.pos.x * 0.4, ty: n.pos.y + (li === 4 ? 0.4 : 0.8), tz: n.pos.z * 0.4,
+              auto: true, loop: false,
+            });
+            packetGoal.set(n.pos.x, n.pos.y + 0.6, n.pos.z);
+          }
+        }
+        HUB._apply = applyBeat;
+
+        function lerpAngle(a, b, t) { let d = ((b - a + Math.PI) % (Math.PI * 2)) - Math.PI; return a + d * t; }
+
+        const clock = new THREE.Clock();
+        function animate() {
+          window.__hubRAF = requestAnimationFrame(animate);
+          try {
+          const t = clock.getElapsedTime();
+          const id = HUB.state.id;
+          const li = ['profile', 'path', 'resource', 'tutor', 'eval'].indexOf(id);
+
+          if (goal.loop && !userControl) {
+            // 回写镜头 · 一镜到底升镜:相机始终在塔体最外圈(不穿模),随球一路升到高空俯瞰,单一缓动无跳变
+            const e = Math.min(1, (t - loopT0) / 10.0);
+            const k = e * e * (3 - 2 * e);                    // 单一缓动
+            loopSphY = (elevBot + 0.9) + k * ((elevTop + 8.0) - (elevBot + 0.9)); // 球从谷底一路升出井口到高空
+            const camR = 13 + k * 13;                         // 13 → 26,恒在最大平台半径(11.4)之外,杜绝穿模
+            const camH = (plazaY + 4.0) + k * 22.0;           // 由谷口一路单调升到高空俯瞰
+            const ang = loopAngStart + k * 0.8;               // 轻微转向,随 k 趋缓而停
+            loopCamGoal.set(Math.cos(ang) * camR, camH, Math.sin(ang) * camR);
+            camera.position.lerp(loopCamGoal, 0.05);
+            loopLookGoal.set(0, loopSphY - k * 2.5, 0);       // 始终望向上升的球
+            loopLookCur.lerp(loopLookGoal, 0.05);
+            camera.lookAt(loopLookCur);
+            theta = ang; phi = 1.0; rad = camR; tgt.copy(loopLookCur);
+            const lbl = document.getElementById('wb-label');
+            if (lbl) { const on = k > 0.82; lbl.style.opacity = on ? '1' : '0'; lbl.style.transform = on ? 'translate(-50%,-50%)' : 'translate(-50%,-42%)'; }
+          } else {
+            if (!userControl) {
+              theta = lerpAngle(theta, goal.theta, 0.045);
+              phi += (goal.phi - phi) * 0.045;
+              rad += (goal.rad - rad) * 0.045;
+              tgt.x += (goal.tx - tgt.x) * 0.05;
+              tgt.y += (goal.ty - tgt.y) * 0.05;
+              tgt.z += (goal.tz - tgt.z) * 0.05;
+              if (id === 'depart') theta += 0.0016;
+            }
+            camera.position.set(tgt.x + rad * Math.sin(phi) * Math.cos(theta), tgt.y + rad * Math.cos(phi), tgt.z + rad * Math.sin(phi) * Math.sin(theta));
+            camera.lookAt(tgt);
+          }
+
+          nodes.forEach((n, i) => {
+            const active = (i === li) || (id === 'loop');
+            const target = active ? (n.baseGlow * (1.25 + 0.25 * Math.sin(t * 3))) : n.baseGlow * 0.5;
+            n.glow.scale.x += (target - n.glow.scale.x) * 0.1; n.glow.scale.y = n.glow.scale.x;
+            if (n.beacon && n.beacon.material.emissiveIntensity !== undefined) {
+              const ei = active ? 3.4 + 0.6 * Math.sin(t * 4) : 1.4;
+              n.beacon.material.emissiveIntensity += (ei - n.beacon.material.emissiveIntensity) * 0.1;
+            }
+            if (n.beam) { const op = active ? 0.45 + 0.15 * Math.sin(t * 2 + i) : 0.12; n.beam.material.opacity += (op - n.beam.material.opacity) * 0.1; }
+          });
+
+          const pulse = 1 + 0.18 * Math.sin(t * 2.2); coreBall.scale.setScalar(pulse); coreGlow.scale.setScalar(4.2 * pulse);
+
+          if (id === 'loop') {
+            capsule.position.y = loopSphY;
+          } else {
+            const capGoalY = (id === 'eval') ? elevBot + 0.8 : elevBot + 0.4;
+            capsule.position.y += (capGoalY - capsule.position.y) * 0.06;
+          }
+          capGlow.position.set(0, capsule.position.y, 0);
+          capHalo.position.set(0, capsule.position.y, 0);
+          capHalo.rotation.z = t * 0.6;
+          capHalo.material.opacity = (id === 'loop') ? 0.6 : 0.22;
+          const capPulse = 1 + 0.08 * Math.sin(t * 3.5);
+          capsule.scale.setScalar((id === 'loop') ? capPulse * 1.05 : capPulse);
+          capsule.material.emissiveIntensity = (id === 'loop' || id === 'eval') ? 3.8 : 2.2;
+
+          packet.position.lerp(packetGoal, 0.07);
+          packet.scale.setScalar(1 + 0.15 * Math.sin(t * 5));
+          packetGlow.position.copy(packet.position);
+          packet.visible = (id !== 'loop'); packetGlow.material.opacity = (id === 'loop') ? 0 : 0.95;
+
+          const flowSpeed = (id === 'depart') ? 0.04 : 0.12;
+          for (let i = 0; i < flowCount; i++) {
+            flowT[i] += flowSpeed * 0.016;
+            if (flowT[i] > 1) flowT[i] -= 1;
+            const p = spiralAt(flowT[i]);
+            flowPos[i * 3] = p.x; flowPos[i * 3 + 1] = p.y; flowPos[i * 3 + 2] = p.z;
+          }
+          flowGeo.attributes.position.needsUpdate = true;
+
+          if (composer && composer.render) composer.render(); else renderer.render(scene, camera);
+          window.__hubdbg = { ver: HUB_BUILD, id: HUB.state.id, interior: !!goal.interior, uc: userControl, camR: Math.round(Math.hypot(camera.position.x, camera.position.z)), camY: Math.round(camera.position.y) };
+          } catch (e) { window.__hubErr = (window.__hubErr || 0) + 1; window.__hubErrMsg = String(e && e.stack || e); }
+        }
+        animate();
+
+        HUB.state.ready = true;
+        startAgentHubCycle();
+        HUB._readyCbs.forEach(cb => { try { cb(); } catch (e) {} });
+        HUB._readyCbs = [];
+      } catch (err) {
+        wrap.innerHTML = '<div style="padding:24px;color:#9FB6DC;font-family:sans-serif;font-size:14px">三维场景加载失败:' + (err && err.message ? err.message : err) + '</div>';
+      }
+    })();
+  }
+  </script>
+
+</body>
+</html>

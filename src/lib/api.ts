@@ -24,6 +24,8 @@ import type {
   FullEvaluationResponse,
   FullRunRequest,
   FullRunResponse,
+  KnowledgeContextResponse,
+  KnowledgeStatusResponse,
 } from '@/types/api'
 import { useAppStore } from '@/store'
 
@@ -196,6 +198,17 @@ export function agentTutoring(payload: { question: string; mode: string; profile
 
 export function agentEvaluate(payload: { profile?: unknown; learningData?: unknown; exerciseResults?: unknown }) {
   return requestJson<FullEvaluationResponse>('/api/agents/evaluate', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  })
+}
+
+export function fetchKnowledgeStatus() {
+  return requestJson<KnowledgeStatusResponse>('/api/knowledge/status')
+}
+
+export function searchKnowledge(payload: { query?: string; profile?: unknown; learningData?: unknown; exerciseResults?: unknown; limit?: number }) {
+  return requestJson<KnowledgeContextResponse>('/api/knowledge/search', {
     method: 'POST',
     body: JSON.stringify(payload),
   })

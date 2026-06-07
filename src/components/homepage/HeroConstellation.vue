@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted, nextTick } from 'vue'
 import { useRouter } from 'vue-router'
 
 const router = useRouter()
@@ -125,8 +125,12 @@ let spotTimer: ReturnType<typeof setInterval> | null = null
 
 onMounted(() => {
   spotTimer = setInterval(() => { spotIdx.value = (spotIdx.value + 1) % agents.length }, 3200)
+  nextTick(initStarfield)
 })
-onUnmounted(() => { if (spotTimer) clearInterval(spotTimer) })
+onUnmounted(() => {
+  if (spotTimer) clearInterval(spotTimer)
+  if (starfieldRAF) cancelAnimationFrame(starfieldRAF)
+})
 
 const activeIdx = computed(() => hoverIdx.value ?? spotIdx.value)
 const hotAgentId = computed(() => agents[activeIdx.value]?.id)
@@ -167,12 +171,71 @@ function chipStyle(x: number, y: number, isHot: boolean, side: string): string {
 
   return `left:${px}px;top:${py}px;transform:${transform};z-index:${isHot ? 20 : 10};min-width:${isHot ? '240px' : 'auto'}`
 }
+
+/* ── Full-screen starfield canvas ── */
+const starfieldCanvas = ref<HTMLCanvasElement | null>(null)
+let starfieldRAF = 0
+
+interface StarDot { x: number; y: number; r: number; o: number; speed: number; phase: number }
+
+function initStarfield() {
+  const canvas = starfieldCanvas.value
+  if (!canvas) return
+  const ctx = canvas.getContext('2d')
+  if (!ctx) return
+  const context = ctx
+  if (!ctx) return
+
+  const dpr = window.devicePixelRatio || 1
+  const resize = () => {
+    const rect = canvas.parentElement?.getBoundingClientRect()
+    if (!rect) return
+    canvas.width = rect.width * dpr
+    canvas.height = rect.height * dpr
+    canvas.style.width = `${rect.width}px`
+    canvas.style.height = `${rect.height}px`
+    context.scale(dpr, dpr)
+  }
+  resize()
+  window.addEventListener('resize', resize)
+
+  const w = () => canvas.width / (window.devicePixelRatio || 1)
+  const h = () => canvas.height / (window.devicePixelRatio || 1)
+
+  const dots: StarDot[] = Array.from({ length: 180 }, () => ({
+    x: Math.random() * 2000,
+    y: Math.random() * 1200,
+    r: Math.random() * 1.2 + 0.3,
+    o: Math.random() * 0.5 + 0.15,
+    speed: Math.random() * 0.008 + 0.003,
+    phase: Math.random() * Math.PI * 2,
+  }))
+
+  let t = 0
+  function draw() {
+    const cw = w(), ch = h()
+    context.clearRect(0, 0, cw, ch)
+    t += 0.016
+    for (const d of dots) {
+      const flicker = 0.5 + 0.5 * Math.sin(t * d.speed * 60 + d.phase)
+      context.beginPath()
+      context.arc(d.x % cw, d.y % ch, d.r, 0, Math.PI * 2)
+      context.fillStyle = `rgba(180, 210, 255, ${d.o * flicker})`
+      context.fill()
+    }
+    starfieldRAF = requestAnimationFrame(draw)
+  }
+  draw()
+}
 </script>
 
 <template>
   <section class="hero-constellation">
     <!-- Background grid -->
     <div class="hero-grid" aria-hidden="true" />
+
+    <!-- Full-screen starfield -->
+    <canvas ref="starfieldCanvas" class="hero-starfield" aria-hidden="true" />
 
     <!-- Layout -->
     <div class="hero-layout">
@@ -184,11 +247,10 @@ function chipStyle(x: number, y: number, isHot: boolean, side: string): string {
         </div>
 
         <h1 class="hero-title-hp">
-          <span>你的学习宇宙</span>
+          <span>EduMind</span>
           <span>
-            正由
-            <em class="gradient-text">6 位 AI 智能体</em>
-            协同照亮
+            <em class="gradient-text">个性化学习</em>
+            智能体系统
           </span>
         </h1>
 
@@ -447,7 +509,9 @@ function chipStyle(x: number, y: number, isHot: boolean, side: string): string {
     radial-gradient(ellipse 900px 500px at 75% 50%, rgba(0, 212, 255, 0.08), transparent 60%),
     radial-gradient(ellipse 700px 500px at 80% 35%, rgba(124, 58, 237, 0.07), transparent 65%),
     radial-gradient(ellipse 600px 400px at 90% 90%, rgba(245, 158, 11, 0.04), transparent 70%),
-    #050610;
+    radial-gradient(ellipse 800px 600px at 20% 60%, rgba(0, 212, 255, 0.05), transparent 70%),
+    radial-gradient(ellipse 600px 400px at 10% 30%, rgba(124, 58, 237, 0.04), transparent 70%),
+    linear-gradient(160deg, #0a0e24 0%, #070b1a 40%, #050610 100%);
   z-index: 1;
 }
 
@@ -462,6 +526,13 @@ function chipStyle(x: number, y: number, isHot: boolean, side: string): string {
   background-size: 48px 48px;
   mask-image: radial-gradient(ellipse at center, black 30%, transparent 80%);
   -webkit-mask-image: radial-gradient(ellipse at center, black 30%, transparent 80%);
+}
+
+.hero-starfield {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
 }
 
 .hero-layout {

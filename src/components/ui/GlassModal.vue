@@ -75,9 +75,9 @@ function onOverlayClick() {
 
 .glass-modal {
   position: relative;
-  background: rgba(8, 8, 32, 0.96);
-  backdrop-filter: blur(24px);
-  -webkit-backdrop-filter: blur(24px);
+  background: rgba(10, 14, 39, 0.88);
+  backdrop-filter: blur(40px) saturate(1.3);
+  -webkit-backdrop-filter: blur(40px) saturate(1.3);
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: var(--radius-lg);
   display: flex;
@@ -85,7 +85,18 @@ function onOverlayClick() {
   overflow: hidden;
   box-shadow:
     0 24px 80px rgba(0, 0, 0, 0.6),
-    0 0 1px rgba(255, 255, 255, 0.1);
+    inset 0 1px 0 rgba(255, 255, 255, 0.05),
+    inset 0 0 0 1px rgba(0, 212, 255, 0.04);
+}
+
+.glass-modal::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: var(--glass-noise);
+  pointer-events: none;
+  opacity: 0.5;
 }
 
 .glass-modal-accent {
