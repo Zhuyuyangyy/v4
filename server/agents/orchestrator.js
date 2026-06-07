@@ -21,6 +21,7 @@ export async function orchestrateProfileAnalysis(answers) {
     riskFlags: profileResult.confidence < 0.7 ? ['低置信度'] : [],
     fallbackUsed: profileResult.fallbackUsed,
     durationMs,
+    agentResults: [profileResult],
   })
   recordTrace(trace)
 
@@ -47,6 +48,7 @@ export async function orchestrateResourceGeneration({ profile, weaknesses, topic
     riskFlags: resourceResult.confidence < 0.7 ? ['资源生成置信度低'] : [],
     fallbackUsed: profileResult.fallbackUsed || resourceResult.fallbackUsed,
     durationMs,
+    agentResults: [profileResult, resourceResult],
   })
   recordTrace(trace)
 
@@ -73,6 +75,7 @@ export async function orchestratePathReplan({ profile, evaluation, currentPath }
     riskFlags: [],
     fallbackUsed: evalResult.fallbackUsed || pathResult.fallbackUsed,
     durationMs,
+    agentResults: [evalResult, pathResult],
   })
   recordTrace(trace)
 
@@ -100,6 +103,7 @@ export async function orchestrateTutoring({ question, mode, profile, resources }
     riskFlags: [],
     fallbackUsed: profileResult.fallbackUsed || tutorResult.fallbackUsed,
     durationMs,
+    agentResults: [profileResult, tutorResult],
   })
   recordTrace(trace)
 
@@ -126,6 +130,7 @@ export async function orchestrateFullEvaluation({ profile, learningData, exercis
     riskFlags: reflectResult.output?.riskAssessment?.level === 'high' ? ['高风险'] : [],
     fallbackUsed: evalResult.fallbackUsed || reflectResult.fallbackUsed,
     durationMs,
+    agentResults: [evalResult, reflectResult],
   })
   recordTrace(trace)
 
@@ -133,6 +138,53 @@ export async function orchestrateFullEvaluation({ profile, learningData, exercis
     evaluation: evalResult.output,
     reflection: reflectResult.output,
     agentResults: [evalResult, reflectResult],
+    trace,
+  }
+}
+
+export async function orchestrateFullRun({ answers, topic, resourceType, question, mode }) {
+  const start = Date.now()
+
+  const profileResult = await runProfileAgent(answers || {})
+  const profile = profileResult.output
+
+  const resourceResult = await runResourceAgent({ profile, weaknesses: profile?.weaknesses || [], topic: topic || '核心概念', resourceType: resourceType || 'all' })
+
+  const tutorResult = await runTutorAgent({ question: question || '请帮我梳理学习重点', mode: mode || 'qa', profile, resources: [] })
+
+  const evalResult = await runEvaluationAgent({ profile, learningData: {}, exerciseResults: {} })
+
+  const pathResult = await runPathAgent({ profile, evaluation: evalResult.output, replan: true })
+
+  const reflectResult = await runReflectionAgent({ profile, evaluation: evalResult.output })
+
+  const durationMs = Date.now() - start
+  const allAgentResults = [profileResult, resourceResult, tutorResult, evalResult, pathResult, reflectResult]
+  const allEvidence = allAgentResults.flatMap(r => r.evidence || [])
+  const anyFallback = allAgentResults.some(r => r.fallbackUsed)
+
+  const trace = buildTrace({
+    requestId: `full-run-${Date.now()}`,
+    agents: [AGENT_NAMES.PROFILE, AGENT_NAMES.RESOURCE, AGENT_NAMES.TUTOR, AGENT_NAMES.EVALUATION, AGENT_NAMES.PATH, AGENT_NAMES.REFLECTION],
+    inputsSummary: `完整闭环: 画像+资源+辅导+评估+路径+反思`,
+    outputsSummary: `评分: ${profile?.totalScore || 'N/A'}, 路径: ${pathResult.output?.phases?.length || 0} 阶段, 风险: ${reflectResult.output?.riskAssessment?.level || 'N/A'}`,
+    evidence: allEvidence,
+    riskFlags: reflectResult.output?.riskAssessment?.level === 'high' ? ['高风险'] : [],
+    fallbackUsed: anyFallback,
+    durationMs,
+    agentResults: allAgentResults,
+  })
+  recordTrace(trace)
+
+  return {
+    workflowId: `wf-${Date.now()}`,
+    agentResults: allAgentResults,
+    resourcePackage: resourceResult.output,
+    tutoringAnswer: tutorResult.output?.answer || '',
+    evaluation: evalResult.output,
+    path: pathResult.output,
+    reflection: reflectResult.output,
+    profile,
     trace,
   }
 }

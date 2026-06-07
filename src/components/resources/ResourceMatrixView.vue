@@ -1,38 +1,28 @@
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted } from 'vue'
+import { BASE_KNOWLEDGE_ITEMS, buildMatrixView, getDomainMeta } from './mapTransforms'
 
-const COG_LEVELS = [
-  { key: 'remember',   name: '记忆',  en: 'Remember',   icon: '◐' },
-  { key: 'understand', name: '理解',  en: 'Understand', icon: '◓' },
-  { key: 'apply',      name: '应用',  en: 'Apply',      icon: '◑' },
-  { key: 'analyze',    name: '分析',  en: 'Analyze',    icon: '◒' },
-  { key: 'evaluate',   name: '评价',  en: 'Evaluate',   icon: '◍' },
-  { key: 'create',     name: '创造',  en: 'Create',     icon: '●' },
+const emit = defineEmits<{ 'select-node': [nodeId: string] }>()
+
+const matrixCells = buildMatrixView(BASE_KNOWLEDGE_ITEMS)
+
+const LEVELS = [
+  { key: 'remember', name: '了解', en: 'Remember', icon: '◐' },
+  { key: 'understand', name: '掌握', en: 'Understand', icon: '◓' },
+  { key: 'apply', name: '应用', en: 'Apply', icon: '◑' },
+  { key: 'transfer', name: '迁移', en: 'Transfer', icon: '◒' },
+  { key: 'create', name: '创新', en: 'Create', icon: '●' },
 ]
 
-const COG_DOMAINS = [
-  { key: 'math', name: '数学基础',       color: '#00d4ff', en: 'Mathematics',     count: '14 子项' },
-  { key: 'algo', name: '算法与数据结构', color: '#f59e0b', en: 'Algorithms',      count: '18 子项' },
-  { key: 'ml',   name: '机器学习',       color: '#7c3aed', en: 'Machine Learning', count: '21 子项' },
-  { key: 'dl',   name: '深度学习',       color: '#06d6a0', en: 'Deep Learning',   count: '16 子项' },
-  { key: 'eng',  name: '工程实践',       color: '#3b82f6', en: 'Engineering',     count: '11 子项' },
-  { key: 'nlp',  name: 'NLP 应用',       color: '#f43f5e', en: 'NLP & Apps',      count: '9 子项' },
-]
+const DOMAIN_ORDER = ['math', 'algo', 'ml', 'dl', 'eng', 'nlp']
 
-const COG_DATA: Record<string, number[]> = {
-  math: [0.95, 0.90, 0.82, 0.65, 0.40, 0.15],
-  algo: [0.92, 0.88, 0.80, 0.62, 0.42, 0.20],
-  ml:   [0.85, 0.78, 0.72, 0.55, 0.32, 0.10],
-  dl:   [0.50, 0.35, 0.22, 0.10, 0.05, 0.00],
-  eng:  [0.80, 0.70, 0.60, 0.45, 0.25, 0.10],
-  nlp:  [0.30, 0.18, 0.08, 0.04, 0.00, 0.00],
-}
-
-const RECOMMENDED = { domain: 'dl', level: 2 }
-const SECONDARY_RECS = [
-  { domain: 'nlp', level: 1 },
-  { domain: 'math', level: 4 },
-]
+const cellsByDomain = computed(() =>
+  DOMAIN_ORDER.map(domain => ({
+    domain,
+    meta: getDomainMeta(domain),
+    cells: LEVELS.map(lv => matrixCells.find(c => c.domain === domain && c.level === lv.key)!),
+  }))
+)
 
 function cellBg(mastery: number, color: string): string {
   if (mastery === 0) return 'rgba(255, 255, 255, 0.02)'
@@ -41,8 +31,8 @@ function cellBg(mastery: number, color: string): string {
 }
 
 const colAvgs = computed(() =>
-  COG_LEVELS.map((_, li) => {
-    const vals = COG_DOMAINS.map(d => COG_DATA[d.key][li])
+  LEVELS.map((_, li) => {
+    const vals = DOMAIN_ORDER.map(d => matrixCells.find(c => c.domain === d && c.level === LEVELS[li].key)!.value)
     return vals.reduce((s, v) => s + v, 0) / vals.length
   })
 )
@@ -85,8 +75,7 @@ onUnmounted(() => { styleEl?.remove() })
 
       <!-- Column headers -->
       <div class="col-headers">
-        <div v-for="(lv, li) in COG_LEVELS" :key="lv.key"
-          :class="['col-header', { rec: li === RECOMMENDED.level }]">
+        <div v-for="(lv, li) in LEVELS" :key="lv.key" class="col-header">
           <div class="col-top">
             <span class="col-name">{{ lv.name }}</span>
             <span class="col-level">L{{ li + 1 }}</span>
@@ -101,47 +90,53 @@ onUnmounted(() => { styleEl?.remove() })
       <div class="matrix-grid">
         <!-- Domain headers (left) -->
         <div class="domain-col">
-          <div v-for="d in COG_DOMAINS" :key="d.key" class="domain-header" :style="{ borderRightColor: d.color + '33' }">
+          <div v-for="row in cellsByDomain" :key="row.domain" class="domain-header" :style="{ borderRightColor: row.meta.color + '33' }">
             <div class="domain-top">
-              <span class="domain-dot" :style="{ background: d.color, boxShadow: `0 0 8px ${d.color}` }"></span>
-              <span class="domain-name">{{ d.name }}</span>
+              <span class="domain-dot" :style="{ background: row.meta.color, boxShadow: `0 0 8px ${row.meta.color}` }"></span>
+              <span class="domain-name">{{ row.meta.name }}</span>
             </div>
-            <div class="domain-en">{{ d.en.toUpperCase() }} · {{ d.count }}</div>
+            <div class="domain-en">{{ row.meta.short }} · {{ row.cells.length }} 层级</div>
             <div class="domain-avg">
-              <div class="domain-avg-track"><div class="domain-avg-fill" :style="{ width: (COG_DATA[d.key].reduce((s, v) => s + v, 0) / COG_LEVELS.length * 100) + '%', background: d.color }"></div></div>
-              <span>{{ Math.round(COG_DATA[d.key].reduce((s, v) => s + v, 0) / COG_LEVELS.length * 100) }}%</span>
+              <div class="domain-avg-track"><div class="domain-avg-fill" :style="{ width: (row.cells.reduce((s, c) => s + c.value, 0) / row.cells.length * 100) + '%', background: row.meta.color }"></div></div>
+              <span>{{ Math.round(row.cells.reduce((s, c) => s + c.value, 0) / row.cells.length * 100) }}%</span>
             </div>
           </div>
         </div>
 
         <!-- Cells -->
         <div class="cells-col">
-          <div v-for="d in COG_DOMAINS" :key="d.key" class="cell-row">
-            <div v-for="(lv, li) in COG_LEVELS" :key="lv.key"
+          <div v-for="row in cellsByDomain" :key="row.domain" class="cell-row">
+            <div v-for="(cell, ci) in row.cells" :key="cell.level"
               :class="['cell', {
-                rec: RECOMMENDED.domain === d.key && RECOMMENDED.level === li,
-                sec: SECONDARY_RECS.some(r => r.domain === d.key && r.level === li),
+                rec: cell.isRecommended,
+                weak: cell.isWeak,
               }]"
               :style="{
-                background: cellBg(COG_DATA[d.key][li], d.color),
-                borderColor: (RECOMMENDED.domain === d.key && RECOMMENDED.level === li) ? '#f59e0b'
-                  : (SECONDARY_RECS.some(r => r.domain === d.key && r.level === li)) ? d.color + '88'
+                background: cellBg(cell.value, row.meta.color),
+                borderColor: cell.isRecommended ? '#f59e0b'
+                  : cell.isWeak ? '#f43f5e88'
                   : 'rgba(255,255,255,0.04)',
-              }">
+              }"
+              :title="`${cell.domainLabel} × ${cell.levelLabel}：${cell.lastScore}% | 证据 ${cell.evidenceCount} 条`"
+              @click="emit('select-node', cell.domain)">
               <!-- High mastery gradient -->
-              <div v-if="COG_DATA[d.key][li] > 0.6" class="cell-glow" :style="{ background: `radial-gradient(circle at 30% 0%, ${d.color}33, transparent 70%)` }"></div>
+              <div v-if="cell.value > 0.6" class="cell-glow" :style="{ background: `radial-gradient(circle at 30% 0%, ${row.meta.color}33, transparent 70%)` }"></div>
 
               <div class="cell-top">
-                <span class="cell-pct" :style="{ color: COG_DATA[d.key][li] === 0 ? '#4a5568' : COG_DATA[d.key][li] > 0.5 ? '#e8edf5' : '#8892b0' }">
-                  {{ COG_DATA[d.key][li] === 0 ? '—' : Math.round(COG_DATA[d.key][li] * 100) + '%' }}
+                <span class="cell-pct" :style="{ color: cell.value === 0 ? '#4a5568' : cell.value > 0.5 ? '#e8edf5' : '#8892b0' }">
+                  {{ cell.value === 0 ? '—' : Math.round(cell.value * 100) + '%' }}
                 </span>
-                <span v-if="COG_DATA[d.key][li] > 0" class="cell-icon" :style="{ color: d.color }">{{ lv.icon }}</span>
+                <span v-if="cell.value > 0" class="cell-icon" :style="{ color: row.meta.color }">{{ LEVELS[ci].icon }}</span>
               </div>
-              <div class="cell-status">{{ statusLabel(COG_DATA[d.key][li]) }}</div>
-              <div v-if="COG_DATA[d.key][li] > 0" class="cell-bar" :style="{ width: (COG_DATA[d.key][li] * 100) + '%', background: d.color }"></div>
+              <div class="cell-status">{{ statusLabel(cell.value) }}</div>
+              <div class="cell-meta">{{ cell.evidenceCount }} 条 · {{ cell.lastScore }}分</div>
+              <div v-if="cell.value > 0" class="cell-bar" :style="{ width: (cell.value * 100) + '%', background: row.meta.color }"></div>
 
               <!-- Recommended star -->
-              <div v-if="RECOMMENDED.domain === d.key && RECOMMENDED.level === li" class="rec-star">★</div>
+              <div v-if="cell.isRecommended" class="rec-star">★</div>
+
+              <!-- Weak indicator -->
+              <div v-if="cell.isWeak && !cell.isRecommended" class="weak-corner"></div>
             </div>
           </div>
         </div>
@@ -193,7 +188,7 @@ onUnmounted(() => { styleEl?.remove() })
         <div class="diag-section">
           <div class="diag-label">认知分布</div>
           <div class="diag-bars">
-            <div v-for="(lv, li) in COG_LEVELS" :key="lv.key" class="diag-bar-row">
+            <div v-for="(lv, li) in LEVELS" :key="lv.key" class="diag-bar-row">
               <span class="diag-bar-label">{{ lv.name }}</span>
               <div class="diag-bar-track"><div class="diag-bar-fill" :style="{ width: (colAvgs[li] * 100) + '%' }"></div></div>
               <span class="diag-bar-pct">{{ Math.round(colAvgs[li] * 100) }}</span>
@@ -277,7 +272,7 @@ onUnmounted(() => { styleEl?.remove() })
   position: relative; width: 156px; height: 90px;
   border: 1px solid; border-radius: 8px; padding: 10px 14px;
   display: flex; flex-direction: column; justify-content: space-between;
-  overflow: hidden;
+  overflow: hidden; cursor: pointer;
 }
 .cell.rec { box-shadow: 0 0 24px #f59e0b66; }
 .cell-glow { position: absolute; inset: 0; pointer-events: none; }
@@ -285,7 +280,16 @@ onUnmounted(() => { styleEl?.remove() })
 .cell-pct { font-family: var(--font-mono); font-size: 18px; font-weight: 600; letter-spacing: -0.02em; }
 .cell-icon { font-size: 14px; opacity: 0.5; }
 .cell-status { font-size: 9.5px; color: #8892b0; font-family: var(--font-mono); letter-spacing: 0.06em; position: relative; }
+.cell-meta { font-size: 8px; color: #4a5568; font-family: var(--font-mono); letter-spacing: 0.04em; position: relative; }
 .cell-bar { position: absolute; left: 0; bottom: 0; height: 3px; opacity: 0.7; }
+.cell.weak { border-width: 2px; }
+.weak-corner {
+  position: absolute; top: 0; right: 0;
+  width: 0; height: 0;
+  border-style: solid; border-width: 0 14px 14px 0;
+  border-color: transparent #f59e0b transparent transparent;
+  opacity: 0.7;
+}
 .rec-star {
   position: absolute; top: -8px; right: -8px;
   width: 24px; height: 24px; border-radius: 50%;

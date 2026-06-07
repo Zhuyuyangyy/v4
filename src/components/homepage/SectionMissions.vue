@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
 import { useRouter } from 'vue-router'
 
 const router = useRouter()
@@ -68,25 +67,38 @@ const stateLabel: Record<string, { text: string; color: string }> = {
   optional: { text: 'OPTIONAL · 可选', color: T.textSub },
 }
 
-const activeMissionIndex = ref(0)
-const activeMission = computed(() => missions[activeMissionIndex.value] ?? missions[0])
-const activeAgents = computed(() => activeMission.value.agents.map(getAgent).filter(Boolean) as AgentInfo[])
+const quickQuestions = [
+  '帮我制定 6 阶段完整学习计划（24 门课程）',
+  '二级指针传参和数组指针有什么区别？',
+  'BFS 中 visited 数组的作用是什么？',
+  '机器学习中的过拟合怎么解决？',
+]
+
+const focusMap: Record<string, string> = {
+  '启动任务': 'remedial',
+  '直接进入': 'remedial',
+  '查看资源': 'recommended',
+  '查看测评': 'evaluation',
+}
 
 function getAgent(id: string) {
   return agentMap.find(a => a.id === id)
 }
 
-function runMission() {
-  const mission = activeMission.value
-  if (mission.agents.includes('resource')) {
-    router.push('/edu-mind')
-    return
-  }
-  if (mission.agents.includes('eval')) {
-    router.push('/evaluation')
-    return
-  }
-  router.push('/learning-path')
+function goToResources(focus: string, extraQuery: Record<string, string> = {}) {
+  router.push({
+    name: 'edu-mind',
+    query: {
+      source: 'home',
+      focus,
+      ...extraQuery,
+    },
+  })
+}
+
+function onMissionCta(m: Mission) {
+  const focus = focusMap[m.cta] || 'today'
+  goToResources(focus, { mission: m.code })
 }
 </script>
 
@@ -115,81 +127,74 @@ function runMission() {
         </div>
       </div>
 
-      <!-- Mission rail -->
-      <div class="mission-rail-shell">
-        <div class="mission-rail">
-          <aside class="rail-list" aria-label="任务队列">
-            <div class="rail-list-head">
-              <span>EXECUTION QUEUE</span>
-              <span>{{ String(missions.length).padStart(2, '0') }}</span>
+      <!-- Mission cards -->
+      <div class="mis-grid">
+        <div v-for="m in missions" :key="m.code" class="mis-card"
+          :style="`--accent: ${m.priorityColor}`">
+          <div class="mis-card-top">
+            <div class="mis-card-top-left">
+              <span class="mis-priority" :style="`color: ${m.priorityColor}; background: ${m.priorityColor}18; border-color: ${m.priorityColor}55`">
+                ◆ {{ m.priority }}
+              </span>
+              <span class="mis-code">{{ m.code }}</span>
             </div>
+            <span class="mis-state" :style="`color: ${stateLabel[m.state].color}`">
+              <span class="mis-state-dot"
+                :class="{ 'mis-state-dot-pulse': m.state === 'ready' }"
+                :style="`background: ${stateLabel[m.state].color}; box-shadow: 0 0 6px ${stateLabel[m.state].color}`" />
+              {{ stateLabel[m.state].text }}
+            </span>
+          </div>
 
-            <button
-              v-for="(m, index) in missions"
-              :key="m.code"
-              class="rail-item"
-              :class="{ active: activeMissionIndex === index }"
-              :style="`--accent: ${m.priorityColor}; --state: ${stateLabel[m.state].color}`"
-              type="button"
-              @click="activeMissionIndex = index"
-            >
-              <span class="rail-index">{{ String(index + 1).padStart(2, '0') }}</span>
-              <span class="rail-body">
-                <span class="rail-meta">
-                  <span>{{ m.priority }}</span>
-                  <span>{{ m.code }}</span>
+          <div class="mis-card-title">{{ m.title }}</div>
+          <div class="mis-card-objective">{{ m.objective }}</div>
+
+          <div class="mis-card-specs">
+            <div>
+              <div class="mis-spec-label">预计时长</div>
+              <div class="mis-spec-val">{{ m.duration }}</div>
+            </div>
+            <div class="mis-spec-divider" />
+            <div>
+              <div class="mis-spec-label">调用智能体</div>
+              <div class="mis-spec-agents">
+                <span v-for="aid in m.agents" :key="aid" class="mis-agent-badge"
+                  :style="`color: ${getAgent(aid)?.color}; background: ${getAgent(aid)?.color}14; border-color: ${getAgent(aid)?.color}33`">
+                  <span class="mis-agent-dot" :style="`background: ${getAgent(aid)?.color}`" />
+                  {{ getAgent(aid)?.role }}
                 </span>
-                <span class="rail-title">{{ m.title }}</span>
-              </span>
-              <span class="rail-state">
-                <span class="rail-state-dot" />
-              </span>
-            </button>
-          </aside>
-
-          <section class="command-panel"
-            :style="`--accent: ${activeMission.priorityColor}; --state: ${stateLabel[activeMission.state].color}; --outcome: ${activeMission.outcome.color}`">
-            <div class="command-panel-grid" aria-hidden="true" />
-            <div class="command-top">
-              <div>
-                <div class="command-kicker">
-                  <span class="command-priority-mark" />
-                  {{ activeMission.priority }} · {{ activeMission.code }}
-                </div>
-                <h3 class="command-title">{{ activeMission.title }}</h3>
-              </div>
-              <div class="command-status">
-                <span class="mis-state-dot mis-state-dot-pulse" />
-                {{ stateLabel[activeMission.state].text }}
               </div>
             </div>
+          </div>
 
-            <p class="command-objective">{{ activeMission.objective }}</p>
-
-            <div class="command-metrics">
-              <div class="command-metric">
-                <span>预计时长</span>
-                <strong>{{ activeMission.duration }}</strong>
-              </div>
-              <div class="command-metric command-metric-wide">
-                <span>{{ activeMission.outcome.label }}</span>
-                <strong>{{ activeMission.outcome.value }}</strong>
-              </div>
+          <div class="mis-outcome"
+            :style="`background: ${m.outcome.color}10; border-color: ${m.outcome.color}33`">
+            <div>
+              <div class="mis-outcome-label">{{ m.outcome.label }}</div>
+              <div class="mis-outcome-val" :style="`color: ${m.outcome.color}`">{{ m.outcome.value }}</div>
             </div>
+            <span class="mis-outcome-arrow" :style="`color: ${m.outcome.color}`">↗</span>
+          </div>
 
-            <div class="agent-strip" aria-label="智能体调度链">
-              <span v-for="(agent, index) in activeAgents" :key="agent.id" class="agent-node"
-                :style="`--agent-color: ${agent.color}`">
-                <span class="agent-node-index">{{ String(index + 1).padStart(2, '0') }}</span>
-                <span class="agent-node-role">{{ agent.role }}</span>
-              </span>
-            </div>
+          <button class="mis-cta"
+            :style="`background: linear-gradient(135deg, ${m.priorityColor}, ${m.priorityColor}CC)`"
+            @click="onMissionCta(m)">
+            ▶ {{ m.cta }}
+          </button>
+        </div>
+      </div>
 
-            <button class="command-cta" type="button" @click="runMission">
-              <span>{{ activeMission.cta }}</span>
-              <span class="command-cta-icon" aria-hidden="true" />
-            </button>
-          </section>
+      <!-- Free dialogue -->
+      <div class="mis-free">
+        <div class="mis-free-left">
+          <div class="mis-free-eyebrow" :style="`color: ${T.cyan}`">OR · 自由对话</div>
+          <div class="mis-free-title">不想跟着任务走？直接问它一个问题</div>
+        </div>
+        <div class="mis-free-questions">
+          <button v-for="q in quickQuestions" :key="q" class="mis-free-btn"
+            @click="router.push('/chat')">
+            {{ q }}
+          </button>
         </div>
       </div>
     </div>
@@ -294,418 +299,263 @@ function runMission() {
   font-variant-numeric: tabular-nums;
 }
 
-/* Mission rail */
-.mission-rail-shell {
-  padding: 1px;
-  border-radius: 24px;
-  background:
-    linear-gradient(135deg, rgba(255,255,255,0.12), rgba(255,255,255,0.03) 44%, rgba(0,212,255,0.08)),
-    rgba(255,255,255,0.02);
-  box-shadow:
-    inset 0 1px 0 rgba(255,255,255,0.11),
-    0 28px 88px rgba(0,0,0,0.28);
-}
-
-.mission-rail {
+/* Grid */
+.mis-grid {
   display: grid;
-  grid-template-columns: minmax(300px, 0.82fr) minmax(0, 1.7fr);
-  gap: 0;
-  min-height: 460px;
-  border-radius: 23px;
-  overflow: hidden;
-  background:
-    radial-gradient(circle at 74% 16%, rgba(0,212,255,0.08), transparent 28%),
-    linear-gradient(135deg, rgba(7, 10, 24, 0.98), rgba(4, 7, 18, 0.94));
+  grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
+  gap: 16px;
 }
 
-.rail-list {
+.mis-card {
   position: relative;
-  padding: 24px 18px;
-  border-right: 1px solid rgba(255,255,255,0.07);
-  background:
-    linear-gradient(180deg, rgba(255,255,255,0.035), transparent 42%),
-    rgba(255,255,255,0.016);
-}
-
-.rail-list::before {
-  content: '';
-  position: absolute;
-  left: 38px;
-  top: 76px;
-  bottom: 32px;
-  width: 1px;
-  background: linear-gradient(180deg, transparent, rgba(136,146,176,0.22), transparent);
-}
-
-.rail-list-head {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 20px;
-  padding: 0 4px;
-  color: rgba(136,146,176,0.72);
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 10px;
-  letter-spacing: 0.2em;
-}
-
-.rail-item {
-  position: relative;
-  width: 100%;
-  min-height: 78px;
-  border: 0;
+  padding: 24px;
+  background: rgba(10, 14, 32, 0.7);
+  border: 1px solid rgba(255,255,255,0.07);
   border-radius: 16px;
-  background: transparent;
-  color: #e8edf5;
-  display: grid;
-  grid-template-columns: 42px minmax(0, 1fr) 24px;
-  align-items: center;
-  gap: 12px;
-  padding: 10px 12px;
+  backdrop-filter: blur(14px);
   cursor: pointer;
-  text-align: left;
-  transition:
-    transform 0.55s cubic-bezier(0.32, 0.72, 0, 1),
-    background 0.55s cubic-bezier(0.32, 0.72, 0, 1),
-    color 0.55s cubic-bezier(0.32, 0.72, 0, 1);
-}
-
-.rail-item::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  border: 1px solid transparent;
-  background: linear-gradient(135deg, color-mix(in srgb, var(--accent) 24%, transparent), rgba(255,255,255,0.06)) border-box;
-  -webkit-mask: linear-gradient(#fff 0 0) padding-box, linear-gradient(#fff 0 0);
-  -webkit-mask-composite: xor;
-  mask-composite: exclude;
-  opacity: 0;
-  transition: opacity 0.55s cubic-bezier(0.32, 0.72, 0, 1);
-}
-
-.rail-item.active,
-.rail-item:hover {
-  background: color-mix(in srgb, var(--accent) 10%, rgba(255,255,255,0.025));
-  transform: translateX(4px);
-}
-
-.rail-item.active::before {
-  opacity: 1;
-}
-
-.rail-index {
-  position: relative;
-  z-index: 1;
-  color: color-mix(in srgb, var(--accent) 72%, #e8edf5);
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.12em;
-}
-
-.rail-index::after {
-  content: '';
-  position: absolute;
-  right: -12px;
-  top: 50%;
-  width: 7px;
-  height: 7px;
-  border-radius: 2px;
-  background: var(--accent);
-  box-shadow: 0 0 16px color-mix(in srgb, var(--accent) 55%, transparent);
-  transform: translateY(-50%) rotate(45deg);
-}
-
-.rail-body {
-  min-width: 0;
+  overflow: hidden;
   display: flex;
   flex-direction: column;
-  gap: 7px;
+  gap: 14px;
+  min-height: 280px;
+  transition: border-color 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease;
 }
 
-.rail-meta {
+.mis-card:hover {
+  border-color: color-mix(in srgb, var(--accent) 40%, transparent);
+  transform: translateY(-4px);
+  box-shadow: 0 24px 60px rgba(0,0,0,0.5), 0 0 28px color-mix(in srgb, var(--accent) 20%, transparent);
+}
+
+.mis-card-top {
   display: flex;
-  gap: 10px;
-  color: rgba(136,146,176,0.66);
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 9.5px;
-  letter-spacing: 0.18em;
-}
-
-.rail-title {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  color: rgba(232,237,245,0.88);
-  font-size: 14px;
-  font-weight: 650;
-  letter-spacing: 0.02em;
-}
-
-.rail-state {
-  justify-self: end;
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  border: 1px solid color-mix(in srgb, var(--state) 52%, rgba(255,255,255,0.1));
-}
-
-.rail-state-dot {
-  display: block;
-  width: 4px;
-  height: 4px;
-  margin: 1px;
-  border-radius: 50%;
-  background: var(--state);
-}
-
-.command-panel {
-  position: relative;
-  min-width: 0;
-  padding: 38px 210px 38px 42px;
-  overflow: hidden;
-  background:
-    radial-gradient(circle at 0% 0%, color-mix(in srgb, var(--accent) 18%, transparent), transparent 34%),
-    linear-gradient(145deg, rgba(7, 10, 24, 0.82), rgba(4, 7, 18, 0.36));
-}
-
-.command-panel-grid {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  background-image:
-    linear-gradient(rgba(255,255,255,0.026) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255,255,255,0.026) 1px, transparent 1px);
-  background-size: 64px 64px;
-  mask-image: linear-gradient(90deg, transparent, #000 16%, #000 82%, transparent);
-  opacity: 0.55;
-}
-
-.command-panel > *:not(.command-panel-grid) {
-  position: relative;
-  z-index: 1;
-}
-
-.command-top {
-  display: flex;
-  justify-content: space-between;
-  gap: 24px;
-  align-items: flex-start;
-  padding-bottom: 22px;
-  border-bottom: 1px solid rgba(255,255,255,0.075);
-}
-
-.command-kicker {
-  display: inline-flex;
   align-items: center;
-  gap: 9px;
-  color: color-mix(in srgb, var(--accent) 88%, #e8edf5);
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 10px;
-  letter-spacing: 0.2em;
-  font-weight: 700;
+  justify-content: space-between;
 }
 
-.command-priority-mark {
-  width: 7px;
-  height: 7px;
-  border-radius: 2px;
-  background: var(--accent);
-  transform: rotate(45deg);
-  box-shadow: 0 0 18px color-mix(in srgb, var(--accent) 55%, transparent);
-}
-
-.command-title {
-  margin: 16px 0 0;
-  color: #e8edf5;
-  font-family: 'Instrument Serif', serif;
-  font-size: 46px;
-  font-weight: 500;
-  line-height: 1.02;
-  letter-spacing: -0.02em;
-}
-
-.command-status {
-  display: inline-flex;
+.mis-card-top-left {
+  display: flex;
   align-items: center;
   gap: 8px;
-  color: var(--state);
+}
+
+.mis-priority {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 8px;
+  border-radius: 4px;
+  border: 1px solid;
+  font-size: 9.5px;
   font-family: 'JetBrains Mono', monospace;
+  letter-spacing: 0.15em;
+  font-weight: 600;
+}
+
+.mis-code {
   font-size: 10px;
-  letter-spacing: 0.18em;
-  white-space: nowrap;
-  padding-top: 4px;
+  color: #8892b0;
+  font-family: 'JetBrains Mono', monospace;
+  letter-spacing: 0.15em;
+}
+
+.mis-state {
+  font-size: 9.5px;
+  font-family: 'JetBrains Mono', monospace;
+  letter-spacing: 0.14em;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
 }
 
 .mis-state-dot {
   width: 5px;
   height: 5px;
   border-radius: 50%;
-  background: var(--state);
-  box-shadow: 0 0 12px var(--state);
 }
 
 .mis-state-dot-pulse {
   animation: pulse-soft 1.5s ease-in-out infinite;
 }
 
-.command-objective {
-  max-width: 760px;
-  margin: 26px 0 0;
-  color: rgba(181,190,216,0.78);
-  font-size: 15px;
-  line-height: 1.75;
-}
-
-.command-metrics {
-  display: grid;
-  grid-template-columns: minmax(150px, 0.38fr) minmax(0, 1fr);
-  gap: 12px;
-  margin-top: 28px;
-}
-
-.command-metric {
-  min-height: 90px;
-  padding: 18px 20px;
-  border-radius: 18px;
-  border: 1px solid rgba(255,255,255,0.065);
-  background: rgba(255,255,255,0.025);
-  box-shadow: inset 0 1px 0 rgba(255,255,255,0.055);
-}
-
-.command-metric span {
-  display: block;
-  margin-bottom: 10px;
-  color: rgba(136,146,176,0.72);
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 10px;
-  letter-spacing: 0.18em;
-}
-
-.command-metric strong {
-  color: #e8edf5;
+.mis-card-title {
   font-family: 'Instrument Serif', serif;
-  font-size: 27px;
-  font-weight: 500;
-  line-height: 1;
+  font-size: 24px;
+  line-height: 1.15;
+  color: #e8edf5;
+  letter-spacing: -0.01em;
 }
 
-.command-metric-wide strong {
-  color: var(--outcome);
-  font-family: 'Outfit', 'PingFang SC', sans-serif;
-  font-size: 20px;
-  font-weight: 750;
+.mis-card-objective {
+  font-size: 12.5px;
+  color: #8892b0;
+  line-height: 1.5;
 }
 
-.agent-strip {
+.mis-card-specs {
   display: flex;
   align-items: center;
-  gap: 0;
-  margin-top: 30px;
-  padding: 18px 0 6px;
+  gap: 14px;
+  padding-top: 12px;
+  padding-bottom: 12px;
+  border-top: 1px solid rgba(255,255,255,0.05);
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+  flex-wrap: wrap;
 }
 
-.agent-node {
-  position: relative;
-  display: inline-flex;
-  flex-direction: column;
-  gap: 5px;
-  min-width: 116px;
-  color: color-mix(in srgb, var(--agent-color) 88%, #e8edf5);
+.mis-spec-label {
+  font-size: 9px;
+  color: #4a5568;
   font-family: 'JetBrains Mono', monospace;
+  letter-spacing: 0.18em;
+  margin-bottom: 3px;
 }
 
-.agent-node:not(:last-child)::after {
-  content: '';
-  position: absolute;
-  left: 74px;
-  top: 8px;
-  width: 74px;
-  height: 1px;
-  background: linear-gradient(90deg, color-mix(in srgb, var(--agent-color) 42%, transparent), rgba(255,255,255,0.08));
+.mis-spec-val {
+  font-family: 'Instrument Serif', serif;
+  font-size: 16px;
+  color: #e8edf5;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
 }
 
-.agent-node-index {
+.mis-spec-divider {
+  width: 1px;
+  height: 24px;
+  background: rgba(255,255,255,0.06);
+}
+
+.mis-spec-agents {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.mis-agent-badge {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-  color: rgba(232,237,245,0.46);
-  font-size: 9px;
-  letter-spacing: 0.16em;
-}
-
-.agent-node-index::before {
-  content: '';
-  width: 8px;
-  height: 8px;
-  border-radius: 2px;
-  background: var(--agent-color);
-  transform: rotate(45deg);
-  box-shadow: 0 0 14px color-mix(in srgb, var(--agent-color) 55%, transparent);
-}
-
-.agent-node-role {
+  gap: 5px;
+  padding: 3px 8px;
+  border-radius: 100px;
+  border: 1px solid;
   font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 0.16em;
+  font-family: 'JetBrains Mono', monospace;
+  letter-spacing: 0.1em;
+  font-weight: 500;
 }
 
-.command-cta {
-  margin-top: 38px;
-  min-width: 240px;
-  min-height: 54px;
-  border-radius: 999px;
-  border: 1px solid color-mix(in srgb, var(--accent) 30%, rgba(255,255,255,0.08));
-  background: color-mix(in srgb, var(--accent) 10%, rgba(255,255,255,0.035));
-  color: #e8edf5;
-  display: inline-flex;
+.mis-agent-dot {
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+}
+
+.mis-outcome {
+  padding: 12px 14px;
+  border: 1px solid;
+  border-radius: 8px;
+  display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 20px;
-  padding: 8px 8px 8px 24px;
-  font-family: 'Outfit', 'PingFang SC', sans-serif;
+}
+
+.mis-outcome-label {
+  font-size: 9.5px;
+  color: #8892b0;
+  letter-spacing: 0.16em;
+  font-family: 'JetBrains Mono', monospace;
+  margin-bottom: 2px;
+}
+
+.mis-outcome-val {
+  font-family: 'Outfit', sans-serif;
   font-size: 14px;
+  font-weight: 600;
+}
+
+.mis-outcome-arrow {
+  font-size: 18px;
+  opacity: 0.6;
+}
+
+.mis-cta {
+  margin-top: auto;
+  background: linear-gradient(135deg, #00d4ff, #00d4ffCC);
+  color: #0a0e1c;
+  border: none;
+  border-radius: 10px;
+  padding: 12px 16px;
+  font-size: 13px;
   font-weight: 700;
-  letter-spacing: 0.08em;
+  font-family: 'Outfit', sans-serif;
   cursor: pointer;
-  box-shadow: inset 0 1px 0 rgba(255,255,255,0.08);
-  transition:
-    transform 0.5s cubic-bezier(0.32, 0.72, 0, 1),
-    border-color 0.5s cubic-bezier(0.32, 0.72, 0, 1),
-    background 0.5s cubic-bezier(0.32, 0.72, 0, 1);
-}
-
-.command-cta:hover {
-  transform: translateY(-2px);
-  border-color: color-mix(in srgb, var(--accent) 48%, rgba(255,255,255,0.08));
-  background: color-mix(in srgb, var(--accent) 16%, rgba(255,255,255,0.04));
-}
-
-.command-cta-icon {
-  width: 38px;
-  height: 38px;
-  border-radius: 50%;
-  background: var(--accent);
-  display: inline-flex;
+  letter-spacing: 0.04em;
+  display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 0 24px color-mix(in srgb, var(--accent) 38%, transparent);
-  transition: transform 0.5s cubic-bezier(0.32, 0.72, 0, 1);
+  gap: 8px;
+  transition: transform 0.2s ease;
 }
 
-.command-cta-icon::before {
-  content: '';
-  width: 0;
-  height: 0;
-  border-top: 5px solid transparent;
-  border-bottom: 5px solid transparent;
-  border-left: 8px solid #050916;
-  transform: translateX(1px);
+.mis-cta:hover {
+  transform: translateY(-1px);
 }
 
-.command-cta:hover .command-cta-icon {
-  transform: translateX(2px) scale(1.04);
+/* Free dialogue */
+.mis-free {
+  margin-top: 32px;
+  padding: 20px 28px;
+  background: rgba(10, 14, 32, 0.5);
+  border: 1px dashed rgba(255,255,255,0.1);
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  flex-wrap: wrap;
+}
+
+.mis-free-left {
+  flex: 1 1 320px;
+}
+
+.mis-free-eyebrow {
+  font-size: 9.5px;
+  letter-spacing: 0.2em;
+  font-family: 'JetBrains Mono', monospace;
+  margin-bottom: 4px;
+}
+
+.mis-free-title {
+  font-family: 'Instrument Serif', serif;
+  font-size: 18px;
+  color: #e8edf5;
+}
+
+.mis-free-questions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  flex: 2 1 600px;
+  justify-content: flex-end;
+}
+
+.mis-free-btn {
+  padding: 8px 14px;
+  background: rgba(0, 212, 255, 0.06);
+  border: 1px solid rgba(0, 212, 255, 0.2);
+  border-radius: 100px;
+  color: #e8edf5;
+  font-size: 12px;
+  font-family: 'Outfit', sans-serif;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.mis-free-btn:hover {
+  background: rgba(0, 212, 255, 0.14);
 }
 
 @keyframes pulse-soft {
@@ -717,9 +567,7 @@ function runMission() {
   .eyebrow-dot, .mis-state-dot-pulse {
     animation: none !important;
   }
-  .rail-item,
-  .command-cta,
-  .command-cta-icon {
+  .mis-card {
     transition: none !important;
   }
 }
@@ -729,30 +577,15 @@ function runMission() {
     padding: 60px 24px 60px;
   }
   .mis-title { font-size: 28px; }
-  .mission-rail {
+  .mis-grid {
     grid-template-columns: 1fr;
   }
-  .rail-list {
-    border-right: none;
-    border-bottom: 1px solid rgba(255,255,255,0.07);
-  }
-  .command-panel {
-    padding: 28px 24px;
-  }
-  .command-top,
-  .command-metrics {
-    grid-template-columns: 1fr;
+  .mis-free {
     flex-direction: column;
+    align-items: stretch;
   }
-  .command-title {
-    font-size: 34px;
-  }
-  .agent-strip {
-    flex-wrap: wrap;
-    gap: 14px;
-  }
-  .agent-node:not(:last-child)::after {
-    display: none;
+  .mis-free-questions {
+    justify-content: flex-start;
   }
 }
 </style>

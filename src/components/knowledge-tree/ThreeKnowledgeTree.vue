@@ -41,7 +41,6 @@ const props = withDefaults(
     fill?: boolean
     knowledgePoints?: KnowledgePoint[]
     sceneScale?: number
-    sceneHeightScale?: number
     sceneOffsetY?: number
   }>(),
   {
@@ -50,7 +49,6 @@ const props = withDefaults(
     fill: false,
     knowledgePoints: () => [],
     sceneScale: 11.4,
-    sceneHeightScale: 1,
     sceneOffsetY: 4.35,
   },
 )
@@ -119,7 +117,6 @@ let backgroundStageGroup: THREE.Group | null = null
 let starGroup: THREE.Group | null = null
 let markerGroup: THREE.Group | null = null
 let auraGroup: THREE.Group | null = null
-let selectionGroup: THREE.Group | null = null
 let raycaster: THREE.Raycaster | null = null
 const pointer = new THREE.Vector2()
 let interactiveObjects: THREE.Object3D[] = []
@@ -128,7 +125,6 @@ let fluidGlowTexture: THREE.CanvasTexture | null = null
 let fluidBumpTexture: THREE.CanvasTexture | null = null
 const fluidMaterials: THREE.MeshStandardMaterial[] = []
 const streamMaterials: THREE.MeshBasicMaterial[] = []
-const selectionMaterials: THREE.Material[] = []
 
 type DisposableObject = THREE.Object3D & {
   geometry?: THREE.BufferGeometry
@@ -180,22 +176,6 @@ function setMarkerData(object: THREE.Object3D, marker: GraphMarker) {
     child.userData.marker = marker
   })
   interactiveObjects.push(object)
-}
-
-function createAppleHitTarget(size: number, marker: GraphMarker) {
-  const picker = new THREE.Mesh(
-    new THREE.SphereGeometry(size * 2.25, 18, 12),
-    new THREE.MeshBasicMaterial({
-      transparent: true,
-      opacity: 0,
-      depthWrite: false,
-    }),
-  )
-  picker.name = `AppleHitTarget-${marker.id}`
-  picker.position.y = size * 0.22
-  picker.userData.marker = marker
-  picker.renderOrder = 40
-  return picker
 }
 
 function pointIsComplete(point?: KnowledgePoint) {
@@ -330,7 +310,6 @@ function createAttachedStar(position: THREE.Vector3, size: number, point: Knowle
   apple.position.z = 0.01
   apple.scale.setScalar(weak ? 1.06 : 1)
   group.add(apple)
-  group.add(createAppleHitTarget(size, marker))
 
   setMarkerData(group, marker)
   return group
@@ -363,7 +342,6 @@ function createMarkerStar(position: THREE.Vector3, size: number, color: number, 
   const apple = createAppleMesh(size, color, marker.type === 'course')
   apple.renderOrder = 20
   group.add(apple)
-  group.add(createAppleHitTarget(size, marker))
 
   setMarkerData(group, marker)
   return group
@@ -993,11 +971,10 @@ function fitModelToScene(model: THREE.Group) {
   const size = box.getSize(new THREE.Vector3())
   const maxDim = Math.max(size.x, size.y, size.z)
   const scale = props.sceneScale / maxDim
-  const scaleY = scale * props.sceneHeightScale
 
-  model.scale.set(scale, scaleY, scale)
-  model.position.sub(center.multiply(new THREE.Vector3(scale, scaleY, scale)))
-  model.position.y -= box.min.y * scaleY
+  model.scale.setScalar(scale)
+  model.position.sub(center.multiplyScalar(scale))
+  model.position.y -= box.min.y * scale
   model.position.y += props.sceneOffsetY - 3.2
   model.position.x += 0.5
   model.position.z += 0.3
@@ -1091,91 +1068,7 @@ function initRenderer() {
   canvasRef.value.addEventListener('click', handleCanvasClick)
 }
 
-interface MarkerHit {
-  marker: GraphMarker
-  object: THREE.Object3D
-  point: THREE.Vector3
-}
-
-function clearSelectionEffect() {
-  if (!selectionGroup || !rootGroup) return
-  rootGroup.remove(selectionGroup)
-  selectionGroup.traverse(child => disposeObject(child as DisposableObject))
-  selectionMaterials.forEach(material => material.dispose())
-  selectionMaterials.length = 0
-  selectionGroup = null
-}
-
-function createSelectionEffect(hit: MarkerHit) {
-  if (!rootGroup) return
-  clearSelectionEffect()
-
-  const localPoint = hit.point.clone()
-  rootGroup.worldToLocal(localPoint)
-
-  const tone = hit.marker.status === 'weak'
-    ? 0xff4b6a
-    : hit.marker.status === 'mastered'
-      ? 0xffc145
-      : 0x72ffd0
-
-  selectionGroup = new THREE.Group()
-  selectionGroup.name = 'KnowledgeAppleSelection'
-  selectionGroup.position.copy(localPoint)
-  selectionGroup.userData.birth = performance.now()
-
-  const ringMaterial = new THREE.MeshBasicMaterial({
-    color: tone,
-    transparent: true,
-    opacity: 0.82,
-    depthWrite: false,
-    depthTest: false,
-    side: THREE.DoubleSide,
-    blending: THREE.AdditiveBlending,
-  })
-  selectionMaterials.push(ringMaterial)
-
-  for (let i = 0; i < 3; i++) {
-    const ring = new THREE.Mesh(
-      new THREE.RingGeometry(0.34 + i * 0.18, 0.39 + i * 0.18, 64),
-      ringMaterial.clone(),
-    )
-    selectionMaterials.push(ring.material as THREE.Material)
-    ring.rotation.set(-0.16, 0.12, 0)
-    ring.position.z = 0.03 + i * 0.012
-    ring.userData.phase = i * 0.32
-    ring.renderOrder = 60 + i
-    selectionGroup.add(ring)
-  }
-
-  const beamMaterial = new THREE.MeshBasicMaterial({
-    color: tone,
-    transparent: true,
-    opacity: 0.22,
-    depthWrite: false,
-    depthTest: false,
-    blending: THREE.AdditiveBlending,
-  })
-  selectionMaterials.push(beamMaterial)
-
-  const beam = new THREE.Mesh(
-    new THREE.CylinderGeometry(0.025, 0.18, 3.4, 24, 1, true),
-    beamMaterial,
-  )
-  beam.position.y = 1.55
-  beam.renderOrder = 58
-  beam.userData.isBeam = true
-  selectionGroup.add(beam)
-
-  const core = new THREE.PointLight(tone, 2.2, 4.5)
-  core.position.set(0, 0.25, 0.2)
-  core.userData.isCoreLight = true
-  selectionGroup.add(core)
-
-  rootGroup.add(selectionGroup)
-}
-
-function markerFromIntersection(event: PointerEvent): MarkerHit | null {
+function markerFromIntersection(event: PointerEvent) {
   if (!canvasRef.value || !camera || !raycaster || !interactiveObjects.length) return null
 
   const rect = canvasRef.value.getBoundingClientRect()
@@ -1185,26 +1078,19 @@ function markerFromIntersection(event: PointerEvent): MarkerHit | null {
 
   const hits = raycaster.intersectObjects(interactiveObjects, true)
   const hit = hits.find(item => item.object.userData.marker)
-  if (!hit?.object.userData.marker) return null
-  return {
-    marker: hit.object.userData.marker as GraphMarker,
-    object: hit.object,
-    point: hit.point.clone(),
-  }
+  return (hit?.object.userData.marker ?? null) as GraphMarker | null
 }
 
 function handlePointerMove(event: PointerEvent) {
   if (!canvasRef.value) return
-  const hit = markerFromIntersection(event)
-  canvasRef.value.style.cursor = hit ? 'pointer' : 'grab'
+  canvasRef.value.style.cursor = markerFromIntersection(event) ? 'pointer' : 'grab'
 }
 
 function handleCanvasClick(event: PointerEvent) {
-  const hit = markerFromIntersection(event)
-  if (hit) {
-    activeMarker.value = hit.marker
-    createSelectionEffect(hit)
-    emit('markerSelect', hit.marker)
+  const marker = markerFromIntersection(event)
+  if (marker) {
+    activeMarker.value = marker
+    emit('markerSelect', marker)
   }
 }
 
@@ -1236,27 +1122,6 @@ function animate() {
       const pulse = 1 + Math.sin(t * 0.65 + index * 1.2) * 0.055
       aura.scale.setScalar(pulse)
     })
-    if (selectionGroup) {
-      const age = performance.now() - (selectionGroup.userData.birth ?? performance.now())
-      selectionGroup.children.forEach((child, index) => {
-        if (child instanceof THREE.Mesh) {
-          const material = child.material as THREE.MeshBasicMaterial
-          if (child.userData.isBeam) {
-            material.opacity = 0.16 + Math.sin(t * 1.45) * 0.06
-            child.scale.set(1 + Math.sin(t * 1.2) * 0.18, 1, 1 + Math.sin(t * 1.2) * 0.18)
-            return
-          }
-          const phase = child.userData.phase ?? 0
-          const wave = ((age * 0.0014 + phase) % 1)
-          const scale = 1 + wave * 2.25
-          child.scale.setScalar(scale)
-          material.opacity = Math.max(0, 0.82 * (1 - wave))
-        }
-        if (child instanceof THREE.PointLight) {
-          child.intensity = 1.5 + Math.sin(t * 1.8 + index) * 0.7
-        }
-      })
-    }
   }
 
   controls?.update()
@@ -1285,7 +1150,6 @@ function disposeObject(object: DisposableObject) {
 }
 
 function removeCurrentModel() {
-  clearSelectionEffect()
   if (rootGroup && scene) {
     scene.remove(rootGroup)
     rootGroup.traverse(child => disposeObject(child as DisposableObject))
@@ -1294,7 +1158,6 @@ function removeCurrentModel() {
   starGroup = null
   markerGroup = null
   auraGroup = null
-  selectionGroup = null
   interactiveObjects = []
   fluidMaterials.length = 0
   streamMaterials.length = 0
@@ -1341,8 +1204,6 @@ watch(() => props.modelUrl, () => {
 
 watch(() => props.knowledgePoints, () => {
   if (!rootGroup) return
-  activeMarker.value = null
-  clearSelectionEffect()
   interactiveObjects = []
   addGraphMarkers(rootGroup)
   addAttachedStars(rootGroup)
@@ -1363,14 +1224,6 @@ watch(() => props.knowledgePoints, () => {
     </div>
     <div class="three-tree-hint">
       <span>拖拽旋转 · 滚轮缩放</span>
-    </div>
-    <div v-if="activeMarker" class="three-tree-selection-card" :class="activeMarkerView.status">
-      <span class="selection-kicker">{{ activeMarkerView.type === 'knowledge' ? 'Apple selected' : 'Branch selected' }}</span>
-      <strong>{{ activeMarkerView.label }}</strong>
-      <div class="selection-progress">
-        <i :style="{ width: `${Math.max(6, activeMarkerView.progress ?? 0)}%` }" />
-      </div>
-      <span class="selection-meta">{{ activeMarkerView.progress ?? 0 }}% · {{ markerStatusLabel(activeMarkerView.status) }}</span>
     </div>
   </div>
 </template>
@@ -1441,88 +1294,5 @@ watch(() => props.knowledgePoints, () => {
 
 .three-tree-wrapper:hover .three-tree-hint {
   opacity: 1;
-}
-
-.three-tree-selection-card {
-  position: absolute;
-  left: 22px;
-  bottom: 24px;
-  width: min(270px, calc(100% - 44px));
-  padding: 12px 14px;
-  border: 1px solid rgba(255, 205, 120, 0.22);
-  border-radius: 10px;
-  background:
-    linear-gradient(135deg, rgba(255, 190, 88, 0.15), rgba(8, 13, 26, 0.7) 54%),
-    rgba(4, 9, 18, 0.72);
-  box-shadow:
-    0 18px 46px rgba(0, 0, 0, 0.36),
-    inset 0 1px 0 rgba(255, 255, 255, 0.08),
-    0 0 28px rgba(255, 185, 84, 0.12);
-  backdrop-filter: blur(14px) saturate(1.25);
-  color: rgba(255, 255, 255, 0.9);
-  pointer-events: none;
-  animation: selection-card-in 0.28s cubic-bezier(0.22, 1, 0.36, 1) both;
-}
-
-.three-tree-selection-card.weak {
-  border-color: rgba(255, 75, 106, 0.28);
-  box-shadow:
-    0 18px 46px rgba(0, 0, 0, 0.36),
-    inset 0 1px 0 rgba(255, 255, 255, 0.08),
-    0 0 30px rgba(255, 75, 106, 0.16);
-}
-
-.selection-kicker {
-  display: block;
-  margin-bottom: 5px;
-  color: rgba(255, 214, 150, 0.72);
-  font-size: 9px;
-  font-weight: 700;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-}
-
-.three-tree-selection-card strong {
-  display: block;
-  overflow: hidden;
-  color: #fff;
-  font-size: 13px;
-  font-weight: 650;
-  line-height: 1.35;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.selection-progress {
-  height: 4px;
-  margin: 9px 0 6px;
-  overflow: hidden;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.09);
-}
-
-.selection-progress i {
-  display: block;
-  height: 100%;
-  border-radius: inherit;
-  background: linear-gradient(90deg, #ffb84d, #72ffd0);
-  box-shadow: 0 0 14px rgba(255, 204, 120, 0.5);
-}
-
-.selection-meta {
-  color: rgba(255, 255, 255, 0.56);
-  font-family: var(--font-mono, monospace);
-  font-size: 10px;
-}
-
-@keyframes selection-card-in {
-  from {
-    opacity: 0;
-    transform: translateY(10px) scale(0.98);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
 }
 </style>

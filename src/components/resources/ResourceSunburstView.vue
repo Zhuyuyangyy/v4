@@ -1,157 +1,43 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
+import { BASE_KNOWLEDGE_ITEMS, buildConcentricView } from './mapTransforms'
+import type { ConcentricRing, ConcentricNode } from './mapTypes'
 
-interface Concept { name: string; m: number }
-interface SubTopic { id: string; name: string; m: number; concepts: Concept[]; focused?: boolean; recommended?: boolean }
-interface Domain { id: string; name: string; color: string; en: string; sub: SubTopic[] }
+const emit = defineEmits<{ 'select-node': [nodeId: string] }>()
+
+const concentricRings = buildConcentricView('dl4', BASE_KNOWLEDGE_ITEMS)
 
 const PALETTE = {
   cyan: '#00d4ff', blue: '#3b82f6', purple: '#7c3aed',
   emerald: '#06d6a0', amber: '#f59e0b', rose: '#f43f5e',
   text: '#e8edf5', textSub: '#8892b0', textTri: '#4a5568',
+  pink: '#ff6b9d', yellow: '#ffd700',
 }
 
-const DATA: Domain[] = [
-  {
-    id: 'math', name: '数学基础', color: PALETTE.cyan, en: 'Mathematics',
-    sub: [
-      { id: 'm1', name: '矩阵 / 线代', m: 0.95, concepts: [
-        { name: '向量空间', m: 1 }, { name: '矩阵运算', m: 1 }, { name: '行列式', m: 1 },
-        { name: '特征值', m: 1 }, { name: '对角化', m: 1 }, { name: '正交基', m: 0.9 },
-        { name: 'SVD', m: 0.8 }, { name: '伪逆', m: 0.7 },
-      ]},
-      { id: 'm2', name: '微积分', m: 0.66, concepts: [
-        { name: '极限', m: 1 }, { name: '导数', m: 1 }, { name: '链式法则', m: 1 },
-        { name: '偏导', m: 0.7 }, { name: '梯度', m: 0.6 }, { name: '二阶导', m: 0.3 },
-      ]},
-      { id: 'm3', name: '概率统计', m: 0.78, concepts: [
-        { name: '条件概率', m: 1 }, { name: '贝叶斯', m: 1 }, { name: '常见分布', m: 1 },
-        { name: '大数定律', m: 0.8 }, { name: '极大似然', m: 0.7 }, { name: '假设检验', m: 0.5 },
-        { name: '马尔可夫链', m: 0.4 },
-      ]},
-      { id: 'm4', name: '凸优化', m: 0.32, concepts: [
-        { name: '凸集', m: 0.6 }, { name: '凸函数', m: 0.5 }, { name: '梯度下降', m: 0.4 },
-        { name: '拉格朗日', m: 0.2 }, { name: 'KKT 条件', m: 0 },
-      ]},
-    ],
-  },
-  {
-    id: 'algo', name: '算法 & 数据', color: PALETTE.amber, en: 'Algorithms',
-    sub: [
-      { id: 'a1', name: '数据结构', m: 0.88, concepts: [
-        { name: '数组', m: 1 }, { name: '链表', m: 1 }, { name: '栈与队列', m: 1 },
-        { name: '哈希表', m: 1 }, { name: '堆', m: 0.9 }, { name: '树', m: 0.8 },
-        { name: '图', m: 0.7 }, { name: '并查集', m: 0.7 }, { name: '字典树', m: 0.7 },
-      ]},
-      { id: 'a2', name: '排序 / 查找', m: 0.92, concepts: [
-        { name: '快排', m: 1 }, { name: '归并', m: 1 }, { name: '堆排序', m: 1 },
-        { name: '二分查找', m: 1 }, { name: 'BFS/DFS', m: 0.8 }, { name: '拓扑排序', m: 0.6 },
-      ]},
-      { id: 'a3', name: '图算法', m: 0.42, concepts: [
-        { name: '最短路', m: 0.8 }, { name: '最小生成树', m: 0.5 }, { name: '强连通分量', m: 0.4 },
-        { name: '网络流', m: 0.2 }, { name: '匹配', m: 0.2 }, { name: '欧拉图', m: 0.4 },
-        { name: '哈密顿', m: 0 },
-      ]},
-      { id: 'a4', name: '动态规划', m: 0.30, recommended: true, concepts: [
-        { name: '一维 DP', m: 0.8 }, { name: '二维 DP', m: 0.5 }, { name: '区间 DP', m: 0.3 },
-        { name: '状态压缩', m: 0.1 }, { name: '树形 DP', m: 0.1 }, { name: '数位 DP', m: 0 },
-        { name: '记忆化', m: 0.4 }, { name: '滚动数组', m: 0.3 },
-      ]},
-    ],
-  },
-  {
-    id: 'eng', name: '工程实践', color: PALETTE.blue, en: 'Engineering',
-    sub: [
-      { id: 'e1', name: 'Python 工程', m: 0.72, concepts: [
-        { name: '虚拟环境', m: 1 }, { name: '包管理', m: 1 }, { name: '类型注解', m: 0.7 },
-        { name: '装饰器', m: 0.6 }, { name: '异步编程', m: 0.4 }, { name: '性能调优', m: 0.5 },
-      ]},
-      { id: 'e2', name: 'Git / 协作', m: 0.85, concepts: [
-        { name: '基础流程', m: 1 }, { name: '分支策略', m: 1 }, { name: 'Rebase', m: 0.8 },
-        { name: 'Cherry-pick', m: 0.6 },
-      ]},
-      { id: 'e3', name: '模型部署', m: 0.30, concepts: [
-        { name: '模型导出', m: 0.7 }, { name: 'Docker', m: 0.3 }, { name: 'REST API', m: 0.4 },
-        { name: 'ONNX', m: 0.1 }, { name: '量化压缩', m: 0 }, { name: '监控', m: 0.3 },
-      ]},
-      { id: 'e4', name: 'CI / CD', m: 0.18, concepts: [
-        { name: 'GitHub Actions', m: 0.4 }, { name: '测试自动化', m: 0.2 },
-        { name: '部署流水线', m: 0.1 }, { name: '回滚', m: 0 }, { name: '蓝绿部署', m: 0 },
-      ]},
-    ],
-  },
-  {
-    id: 'nlp', name: 'NLP 应用', color: PALETTE.rose, en: 'NLP & Apps',
-    sub: [
-      { id: 'n1', name: '词嵌入', m: 0.40, concepts: [
-        { name: 'One-hot', m: 1 }, { name: 'Word2Vec', m: 0.6 }, { name: 'GloVe', m: 0.3 },
-        { name: 'FastText', m: 0.2 }, { name: '上下文嵌入', m: 0.1 },
-      ]},
-      { id: 'n2', name: 'LLM 基础', m: 0.18, concepts: [
-        { name: 'Token 化', m: 0.5 }, { name: 'Embedding', m: 0.3 }, { name: '上下文窗口', m: 0.2 },
-        { name: '采样策略', m: 0.1 }, { name: 'Prompt 设计', m: 0.2 }, { name: '推理优化', m: 0 },
-        { name: 'KV Cache', m: 0 },
-      ]},
-      { id: 'n3', name: '检索增强', m: 0.12, concepts: [
-        { name: '向量检索', m: 0.3 }, { name: 'Chunking', m: 0.2 }, { name: 'Reranking', m: 0 },
-        { name: '多轮 RAG', m: 0 },
-      ]},
-      { id: 'n4', name: '微调对齐', m: 0.05, concepts: [
-        { name: 'SFT', m: 0.1 }, { name: 'LoRA', m: 0.1 }, { name: 'RLHF', m: 0 },
-        { name: 'DPO', m: 0 }, { name: 'PPO', m: 0 }, { name: '数据构造', m: 0.1 },
-      ]},
-    ],
-  },
-  {
-    id: 'dl', name: '深度学习', color: PALETTE.emerald, en: 'Deep Learning',
-    sub: [
-      { id: 'd1', name: '神经网络', m: 0.58, concepts: [
-        { name: '感知机', m: 1 }, { name: 'MLP', m: 0.9 }, { name: '反向传播', m: 0.6 },
-        { name: '激活函数', m: 0.7 }, { name: '损失函数', m: 0.5 }, { name: '初始化', m: 0.3 },
-      ]},
-      { id: 'd2', name: 'CNN', m: 0.32, focused: true, concepts: [
-        { name: '卷积运算', m: 1 }, { name: '池化', m: 1 }, { name: '感受野', m: 0.4 },
-        { name: '经典架构', m: 0 }, { name: '迁移学习', m: 0 },
-      ]},
-      { id: 'd3', name: 'RNN / 序列', m: 0.22, concepts: [
-        { name: 'RNN 基础', m: 0.5 }, { name: 'LSTM', m: 0.3 }, { name: 'GRU', m: 0.2 },
-        { name: '序列到序列', m: 0.1 }, { name: '注意力', m: 0.2 }, { name: '梯度消失', m: 0.2 },
-      ]},
-      { id: 'd4', name: 'Transformer', m: 0.12, concepts: [
-        { name: 'Self-Attention', m: 0.3 }, { name: 'Multi-Head', m: 0.1 },
-        { name: 'Positional Enc.', m: 0.2 }, { name: 'Encoder', m: 0.1 }, { name: 'Decoder', m: 0 },
-        { name: 'Layer Norm', m: 0.2 }, { name: 'FFN', m: 0.1 },
-      ]},
-    ],
-  },
-  {
-    id: 'ml', name: '机器学习', color: PALETTE.purple, en: 'Machine Learning',
-    sub: [
-      { id: 'l1', name: '监督学习', m: 0.85, concepts: [
-        { name: '线性回归', m: 1 }, { name: '逻辑回归', m: 1 }, { name: 'KNN', m: 1 },
-        { name: 'SVM', m: 0.8 }, { name: '朴素贝叶斯', m: 0.7 }, { name: '感知机', m: 0.8 },
-        { name: '决策树', m: 0.8 }, { name: '正则化', m: 0.8 },
-      ]},
-      { id: 'l2', name: '无监督', m: 0.62, concepts: [
-        { name: 'K-Means', m: 1 }, { name: '层次聚类', m: 0.7 }, { name: 'DBSCAN', m: 0.5 },
-        { name: 'PCA', m: 0.8 }, { name: 'tSNE', m: 0.4 }, { name: 'GMM', m: 0.3 },
-      ]},
-      { id: 'l3', name: '集成方法', m: 0.55, concepts: [
-        { name: 'Bagging', m: 0.7 }, { name: '随机森林', m: 0.8 }, { name: 'Boosting', m: 0.6 },
-        { name: 'XGBoost', m: 0.5 }, { name: 'LightGBM', m: 0.3 }, { name: 'Stacking', m: 0.3 },
-        { name: 'AdaBoost', m: 0.5 },
-      ]},
-      { id: 'l4', name: '模型评估', m: 0.48, concepts: [
-        { name: '准确率', m: 1 }, { name: '精确召回', m: 0.7 }, { name: 'ROC / AUC', m: 0.5 },
-        { name: '交叉验证', m: 0.4 }, { name: '混淆矩阵', m: 0.6 },
-      ]},
-    ],
-  },
-]
+const RING_COLORS: Record<string, string> = {
+  prerequisite: PALETTE.cyan,
+  current: PALETTE.emerald,
+  application: PALETTE.amber,
+  extension: PALETTE.purple,
+}
 
-const RING = { centerR: 92, domainIn: 104, domainOut: 226, subIn: 240, subOut: 358, dotsR: 384 }
+const RING_ALPHAS: Record<string, number> = {
+  prerequisite: 0.85,
+  current: 1.0,
+  application: 0.65,
+  extension: 0.45,
+}
+
+const RING = { centerR: 92, ring1In: 108, ring1Out: 196, ring2In: 210, ring2Out: 298, ring3In: 312, ring3Out: 380, ring4In: 394, ring4Out: 448 }
 const STAGE_W = 1920
 const STAGE_H = 1080
+
+const RING_BOUNDS: Record<string, { rIn: number; rOut: number }> = {
+  prerequisite: { rIn: RING.ring1In, rOut: RING.ring1Out },
+  current: { rIn: RING.ring2In, rOut: RING.ring2Out },
+  application: { rIn: RING.ring3In, rOut: RING.ring3Out },
+  extension: { rIn: RING.ring4In, rOut: RING.ring4Out },
+}
 
 // --- Geometry ---
 function polar(cx: number, cy: number, r: number, deg: number) {
@@ -182,40 +68,25 @@ const STARS = (() => {
 })()
 
 // --- Segments ---
-const domainSpan = 360 / DATA.length
+interface RingNode extends ConcentricNode { ringId: string; ringLabel: string; ringType: string }
 
-interface SegDomain { d: Domain; di: number; a0: number; a1: number; m: number }
-interface SegSub { d: Domain; di: number; sub: SubTopic; si: number; a0: number; a1: number; key: string }
-
-const domainSegs: SegDomain[] = DATA.map((d, di) => {
-  const a0 = di * domainSpan, a1 = (di + 1) * domainSpan
-  const m = d.sub.reduce((s, x) => s + x.m, 0) / d.sub.length
-  return { d, di, a0, a1, m }
-})
-
-const subSegs: SegSub[] = DATA.flatMap((d, di) =>
-  d.sub.map((sub, si) => {
-    const span = domainSpan / d.sub.length
-    const a0 = di * domainSpan + si * span
-    const a1 = di * domainSpan + (si + 1) * span
-    return { d, di, sub, si, a0, a1, key: sub.id }
-  })
+const allRingNodes: RingNode[] = concentricRings.flatMap(ring =>
+  ring.nodes.map(n => ({ ...n, ringId: ring.id, ringLabel: ring.label, ringType: ring.relationType }))
 )
 
 // --- State ---
-const hoverSub = ref<SegSub | null>(null)
-
-const focusedSub = ref<SegSub | null>(null)
+const hoverNode = ref<RingNode | null>(null)
+const focusedNode = ref<RingNode | null>(null)
 const mouse = ref({ x: 0, y: 0 })
 
-const focusedDomainId = computed(() => focusedSub.value?.d.id ?? hoverSub.value?.d.id ?? null)
-const focusedSubId = computed(() => focusedSub.value?.sub.id ?? hoverSub.value?.sub.id ?? null)
-const isAnyFocused = computed(() => !!focusedDomainId.value)
+const focusedRingId = computed(() => focusedNode.value?.ringId ?? hoverNode.value?.ringId ?? null)
+const focusedNodeId = computed(() => focusedNode.value?.id ?? null)
+const isAnyFocused = computed(() => !!focusedRingId.value)
 
 // --- Animated counter ---
-const allConcepts = DATA.flatMap(d => d.sub.flatMap(s => s.concepts))
-const totalMastery = allConcepts.reduce((s, c) => s + c.m, 0) / allConcepts.length
-const animVal = ref(focusedSub.value ? focusedSub.value.sub.m * 100 : totalMastery * 100)
+const allNodes = concentricRings.flatMap(r => r.nodes)
+const totalMastery = allNodes.reduce((s, n) => s + n.mastery, 0) / allNodes.length
+const animVal = ref(focusedNode.value ? focusedNode.value.mastery * 100 : totalMastery * 100)
 let animRaf = 0
 
 function animateTo(target: number) {
@@ -234,8 +105,8 @@ function animateTo(target: number) {
 
 const centerPercent = computed(() => Math.round(animVal.value))
 
-watch(focusedSub, () => {
-  const target = focusedSub.value ? focusedSub.value.sub.m * 100 : totalMastery * 100
+watch(focusedNode, () => {
+  const target = focusedNode.value ? focusedNode.value.mastery * 100 : totalMastery * 100
   animateTo(target)
 }, { immediate: true })
 
@@ -244,29 +115,27 @@ function onMove(e: MouseEvent) { mouse.value = { x: e.clientX, y: e.clientY } }
 onMounted(() => window.addEventListener('mousemove', onMove))
 onUnmounted(() => { window.removeEventListener('mousemove', onMove); cancelAnimationFrame(animRaf) })
 
-function onSubHover(seg: SegSub | null) { hoverSub.value = seg }
-function onSubClick(seg: SegSub) {
-  if (focusedSub.value && focusedSub.value.sub.id === seg.sub.id) focusedSub.value = null
-  else focusedSub.value = seg
+function onNodeHover(node: RingNode | null) { hoverNode.value = node }
+function onNodeClick(node: RingNode) {
+  if (focusedNode.value && focusedNode.value.id === node.id) focusedNode.value = null
+  else focusedNode.value = node
+  emit('select-node', node.id)
 }
-function closeDetail() { focusedSub.value = null }
+function closeDetail() { focusedNode.value = null }
 
 // --- Derived ---
-const subCount = DATA.reduce((s, d) => s + d.sub.length, 0)
-const conceptCount = allConcepts.length
-const weakest = [...DATA].sort((a, b) => {
-  const am = a.sub.reduce((s, x) => s + x.m, 0) / a.sub.length
-  const bm = b.sub.reduce((s, x) => s + x.m, 0) / b.sub.length
-  return am - bm
-})[0]
-const weakestM = weakest.sub.reduce((s, x) => s + x.m, 0) / weakest.sub.length
+const nodeCount = allNodes.length
+const weakCount = allNodes.filter(n => n.mastery < 0.4).length
+const recommendedCount = allNodes.filter(n => n.recommended).length
 const masteredCount = computed(() => {
-  if (!focusedSub.value) return allConcepts.filter(c => c.m >= 0.9).length
-  return focusedSub.value.sub.concepts.filter(c => c.m >= 0.9).length
+  if (!focusedNode.value) return allNodes.filter(n => n.mastery >= 0.9).length
+  const ring = concentricRings.find(r => r.id === focusedNode.value!.ringId)
+  return ring ? ring.nodes.filter(n => n.mastery >= 0.9).length : 0
 })
 const inProgressCount = computed(() => {
-  if (!focusedSub.value) return allConcepts.filter(c => c.m > 0 && c.m < 0.9).length
-  return focusedSub.value.sub.concepts.filter(c => c.m > 0 && c.m < 0.9).length
+  if (!focusedNode.value) return allNodes.filter(n => n.mastery > 0 && n.mastery < 0.9).length
+  const ring = concentricRings.find(r => r.id === focusedNode.value!.ringId)
+  return ring ? ring.nodes.filter(n => n.mastery > 0 && n.mastery < 0.9).length : 0
 })
 </script>
 
@@ -276,37 +145,36 @@ const inProgressCount = computed(() => {
     <div class="sb-stats">
       <div class="sb-stat-card">
         <div class="sb-stat-label">已点亮</div>
-        <div class="sb-stat-val"><span class="sb-stat-num">{{ masteredCount }}</span><span class="sb-stat-sub"> / {{ conceptCount }}</span></div>
+        <div class="sb-stat-val"><span class="sb-stat-num">{{ masteredCount }}</span><span class="sb-stat-sub"> / {{ nodeCount }}</span></div>
       </div>
       <div class="sb-stat-card">
         <div class="sb-stat-label">进行中</div>
         <div class="sb-stat-val"><span class="sb-stat-num" style="color:var(--color-accent-cyan)">{{ inProgressCount }}</span><span class="sb-stat-sub"> 个</span></div>
       </div>
-      <div class="sb-stat-card sb-stat-wide">
-        <div class="sb-stat-label">薄弱方向</div>
-        <div class="sb-stat-val"><span class="sb-stat-num" style="color:var(--color-accent-rose)">{{ weakest.name }}</span><span class="sb-stat-sub"> {{ Math.round(weakestM * 100) }}%</span></div>
+      <div class="sb-stat-card">
+        <div class="sb-stat-label">薄弱节点</div>
+        <div class="sb-stat-val"><span class="sb-stat-num" style="color:var(--color-accent-rose)">{{ weakCount }}</span><span class="sb-stat-sub"> 个</span></div>
+      </div>
+      <div class="sb-stat-card">
+        <div class="sb-stat-label">推荐学习</div>
+        <div class="sb-stat-val"><span class="sb-stat-num" style="color:var(--color-accent-amber)">{{ recommendedCount }}</span><span class="sb-stat-sub"> 个</span></div>
       </div>
     </div>
 
     <!-- Legend -->
     <div class="sb-legend">
       <div class="sb-legend-title">RINGS &middot; 由内向外</div>
-      <div v-for="(r, i) in [
-        { label: '我的整体掌握度', color: PALETTE.purple, info: '中心总览' },
-        { label: '6 个学科领域', color: PALETTE.cyan, info: '内环 / 大方向' },
-        { label: '24 个子方向', color: PALETTE.emerald, info: '外环 / 主题' },
-        { label: '134 个知识点', color: PALETTE.amber, info: '外缘 / 光点' },
-      ]" :key="i" class="sb-legend-row">
-        <span class="sb-legend-dot" :style="{ background: hexA(r.color, 0.18), borderColor: r.color, color: r.color }">{{ i }}</span>
-        <span class="sb-legend-label">{{ r.label }}</span>
-        <span class="sb-legend-info">{{ r.info }}</span>
+      <div v-for="(ring, i) in concentricRings" :key="ring.id" class="sb-legend-row">
+        <span class="sb-legend-dot" :style="{ background: hexA(RING_COLORS[ring.relationType], 0.18), borderColor: RING_COLORS[ring.relationType], color: RING_COLORS[ring.relationType] }">{{ i + 1 }}</span>
+        <span class="sb-legend-label">{{ ring.label }}</span>
+        <span class="sb-legend-info">{{ ring.nodes.length }} 个节点</span>
       </div>
     </div>
 
     <!-- Hint -->
-    <div class="sb-hint" :style="{ opacity: focusedSub ? 0 : 0.7 }">
+    <div class="sb-hint" :style="{ opacity: focusedNode ? 0 : 0.7 }">
       <span class="sb-hint-dot"></span>
-      HOVER &middot; CLICK 任意扇区
+      HOVER &middot; CLICK 任意节点
     </div>
 
     <!-- SVG Stage -->
@@ -333,74 +201,70 @@ const inProgressCount = computed(() => {
       </g>
 
       <!-- Center halo -->
-      <circle :cx="STAGE_W/2" :cy="STAGE_H/2" :r="RING.dotsR + 50" fill="url(#sb-cg)" opacity="0.55" />
+      <circle :cx="STAGE_W/2" :cy="STAGE_H/2" :r="RING.ring4Out + 50" fill="url(#sb-cg)" opacity="0.55" />
 
       <!-- Guide rings -->
-      <circle v-for="r in [RING.domainIn, RING.domainOut, RING.subIn, RING.subOut, RING.dotsR]" :key="'g'+r"
-        :cx="STAGE_W/2" :cy="STAGE_H/2" :r="r" fill="none" stroke="#fff" :stroke-opacity="0.04" stroke-width="1" />
+      <template v-for="ring in concentricRings" :key="'g-'+ring.id">
+        <circle :cx="STAGE_W/2" :cy="STAGE_H/2" :r="RING_BOUNDS[ring.relationType].rIn" fill="none" stroke="#fff" :stroke-opacity="0.04" stroke-width="1" />
+        <circle :cx="STAGE_W/2" :cy="STAGE_H/2" :r="RING_BOUNDS[ring.relationType].rOut" fill="none" stroke="#fff" :stroke-opacity="0.04" stroke-width="1" />
+      </template>
 
       <!-- Rotating sheen -->
       <g class="sb-orbit-slow">
-        <circle :cx="STAGE_W/2" :cy="STAGE_H/2" :r="RING.dotsR + 4" fill="none" :stroke="PALETTE.cyan" :stroke-opacity="0.5" stroke-width="1.5" stroke-dasharray="2 240" />
+        <circle :cx="STAGE_W/2" :cy="STAGE_H/2" :r="RING.ring4Out + 4" fill="none" :stroke="PALETTE.cyan" :stroke-opacity="0.5" stroke-width="1.5" stroke-dasharray="2 240" />
       </g>
       <g class="sb-orbit-slow-rev">
-        <circle :cx="STAGE_W/2" :cy="STAGE_H/2" :r="RING.subOut + 8" fill="none" :stroke="PALETTE.purple" :stroke-opacity="0.4" stroke-width="1" stroke-dasharray="1 320" />
+        <circle :cx="STAGE_W/2" :cy="STAGE_H/2" :r="RING.ring3Out + 8" fill="none" :stroke="PALETTE.purple" :stroke-opacity="0.4" stroke-width="1" stroke-dasharray="1 320" />
       </g>
 
-      <!-- Domain ring -->
-      <g v-for="seg in domainSegs" :key="'dom-'+seg.d.id" :style="{ opacity: isAnyFocused && focusedDomainId !== seg.d.id ? 0.3 : 1, transition: 'opacity 0.35s ease' }">
-        <path :d="arcPath(STAGE_W/2, STAGE_H/2, RING.domainIn, RING.domainOut, seg.a0 + 0.5, seg.a1 - 0.5)"
-          :fill="hexA(seg.d.color, 0.08)" :stroke="hexA(seg.d.color, focusedDomainId === seg.d.id ? 0.6 : 0.3)" :stroke-width="focusedDomainId === seg.d.id ? 1.5 : 0.8" />
-        <path :d="arcPath(STAGE_W/2, STAGE_H/2, RING.domainIn, RING.domainIn + (RING.domainOut - RING.domainIn) * seg.m, seg.a0 + 0.5, seg.a1 - 0.5)"
-          :fill="hexA(seg.d.color, 0.42)" :filter="focusedDomainId === seg.d.id ? 'url(#sb-blur)' : undefined" />
+      <!-- Concentric rings -->
+      <g v-for="ring in concentricRings" :key="'ring-'+ring.id"
+        :style="{ opacity: isAnyFocused && focusedRingId !== ring.id ? 0.35 : 1, transition: 'opacity 0.35s ease' }">
+        <template v-for="node in ring.nodes" :key="node.id">
+          <g @mouseenter="onNodeHover({ ...node, ringId: ring.id, ringLabel: ring.label, ringType: ring.relationType })"
+            @mouseleave="onNodeHover(null)"
+            @click="onNodeClick({ ...node, ringId: ring.id, ringLabel: ring.label, ringType: ring.relationType })"
+            :style="{ cursor: 'pointer', transition: 'opacity 0.3s ease' }">
+            <circle :cx="polar(STAGE_W/2, STAGE_H/2, (RING_BOUNDS[ring.relationType].rIn + RING_BOUNDS[ring.relationType].rOut) / 2, node.angle).x"
+              :cy="polar(STAGE_W/2, STAGE_H/2, (RING_BOUNDS[ring.relationType].rIn + RING_BOUNDS[ring.relationType].rOut) / 2, node.angle).y"
+              :r="focusedNodeId === node.id ? 28 : 22"
+              :fill="node.mastery < 0.4 ? hexA(PALETTE.pink, 0.12 * RING_ALPHAS[ring.relationType]) : hexA(RING_COLORS[ring.relationType], 0.08 * RING_ALPHAS[ring.relationType])"
+              :stroke="node.recommended ? PALETTE.yellow : (focusedNodeId === node.id ? RING_COLORS[ring.relationType] : hexA(RING_COLORS[ring.relationType], 0.35 * RING_ALPHAS[ring.relationType]))"
+              :stroke-width="node.recommended ? 2 : (focusedNodeId === node.id ? 2 : 0.8)"
+              :stroke-dasharray="node.recommended ? '4 3' : undefined"
+              style="transition: all 0.2s ease" />
+            <circle :cx="polar(STAGE_W/2, STAGE_H/2, (RING_BOUNDS[ring.relationType].rIn + RING_BOUNDS[ring.relationType].rOut) / 2, node.angle).x"
+              :cy="polar(STAGE_W/2, STAGE_H/2, (RING_BOUNDS[ring.relationType].rIn + RING_BOUNDS[ring.relationType].rOut) / 2, node.angle).y"
+              :r="focusedNodeId === node.id ? 28 : 22"
+              :fill="node.mastery < 0.4 ? hexA(PALETTE.pink, 0.25 * RING_ALPHAS[ring.relationType] * node.mastery) : hexA(RING_COLORS[ring.relationType], 0.4 * RING_ALPHAS[ring.relationType] * node.mastery)"
+              :filter="node.mastery > 0.5 || focusedNodeId === node.id ? 'url(#sb-blur)' : undefined"
+              style="transition: all 0.2s ease" />
+            <circle v-if="focusedNodeId === node.id"
+              :cx="polar(STAGE_W/2, STAGE_H/2, (RING_BOUNDS[ring.relationType].rIn + RING_BOUNDS[ring.relationType].rOut) / 2, node.angle).x"
+              :cy="polar(STAGE_W/2, STAGE_H/2, (RING_BOUNDS[ring.relationType].rIn + RING_BOUNDS[ring.relationType].rOut) / 2, node.angle).y"
+              r="30" :fill="hexA('#ffffff', 0.06)" />
+            <circle v-if="node.recommended"
+              :cx="polar(STAGE_W/2, STAGE_H/2, (RING_BOUNDS[ring.relationType].rIn + RING_BOUNDS[ring.relationType].rOut) / 2, node.angle).x"
+              :cy="polar(STAGE_W/2, STAGE_H/2, (RING_BOUNDS[ring.relationType].rIn + RING_BOUNDS[ring.relationType].rOut) / 2, node.angle).y"
+              r="26" fill="none" :stroke="PALETTE.yellow" stroke-width="1.5" stroke-dasharray="4 3" class="sb-pulse-soft" />
+          </g>
+        </template>
       </g>
 
-      <!-- Sub-topic ring -->
-      <g v-for="seg in subSegs" :key="'sub-'+seg.key"
-        @mouseenter="onSubHover(seg)" @mouseleave="onSubHover(null)" @click="onSubClick(seg)"
-        :style="{ cursor: 'pointer', opacity: isAnyFocused && focusedDomainId !== seg.d.id && focusedSubId !== seg.sub.id ? 0.22 : 1, transition: 'opacity 0.3s ease' }">
-        <path :d="arcPath(STAGE_W/2, STAGE_H/2, RING.subIn - (focusedSubId === seg.sub.id ? 4 : 0), RING.subOut + (focusedSubId === seg.sub.id ? 8 : 0), seg.a0 + 0.25, seg.a1 - 0.25)"
-          :fill="hexA(seg.d.color, 0.04)" :stroke="seg.sub.recommended || focusedSubId === seg.sub.id ? seg.d.color : hexA(seg.d.color, 0.22)" :stroke-width="focusedSubId === seg.sub.id ? 2 : seg.sub.recommended ? 1.5 : 0.6"
-          style="transition: all 0.2s ease" />
-        <path :d="arcPath(STAGE_W/2, STAGE_H/2, RING.subIn - (focusedSubId === seg.sub.id ? 4 : 0), RING.subIn - (focusedSubId === seg.sub.id ? 4 : 0) + (RING.subOut + (focusedSubId === seg.sub.id ? 8 : 0) - (RING.subIn - (focusedSubId === seg.sub.id ? 4 : 0))) * seg.sub.m, seg.a0 + 0.25, seg.a1 - 0.25)"
-          :fill="hexA(seg.d.color, 0.55 + seg.sub.m * 0.35)" :filter="seg.sub.m > 0.5 || focusedSubId === seg.sub.id ? 'url(#sb-blur)' : undefined" />
-        <path v-if="focusedSubId === seg.sub.id" :d="arcPath(STAGE_W/2, STAGE_H/2, RING.subIn - 4, RING.subOut + 8, seg.a0 + 0.25, seg.a1 - 0.25)" :fill="hexA('#ffffff', 0.06)" />
-        <path v-if="seg.sub.recommended" :d="arcPath(STAGE_W/2, STAGE_H/2, RING.subIn - 4, RING.subOut + 4, seg.a0 + 0.25, seg.a1 - 0.25)"
-          fill="none" :stroke="seg.d.color" stroke-width="1.5" class="sb-pulse-soft" />
-      </g>
-
-      <!-- Concept dots -->
-      <template v-for="(seg, segIdx) in subSegs" :key="'dots-'+seg.key">
-        <g v-for="(c, j) in seg.sub.concepts" :key="seg.key+'-'+j"
-          :style="{ opacity: isAnyFocused && focusedDomainId !== seg.d.id && focusedSubId !== seg.sub.id ? 0.18 : 1, transition: 'opacity 0.3s ease' }">
-          <circle v-if="c.m >= 0.5" :cx="polar(STAGE_W/2, STAGE_H/2, RING.dotsR, seg.a0 + 0.4 + ((seg.a1 - seg.a0 - 0.8) * (j + 0.5)) / seg.sub.concepts.length).x"
-            :cy="polar(STAGE_W/2, STAGE_H/2, RING.dotsR, seg.a0 + 0.4 + ((seg.a1 - seg.a0 - 0.8) * (j + 0.5)) / seg.sub.concepts.length).y"
-            r="6" :fill="seg.d.color" opacity="0.3" filter="url(#sb-blur)" />
-          <circle :cx="polar(STAGE_W/2, STAGE_H/2, RING.dotsR, seg.a0 + 0.4 + ((seg.a1 - seg.a0 - 0.8) * (j + 0.5)) / seg.sub.concepts.length).x"
-            :cy="polar(STAGE_W/2, STAGE_H/2, RING.dotsR, seg.a0 + 0.4 + ((seg.a1 - seg.a0 - 0.8) * (j + 0.5)) / seg.sub.concepts.length).y"
-            :r="focusedSubId === seg.sub.id ? (c.m >= 0.5 ? 3.4 : 2.4) : (c.m >= 0.5 ? 2.6 : 1.6)"
-            :fill="c.m >= 0.5 ? seg.d.color : (c.m > 0 ? hexA(seg.d.color, 0.5) : '#fff')"
-            :opacity="c.m >= 0.5 ? 1 : (c.m > 0 ? 1 : 0.2)"
-            :class="c.m >= 0.5 ? 'sb-twinkle' : undefined"
-            :style="c.m >= 0.5 ? { animationDelay: `${(segIdx * 0.1 + j * 0.13) % 2.4}s` } : undefined" />
-        </g>
-      </template>
-
-      <!-- Beam -->
-      <g v-if="focusedSub" key="beam">
-        <line :x1="polar(STAGE_W/2, STAGE_H/2, RING.centerR, (focusedSub.a0 + focusedSub.a1) / 2).x"
-          :y1="polar(STAGE_W/2, STAGE_H/2, RING.centerR, (focusedSub.a0 + focusedSub.a1) / 2).y"
-          :x2="polar(STAGE_W/2, STAGE_H/2, RING.subOut, (focusedSub.a0 + focusedSub.a1) / 2).x"
-          :y2="polar(STAGE_W/2, STAGE_H/2, RING.subOut, (focusedSub.a0 + focusedSub.a1) / 2).y"
-          :stroke="focusedSub.d.color" stroke-opacity="0.5" stroke-width="1.5" stroke-dasharray="3 6" class="sb-shimmer" />
-        <circle :cx="polar(STAGE_W/2, STAGE_H/2, RING.centerR, (focusedSub.a0 + focusedSub.a1) / 2).x"
-          :cy="polar(STAGE_W/2, STAGE_H/2, RING.centerR, (focusedSub.a0 + focusedSub.a1) / 2).y"
-          r="3" :fill="focusedSub.d.color" filter="url(#sb-blur)" />
+      <!-- Connection lines from center to focused node -->
+      <g v-if="focusedNode" key="beam">
+        <line :x1="STAGE_W/2" :y1="STAGE_H/2"
+          :x2="polar(STAGE_W/2, STAGE_H/2, (RING_BOUNDS[focusedNode.ringType].rIn + RING_BOUNDS[focusedNode.ringType].rOut) / 2, focusedNode.angle).x"
+          :y2="polar(STAGE_W/2, STAGE_H/2, (RING_BOUNDS[focusedNode.ringType].rIn + RING_BOUNDS[focusedNode.ringType].rOut) / 2, focusedNode.angle).y"
+          :stroke="RING_COLORS[focusedNode.ringType]" stroke-opacity="0.5" stroke-width="1.5" stroke-dasharray="3 6" class="sb-shimmer" />
+        <circle :cx="polar(STAGE_W/2, STAGE_H/2, RING.centerR, focusedNode.angle).x"
+          :cy="polar(STAGE_W/2, STAGE_H/2, RING.centerR, focusedNode.angle).y"
+          r="3" :fill="RING_COLORS[focusedNode.ringType]" filter="url(#sb-blur)" />
       </g>
 
       <!-- Flow particles -->
       <g class="sb-flow-orbit">
-        <circle v-for="i in 5" :key="'fp'+i" :cx="polar(STAGE_W/2, STAGE_H/2, RING.subOut + 14, i * 72).x" :cy="polar(STAGE_W/2, STAGE_H/2, RING.subOut + 14, i * 72).y" r="2" :fill="PALETTE.cyan" opacity="0.65" filter="url(#sb-blur)" />
+        <circle v-for="i in 5" :key="'fp'+i" :cx="polar(STAGE_W/2, STAGE_H/2, RING.ring4Out + 14, i * 72).x" :cy="polar(STAGE_W/2, STAGE_H/2, RING.ring4Out + 14, i * 72).y" r="2" :fill="PALETTE.cyan" opacity="0.65" filter="url(#sb-blur)" />
       </g>
 
       <!-- Center disc ring -->
@@ -408,102 +272,114 @@ const inProgressCount = computed(() => {
       <circle :cx="STAGE_W/2" :cy="STAGE_H/2" :r="RING.centerR" fill="url(#sb-cd)" :stroke="hexA(PALETTE.purple, 0.5)" stroke-width="1.5" />
     </svg>
 
-    <!-- Domain labels (HTML overlay) -->
-    <template v-for="d in DATA" :key="'dl-'+d.id">
-      <div class="sb-domain-label" :style="{
-        left: polar(STAGE_W/2, STAGE_H/2, (RING.domainIn + RING.domainOut) / 2, DATA.indexOf(d) * domainSpan + domainSpan / 2).x / STAGE_W * 100 + '%',
-        top: polar(STAGE_W/2, STAGE_H/2, (RING.domainIn + RING.domainOut) / 2, DATA.indexOf(d) * domainSpan + domainSpan / 2).y / STAGE_H * 100 + '%',
-        opacity: focusedDomainId && focusedDomainId !== d.id ? 0.35 : 1,
+    <!-- Node labels (HTML overlay) -->
+    <template v-for="ring in concentricRings" :key="'nl-'+ring.id">
+      <div v-for="node in ring.nodes" :key="'nl-'+node.id" class="sb-sub-label" :style="{
+        left: polar(STAGE_W/2, STAGE_H/2, RING_BOUNDS[ring.relationType].rOut + 24, node.angle).x / STAGE_W * 100 + '%',
+        top: polar(STAGE_W/2, STAGE_H/2, RING_BOUNDS[ring.relationType].rOut + 24, node.angle).y / STAGE_H * 100 + '%',
+        opacity: focusedRingId && focusedRingId !== ring.id ? 0.32 : 1,
       }">
-        <div class="sb-dl-name">{{ d.name }}</div>
-        <div class="sb-dl-pct" :style="{ color: d.color }">{{ Math.round(d.sub.reduce((s, x) => s + x.m, 0) / d.sub.length * 100) }}%</div>
+        <div class="sb-sl-name" :style="{
+          fontSize: (focusedNodeId === node.id || hoverNode?.id === node.id) ? '14px' : '12.5px',
+          fontWeight: (focusedNodeId === node.id || hoverNode?.id === node.id) ? 600 : 500,
+          color: focusedNodeId === node.id ? RING_COLORS[ring.relationType] : (node.mastery > 0.5 ? PALETTE.text : PALETTE.textSub),
+        }">{{ node.label }}</div>
+        <div class="sb-sl-pct" :style="{ color: node.mastery < 0.4 ? PALETTE.pink : RING_COLORS[ring.relationType] }">{{ Math.round(node.mastery * 100) }}%</div>
       </div>
     </template>
 
-    <!-- Sub-topic labels -->
-    <template v-for="seg in subSegs" :key="'sl-'+seg.key">
-      <div v-if="polar(STAGE_W/2, STAGE_H/2, RING.dotsR + 32, (seg.a0 + seg.a1) / 2).x > 40 && polar(STAGE_W/2, STAGE_H/2, RING.dotsR + 32, (seg.a0 + seg.a1) / 2).x < STAGE_W - 40"
-        class="sb-sub-label" :style="{
-          left: polar(STAGE_W/2, STAGE_H/2, RING.dotsR + 32, (seg.a0 + seg.a1) / 2).x / STAGE_W * 100 + '%',
-          top: polar(STAGE_W/2, STAGE_H/2, RING.dotsR + 32, (seg.a0 + seg.a1) / 2).y / STAGE_H * 100 + '%',
-          opacity: focusedDomainId && focusedDomainId !== seg.d.id ? 0.32 : 1,
-        }">
-        <div class="sb-sl-name" :style="{ fontSize: (focusedSubId === seg.sub.id || hoverSub?.sub.id === seg.sub.id) ? '14px' : '12.5px', fontWeight: (focusedSubId === seg.sub.id || hoverSub?.sub.id === seg.sub.id) ? 600 : 500, color: focusedSubId === seg.sub.id ? seg.d.color : (seg.sub.m > 0.5 ? PALETTE.text : PALETTE.textSub) }">{{ seg.sub.name }}</div>
-        <div class="sb-sl-pct" :style="{ color: seg.d.color }">{{ Math.round(seg.sub.m * 100) }}%</div>
+    <!-- Ring labels -->
+    <template v-for="(ring, i) in concentricRings" :key="'rl-'+ring.id">
+      <div class="sb-domain-label" :style="{
+        left: polar(STAGE_W/2, STAGE_H/2, (RING_BOUNDS[ring.relationType].rIn + RING_BOUNDS[ring.relationType].rOut) / 2, i * 90 + 45).x / STAGE_W * 100 + '%',
+        top: polar(STAGE_W/2, STAGE_H/2, (RING_BOUNDS[ring.relationType].rIn + RING_BOUNDS[ring.relationType].rOut) / 2, i * 90 + 45).y / STAGE_H * 100 + '%',
+        opacity: focusedRingId && focusedRingId !== ring.id ? 0.35 : 1,
+      }">
+        <div class="sb-dl-name" :style="{ color: RING_COLORS[ring.relationType], fontSize: '16px' }">{{ ring.label }}</div>
       </div>
     </template>
 
     <!-- Center label -->
     <div class="sb-center">
-      <div class="sb-center-sub">{{ focusedSub ? 'FOCUSED &middot; 此项' : 'MY KNOWLEDGE' }}</div>
+      <div class="sb-center-sub">{{ focusedNode ? 'FOCUSED &middot; 此项' : 'TRANSFORMER' }}</div>
       <div class="sb-center-pct">{{ centerPercent }}<span class="sb-center-pct-unit">%</span></div>
       <div class="sb-center-info">
-        <template v-if="focusedSub">{{ focusedSub.sub.name }}<br />{{ focusedSub.sub.concepts.length }} 个知识点</template>
-        <template v-else>{{ DATA.length }} 学科 &middot; {{ subCount }} 子方向<br />{{ conceptCount }} 知识点</template>
+        <template v-if="focusedNode">{{ focusedNode.label }}<br />{{ focusedNode.ringLabel }}</template>
+        <template v-else>{{ concentricRings.length }} 层环 &middot; {{ nodeCount }} 节点<br />知识扩散视图</template>
       </div>
     </div>
 
     <!-- Hover tooltip -->
-    <div v-if="hoverSub && (!focusedSub || focusedSub.sub.id !== hoverSub.sub.id)" class="sb-tooltip" :style="{ left: mouse.x + 16 + 'px', top: mouse.y + 16 + 'px' }">
-      <div class="sb-tt-en" :style="{ color: hoverSub.d.color }">{{ hoverSub.d.en.toUpperCase() }}</div>
-      <div class="sb-tt-name">{{ hoverSub.sub.name }}</div>
+    <div v-if="hoverNode && (!focusedNode || focusedNode.id !== hoverNode.id)" class="sb-tooltip" :style="{ left: mouse.x + 16 + 'px', top: mouse.y + 16 + 'px' }">
+      <div class="sb-tt-en" :style="{ color: RING_COLORS[hoverNode.ringType] }">{{ hoverNode.ringLabel.toUpperCase() }}</div>
+      <div class="sb-tt-name">{{ hoverNode.label }}</div>
       <div class="sb-tt-bar-wrap">
-        <div class="sb-tt-bar-bg"><div class="sb-tt-bar" :style="{ width: hoverSub.sub.m * 100 + '%', background: hoverSub.d.color }"></div></div>
-        <span class="sb-tt-pct" :style="{ color: hoverSub.d.color }">{{ Math.round(hoverSub.sub.m * 100) }}%</span>
+        <div class="sb-tt-bar-bg"><div class="sb-tt-bar" :style="{ width: hoverNode.mastery * 100 + '%', background: hoverNode.mastery < 0.4 ? PALETTE.pink : RING_COLORS[hoverNode.ringType] }"></div></div>
+        <span class="sb-tt-pct" :style="{ color: hoverNode.mastery < 0.4 ? PALETTE.pink : RING_COLORS[hoverNode.ringType] }">{{ Math.round(hoverNode.mastery * 100) }}%</span>
       </div>
-      <div class="sb-tt-hint">{{ hoverSub.sub.concepts.length }} 知识点 &middot; 点击查看详情</div>
+      <div class="sb-tt-hint">{{ hoverNode.recommended ? '⭐ 推荐学习 &middot; ' : '' }}点击查看详情</div>
     </div>
 
     <!-- Detail panel -->
     <transition name="sb-slide">
-      <div v-if="focusedSub" class="sb-detail">
+      <div v-if="focusedNode" class="sb-detail">
         <div class="sb-detail-header">
-          <span class="sb-detail-tag" :style="{ color: focusedSub.d.color, background: hexA(focusedSub.d.color, 0.1), borderColor: hexA(focusedSub.d.color, 0.25) }">
-            <span class="sb-detail-tag-dot" :style="{ background: focusedSub.d.color, boxShadow: `0 0 6px ${focusedSub.d.color}` }"></span>
-            {{ focusedSub.d.en.toUpperCase() }}
+          <span class="sb-detail-tag" :style="{ color: RING_COLORS[focusedNode.ringType], background: hexA(RING_COLORS[focusedNode.ringType], 0.1), borderColor: hexA(RING_COLORS[focusedNode.ringType], 0.25) }">
+            <span class="sb-detail-tag-dot" :style="{ background: RING_COLORS[focusedNode.ringType], boxShadow: `0 0 6px ${RING_COLORS[focusedNode.ringType]}` }"></span>
+            {{ focusedNode.ringLabel.toUpperCase() }}
           </span>
           <button class="sb-detail-close" @click="closeDetail">&times;</button>
         </div>
-        <div class="sb-detail-title">{{ focusedSub.sub.name }}</div>
-        <div class="sb-detail-sub">{{ focusedSub.d.name }} &middot; {{ focusedSub.sub.concepts.length }} 个具体知识点</div>
+        <div class="sb-detail-title">{{ focusedNode.label }}</div>
+        <div class="sb-detail-sub">中心: Transformer &middot; {{ focusedNode.ringLabel }}</div>
 
         <div class="sb-detail-mastery">
           <div class="sb-detail-mastery-head">
             <span class="sb-detail-mastery-label">掌握度</span>
-            <span class="sb-detail-mastery-val" :style="{ color: focusedSub.d.color }">{{ Math.round(focusedSub.sub.m * 100) }}%</span>
+            <span class="sb-detail-mastery-val" :style="{ color: focusedNode.mastery < 0.4 ? PALETTE.pink : RING_COLORS[focusedNode.ringType] }">{{ Math.round(focusedNode.mastery * 100) }}%</span>
           </div>
           <div class="sb-detail-mastery-bar-bg">
-            <div class="sb-detail-mastery-bar" :style="{ width: focusedSub.sub.m * 100 + '%', background: `linear-gradient(90deg, ${focusedSub.d.color}, ${PALETTE.cyan})`, boxShadow: `0 0 12px ${focusedSub.d.color}88` }"></div>
+            <div class="sb-detail-mastery-bar" :style="{ width: focusedNode.mastery * 100 + '%', background: `linear-gradient(90deg, ${focusedNode.mastery < 0.4 ? PALETTE.pink : RING_COLORS[focusedNode.ringType]}, ${PALETTE.cyan})`, boxShadow: `0 0 12px ${focusedNode.mastery < 0.4 ? PALETTE.pink : RING_COLORS[focusedNode.ringType]}88` }"></div>
           </div>
         </div>
 
         <div class="sb-detail-stats">
           <div class="sb-detail-stat">
-            <div class="sb-detail-stat-val" style="color:#06d6a0">{{ focusedSub.sub.concepts.filter(c => c.m >= 0.9).length }}</div>
+            <div class="sb-detail-stat-val" :style="{ color: focusedNode.mastery >= 0.9 ? '#06d6a0' : PALETTE.textSub }">{{ focusedNode.mastery >= 0.9 ? '是' : '否' }}</div>
             <div class="sb-detail-stat-label">已精通</div>
           </div>
           <div class="sb-detail-stat">
-            <div class="sb-detail-stat-val" :style="{ color: focusedSub.d.color }">{{ focusedSub.sub.concepts.filter(c => c.m > 0 && c.m < 0.9).length }}</div>
-            <div class="sb-detail-stat-label">进行中</div>
+            <div class="sb-detail-stat-val" :style="{ color: focusedNode.mastery < 0.4 ? PALETTE.pink : RING_COLORS[focusedNode.ringType] }">{{ focusedNode.mastery < 0.4 ? '薄弱' : '正常' }}</div>
+            <div class="sb-detail-stat-label">状态</div>
           </div>
           <div class="sb-detail-stat">
-            <div class="sb-detail-stat-val" style="color:var(--color-text-secondary)">{{ focusedSub.sub.concepts.filter(c => c.m === 0).length }}</div>
-            <div class="sb-detail-stat-label">未触及</div>
+            <div class="sb-detail-stat-val" :style="{ color: focusedNode.recommended ? PALETTE.yellow : PALETTE.textSub }">{{ focusedNode.recommended ? '是' : '否' }}</div>
+            <div class="sb-detail-stat-label">推荐</div>
           </div>
         </div>
 
-        <div class="sb-detail-concepts-title">CONCEPTS &middot; 知识点</div>
+        <div class="sb-detail-concepts-title">RELATION &middot; 关系</div>
         <div class="sb-detail-concepts">
-          <div v-for="(c, i) in focusedSub.sub.concepts" :key="i" class="sb-detail-concept" :class="c.m >= 0.9 ? 'done' : c.m > 0 ? 'partial' : 'todo'"
-            :style="{ animationDelay: `${i * 0.04}s` }">
-            <div class="sb-dc-dot" :class="c.m >= 0.9 ? 'done' : c.m > 0 ? 'partial' : 'todo'" :style="c.m >= 0.9 ? { background: '#06d6a0', boxShadow: '0 0 8px #06d6a0' } : c.m > 0 ? { background: focusedSub.d.color } : {}"></div>
-            <span class="sb-dc-name" :class="{ 'sb-dc-todo': c.m === 0, 'sb-dc-done': c.m >= 0.9 }">{{ c.name }}</span>
-            <span class="sb-dc-pct" :style="{ color: c.m >= 0.9 ? '#06d6a0' : c.m > 0 ? focusedSub.d.color : PALETTE.textTri }">{{ c.m === 0 ? '&mdash;' : Math.round(c.m * 100) + '%' }}</span>
+          <div class="sb-detail-concept" :class="focusedNode.mastery >= 0.9 ? 'done' : focusedNode.mastery > 0 ? 'partial' : 'todo'">
+            <div class="sb-dc-dot" :class="focusedNode.mastery >= 0.9 ? 'done' : focusedNode.mastery > 0 ? 'partial' : 'todo'"
+              :style="focusedNode.mastery >= 0.9 ? { background: '#06d6a0', boxShadow: '0 0 8px #06d6a0' } : focusedNode.mastery > 0 ? { background: RING_COLORS[focusedNode.ringType] } : {}"></div>
+            <span class="sb-dc-name" :class="{ 'sb-dc-todo': focusedNode.mastery === 0, 'sb-dc-done': focusedNode.mastery >= 0.9 }">中心: Transformer</span>
+            <span class="sb-dc-pct" :style="{ color: PALETTE.textTri }">10%</span>
+          </div>
+          <div class="sb-detail-concept partial" :style="{ animationDelay: '0.04s' }">
+            <div class="sb-dc-dot partial" :style="{ background: RING_COLORS[focusedNode.ringType] }"></div>
+            <span class="sb-dc-name">关系: {{ focusedNode.ringLabel }}</span>
+            <span class="sb-dc-pct" :style="{ color: RING_COLORS[focusedNode.ringType] }">{{ focusedNode.ringType === 'prerequisite' ? '先修' : focusedNode.ringType === 'current' ? '同域' : focusedNode.ringType === 'application' ? '应用' : '拓展' }}</span>
+          </div>
+          <div v-if="focusedNode.recommended" class="sb-detail-concept partial" :style="{ animationDelay: '0.08s' }">
+            <div class="sb-dc-dot partial" :style="{ background: PALETTE.yellow }"></div>
+            <span class="sb-dc-name">推荐学习</span>
+            <span class="sb-dc-pct" :style="{ color: PALETTE.yellow }">⭐</span>
           </div>
         </div>
 
-        <button class="sb-detail-btn" :style="{ background: `linear-gradient(135deg, ${focusedSub.d.color}, ${PALETTE.purple})`, boxShadow: `0 6px 22px ${hexA(focusedSub.d.color, 0.4)}` }">
-          进入 {{ focusedSub.sub.name }} 学习 &rarr;
+        <button class="sb-detail-btn" :style="{ background: `linear-gradient(135deg, ${RING_COLORS[focusedNode.ringType]}, ${PALETTE.purple})`, boxShadow: `0 6px 22px ${hexA(RING_COLORS[focusedNode.ringType], 0.4)}` }">
+          进入 {{ focusedNode.label }} 学习 &rarr;
         </button>
       </div>
     </transition>

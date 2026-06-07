@@ -76,7 +76,7 @@ export function getTraceSummary() {
   }
 }
 
-export function buildTrace({ requestId, agents, inputsSummary, outputsSummary, evidence, riskFlags, fallbackUsed, durationMs }) {
+export function buildTrace({ requestId, agents, inputsSummary, outputsSummary, evidence, riskFlags, fallbackUsed, durationMs, agentResults }) {
   return {
     requestId: requestId || `req-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
     timestamp: new Date().toISOString(),
@@ -87,5 +87,14 @@ export function buildTrace({ requestId, agents, inputsSummary, outputsSummary, e
     riskFlags: riskFlags || [],
     fallbackUsed: fallbackUsed || false,
     durationMs: durationMs || 0,
+    agentResults: (agentResults || []).map(r => ({
+      agentName: r.agentName,
+      inputSummary: r.inputSummary || '',
+      outputSummary: r.outputSummary || '',
+      confidence: r.confidence,
+      evidence: r.evidence || [],
+      durationMs: r.durationMs || 0,
+      fallbackUsed: r.fallbackUsed || false,
+    })),
   }
 }

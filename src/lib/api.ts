@@ -22,6 +22,8 @@ import type {
   PathReplanResponse,
   TutorAgentResponse,
   FullEvaluationResponse,
+  FullRunRequest,
+  FullRunResponse,
   KnowledgeContextResponse,
   KnowledgeStatusResponse,
 } from '@/types/api'
@@ -35,7 +37,9 @@ async function requestJson<T>(input: string, init?: RequestInit): Promise<T> {
     (
       input.startsWith('/api/chat') ||
       input.startsWith('/api/tutoring') ||
-      input.startsWith('/api/profile/analyze')
+      input.startsWith('/api/profile/analyze') ||
+      input.startsWith('/api/agents/') ||
+      input.startsWith('/api/resources/generate')
     )
 
   if (isAiRequest) {
@@ -139,10 +143,13 @@ export function fetchAgentWorkflow() {
   return requestJson<LearningWorkflowResponse>('/api/agent/workflow')
 }
 
-export function generateResources(topic?: string) {
+export function generateResources(topic?: string, resourceType?: string) {
   return requestJson<{ items: GeneratedResource[] }>('/api/resources/generate', {
     method: 'POST',
-    body: JSON.stringify({ topic }),
+    body: JSON.stringify({
+      topic: topic || '综合学习',
+      resourceType: resourceType || 'concept',
+    }),
   })
 }
 
@@ -172,7 +179,7 @@ export function agentProfileAnalyze(payload: unknown) {
 }
 
 export function fetchTutoringTopics() {
-  return requestJson<{ topics: Array<{ label: string; questions: string[] }> }>('/api/tutoring/topics')
+  return requestJson<{ topics: Array<{ id: string; label: string; category: string }> }>('/api/tutoring/topics')
 }
 
 export function agentPathReplan(payload: { profile?: unknown; evaluation?: unknown; currentPath?: unknown }) {
@@ -189,7 +196,7 @@ export function agentTutoring(payload: { question: string; mode: string; profile
   })
 }
 
-export function agentEvaluate(payload: { profile?: unknown; learningData?: unknown; exerciseResults?: unknown; knowledgeContext?: unknown }) {
+export function agentEvaluate(payload: { profile?: unknown; learningData?: unknown; exerciseResults?: unknown }) {
   return requestJson<FullEvaluationResponse>('/api/agents/evaluate', {
     method: 'POST',
     body: JSON.stringify(payload),
@@ -202,6 +209,13 @@ export function fetchKnowledgeStatus() {
 
 export function searchKnowledge(payload: { query?: string; profile?: unknown; learningData?: unknown; exerciseResults?: unknown; limit?: number }) {
   return requestJson<KnowledgeContextResponse>('/api/knowledge/search', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  })
+}
+
+export function agentFullRun(payload: FullRunRequest) {
+  return requestJson<FullRunResponse>('/api/agents/run', {
     method: 'POST',
     body: JSON.stringify(payload),
   })

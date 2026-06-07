@@ -20,7 +20,7 @@ import {
 import { fetchEvaluation, agentPathReplan, fetchLatestProfile, agentEvaluate, fetchEvidenceTraces, fetchEvidenceSummary } from '@/lib/api'
 import ThreeKnowledgeTree from '@/components/knowledge-tree/ThreeKnowledgeTree.vue'
 import ParticleBackground from '@/components/evaluation/ParticleBackground.vue'
-import AgentFlowTimeline from '@/components/evaluation/agentflowtimeline.vue'
+import AgentFlowTimeline from '@/components/evaluation/AgentFlowTimeline.vue'
 import EvidenceTraceView from '@/components/evidence/EvidenceTraceView.vue'
 import type { TreeNode } from '@/components/knowledge-tree/GrowthKnowledgeTree.vue'
 
@@ -60,14 +60,14 @@ const reportDate = ref('2026-05-12')
 
 const roundInsight = {
   title: '这一轮学习画像已更新',
-  subtitle: '系统根据刚完成的一轮练习，重新校准了你的掌握状态和下一轮侧重。',
+  subtitle: '大树根据刚完成的一轮练习，重新校准了你的掌握状态和下一轮侧重。',
   metrics: [
     { label: '完成知识点', value: '18', tone: '#06d6a0' },
-    { label: '新增亮点', value: '7', tone: '#ffe58f' },
+    { label: '新点亮星标', value: '7', tone: '#ffe58f' },
     { label: '薄弱收敛', value: '2', tone: '#00d4ff' },
   ],
   profile: [
-    { label: '主要薄弱', before: '指针泛复习', after: '二级指针传参' },
+    { label: '主薄弱', before: '指针泛复习', after: '二级指针传参' },
     { label: '学习偏好', before: '文字讲解', after: '栈图 + 队列快照' },
   ],
   route: [
@@ -79,7 +79,7 @@ const roundInsight = {
 
 const isReplanning = ref(false)
 
-// Agent collaboration flow state
+// Agent协作流状态
 interface AgentNode {
   agentId: string
   agentName: string
@@ -103,7 +103,7 @@ const defaultAgentNodes: AgentNode[] = [
   { agentId: 'reflection', agentName: '反思智能体', role: 'REFLECTION', input: '评估结果 + 画像变化', output: '画像更新 + 路径触发', confidence: 0.83, evidenceTags: ['反向传播', '路径触发'], duration: 350, status: 'pending' },
 ]
 
-// Profile update animation state
+// 画像更新动画状态
 const previousMastery = ref<Record<string, number>>({})
 const masteryDeltas = ref<Record<string, number>>({})
 
@@ -130,7 +130,7 @@ async function generateReport() {
   isGeneratingReport.value = true
   animateAgentFlow()
 
-  // 淇濆瓨鏃ф帉鎻″害鐢ㄤ簬鍔ㄧ敾
+  // 保存旧掌握度用于动画
   previousMastery.value = {}
   subjects.value.forEach(s => { previousMastery.value[s.name] = s.mastery })
 
@@ -138,7 +138,7 @@ async function generateReport() {
     const profile = await fetchLatestProfile()
     const result = await agentEvaluate({ profile }) as any
 
-    // Update collaboration flow from agent results.
+    // 从agent结果更新协作流
     if (result.agentResults && result.agentResults.length > 0) {
       result.agentResults.forEach((ar: any, i: number) => {
         if (i < agentNodes.value.length) {
@@ -156,7 +156,7 @@ async function generateReport() {
       agentFlowActive.value = false
     }
 
-    // 浠庤瘎浼扮粨鏋滄洿鏂版帉鎻″害
+    // 从评估结果更新掌握度
     if (result.evaluation?.mastery) {
       const masteryMap: Record<string, number> = {}
       result.evaluation.mastery.forEach((m: any) => { masteryMap[m.name] = m.level })
@@ -168,7 +168,7 @@ async function generateReport() {
       })
     }
 
-    // Update suggestions from evaluation result.
+    // 从评估结果更新建议
     if (result.evaluation?.suggestions) {
       suggestions.value = result.evaluation.suggestions.map((item: any) => {
         const type = item.type ?? inferSuggestionType(item.text)
@@ -176,7 +176,7 @@ async function generateReport() {
       })
     }
 
-    // 浠庣敾鍍忔洿鏂版洿鏂皃rofileTrace
+    // 从画像更新更新profileTrace
     if (result.evaluation?.profileUpdates?.adjustDimensions) {
       const updates = result.evaluation.profileUpdates.adjustDimensions
       profileTrace.after = updates.map((u: any) => ({
@@ -185,7 +185,7 @@ async function generateReport() {
       }))
     }
   } catch {
-    // fallback: 浠嶇劧鏄剧ず榛樿鏁版嵁
+    // fallback: 仍然显示默认数据
   }
 
   isGeneratingReport.value = false
@@ -219,7 +219,7 @@ const defaultSuggestions: SuggestionItem[] = [
   { text: '概率论与数理统计是当前短板，建议安排 2 小时专项复习。', type: 'weakness', icon: AlertTriangle },
   { text: '机器学习基础掌握较稳，可以逐步加入项目实战。', type: 'strength', icon: Sparkles },
   { text: '本周学习时长较上周提升 15%，可以继续保持当前节奏。', type: 'positive', icon: ArrowUp },
-  { text: '建议增加编程实战时间，将理论与实践比例调整到 1:1。', type: 'action', icon: ArrowRight },
+  { text: '建议增加编程实战时间，理论与实践比例可以调整到 1:1。', type: 'action', icon: ArrowRight },
 ]
 
 const stats = ref(defaultStats)
@@ -228,7 +228,7 @@ const suggestions = ref(defaultSuggestions)
 const subjects = ref([
   { name: 'C / Python 编程基础', mastery: 90, color: '#00599C' },
   { name: '数据结构与算法', mastery: 78, color: '#4CAF50' },
-  { name: '计算机系统', mastery: 58, color: '#1565C0' },
+  { name: '计算机系统（OS/网络/DB）', mastery: 58, color: '#1565C0' },
   { name: '机器学习', mastery: 65, color: '#00d4ff' },
   { name: '深度学习', mastery: 42, color: '#7c3aed' },
   { name: '数学与编程基础', mastery: 82, color: '#f43f5e' },
@@ -245,12 +245,12 @@ const weeklyTrend = [
 ]
 
 const badges = [
-  { icon: Sparkles, name: '鍒濊瘑瀛︿範', earned: true, color: '#00d4ff' },
-  { icon: Zap, name: '杩炵画鎵撳崱', earned: true, color: '#06d6a0' },
-  { icon: Award, name: '鐭ヨ瘑杈句汉', earned: true, color: '#7c3aed' },
-  { icon: PenTool, name: '鍒烽鑳芥墜', earned: false, color: '#f59e0b' },
-  { icon: Brain, name: '椤圭洰鍏堥攱', earned: false, color: '#f43f5e' },
-  { icon: TrendingUp, name: '瀛︿範澶у笀', earned: false, color: '#3b82f6' },
+  { icon: Sparkles, name: '初识学习', earned: true, color: '#00d4ff' },
+  { icon: Zap, name: '连续打卡', earned: true, color: '#06d6a0' },
+  { icon: Award, name: '知识达人', earned: true, color: '#7c3aed' },
+  { icon: PenTool, name: '刷题能手', earned: false, color: '#f59e0b' },
+  { icon: Brain, name: '项目先锋', earned: false, color: '#f43f5e' },
+  { icon: TrendingUp, name: '学习大师', earned: false, color: '#3b82f6' },
 ]
 
 const atlasNodes = [
@@ -263,56 +263,59 @@ const atlasNodes = [
 ]
 
 const learningStreams = [
-  { label: '诊断入口', value: '23 个行为信号', text: '测评错题、资源完成度和对话追问汇入同一条学习画像时间线。', tone: '#00d4ff' },
+  { label: '诊断入口', value: '23 个行为信号', text: '测评错题、资源完成度、对话追问汇入同一条学习画像时间线。', tone: '#00d4ff' },
   { label: '路径修正', value: '2 个薄弱点', text: '图结构与指针训练自动插入下一轮路径，不再只给静态报告。', tone: '#f43f5e' },
   { label: '星标反馈', value: '3 枚已点亮', text: '完成的知识点在树叶上高亮，未完成节点保持低亮等待触发。', tone: '#ffe58f' },
 ]
 
 const pathStages = [
-  { label: 'Profile capture', value: 88, tone: '#00d4ff' },
-  { label: 'Knowledge location', value: 72, tone: '#3b82f6' },
-  { label: 'Weakness repair', value: 46, tone: '#f43f5e' },
-  { label: 'Next path', value: 64, tone: '#7c3aed' },
+  { label: '画像采集', value: 88, tone: '#00d4ff' },
+  { label: '知识定位', value: 72, tone: '#3b82f6' },
+  { label: '薄弱修复', value: 46, tone: '#f43f5e' },
+  { label: '下一路径', value: 64, tone: '#7c3aed' },
 ]
 
 const fineTreeNodes: TreeNode[] = [
-  { name: 'Stack frame lifetime', course: 'C programming', status: 'mastered', progress: 86 },
-  { name: 'malloc / free pairing', course: 'C programming', status: 'learning', progress: 58 },
-  { name: 'Double pointer parameters', course: 'C programming', status: 'weak', progress: 41, issue: 'Cannot reliably judge whether parameter changes sync to the caller.', cause: 'Pointer levels and address aliases are mixed.', remedialResources: ['Double pointer call-stack diagram', 'swap / createNode comparison drills'], pathImpact: 'Insert chapter 3 micro practice' },
-  { name: '*p and p write direction', course: 'C programming', status: 'weak', progress: 44, issue: 'Confuses changing a pointer variable with changing the pointed value.', cause: 'Needs memory-cell tracing.', remedialResources: ['Pointer alias sketch card', 'Line-by-line trace drills'], pathImpact: 'Insert next repair task' },
-  { name: 'Dangling pointer after free', course: 'C programming', status: 'weak', progress: 36 },
-  { name: 'Struct pointer member access', course: 'C programming', status: 'mastered', progress: 84 },
-  { name: 'Array bounds and pointer offset', course: 'C programming', status: 'learning', progress: 61 },
-  { name: 'Adjacency list graph build', course: 'Data structures', status: 'learning', progress: 68 },
-  { name: 'BFS visited timing', course: 'Data structures', status: 'weak', progress: 38, issue: 'Visited marking timing causes repeated or missed nodes.', cause: 'Queue progression model is not stable.', remedialResources: ['BFS queue snapshot animation', 'visited marking drills'], pathImpact: 'Insert graph search training' },
-  { name: 'DFS backtracking boundary', course: 'Data structures', status: 'learning', progress: 52 },
-  { name: 'Head and tail insert difference', course: 'Data structures', status: 'learning', progress: 66 },
-  { name: 'Queue empty boundary', course: 'Data structures', status: 'weak', progress: 40 },
-  { name: 'Graph indegree counting', course: 'Data structures', status: 'learning', progress: 57 },
-  { name: 'Shortest path initialization', course: 'Data structures', status: 'next', progress: 24 },
-  { name: 'Recursion termination', course: 'Algorithms', status: 'mastered', progress: 88 },
-  { name: 'Complexity from loops', course: 'Algorithms', status: 'learning', progress: 62 },
-  { name: 'Mistake clustering review', course: 'Algorithms', status: 'weak', progress: 34 },
-  { name: '15 minute diagram repair', course: 'Algorithms', status: 'next', progress: 20 },
+  // C 语言程序设计
+  { name: '栈帧与地址生命周期', course: 'C 语言程序设计', status: 'mastered', progress: 86 },
+  { name: 'malloc / free 配对', course: 'C 语言程序设计', status: 'learning', progress: 58 },
+  { name: '二级指针传参', course: 'C 语言程序设计', status: 'weak', progress: 41, issue: '无法稳定判断形参修改是否能同步到调用方', cause: '指针层级与地址别名混淆', remedialResources: ['二级指针调用栈图解', 'swap / createNode 对照练习 5 题'], pathImpact: '插入第 3 章课后微训练' },
+  { name: '*p 与 p 的读写方向', course: 'C 语言程序设计', status: 'weak', progress: 44, issue: '把修改指针变量和修改指针指向的值混在一起', cause: '缺少内存格子图推演', remedialResources: ['指针别名关系画图卡', '逐行 Trace 训练 4 题'], pathImpact: '插入下一轮补弱任务' },
+  { name: '释放后悬空指针', course: 'C 语言程序设计', status: 'weak', progress: 36 },
+  { name: '结构体指针成员访问', course: 'C 语言程序设计', status: 'mastered', progress: 84 },
+  { name: '数组越界与指针偏移', course: 'C 语言程序设计', status: 'learning', progress: 61 },
+  // 数据结构
+  { name: '邻接表建图', course: '数据结构', status: 'learning', progress: 68 },
+  { name: 'BFS visited 标记时机', course: '数据结构', status: 'weak', progress: 38, issue: '入队前后标记时机不稳定，导致重复访问或漏节点', cause: '队列推进过程没有形成步骤模型', remedialResources: ['BFS 队列快照动画', 'visited 标记专项 6 题'], pathImpact: '插入第 5 章搜索训练' },
+  { name: 'DFS 回溯边界', course: '数据结构', status: 'learning', progress: 52 },
+  { name: '链表头插与尾插差异', course: '数据结构', status: 'learning', progress: 66 },
+  { name: '队列空判边界', course: '数据结构', status: 'weak', progress: 40 },
+  { name: '图节点入度统计', course: '数据结构', status: 'learning', progress: 57 },
+  { name: '最短路径初始化', course: '数据结构', status: 'next', progress: 24 },
+  // 算法设计与分析
+  { name: '递归终止条件', course: '算法设计与分析', status: 'mastered', progress: 88 },
+  { name: '复杂度从循环推导', course: '算法设计与分析', status: 'learning', progress: 62 },
+  { name: '错题聚类复盘', course: '算法设计与分析', status: 'weak', progress: 34 },
+  { name: '15 分钟图解补弱', course: '算法设计与分析', status: 'next', progress: 20 },
 ]
 
 const profileTrace = {
   before: [
-    { label: 'Graph structure mastery', value: '68%' },
-    { label: 'Pointer mastery', value: '65%' },
-    { label: 'Resource preference', value: 'Text explanation' },
+    { label: '图结构掌握度', value: '68%' },
+    { label: '指针掌握度', value: '65%' },
+    { label: '资源偏好', value: '文本讲解' },
   ],
   evidence: [
-    'Two thirds of stage assessment mistakes came from graphs and pointers',
-    'Student asked about node relationships three times',
-    'Pointer exercise accuracy dropped from 65% to 42%',
+    '阶段测评错题 2/3 来自图结构与指针',
+    '学生连续询问"节点关系"相关问题 3 次',
+    '指针相关练习正确率从 65% 下降至 42%',
   ],
   after: [
-    { label: 'Graph structure mastery', value: '42%' },
-    { label: 'Pointer mastery', value: '42%' },
-    { label: 'New preference', value: 'Mind map and example breakdown' },
+    { label: '图结构掌握度', value: '42% ↓' },
+    { label: '指针掌握度', value: '42% ↓' },
+    { label: '新增偏好', value: '思维导图 + 例题拆解' },
   ],
-  nextAction: 'Insert graph repair and pointer training resources into the next path',
+  nextAction: '下一轮路径插入图结构补弱与指针训练资源',
 }
 
 const selectedNode = ref<TreeNode | null>(null)
@@ -320,7 +323,7 @@ const selectedNode = ref<TreeNode | null>(null)
 const selectedNodeDetail = computed(() => {
   const node = selectedNode.value
   if (!node) return null
-  const course = node.course ?? 'Uncategorized'
+  const course = node.course ?? '未分类'
   const siblings = fineTreeNodes.filter(n => n.course === course)
   const courseMastery = siblings.length > 0 ? Math.round(siblings.reduce((sum, n) => sum + n.progress, 0) / siblings.length) : 0
   const courseWeakCount = siblings.filter(n => n.status === 'weak').length
@@ -340,14 +343,14 @@ const selectedNodeDetail = computed(() => {
 })
 
 function handleMarkerSelect(marker: any) {
-  // 鐭ヨ瘑鐐硅嫻鏋滐細鐩存帴鍖归厤
+  // 知识点苹果：直接匹配
   const point = fineTreeNodes.find(n => n.name === marker?.label)
   if (point) {
     selectedNode.value = point
     return
   }
 
-  // 璇剧▼/鍒嗘敮鏍囪锛氭樉绀鸿璇剧▼鐨勭涓€涓杽寮辩煡璇嗙偣锛屾垨绗竴涓煡璇嗙偣
+  // 课程/分支标记：显示该课程的第一个薄弱知识点，或第一个知识点
   if (marker?.type === 'course' || marker?.type === 'branch') {
     const courseName = marker.label
     const courseNodes = fineTreeNodes.filter(n => n.course === courseName)
@@ -403,9 +406,9 @@ function suggestIconColor(type: SuggestionType) {
 }
 
 function inferSuggestionType(text: string): SuggestionType {
-  if (text.includes('鐭澘') || text.includes('钖勫急') || text.includes('鍔犲己')) return 'weakness'
-  if (text.includes('淇濇寔') || text.includes('鎻愬崌')) return 'positive'
-  if (text.includes('鍙互') || text.includes('鎺屾彙')) return 'strength'
+  if (text.includes('短板') || text.includes('薄弱') || text.includes('加强')) return 'weakness'
+  if (text.includes('保持') || text.includes('提升')) return 'positive'
+  if (text.includes('可以') || text.includes('掌握')) return 'strength'
   return 'action'
 }
 
@@ -421,10 +424,10 @@ function iconForStat(label: string, iconName?: string) {
     return iconMap[iconName as keyof typeof iconMap]
   }
 
-    if (label.includes('??')) return Clock
-    if (label.includes('??') || label.includes('??')) return PenTool
-    if (label.includes('???')) return Target
-    if (label.includes('??')) return TrendingUp
+  if (label.includes('时长')) return Clock
+  if (label.includes('课时') || label.includes('资源')) return PenTool
+  if (label.includes('正确率')) return Target
+  if (label.includes('掌握')) return TrendingUp
   return Brain
 }
 
@@ -445,7 +448,7 @@ onMounted(() => {
     loaded.value = true
   }, 100)
 
-  // 鍒濆鍖朅gent鍗忎綔娴侊紙榛樿pending鐘舵€侊級
+  // 初始化Agent协作流（默认pending状态）
   agentNodes.value = defaultAgentNodes.map(n => ({ ...n, status: 'pending' }))
 
   fetchEvaluation()
@@ -465,12 +468,14 @@ onMounted(() => {
       })
 
       reportDate.value = data.generatedAt
+
+      // 从dashboard.weaknesses更新fineTreeNodes的薄弱状态
       const dashboard = (data as any).dashboard
       if (dashboard?.weaknesses) {
         const weakIds = dashboard.weaknesses.map((w: any) => w.id)
         const weakMap: Record<string, any> = {}
         dashboard.weaknesses.forEach((w: any) => { weakMap[w.id] = w })
-        // 鏄犲皠weakness鍒癴ineTreeNodes
+        // 映射weakness到fineTreeNodes
         fineTreeNodes.forEach(node => {
           const matched = dashboard.weaknesses.find((w: any) =>
             node.name.includes(w.label) || w.label.includes(node.name.split(' ')[0])
@@ -484,22 +489,23 @@ onMounted(() => {
         })
       }
 
-      // Update subject mastery from dashboard metrics.
+      // 从dashboard.profileMetrics更新subjects掌握度
       if (dashboard?.profileMetrics) {
         const metricMap: Record<string, number> = {}
         dashboard.profileMetrics.forEach((m: any) => {
-          metricMap[m.label] = m.stage2
+          metricMap[m.label] = m.stage2 // 使用最新阶段的数据
         })
-        const nameMap: Array<[string, string]> = [
-          ['知识广度', 'C / Python 编程基础'],
-          ['知识深度', '数据结构与算法'],
-          ['应用能力', '计算机系统（OS/网络/DB）'],
-          ['创新力', '机器学习'],
-          ['工程实践', '深度学习'],
-          ['知识迁移', '数学与编程基础'],
-        ]
+        // 映射到subjects
+        const nameMap: Record<string, string> = {
+          '知识广度': 'C / Python 编程基础',
+          '知识深度': '数据结构与算法',
+          '应用能力': '计算机系统（OS/网络/DB）',
+          '创新力': '机器学习',
+          '工程实践': '深度学习',
+          '知识迁移': '数学与编程基础',
+        }
         subjects.value = subjects.value.map(s => {
-          const metricLabel = nameMap.find(([, v]) => v === s.name)?.[0]
+          const metricLabel = Object.entries(nameMap).find(([, v]) => v === s.name)?.[0]
           if (metricLabel && metricMap[metricLabel] !== undefined) {
             return { ...s, mastery: metricMap[metricLabel] }
           }
@@ -507,7 +513,7 @@ onMounted(() => {
         })
       }
 
-      // 浠巇ashboard.evidenceRounds鏇存柊profileTrace
+      // 从dashboard.evidenceRounds更新profileTrace
       if (dashboard?.evidenceRounds && dashboard.evidenceRounds.length > 0) {
         const latestRound = dashboard.evidenceRounds[dashboard.evidenceRounds.length - 1]
         profileTrace.evidence = latestRound.evidence
@@ -532,10 +538,10 @@ onMounted(() => {
       <div class="eval-left-panel">
         <div class="card three-mini-card">
           <div class="card-head">
-            <h2 class="card-title-sm">瀛︿範鐘舵€佸彲瑙嗗寲</h2>
+            <h2 class="card-title-sm">学习状态可视化</h2>
             <span class="card-tag">3D</span>
           </div>
-          <ThreeKnowledgeTree fill :knowledge-points="fineTreeNodes" :scene-scale="10.2" :scene-height-scale="1.45" :scene-offset-y="4.35" @marker-select="handleMarkerSelect" />
+          <ThreeKnowledgeTree fill :knowledge-points="fineTreeNodes" :scene-scale="7.5" :scene-offset-y="5.05" @marker-select="handleMarkerSelect" />
         </div>
       </div>
 
@@ -558,11 +564,11 @@ onMounted(() => {
 
             <h2 class="detail-title">{{ selectedNodeDetail.name }}</h2>
 
-            <!-- 璇剧▼淇℃伅 -->
+            <!-- 课程信息 -->
             <div class="detail-course-bar">
               <span class="detail-course-name">{{ selectedNodeDetail.course }}</span>
-              <span class="detail-course-mastery">璇剧▼鎺屾彙 {{ selectedNodeDetail.courseMastery }}%</span>
-              <span v-if="selectedNodeDetail.courseWeakCount > 0" class="detail-course-weak">{{ selectedNodeDetail.courseWeakCount }} ???</span>
+              <span class="detail-course-mastery">课程掌握 {{ selectedNodeDetail.courseMastery }}%</span>
+              <span v-if="selectedNodeDetail.courseWeakCount > 0" class="detail-course-weak">{{ selectedNodeDetail.courseWeakCount }} 个薄弱</span>
             </div>
 
             <div class="detail-meter">
@@ -570,27 +576,27 @@ onMounted(() => {
             </div>
 
             <div v-if="selectedNodeDetail.issue" class="detail-block">
-              <span class="detail-label">闂璇婃柇</span>
+              <span class="detail-label">问题诊断</span>
               <p>{{ selectedNodeDetail.issue }}</p>
             </div>
             <div v-if="selectedNodeDetail.cause" class="detail-block">
-              <span class="detail-label">鏍瑰洜鍒嗘瀽</span>
+              <span class="detail-label">根因分析</span>
               <p>{{ selectedNodeDetail.cause }}</p>
             </div>
             <div v-if="selectedNodeDetail.remedialResources.length" class="detail-block">
-              <span class="detail-label">琛ユ晳璧勬簮</span>
+              <span class="detail-label">补救资源</span>
               <ul>
                 <li v-for="res in selectedNodeDetail.remedialResources" :key="res" @click="goToTutoring(res)">{{ res }}</li>
               </ul>
             </div>
             <div v-if="selectedNodeDetail.pathImpact" class="detail-block">
-              <span class="detail-label">璺緞褰卞搷</span>
+              <span class="detail-label">路径影响</span>
               <p>{{ selectedNodeDetail.pathImpact }}</p>
             </div>
 
-            <!-- 鍚岃绋嬬煡璇嗙偣鍒楄〃 -->
+            <!-- 同课程知识点列表 -->
             <div class="detail-block">
-              <span class="detail-label">鍚岃绋嬬煡璇嗙偣</span>
+              <span class="detail-label">同课程知识点</span>
               <div class="detail-sibling-list">
                 <button
                   v-for="sib in selectedNodeDetail.siblings"
@@ -608,7 +614,7 @@ onMounted(() => {
 
             <!-- Round insight info (moved from left overlay) -->
             <div v-if="showRoundInsight" class="detail-block round-insight-compact">
-              <span class="detail-label">澶ф爲鏇存柊</span>
+              <span class="detail-label">大树更新</span>
               <p class="round-compact-copy">{{ roundInsight.subtitle }}</p>
               <div class="round-compact-metrics">
                 <div v-for="item in roundInsight.metrics" :key="item.label" class="round-compact-metric">
@@ -620,54 +626,59 @@ onMounted(() => {
                 <button v-for="item in roundInsight.route" :key="item" type="button" class="route-chip" @click="goToTutoring(item)">{{ item }}</button>
               </div>
               <div class="round-compact-actions">
-                <button class="round-secondary-sm" type="button" @click="showRoundInsight = false">绋嶅悗</button>
-                <button class="round-primary-sm" type="button" @click="acceptRoundAdjustment">鎺ュ彈璋冩暣</button>
+                <button class="round-secondary-sm" type="button" @click="showRoundInsight = false">稍后</button>
+                <button class="round-primary-sm" type="button" @click="acceptRoundAdjustment">接受调整</button>
               </div>
             </div>
 
             <div class="detail-actions">
-              <button type="button" class="detail-btn-secondary" @click="goToTutoring(selectedNodeDetail.name)">杩涘叆杈呭</button>
-              <button type="button" class="detail-btn-primary" @click="addToNextPath">鍔犲叆璺緞</button>
+              <button type="button" class="detail-btn-secondary" @click="goToTutoring(selectedNodeDetail.name)">进入辅导</button>
+              <button type="button" class="detail-btn-primary" @click="addToNextPath">加入路径</button>
             </div>
           </template>
+
+          <!-- Overview state: default -->
           <template v-else>
             <div class="right-header">
-              <div class="hero-badge">????</div>
-              <h1 class="page-title">????<span class="accent-text">????</span></h1>
-              <p class="page-subtitle">??????????????????????????????????</p>
-              <p v-if="isLoading" class="page-status">????????...</p>
+              <div class="hero-badge">效果评估</div>
+              <h1 class="page-title">学习效果<span class="accent-text">数据洞察</span></h1>
+              <p class="page-subtitle">从测评结果、资源完成度和知识树变化中识别薄弱点，并反向更新学生画像。</p>
+              <p v-if="isLoading" class="page-status">正在同步评估数据...</p>
             </div>
 
             <div class="card agent-flow-card">
               <div class="card-head">
-                <h2 class="card-title-sm">Multi-agent collaboration flow</h2>
+                <h2 class="card-title-sm">多智能体协作流</h2>
                 <span class="card-tag">Agent</span>
               </div>
               <AgentFlowTimeline :agents="agentNodes" :active="agentFlowActive" @agent-select="handleAgentSelect" />
               <transition name="agent-detail">
                 <div v-if="selectedAgent" class="agent-detail-panel">
                   <div class="agent-detail-head">
-                    <span class="agent-detail-name">{{ selectedAgent?.agentName }}</span>
-                    <span class="agent-detail-confidence">Confidence {{ ((selectedAgent?.confidence ?? 0) * 100).toFixed(0) }}%</span>
+                    <span class="agent-detail-name">{{ selectedAgent.agentName }}</span>
+                    <span class="agent-detail-confidence" :style="{ color: selectedAgent.confidence >= 0.8 ? '#06d6a0' : selectedAgent.confidence >= 0.6 ? '#f59e0b' : '#f43f5e' }">
+                      置信度 {{ (selectedAgent.confidence * 100).toFixed(0) }}%
+                    </span>
                   </div>
                   <div class="agent-detail-row">
-                    <span class="agent-detail-label">Input</span>
-                    <span>{{ selectedAgent?.input }}</span>
+                    <span class="agent-detail-label">输入</span>
+                    <span>{{ selectedAgent.input }}</span>
                   </div>
                   <div class="agent-detail-row">
-                    <span class="agent-detail-label">Output</span>
-                    <span>{{ selectedAgent?.output }}</span>
+                    <span class="agent-detail-label">输出</span>
+                    <span>{{ selectedAgent.output }}</span>
                   </div>
                   <div class="agent-detail-row">
-                    <span class="agent-detail-label">Time</span>
-                    <span>{{ selectedAgent?.duration }}ms</span>
+                    <span class="agent-detail-label">耗时</span>
+                    <span>{{ selectedAgent.duration }}ms</span>
                   </div>
-                  <div v-if="selectedAgent?.evidenceTags.length" class="agent-detail-tags">
-                    <span v-for="tag in selectedAgent?.evidenceTags" :key="tag" class="agent-tag">{{ tag }}</span>
+                  <div v-if="selectedAgent.evidenceTags.length" class="agent-detail-tags">
+                    <span v-for="tag in selectedAgent.evidenceTags" :key="tag" class="agent-tag">{{ tag }}</span>
                   </div>
                 </div>
               </transition>
             </div>
+
             <div class="eval-summary-cards">
               <div v-for="item in stats" :key="item.label" class="summary-card">
                 <div class="summary-icon" :style="{ color: item.color }">
@@ -712,7 +723,7 @@ onMounted(() => {
 
             <div class="card suggest-card">
               <div class="card-head">
-                <h2 class="card-title-sm">瀛︿範寤鸿</h2>
+                <h2 class="card-title-sm">学习建议</h2>
                 <span class="suggest-count">{{ suggestions.length }} 条</span>
               </div>
               <div class="suggest-list">
@@ -733,7 +744,7 @@ onMounted(() => {
 
             <div class="card badge-card">
               <div class="card-head">
-                <h2 class="card-title-sm">鎴愬氨寰界珷</h2>
+                <h2 class="card-title-sm">成就徽章</h2>
                 <span class="suggest-count">{{ badges.filter(b => b.earned).length }}/{{ badges.length }}</span>
               </div>
               <div class="badge-row">
@@ -744,17 +755,17 @@ onMounted(() => {
                   :title="badge.name"
                 >
                   <component :is="badge.icon" v-if="badge.earned" :size="16" stroke-width="2" :style="{ color: badge.color }" />
-                  <span v-else class="badge-locked">--</span>
+                  <span v-else class="badge-locked">•</span>
                 </div>
               </div>
             </div>
 
             <div class="card chart-card">
               <div class="card-head">
-                <h2 class="card-title-sm">鑳藉姏鎴愰暱鏇茬嚎</h2>
+                <h2 class="card-title-sm">能力成长曲线</h2>
                 <div class="chart-legend">
-                  <span class="legend-item"><span class="legend-dot cyan" />鎴戠殑</span>
-                  <span class="legend-item"><span class="legend-dot dim" />骞冲潎</span>
+                  <span class="legend-item"><span class="legend-dot cyan" />我的</span>
+                  <span class="legend-item"><span class="legend-dot dim" />平均</span>
                 </div>
               </div>
               <div class="chart-body">
@@ -763,8 +774,8 @@ onMounted(() => {
                   <polyline :points="chartPoints.youPoints" fill="none" stroke="#00d4ff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
                 </svg>
                 <div class="chart-footer">
-                  <span>绱 +23%</span>
-                  <span>杈冧笂鍛?<strong class="up">+12%</strong></span>
+                  <span>累计 +23%</span>
+                  <span>较上周 <strong class="up">+12%</strong></span>
                 </div>
               </div>
             </div>
@@ -780,7 +791,7 @@ onMounted(() => {
             <div class="right-footer">
               <button class="report-btn" @click="generateReport" :disabled="isGeneratingReport">
                 <FileBarChart :size="16" stroke-width="1.5" />
-                <span>{{ isGeneratingReport ? '姝ｅ湪鐢熸垚...' : '鐢熸垚璇勪及鎶ュ憡' }}</span>
+                <span>{{ isGeneratingReport ? '正在生成...' : '生成评估报告' }}</span>
               </button>
             </div>
           </template>
@@ -792,22 +803,22 @@ onMounted(() => {
       <div v-if="showReportModal" class="modal-overlay" @click.self="showReportModal = false">
         <div class="modal">
           <div class="modal-header">
-            <h2 class="modal-title">瀛︿範璇勪及鎶ュ憡</h2>
-            <button class="modal-close-btn" @click="showReportModal = false">关闭</button>
+            <h2 class="modal-title">学习评估报告</h2>
+            <button class="modal-close-btn" @click="showReportModal = false">✕</button>
           </div>
           <div class="modal-body">
             <div class="report-summary">
               <div class="report-grade">
                 <span class="grade-letter">B+</span>
-                <span class="grade-label">缁煎悎璇勭骇</span>
+                <span class="grade-label">综合评级</span>
               </div>
               <div class="report-metrics">
                 <div class="metric-item">
                   <span class="metric-label">学习总时长</span>
-                  <span class="metric-value">128 灏忔椂</span>
+                  <span class="metric-value">128 小时</span>
                 </div>
                 <div class="metric-item">
-                  <span class="metric-label">瀹屾垚璇炬椂</span>
+                  <span class="metric-label">完成课时</span>
                   <span class="metric-value">47 节</span>
                 </div>
                 <div class="metric-item">
@@ -821,8 +832,8 @@ onMounted(() => {
               </div>
             </div>
             <div class="report-section">
-              <h3>闃舵鎬荤粨</h3>
-              <p>当前学习节奏稳定，机器学习基础表现较好，但在深度学习和大模型应用上的完成度仍有明显提升空间。</p>
+              <h3>阶段总结</h3>
+              <p>当前学习节奏稳定，机器学习基础表现较好，但在深度学习和大模型应用上的完成度还有明显提升空间。</p>
             </div>
             <div class="report-section">
               <h3>下一步建议</h3>
@@ -836,10 +847,10 @@ onMounted(() => {
           <div class="modal-footer">
             <span class="footer-date">{{ reportDate }}</span>
             <div class="footer-actions">
-              <button class="btn-ghost">棰勮</button>
+              <button class="btn-ghost">预览</button>
               <button class="btn-primary">
                 <Download :size="14" stroke-width="1.5" />
-                涓嬭浇 PDF
+                下载 PDF
               </button>
             </div>
           </div>
@@ -869,23 +880,8 @@ onMounted(() => {
 
 .eval-right-panel {
   position: relative;
-  border-left: 1px solid rgba(255, 255, 255, 0.08);
-  background: rgba(10, 14, 39, 0.72);
-  backdrop-filter: blur(30px) saturate(1.3);
-  -webkit-backdrop-filter: blur(30px) saturate(1.3);
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.04),
-    inset 0 0 0 1px rgba(0, 212, 255, 0.03);
-}
-
-.eval-right-panel::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  background: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.015'/%3E%3C/svg%3E");
-  opacity: 0.5;
-  border-radius: inherit;
+  border-left: 1px solid var(--color-border);
+  background: var(--color-bg-card);
 }
 
 .right-scroll-area {
@@ -951,7 +947,7 @@ onMounted(() => {
   font-size: 12px;
 }
 
-/* Summary cards 鈥?flat, no hero-metric */
+/* Summary cards — flat, no hero-metric */
 .eval-summary-cards {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
@@ -1036,7 +1032,7 @@ onMounted(() => {
   background: rgba(255, 255, 255, 0.02);
 }
 
-/* Left panel 鈥?3D tree only, no overlays */
+/* Left panel — 3D tree only, no overlays */
 .three-mini-card {
   position: relative;
   min-height: 100vh;
@@ -1567,7 +1563,7 @@ onMounted(() => {
   font-size: 10px;
 }
 
-/* Badges 鈥?single row */
+/* Badges — single row */
 .badge-row {
   display: flex;
   gap: 8px;
@@ -1599,7 +1595,7 @@ onMounted(() => {
   color: rgba(255, 255, 255, 0.3);
 }
 
-/* Chart 鈥?mini sparkline */
+/* Chart — mini sparkline */
 .chart-legend {
   display: flex;
   gap: 10px;
@@ -1917,7 +1913,7 @@ onMounted(() => {
 }
 
 .rec-list li::before {
-  content: '>';
+  content: '→';
   position: absolute;
   left: 0;
   color: var(--color-accent-cyan);
