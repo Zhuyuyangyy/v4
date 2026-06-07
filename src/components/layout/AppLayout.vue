@@ -3,6 +3,7 @@ import { useRoute } from 'vue-router'
 import { computed, watch } from 'vue'
 import { useAppStore } from '@/store'
 import { useScrollReveal } from '@/composables/useScrollReveal'
+import CosmicPageBackground from './CosmicPageBackground.vue'
 import {
   Home,
   MessageCircle,
@@ -68,16 +69,18 @@ watch(
 
     <!-- Main Content -->
     <main class="main-content" id="main-content" :class="{
-      'has-background': !isHomePage && !isEduMindPage,
+      'home-active': isHomePage,
       'universe-active': isUniversePage,
       'edu-mind-active': isEduMindPage,
     }">
-      <div v-if="!isHomePage && !isEduMindPage" class="background-image" />
-      <router-view v-slot="{ Component }">
-        <transition name="fade" mode="out-in">
-          <component :is="Component" />
-        </transition>
-      </router-view>
+      <CosmicPageBackground />
+      <div class="page-content">
+        <router-view v-slot="{ Component }">
+          <transition name="fade" mode="out-in">
+            <component :is="Component" />
+          </transition>
+        </router-view>
+      </div>
     </main>
   </div>
 </template>
@@ -96,11 +99,11 @@ watch(
   left: 0;
   right: 0;
   height: var(--header-height);
-  background: rgba(7, 7, 13, 0.85);
-  backdrop-filter: blur(24px);
-  -webkit-backdrop-filter: blur(24px);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.3);
+  background: rgba(7, 7, 13, 0.46);
+  backdrop-filter: blur(30px) saturate(1.3);
+  -webkit-backdrop-filter: blur(30px) saturate(1.3);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.04);
   z-index: var(--z-dropdown);
 }
 
@@ -233,10 +236,13 @@ watch(
   min-height: calc(100vh - var(--header-height));
   position: relative;
   overflow: hidden;
+  background: transparent;
+  isolation: isolate;
 }
 
-.main-content.has-background {
-  background: transparent;
+.main-content.home-active {
+  margin-top: 0;
+  min-height: 100vh;
 }
 
 .main-content.universe-active {
@@ -245,21 +251,11 @@ watch(
 
 .main-content.edu-mind-active {
   overflow: visible;
-  background: transparent;
 }
 
-.background-image {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-image: url('/all-background.png');
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
-  background-attachment: fixed;
-  opacity: 0.35;
-  z-index: 0;
+.page-content {
+  position: relative;
+  z-index: 1;
+  min-height: inherit;
 }
 </style>

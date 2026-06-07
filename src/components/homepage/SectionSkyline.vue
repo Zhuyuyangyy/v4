@@ -1,323 +1,451 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 
-const T = {
-  cyan: '#00d4ff', purple: '#7c3aed', emerald: '#06d6a0',
-  amber: '#f59e0b', rose: '#f43f5e', blue: '#3b82f6',
-  text: '#e8edf5', textSub: '#8892b0', textTri: '#4a5568',
-  serif: "'Instrument Serif', 'Noto Serif SC', serif",
-  sans: "'Outfit', 'PingFang SC', sans-serif",
-  mono: "'JetBrains Mono', monospace",
-}
+type DomainId = 'lang' | 'ds' | 'sys' | 'math' | 'ml' | 'dl'
 
 interface Domain {
-  id: string; name: string; en: string; color: string;
-  n: number; m: number; hot: boolean
+  id: DomainId
+  name: string
+  code: string
+  color: string
+  n: number
+  mastery: number
+  width: number
+  cols: number
+  winW: number
+  winH: number
+  gapX: number
+  gapY: number
+  roof: 'terrace' | 'antenna' | 'twin' | 'slope' | 'frame' | 'spire'
+  weekly: number[]
+  hot: number[]
+  story: string
+  next: string
+}
+
+interface WindowCell {
+  x: number
+  y: number
+  i: number
+  lit: boolean
+  partial: boolean
+  hot: boolean
+  weekly: boolean
+}
+
+const C = {
+  text: '#e8edf5',
+  sub: '#91a3c7',
+  dim: '#54627f',
+  amber: '#f0b24a',
+  mono: "'JetBrains Mono', monospace",
+  sans: "'Outfit', 'PingFang SC', sans-serif",
 }
 
 const domains: Domain[] = [
-  { id: 'cpy', name: 'C / Python', en: 'LANG', color: T.blue, n: 24, m: 0.90, hot: false },
-  { id: 'ds', name: '数据结构', en: 'DS', color: T.amber, n: 22, m: 0.78, hot: false },
-  { id: 'sys', name: '计算机系统', en: 'SYS', color: T.emerald, n: 18, m: 0.58, hot: false },
-  { id: 'ml', name: '机器学习', en: 'ML', color: T.purple, n: 20, m: 0.65, hot: false },
-  { id: 'dl', name: '深度学习', en: 'DL', color: '#1de9b6', n: 16, m: 0.42, hot: true },
-  { id: 'math', name: '数学基础', en: 'MATH', color: T.cyan, n: 20, m: 0.82, hot: false },
+  {
+    id: 'lang',
+    name: '语言基础',
+    code: 'LANG',
+    color: '#4A8DFF',
+    n: 24,
+    mastery: 0.90,
+    width: 118,
+    cols: 4,
+    winW: 15,
+    winH: 9,
+    gapX: 10,
+    gapY: 10,
+    roof: 'terrace',
+    weekly: [17, 18],
+    hot: [],
+    story: 'C / Python 基础最稳，语法、指针与函数调用已形成高亮区域。',
+    next: '进入更复杂的内存模型与工程实践题。',
+  },
+  {
+    id: 'ds',
+    name: '数据结构',
+    code: 'DS',
+    color: '#35E0D8',
+    n: 22,
+    mastery: 0.78,
+    width: 148,
+    cols: 5,
+    winW: 14,
+    winH: 9,
+    gapX: 9,
+    gapY: 10,
+    roof: 'antenna',
+    weekly: [14, 15, 16],
+    hot: [19],
+    story: '线性表和树结构已点亮，图遍历仍在形成稳定掌握。',
+    next: '补强 BFS visited、队列空判和复杂度分析。',
+  },
+  {
+    id: 'sys',
+    name: '计算机系统',
+    code: 'SYS',
+    color: '#4FD483',
+    n: 18,
+    mastery: 0.58,
+    width: 132,
+    cols: 3,
+    winW: 18,
+    winH: 8,
+    gapX: 14,
+    gapY: 11,
+    roof: 'twin',
+    weekly: [8, 9],
+    hot: [13],
+    story: '进程、内存和 I/O 概念正在建造中，已掌握部分核心框架。',
+    next: '继续点亮虚拟内存、缓存局部性与系统调用链路。',
+  },
+  {
+    id: 'math',
+    name: '数学基础',
+    code: 'MATH',
+    color: '#86B7FF',
+    n: 20,
+    mastery: 0.82,
+    width: 104,
+    cols: 4,
+    winW: 12,
+    winH: 10,
+    gapX: 9,
+    gapY: 9,
+    roof: 'spire',
+    weekly: [13, 14],
+    hot: [],
+    story: '离散数学与概率基础稳定，为算法和模型理解提供支撑。',
+    next: '引入矩阵分解、贝叶斯推断和优化直觉。',
+  },
+  {
+    id: 'ml',
+    name: '机器学习',
+    code: 'ML',
+    color: '#F0B24A',
+    n: 20,
+    mastery: 0.65,
+    width: 154,
+    cols: 5,
+    winW: 13,
+    winH: 9,
+    gapX: 10,
+    gapY: 10,
+    roof: 'slope',
+    weekly: [10, 11],
+    hot: [15],
+    story: '监督学习和评估指标已建立，高阶泛化能力仍在加固。',
+    next: '补弱正则化、交叉验证和特征工程判断。',
+  },
+  {
+    id: 'dl',
+    name: '深度学习',
+    code: 'DL',
+    color: '#F06A7E',
+    n: 16,
+    mastery: 0.42,
+    width: 126,
+    cols: 4,
+    winW: 14,
+    winH: 8,
+    gapX: 10,
+    gapY: 11,
+    roof: 'frame',
+    weekly: [5],
+    hot: [8, 10],
+    story: '这座塔还在搭脚手架，基础模块已点亮，但网络结构理解仍不稳定。',
+    next: '优先补强反向传播、卷积结构和训练稳定性。',
+  },
 ]
 
 const SW = 1760
-const SH = 580
-const TOWER_MAX_H = 380
-const TOWER_MIN_H = 180
-const TOWER_W = 120
-const TOWER_BOTTOM = SH - 110
-const PEDESTAL_H = 14
+const SH = 560
+const GROUND = 462
+const MIN_H = 150
+const MAX_H = 330
+const positions = [118, 382, 650, 912, 1168, 1442]
+const selectedId = ref<DomainId>('ds')
+const hoverId = ref<DomainId | null>(null)
+const locked = ref(false)
+const weeklyGlow = ref(false)
+const particleSeed = ref(0)
 
-function towerHeight(n: number) {
-  const t = (n - 12) / (28 - 12)
-  return TOWER_MIN_H + Math.max(0, Math.min(1, t)) * (TOWER_MAX_H - TOWER_MIN_H)
+const totalConcepts = computed(() => domains.reduce((sum, d) => sum + d.n, 0))
+const masteredTotal = computed(() => domains.reduce((sum, d) => sum + Math.round(d.n * d.mastery), 0))
+const overall = computed(() => Math.round((masteredTotal.value / totalConcepts.value) * 100))
+const activeDomain = computed(() => (
+  domains.find(d => d.id === (hoverId.value ?? selectedId.value)) ?? domains[0]
+))
+const weeklyTotal = computed(() => domains.reduce((sum, d) => sum + d.weekly.length, 0))
+
+function towerHeight(d: Domain) {
+  const conceptWeight = Math.min(1, d.n / 24)
+  const masteryWeight = 0.36 + d.mastery * 0.64
+  return MIN_H + (MAX_H - MIN_H) * conceptWeight * masteryWeight
 }
 
-const N = domains.length
-const totalUsable = SW - 80
-const gap = (totalUsable - N * TOWER_W) / (N + 1)
-const positions = domains.map((_, i) => 40 + gap + i * (TOWER_W + gap))
-
-const totalConcepts = domains.reduce((s, d) => s + d.n, 0)
-const masteredTotal = domains.reduce((s, d) => s + Math.round(d.n * d.m), 0)
-const overallM = Math.round((masteredTotal / totalConcepts) * 100)
-
-// Starfield
-const stars = (() => {
-  const out: { x: number; y: number; r: number; o: number; d: number }[] = []
-  let s = 999
-  const rand = () => { s = (s * 9301 + 49297) % 233280; return s / 233280 }
-  for (let i = 0; i < 90; i++) {
-    out.push({
-      x: rand() * SW, y: rand() * (TOWER_BOTTOM - 50),
-      r: 0.3 + rand() * 1.2, o: 0.15 + rand() * 0.6, d: rand() * 5,
-    })
-  }
-  return out
-})()
-
-const hover = ref<string | null>(null)
-const hoveredDomain = computed(() => hover.value ? domains.find(d => d.id === hover.value) : null)
-
-const moonX = SW * 0.16
-const moonY = 110
-
-/* ── Compute windows grid for a tower ── */
-interface Win { x: number; y: number; lit: boolean; partial: boolean; i: number }
-function computeWindows(d: { n: number; m: number }): Win[] {
-  const cols = 5
-  const cellW = 14
-  const cellH = 8
-  const gapX = 6
-  const gapY = 7
-  const rows = Math.ceil(d.n / cols)
-  const masteredCount = Math.round(d.n * d.m)
-  const h = towerHeight(d.n)
-  const totalW = cols * cellW + (cols - 1) * gapX
-  const startX = (120 - totalW) / 2
-  const innerH = h - 56
-  const usableY = innerH - 12
-  const totalGridH = rows * cellH + (rows - 1) * gapY
-  const yStart = 30 + Math.max(0, (usableY - totalGridH) / 2)
-
-  const windows: Win[] = []
-  for (let i = 0; i < d.n; i++) {
-    const r = rows - 1 - Math.floor(i / cols)
-    const c = i % cols
-    const x = startX + c * (cellW + gapX)
-    const y = yStart + r * (cellH + gapY)
-    const lit = i < masteredCount
-    const partial = !lit && i < masteredCount + 2
-    windows.push({ x, y, lit, partial, i })
-  }
-  return windows
+function towerTop(d: Domain) {
+  return GROUND - towerHeight(d)
 }
+
+function masteredCount(d: Domain) {
+  return Math.round(d.n * d.mastery)
+}
+
+function windowsFor(d: Domain): WindowCell[] {
+  const rows = Math.ceil(d.n / d.cols)
+  const gridW = d.cols * d.winW + (d.cols - 1) * d.gapX
+  const gridH = rows * d.winH + (rows - 1) * d.gapY
+  const startX = (d.width - gridW) / 2
+  const startY = Math.max(42, towerHeight(d) - gridH - 34)
+  const mastered = masteredCount(d)
+  return Array.from({ length: d.n }, (_, i) => {
+    const rowFromBottom = Math.floor(i / d.cols)
+    const col = i % d.cols
+    const visualRow = rows - 1 - rowFromBottom
+    return {
+      x: startX + col * (d.winW + d.gapX),
+      y: startY + visualRow * (d.winH + d.gapY),
+      i,
+      lit: i < mastered,
+      partial: i >= mastered && i < Math.min(d.n, mastered + 2),
+      hot: d.hot.includes(i),
+      weekly: d.weekly.includes(i),
+    }
+  })
+}
+
+function selectDomain(id: DomainId) {
+  selectedId.value = id
+  locked.value = true
+}
+
+function triggerWeekly() {
+  weeklyGlow.value = false
+  window.requestAnimationFrame(() => {
+    particleSeed.value += 1
+    weeklyGlow.value = true
+    window.setTimeout(() => {
+      weeklyGlow.value = false
+    }, 2600)
+  })
+}
+
+let cycleTimer: ReturnType<typeof window.setInterval> | undefined
+
+onMounted(() => {
+  cycleTimer = window.setInterval(() => {
+    if (hoverId.value || locked.value) return
+    const index = domains.findIndex(d => d.id === selectedId.value)
+    selectedId.value = domains[(index + 1) % domains.length].id
+  }, 3400)
+})
+
+onBeforeUnmount(() => {
+  if (cycleTimer) window.clearInterval(cycleTimer)
+})
 </script>
 
 <template>
   <section class="section-skyline">
     <div class="skyline-inner">
-      <!-- Header -->
-      <div class="sky-header">
+      <header class="sky-header">
         <div>
-          <div class="section-eyebrow" :style="`color: ${T.emerald}`">
-            <span class="eyebrow-dot" :style="`background: ${T.emerald}`" />
-            YOUR KNOWLEDGE HORIZON · 此刻
+          <div class="sky-eyebrow">
+            <span />
+            KNOWLEDGE HORIZON
           </div>
-          <h2 class="section-title-hp">
-            你的知识地平线 · 共 <span :style="`color: ${T.emerald}`">{{ masteredTotal }}</span> / {{ totalConcepts }} 概念已点亮
+          <h2>
+            你的知识地平线
+            <strong>{{ masteredTotal }}</strong>
+            / {{ totalConcepts }} 概念已点亮
           </h2>
-          <p class="section-desc-hp">
-            每座塔楼是一个学科域，每扇亮窗是你已掌握的具体知识点。
-            塔顶闪烁的灯标 <span :style="`color: ${T.amber}`">◉</span> 表示评估发现的待加强方向。
-          </p>
+          <p>每座塔是一块学科域，每扇窗是一枚具体知识点。城市越亮，学习画像越清晰。</p>
         </div>
-        <div class="sky-stats">
-          <div>
-            <div class="sky-stat-label">整体掌握度</div>
-            <div class="sky-stat-val" :style="`color: ${T.emerald}`">
-              {{ overallM }}<span class="sky-stat-unit">%</span>
-            </div>
+
+        <div class="sky-actions">
+          <div class="sky-score">
+            <span>MASTERY</span>
+            <strong>{{ overall }}%</strong>
           </div>
-          <div class="sky-stat-divider" />
-          <div>
-            <div class="sky-stat-label">本周新点亮</div>
-            <div class="sky-stat-val sky-stat-val-sm" :style="`color: ${T.cyan}`">
-              +12<span class="sky-stat-unit"> 概念</span>
-            </div>
-          </div>
+          <button type="button" class="weekly-button" :class="{ active: weeklyGlow }" @click="triggerWeekly">
+            <span>THIS WEEK</span>
+            <strong>+{{ weeklyTotal }}</strong>
+          </button>
         </div>
-      </div>
+      </header>
 
-      <!-- Skyline SVG -->
-      <div class="sky-canvas">
-        <svg :viewBox="`0 0 ${SW} ${SH}`" class="sky-svg">
-          <defs>
-            <linearGradient id="sky-tower-grad" x1="0%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%" stop-color="#0c1024" />
-              <stop offset="100%" stop-color="#06081a" />
-            </linearGradient>
-            <radialGradient id="sky-moon-grad" cx="40%" cy="40%" r="50%">
-              <stop offset="0%" stop-color="#e8edf5" />
-              <stop offset="80%" stop-color="#a3aec0" stop-opacity="0.8" />
-              <stop offset="100%" stop-color="#5a6273" stop-opacity="0.4" />
-            </radialGradient>
-            <linearGradient v-for="d in domains" :key="`refl-${d.id}`"
-              :id="`sky-refl-${d.id}`" x1="0%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%" :stop-color="d.color" stop-opacity="0.4" />
-              <stop offset="100%" :stop-color="d.color" stop-opacity="0" />
-            </linearGradient>
-          </defs>
+      <div class="skyline-board">
+        <div class="sky-canvas">
+          <svg :viewBox="`0 0 ${SW} ${SH}`" class="sky-svg" role="img" aria-label="知识地平线城市天际线">
+            <defs>
+              <linearGradient id="horizon-band" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" stop-color="#4A8DFF" stop-opacity="0.10" />
+                <stop offset="45%" stop-color="#35E0D8" stop-opacity="0.22" />
+                <stop offset="100%" stop-color="#F06A7E" stop-opacity="0.16" />
+              </linearGradient>
+              <linearGradient
+                v-for="d in domains"
+                :key="`body-${d.id}`"
+                :id="`body-${d.id}`"
+                x1="0%"
+                y1="0%"
+                x2="0%"
+                y2="100%"
+              >
+                <stop offset="0%" :stop-color="d.color" stop-opacity="0.16" />
+                <stop offset="100%" stop-color="#070B1A" stop-opacity="0.72" />
+              </linearGradient>
+            </defs>
 
-          <!-- Stars -->
-          <circle v-for="(s, i) in stars" :key="`star-${i}`"
-            :cx="s.x" :cy="s.y" :r="s.r" fill="#fff" :opacity="s.o"
-            class="sky-star"
-            :style="`animation-duration: ${3 + (i % 4)}s; animation-delay: ${s.d}s`" />
-
-          <!-- Moon -->
-          <circle :cx="moonX" :cy="moonY" r="38" fill="url(#sky-moon-grad)" opacity="0.5"
-            style="filter: drop-shadow(0 0 24px rgba(168, 200, 255, 0.4))" />
-          <circle :cx="moonX - 8" :cy="moonY - 6" r="3" fill="rgba(0,0,0,0.18)" />
-          <circle :cx="moonX + 10" :cy="moonY + 4" r="5" fill="rgba(0,0,0,0.15)" />
-          <circle :cx="moonX + 2" :cy="moonY + 12" r="2.5" fill="rgba(0,0,0,0.12)" />
-
-          <!-- Horizon glow -->
-          <ellipse :cx="SW / 2" :cy="TOWER_BOTTOM + 4" :rx="SW * 0.45" ry="50"
-            :fill="T.cyan" opacity="0.06" style="filter: blur(20px)" />
-
-          <!-- Ground grid -->
-          <line x1="0" :y1="TOWER_BOTTOM + 5" :x2="SW" :y2="TOWER_BOTTOM + 5"
-            :stroke="T.cyan" stroke-opacity="0.35" stroke-width="1" />
-          <line v-for="i in 5" :key="`gh-${i}`"
-            x1="0" :y1="TOWER_BOTTOM + 6 + i * 18" :x2="SW" :y2="TOWER_BOTTOM + 6 + i * 18"
-            :stroke="T.cyan" :stroke-opacity="0.1 * (1 - i * 0.18)" stroke-width="0.5" />
-          <line v-for="i in 12" :key="`gv-${i}`"
-            :x1="SW / 2 + ((i - 1) / 11 * SW - SW / 2) * 0.6 * 0.4"
-            :y1="TOWER_BOTTOM + 6"
-            :x2="SW / 2 + ((i - 1) / 11 * SW - SW / 2) * 0.6 * 1.5"
-            :y2="TOWER_BOTTOM + 96"
-            :stroke="T.cyan" stroke-opacity="0.08" stroke-width="0.5" />
-
-          <!-- Towers -->
-          <g v-for="(d, i) in domains" :key="d.id"
-            :transform="`translate(${positions[i]}, 0)`"
-            @mouseenter="hover = d.id" @mouseleave="hover = null"
-            style="cursor: pointer"
-            :opacity="hover && hover !== d.id ? 0.5 : 1"
-            class="tower-group">
-            <!-- Ambient halo -->
-            <rect :x="-12" :y="TOWER_BOTTOM - towerHeight(d.n) - 12"
-              :width="TOWER_W + 24" :height="towerHeight(d.n) + 24"
-              :fill="d.color" :opacity="hover === d.id ? 0.1 : 0.04"
-              style="filter: blur(20px)" />
-
-            <!-- Tower body -->
-            <rect x="0" :y="TOWER_BOTTOM - towerHeight(d.n)"
-              :width="TOWER_W" :height="towerHeight(d.n) - 8"
-              fill="url(#sky-tower-grad)"
-              :stroke="d.color" :stroke-opacity="hover === d.id ? 0.7 : 0.35"
-              stroke-width="1" rx="2" />
-
-            <!-- Side stripes -->
-            <rect x="3" :y="TOWER_BOTTOM - towerHeight(d.n) + 8" width="2"
-              :height="towerHeight(d.n) - 24"
-              :fill="d.color" :opacity="hover === d.id ? 0.95 : 0.55" />
-            <rect :x="TOWER_W - 5" :y="TOWER_BOTTOM - towerHeight(d.n) + 8" width="2"
-              :height="towerHeight(d.n) - 24"
-              :fill="d.color" :opacity="hover === d.id ? 0.6 : 0.3" />
-
-            <!-- Top spire -->
-            <rect :x="TOWER_W / 2 - 2" :y="TOWER_BOTTOM - towerHeight(d.n) - 22"
-              width="4" height="22" :fill="d.color" opacity="0.6" />
-            <circle :cx="TOWER_W / 2" :cy="TOWER_BOTTOM - towerHeight(d.n) - 26"
-              r="3" :fill="d.color"
-              :style="`filter: drop-shadow(0 0 8px ${d.color}); animation-delay: ${i * 0.25}s`"
-              class="spire-light" />
-
-            <!-- Hot indicator -->
-            <circle v-if="d.hot"
-              :cx="TOWER_W / 2" :cy="TOWER_BOTTOM - towerHeight(d.n) - 26"
-              r="6" fill="none" :stroke="T.amber" stroke-width="1"
-              class="hot-pulse" />
-
-            <!-- Windows -->
-            <g v-for="w in computeWindows(d)" :key="w.i">
-              <rect v-if="w.lit" :x="w.x - 1" :y="w.y - 1" :width="16" :height="10"
-                rx="1.5" :fill="d.color" opacity="0.35" style="filter: blur(2px)" />
-              <rect :x="w.x" :y="w.y" width="14" height="8" rx="1.2"
-                :fill="w.lit ? d.color : w.partial ? `${d.color}66` : '#10131f'"
-                :stroke="w.lit ? 'rgba(255,255,255,0.5)' : `${d.color}22`"
-                stroke-width="0.5"
-                :opacity="w.lit ? 1 : w.partial ? 0.8 : 0.55" />
+            <g class="sky-depth">
+              <circle v-for="i in 44" :key="i" :cx="38 + i * 41" :cy="36 + (i * 37) % 170" :r="i % 5 === 0 ? 1.25 : 0.7" />
             </g>
 
-            <!-- Pedestal -->
-            <rect x="-6" :y="TOWER_BOTTOM - 8" :width="TOWER_W + 12" :height="PEDESTAL_H"
-              fill="#0a0e1c" :stroke="d.color" stroke-opacity="0.45" stroke-width="0.8" rx="2" />
-            <rect x="-6" :y="TOWER_BOTTOM - 8" :width="TOWER_W + 12" height="3"
-              :fill="d.color" :opacity="hover === d.id ? 0.7 : 0.45" />
+            <path
+              class="horizon-band"
+              :d="`M 40 ${GROUND + 10} C 380 ${GROUND - 32}, 650 ${GROUND + 36}, 940 ${GROUND} S 1430 ${GROUND - 26}, 1720 ${GROUND + 6}`"
+            />
 
-            <!-- Reflection -->
-            <rect x="6" :y="TOWER_BOTTOM + 8" :width="TOWER_W - 12"
-              :height="Math.min(70, towerHeight(d.n) * 0.35)"
-              :fill="`url(#sky-refl-${d.id})`" :opacity="hover === d.id ? 0.45 : 0.28" />
+            <g
+              v-for="(d, index) in domains"
+              :key="d.id"
+              class="tower"
+              :class="{ active: activeDomain.id === d.id, muted: activeDomain.id !== d.id }"
+              :style="`--tower-color: ${d.color}; --tower-delay: ${index * 120}ms`"
+              :transform="`translate(${positions[index]}, ${activeDomain.id === d.id ? -8 : 0})`"
+              @mouseenter="hoverId = d.id"
+              @mouseleave="hoverId = null"
+              @click="selectDomain(d.id)"
+            >
+              <g class="tower-label" :transform="`translate(${d.width / 2}, ${Math.max(30, towerTop(d) - 72)})`">
+                <text class="tower-title" text-anchor="middle">{{ d.name }} {{ d.code }}</text>
+                <text class="tower-meta" y="23" text-anchor="middle">
+                  {{ Math.round(d.mastery * 100) }}% · {{ masteredCount(d) }}/{{ d.n }} 概念
+                </text>
+              </g>
 
-            <!-- Tower name -->
-            <g :transform="`translate(${TOWER_W / 2}, ${TOWER_BOTTOM - towerHeight(d.n) - 60})`">
-              <text text-anchor="middle" :fill="d.color" font-size="9.5"
-                :font-family="T.mono" letter-spacing="0.18em" opacity="0.9">
-                {{ d.en }}
-              </text>
-              <text text-anchor="middle" y="16" :fill="T.text" font-size="14"
-                :font-family="T.serif" font-weight="500">
-                {{ d.name }}
-              </text>
-              <text text-anchor="middle" y="34" :fill="d.color" font-size="18"
-                :font-family="T.serif" font-weight="500">
-                {{ Math.round(d.m * 100) }}<tspan font-size="10" :fill="T.textSub">%</tspan>
-              </text>
-              <text text-anchor="middle" y="48" :fill="T.textTri" font-size="9.5" :font-family="T.mono">
-                {{ Math.round(d.n * d.m) }} / {{ d.n }} 概念
-              </text>
+              <g class="tower-building" :transform="`translate(0, ${towerTop(d)})`">
+                <path
+                  v-if="d.roof === 'slope'"
+                  class="tower-roof"
+                  :d="`M 0 30 L ${d.width * 0.66} 0 L ${d.width} 30 Z`"
+                />
+                <path
+                  v-else-if="d.roof === 'spire'"
+                  class="tower-roof"
+                  :d="`M ${d.width * 0.18} 34 L ${d.width / 2} 0 L ${d.width * 0.82} 34 Z`"
+                />
+                <path
+                  v-else-if="d.roof === 'twin'"
+                  class="tower-roof"
+                  :d="`M 0 24 L 0 8 L ${d.width * 0.42} 8 L ${d.width * 0.42} 0 L ${d.width * 0.58} 0 L ${d.width * 0.58} 8 L ${d.width} 8 L ${d.width} 24 Z`"
+                />
+                <path
+                  v-else-if="d.roof === 'antenna'"
+                  class="tower-roof"
+                  :d="`M 0 26 L ${d.width} 26 L ${d.width} 42 L 0 42 Z M ${d.width / 2} 26 L ${d.width / 2} 0`"
+                />
+                <path
+                  v-else-if="d.roof === 'frame'"
+                  class="tower-roof scaffold"
+                  :d="`M 0 28 L ${d.width} 28 M ${d.width * 0.18} 28 L ${d.width * 0.5} 0 L ${d.width * 0.82} 28`"
+                />
+                <path
+                  v-else
+                  class="tower-roof"
+                  :d="`M 0 24 L ${d.width} 24 L ${d.width} 38 L 0 38 Z`"
+                />
+
+                <rect
+                  class="tower-body"
+                  :x="0"
+                  :y="d.roof === 'frame' ? 28 : 30"
+                  :width="d.width"
+                  :height="towerHeight(d) - 30"
+                  :fill="`url(#body-${d.id})`"
+                />
+
+                <g v-if="d.roof === 'frame'" class="scaffold-lines">
+                  <line v-for="n in 5" :key="`v-${n}`" :x1="(n - 1) * d.width / 4" :y1="32" :x2="(n - 1) * d.width / 4" :y2="towerHeight(d) - 6" />
+                  <line v-for="n in 7" :key="`h-${n}`" x1="0" :y1="42 + n * 22" :x2="d.width" :y2="42 + n * 22" />
+                  <line x1="0" y1="34" :x2="d.width" :y2="towerHeight(d) - 8" />
+                  <line :x1="d.width" y1="34" x2="0" :y2="towerHeight(d) - 8" />
+                </g>
+
+                <g class="window-grid">
+                  <rect
+                    v-for="cell in windowsFor(d)"
+                    :key="cell.i"
+                    class="window-cell"
+                    :class="{
+                      lit: cell.lit,
+                      partial: cell.partial,
+                      hot: cell.hot,
+                      weekly: cell.weekly,
+                      weeklyActive: weeklyGlow && cell.weekly,
+                    }"
+                    :style="`--cell-color: ${cell.hot ? C.amber : d.color}; --cell-delay: ${(index * 90) + (cell.i % d.cols) * 55 + Math.floor(cell.i / d.cols) * 80}ms`"
+                    :x="cell.x"
+                    :y="cell.y"
+                    :width="d.winW"
+                    :height="d.winH"
+                    rx="2"
+                  />
+                </g>
+
+                <g v-if="weeklyGlow" class="weekly-particles" :key="particleSeed">
+                  <circle
+                    v-for="cell in windowsFor(d).filter(w => w.weekly)"
+                    :key="`p-${cell.i}`"
+                    class="weekly-particle"
+                    :style="`--particle-delay: ${cell.i * 70}ms; --cell-color: ${d.color}`"
+                    :cx="cell.x + d.winW / 2"
+                    :cy="cell.y + d.winH / 2"
+                    r="2"
+                  />
+                </g>
+
+                <rect class="tower-base" :x="-8" :y="towerHeight(d) - 8" :width="d.width + 16" height="16" rx="3" />
+              </g>
             </g>
-          </g>
-        </svg>
-
-        <!-- Hover callout -->
-        <div v-if="hoveredDomain" class="sky-callout"
-          :style="`border-color: ${hoveredDomain.color}55; box-shadow: 0 12px 36px rgba(0,0,0,0.6), 0 0 24px ${hoveredDomain.color}33`">
-          <div class="sky-callout-eyebrow" :style="`color: ${hoveredDomain.color}`">
-            {{ hoveredDomain.en }} · DOMAIN
-          </div>
-          <div class="sky-callout-title">{{ hoveredDomain.name }}</div>
-          <div class="sky-callout-stats">
-            <div>
-              <div class="sky-callout-stat-label">掌握</div>
-              <div class="sky-callout-stat-val" :style="`color: ${hoveredDomain.color}`">
-                {{ Math.round(hoveredDomain.m * 100) }}%
-              </div>
-            </div>
-            <div>
-              <div class="sky-callout-stat-label">已点亮</div>
-              <div class="sky-callout-stat-val">
-                {{ Math.round(hoveredDomain.n * hoveredDomain.m) }}/{{ hoveredDomain.n }}
-              </div>
-            </div>
-          </div>
-          <div class="sky-callout-desc">
-            {{ hoveredDomain.hot
-              ? `评估发现这里有 ${hoveredDomain.n - Math.round(hoveredDomain.n * hoveredDomain.m)} 个未点亮的窗户 — 路径智能体已优先插入补弱节点。`
-              : hoveredDomain.m > 0.7
-                ? '这座塔几乎全亮，可挑战更深层的认知层级，或尝试阶段测评验证掌握度。'
-                : '稳步推进中，资源推荐智能体已为你匹配了专项练习和思维导图资源。' }}
-          </div>
+          </svg>
         </div>
+
+        <aside class="sky-detail" :style="`--detail-color: ${activeDomain.color}`">
+          <div class="detail-kicker">ACTIVE DOMAIN</div>
+          <h3>{{ activeDomain.name }} {{ activeDomain.code }}</h3>
+          <p>{{ activeDomain.story }}</p>
+
+          <div class="detail-stats">
+            <div>
+              <span>WINDOWS</span>
+              <strong>{{ activeDomain.n }}</strong>
+            </div>
+            <div>
+              <span>LIT</span>
+              <strong>{{ masteredCount(activeDomain) }}</strong>
+            </div>
+            <div>
+              <span>FOCUS</span>
+              <strong>{{ activeDomain.hot.length }}</strong>
+            </div>
+          </div>
+
+          <div class="detail-next">
+            <span>NEXT ACTION</span>
+            <strong>{{ activeDomain.next }}</strong>
+          </div>
+        </aside>
       </div>
 
-      <!-- Legend -->
       <div class="sky-legend">
-        <span class="sky-legend-label">LEGEND</span>
-        <span class="sky-legend-item">
-          <span class="sky-legend-swatch" :style="`background: ${T.cyan}; box-shadow: 0 0 6px ${T.cyan}`" />
-          已掌握
-        </span>
-        <span class="sky-legend-item">
-          <span class="sky-legend-swatch" :style="`background: ${T.cyan}66`" />
-          进行中
-        </span>
-        <span class="sky-legend-item">
-          <span class="sky-legend-swatch sky-legend-swatch-off" />
-          未点亮
-        </span>
-        <span class="sky-legend-item">
-          <span class="sky-legend-dot" :style="`background: ${T.amber}; box-shadow: 0 0 8px ${T.amber}`" />
-          评估标记为待加强
-        </span>
+        <span>LEGEND</span>
+        <i class="legend-lit" /> 已掌握
+        <i class="legend-partial" /> 进行中
+        <i class="legend-empty" /> 未点亮
+        <i class="legend-hot" /> 待加强
       </div>
     </div>
   </section>
@@ -325,8 +453,8 @@ function computeWindows(d: { n: number; m: number }): Win[] {
 
 <style scoped>
 .section-skyline {
-  padding: 40px 0 60px;
   position: relative;
+  padding: 44px 0 56px;
 }
 
 .skyline-inner {
@@ -336,249 +464,436 @@ function computeWindows(d: { n: number; m: number }): Win[] {
 }
 
 .sky-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-end;
-  margin-bottom: 28px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
   gap: 24px;
-  flex-wrap: wrap;
+  align-items: end;
+  margin-bottom: 22px;
 }
 
-.section-eyebrow {
+.sky-eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  color: #35e0d8;
+  font-family: var(--font-mono, 'JetBrains Mono', monospace);
   font-size: 10px;
-  letter-spacing: 0.24em;
-  font-family: 'JetBrains Mono', monospace;
-  font-weight: 500;
-  margin-bottom: 8px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
+  letter-spacing: 0.22em;
 }
 
-.eyebrow-dot {
-  display: inline-block;
-  width: 6px;
-  height: 6px;
+.sky-eyebrow span {
+  width: 7px;
+  height: 7px;
   border-radius: 50%;
-  animation: pulse-soft 1.5s ease-in-out infinite;
+  background: #35e0d8;
+  animation: soft-pulse 1.6s ease-in-out infinite;
 }
 
-.section-title-hp {
-  margin: 0;
-  font-family: 'Instrument Serif', serif;
-  font-size: 40px;
-  font-weight: 500;
-  color: #e8edf5;
-  letter-spacing: -0.02em;
-  line-height: 1.1;
-  text-wrap: balance;
-}
-
-.section-desc-hp {
+.sky-header h2 {
   margin: 10px 0 0;
-  font-size: 13.5px;
-  color: #8892b0;
-  max-width: 620px;
+  color: #f7fbff;
+  font-family: var(--font-display, 'Outfit', 'PingFang SC', sans-serif);
+  font-size: clamp(30px, 3vw, 46px);
+  line-height: 1.08;
+  font-weight: 800;
+  letter-spacing: 0;
 }
 
-.sky-stats {
+.sky-header h2 strong {
+  color: #35e0d8;
+  font-family: var(--font-mono, 'JetBrains Mono', monospace);
+}
+
+.sky-header p {
+  max-width: 680px;
+  margin: 10px 0 0;
+  color: #91a3c7;
+  font-size: 14px;
+  line-height: 1.7;
+}
+
+.sky-actions {
   display: flex;
-  align-items: center;
-  gap: 18px;
-  padding: 14px 22px;
-  background: rgba(10, 12, 28, 0.65);
-  border: 1px solid rgba(255,255,255,0.06);
-  border-radius: 14px;
-  backdrop-filter: blur(12px);
+  gap: 10px;
+  align-items: stretch;
 }
 
-.sky-stat-label {
+.sky-score,
+.weekly-button {
+  min-width: 126px;
+  padding: 13px 15px;
+  border: 1px solid rgba(150, 175, 220, 0.14);
+  border-radius: 13px;
+  background: rgba(8, 12, 30, 0.24);
+  backdrop-filter: blur(12px) saturate(1.14);
+}
+
+.sky-score span,
+.weekly-button span {
+  display: block;
+  color: #7f93ba;
+  font-family: var(--font-mono, 'JetBrains Mono', monospace);
   font-size: 9px;
-  color: #8892b0;
-  font-family: 'JetBrains Mono', monospace;
   letter-spacing: 0.18em;
 }
 
-.sky-stat-val {
-  font-family: 'Instrument Serif', serif;
-  font-size: 36px;
+.sky-score strong,
+.weekly-button strong {
+  display: block;
+  margin-top: 4px;
+  color: #f7fbff;
+  font-family: var(--font-mono, 'JetBrains Mono', monospace);
+  font-size: 28px;
   line-height: 1;
-  font-weight: 500;
-  font-variant-numeric: tabular-nums;
 }
 
-.sky-stat-val-sm { font-size: 24px; }
-
-.sky-stat-unit {
-  font-size: 14px;
-  color: #8892b0;
+.weekly-button {
+  appearance: none;
+  cursor: pointer;
+  text-align: left;
+  transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.22s ease, background 0.22s ease;
 }
 
-.sky-stat-divider {
-  width: 1px;
-  height: 36px;
-  background: rgba(255,255,255,0.08);
+.weekly-button:hover,
+.weekly-button.active {
+  transform: translateY(-2px);
+  border-color: rgba(53, 224, 216, 0.42);
+  background: linear-gradient(135deg, rgba(53, 224, 216, 0.12), rgba(8, 12, 30, 0.24));
+}
+
+.weekly-button:active {
+  transform: scale(0.98);
+}
+
+.skyline-board {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 300px;
+  gap: 14px;
+  align-items: stretch;
+}
+
+.sky-canvas,
+.sky-detail {
+  border: 1px solid rgba(150, 175, 220, 0.13);
+  border-radius: 16px;
+  background:
+    radial-gradient(ellipse at 50% 108%, rgba(53, 224, 216, 0.10), transparent 62%),
+    linear-gradient(180deg, rgba(6, 8, 28, 0.34), rgba(4, 6, 16, 0.16));
+  backdrop-filter: blur(8px) saturate(1.12);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.08);
 }
 
 .sky-canvas {
   position: relative;
-  background:
-    radial-gradient(ellipse 1200px 400px at 50% 110%, rgba(0, 212, 255, 0.06), transparent 70%),
-    linear-gradient(180deg, #06081c 0%, #050610 60%, #030410 100%);
-  border-radius: 18px;
-  border: 1px solid rgba(255,255,255,0.06);
-  overflow: hidden;
+  overflow: auto hidden;
 }
 
 .sky-svg {
   display: block;
   width: 100%;
+  min-width: 1080px;
+  height: auto;
 }
 
-.tower-group {
-  transition: opacity 0.3s ease;
+.sky-depth circle {
+  fill: rgba(220, 236, 255, 0.42);
+  animation: star-drift 12s ease-in-out infinite alternate;
 }
 
-.sky-star {
-  animation: twinkle 3s ease-in-out infinite;
+.horizon-band {
+  fill: none;
+  stroke: url(#horizon-band);
+  stroke-width: 18;
+  stroke-linecap: round;
+  filter: blur(1px);
+  stroke-dasharray: 80 38;
+  animation: horizon-flow 18s linear infinite;
 }
 
-.spire-light {
-  animation: pulse-soft 1.8s ease-in-out infinite;
+.tower {
+  cursor: pointer;
+  opacity: 0;
+  animation: tower-rise 0.9s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  animation-delay: var(--tower-delay);
+  transition: opacity 0.28s ease;
 }
 
-.hot-pulse {
-  animation: pulse-ring 1.8s ease-out infinite;
-  transform-origin: center;
+.tower.muted {
+  opacity: 0.48;
 }
 
-@keyframes twinkle {
-  0%, 100% { opacity: 0.3; }
-  50% { opacity: 1; }
+.tower.active {
+  opacity: 1;
 }
 
-@keyframes pulse-soft {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.4; }
-}
-
-@keyframes pulse-ring {
-  0% { transform: scale(1); opacity: 0.6; }
-  100% { transform: scale(2.2); opacity: 0; }
-}
-
-/* Hover callout */
-.sky-callout {
-  position: absolute;
-  right: 24px;
-  top: 24px;
-  width: 280px;
-  padding: 18px;
-  background: rgba(8, 10, 24, 0.95);
-  border: 1px solid;
-  border-radius: 12px;
-  backdrop-filter: blur(16px);
+.tower-label {
   pointer-events: none;
-  z-index: 5;
 }
 
-.sky-callout-eyebrow {
-  font-size: 10px;
-  font-family: 'JetBrains Mono', monospace;
-  letter-spacing: 0.2em;
-  margin-bottom: 6px;
+.tower-title {
+  fill: #f7fbff;
+  font-family: var(--font-display, 'Outfit', 'PingFang SC', sans-serif);
+  font-size: 17px;
+  font-weight: 760;
 }
 
-.sky-callout-title {
-  font-family: 'Instrument Serif', serif;
-  font-size: 22px;
-  color: #e8edf5;
-  margin-bottom: 12px;
-}
-
-.sky-callout-stats {
-  display: flex;
-  gap: 14px;
-  margin-bottom: 12px;
-}
-
-.sky-callout-stat-label {
-  font-size: 9px;
-  color: #4a5568;
-  font-family: 'JetBrains Mono', monospace;
-  letter-spacing: 0.14em;
-}
-
-.sky-callout-stat-val {
-  font-family: 'Instrument Serif', serif;
-  font-size: 22px;
-  color: #e8edf5;
-}
-
-.sky-callout-desc {
-  font-size: 11.5px;
-  color: #8892b0;
-  line-height: 1.5;
-  padding-top: 10px;
-  border-top: 1px solid rgba(255,255,255,0.06);
-}
-
-/* Legend */
-.sky-legend {
-  margin-top: 18px;
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  flex-wrap: wrap;
+.tower-meta {
+  fill: #91a3c7;
+  font-family: var(--font-mono, 'JetBrains Mono', monospace);
   font-size: 11px;
-  color: #8892b0;
+  letter-spacing: 0.08em;
 }
 
-.sky-legend-label {
-  font-family: 'JetBrains Mono', monospace;
+.tower-roof,
+.tower-body {
+  stroke: color-mix(in srgb, var(--tower-color) 42%, rgba(255,255,255,0.10));
+  stroke-width: 1;
+}
+
+.tower-roof {
+  fill: rgba(6, 9, 22, 0.70);
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.tower.active .tower-body,
+.tower.active .tower-roof {
+  filter: drop-shadow(0 0 14px color-mix(in srgb, var(--tower-color) 35%, transparent));
+}
+
+.scaffold {
+  fill: none;
+}
+
+.scaffold-lines line {
+  stroke: color-mix(in srgb, var(--tower-color) 34%, rgba(255,255,255,0.08));
+  stroke-width: 1;
+  opacity: 0.7;
+}
+
+.window-cell {
+  fill: rgba(10, 15, 34, 0.72);
+  stroke: color-mix(in srgb, var(--cell-color) 26%, rgba(255,255,255,0.12));
+  stroke-width: 0.8;
+  opacity: 0;
+  animation: window-on 0.45s ease forwards;
+  animation-delay: var(--cell-delay);
+}
+
+.window-cell.lit {
+  fill: color-mix(in srgb, var(--cell-color) 72%, rgba(255,255,255,0.16));
+  stroke: color-mix(in srgb, var(--cell-color) 78%, white);
+}
+
+.window-cell.partial {
+  fill: color-mix(in srgb, var(--cell-color) 38%, rgba(10, 15, 34, 0.74));
+  animation: window-on 0.45s ease forwards, partial-breathe 2.8s ease-in-out infinite;
+}
+
+.window-cell.hot {
+  fill: color-mix(in srgb, #f0b24a 72%, rgba(10, 15, 34, 0.28));
+  stroke: #ffd18a;
+  animation: window-on 0.45s ease forwards, hot-beacon 1.4s ease-in-out infinite;
+}
+
+.window-cell.weeklyActive {
+  animation: weekly-pop 0.9s cubic-bezier(0.16, 1, 0.3, 1) forwards, hot-beacon 1.1s ease-in-out infinite;
+}
+
+.weekly-particle {
+  fill: var(--cell-color);
+  opacity: 0;
+  animation: particle-rise 1.2s ease-out forwards;
+  animation-delay: var(--particle-delay);
+}
+
+.tower-base {
+  fill: color-mix(in srgb, var(--tower-color) 18%, rgba(6, 9, 22, 0.86));
+  stroke: color-mix(in srgb, var(--tower-color) 38%, rgba(255,255,255,0.08));
+}
+
+.sky-detail {
+  --detail-color: #35e0d8;
+  min-height: 100%;
+  padding: 18px;
+  background:
+    radial-gradient(circle at 100% 0%, color-mix(in srgb, var(--detail-color) 14%, transparent), transparent 42%),
+    rgba(8, 12, 30, 0.26);
+}
+
+.detail-kicker,
+.detail-stats span,
+.detail-next span {
+  color: #7f93ba;
+  font-family: var(--font-mono, 'JetBrains Mono', monospace);
+  font-size: 9px;
   letter-spacing: 0.18em;
-  color: #4a5568;
 }
 
-.sky-legend-item {
-  display: inline-flex;
-  align-items: center;
+.sky-detail h3 {
+  margin: 9px 0 0;
+  color: #f7fbff;
+  font-size: 22px;
+  font-weight: 780;
+}
+
+.sky-detail p {
+  margin: 10px 0 14px;
+  color: #9badcc;
+  font-size: 13px;
+  line-height: 1.7;
+}
+
+.detail-stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  padding: 12px 0;
+  border-top: 1px solid rgba(255,255,255,0.08);
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+}
+
+.detail-stats div {
+  display: grid;
   gap: 6px;
 }
 
-.sky-legend-swatch {
-  display: inline-block;
-  width: 11px;
-  height: 7px;
-  border-radius: 1px;
+.detail-stats strong {
+  color: var(--detail-color);
+  font-family: var(--font-mono, 'JetBrains Mono', monospace);
+  font-size: 24px;
 }
 
-.sky-legend-swatch-off {
-  background: #10131f;
-  border: 1px solid #4a5568;
+.detail-next {
+  display: grid;
+  gap: 8px;
+  margin-top: 12px;
+  padding: 12px;
+  border: 1px solid color-mix(in srgb, var(--detail-color) 30%, rgba(255,255,255,0.08));
+  border-radius: 13px;
+  background: color-mix(in srgb, var(--detail-color) 8%, rgba(255,255,255,0.035));
 }
 
-.sky-legend-dot {
+.detail-next strong {
+  color: #e8edf5;
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.sky-legend {
+  display: flex;
+  gap: 14px;
+  align-items: center;
+  flex-wrap: wrap;
+  margin-top: 16px;
+  color: #91a3c7;
+  font-size: 11px;
+}
+
+.sky-legend span {
+  color: #54627f;
+  font-family: var(--font-mono, 'JetBrains Mono', monospace);
+  letter-spacing: 0.18em;
+}
+
+.sky-legend i {
   display: inline-block;
-  width: 8px;
+  width: 12px;
   height: 8px;
-  border-radius: 50%;
-  animation: pulse-soft 1.5s ease-in-out infinite;
+  border-radius: 2px;
+}
+
+.legend-lit { background: #35e0d8; }
+.legend-partial { background: rgba(53, 224, 216, 0.42); }
+.legend-empty { border: 1px solid #54627f; background: rgba(10, 15, 34, 0.72); }
+.legend-hot { background: #f0b24a; }
+
+@keyframes tower-rise {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes window-on {
+  from { opacity: 0; transform: translateY(5px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes partial-breathe {
+  0%, 100% { opacity: 0.55; }
+  50% { opacity: 1; }
+}
+
+@keyframes hot-beacon {
+  0%, 100% { filter: drop-shadow(0 0 0 rgba(240,178,74,0)); }
+  50% { filter: drop-shadow(0 0 8px rgba(240,178,74,0.75)); }
+}
+
+@keyframes weekly-pop {
+  0% { opacity: 0.35; transform: scale(0.84); }
+  55% { opacity: 1; transform: scale(1.35); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
+@keyframes particle-rise {
+  0% { opacity: 0.9; transform: translateY(0) scale(1); }
+  100% { opacity: 0; transform: translateY(-32px) scale(0.2); }
+}
+
+@keyframes horizon-flow {
+  to { stroke-dashoffset: -118; }
+}
+
+@keyframes star-drift {
+  from { opacity: 0.22; transform: translateX(0); }
+  to { opacity: 0.58; transform: translateX(8px); }
+}
+
+@keyframes soft-pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.42; transform: scale(0.76); }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .eyebrow-dot, .sky-legend-dot, .spire-light, .hot-pulse, .sky-star {
+  .sky-eyebrow span,
+  .sky-depth circle,
+  .horizon-band,
+  .tower,
+  .window-cell,
+  .window-cell.partial,
+  .window-cell.hot,
+  .weekly-particle {
     animation: none !important;
-  }
-  .tower-group {
-    transition: none !important;
   }
 }
 
-@media (max-width: 900px) {
-  .section-skyline { padding: 40px 0 40px; }
-  .skyline-inner { padding: 0 16px; }
-  .section-title-hp { font-size: 28px; }
-  .sky-header { flex-direction: column; align-items: flex-start; }
+@media (max-width: 1100px) {
+  .sky-header,
+  .skyline-board {
+    grid-template-columns: 1fr;
+  }
+
+  .sky-detail {
+    min-height: auto;
+  }
+}
+
+@media (max-width: 720px) {
+  .section-skyline {
+    padding: 42px 0 46px;
+  }
+
+  .skyline-inner {
+    padding: 0 16px;
+  }
+
+  .sky-actions {
+    width: 100%;
+  }
+
+  .sky-score,
+  .weekly-button {
+    flex: 1;
+    min-width: 0;
+  }
 }
 </style>
