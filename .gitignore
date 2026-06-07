@@ -42,3 +42,20 @@ _tailwind.css
 
 # Claude 工作树
 .claude/worktrees/
+
+# Local browser/test artifacts
+.tmp-*/
+eval*.png
+learning_path*.png
+test*.png
+tree_fixed.png
+apples_check.png
+modify-file.*
+temp_edit.txt
+test-*.mjs
+
+# Generated caches and runtime data
+__pycache__/
+*.pyc
+server/evidence-data/
+*_extracted/
