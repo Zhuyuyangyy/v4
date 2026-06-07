@@ -22,6 +22,8 @@ import type {
   PathReplanResponse,
   TutorAgentResponse,
   FullEvaluationResponse,
+  KnowledgeContextResponse,
+  KnowledgeStatusResponse,
 } from '@/types/api'
 import { useAppStore } from '@/store'
 
@@ -162,6 +164,17 @@ export function fetchEvidenceSummary() {
   return requestJson<EvidenceSummaryResponse>('/api/evidence/summary')
 }
 
+export function agentProfileAnalyze(payload: unknown) {
+  return requestJson<{ profile: ProfileAnalyzeResponse; agentResults: unknown[]; trace: unknown }>('/api/agents/profile', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  })
+}
+
+export function fetchTutoringTopics() {
+  return requestJson<{ topics: Array<{ label: string; questions: string[] }> }>('/api/tutoring/topics')
+}
+
 export function agentPathReplan(payload: { profile?: unknown; evaluation?: unknown; currentPath?: unknown }) {
   return requestJson<PathReplanResponse>('/api/agents/path-replan', {
     method: 'POST',
@@ -176,8 +189,19 @@ export function agentTutoring(payload: { question: string; mode: string; profile
   })
 }
 
-export function agentEvaluate(payload: { profile?: unknown; learningData?: unknown; exerciseResults?: unknown }) {
+export function agentEvaluate(payload: { profile?: unknown; learningData?: unknown; exerciseResults?: unknown; knowledgeContext?: unknown }) {
   return requestJson<FullEvaluationResponse>('/api/agents/evaluate', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  })
+}
+
+export function fetchKnowledgeStatus() {
+  return requestJson<KnowledgeStatusResponse>('/api/knowledge/status')
+}
+
+export function searchKnowledge(payload: { query?: string; profile?: unknown; learningData?: unknown; exerciseResults?: unknown; limit?: number }) {
+  return requestJson<KnowledgeContextResponse>('/api/knowledge/search', {
     method: 'POST',
     body: JSON.stringify(payload),
   })

@@ -261,3 +261,34 @@ export interface FullEvaluationResponse {
   agentResults: AgentResult[]
   trace: TraceRecord
 }
+
+export interface KnowledgeHit {
+  id: string
+  source: 'local' | 'vector'
+  title: string
+  type: string
+  tags: string[]
+  summary: string
+  agentHint: string
+  score: number
+}
+
+export interface KnowledgeContextResponse {
+  query: string
+  matches: KnowledgeHit[]
+  embedding: {
+    model: string
+    dimensions: number
+    indexSize: number
+    generatedAt: string
+  }
+}
+
+export interface KnowledgeStatusResponse {
+  model: string
+  dimensions: number
+  localDocuments: number
+  vectorDocuments: number
+  syncedAgents: string[]
+  updatedAt: string
+}

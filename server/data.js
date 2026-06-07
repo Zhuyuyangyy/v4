@@ -1,6 +1,7 @@
 import fs from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { callLlm, isLlmAvailable } from './llm/provider.js'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
@@ -132,6 +133,44 @@ export function saveTutoringHistoryEntry({ question, answer, mode, scenario, mul
     20,
   )
   writeStore(store)
+}
+
+const CHAT_SYSTEM_PROMPT = `你是 EduMind 个性化学习智能体系统的 AI 学习导师。你的职责是：
+
+1. 理解学生的学习问题，提供清晰、耐心的解答
+2. 根据学生的水平调整讲解的深度和方式
+3. 给出具体的学习建议和资源推荐
+4. 引导学生进行思考，而不是直接给出答案
+5. 保持友好、鼓励的语气
+
+请用中文回答，回答要具体、实用，避免空洞的套话。`
+
+export async function buildChatReplyAsync(message, multimodalContents) {
+  const text = String(message || '').trim()
+  const topic = text || '当前学习问题'
+
+  const hasImages = multimodalContents && multimodalContents.some(c => c.type === 'image')
+
+  if (isLlmAvailable()) {
+    try {
+      const llmResult = await callLlm(CHAT_SYSTEM_PROMPT, text, { temperature: 0.7, maxTokens: 1024 })
+      if (llmResult.content) {
+        return {
+          content: llmResult.content,
+          resources: [
+            { type: 'doc', title: '相关概念速查', color: '#00d4ff' },
+            { type: 'mindmap', title: '知识脉络图', color: '#7c3aed' },
+            { type: 'exercise', title: '配套练习', color: '#06d6a0' },
+          ],
+          suggestions: ['用更简单的话解释', '给我一个代码示例', '顺便出 3 道练习题'],
+        }
+      }
+    } catch (err) {
+      console.error('LLM call failed, using fallback:', err)
+    }
+  }
+
+  return buildChatReply(message, multimodalContents)
 }
 
 export function buildChatReply(message, multimodalContents) {

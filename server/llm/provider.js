@@ -41,7 +41,7 @@ export async function callLlm(systemPrompt, userPrompt, options = {}) {
     }
 
     const data = await response.json()
-    const content = data?.choices?.[0]?.message?.content || data?.data?.?.text || null
+    const content = data?.choices?.[0]?.message?.content || data?.data?.text || null
     return { content, fallbackUsed: false, error: null }
   } catch (error) {
     return { content: null, fallbackUsed: true, error: error.message }
