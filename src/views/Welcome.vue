@@ -1,50 +1,94 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import HeroConstellation from '@/components/homepage/HeroConstellation.vue'
 import AgentLiveTicker from '@/components/homepage/AgentLiveTicker.vue'
 import SectionTelemetry from '@/components/homepage/SectionTelemetry.vue'
 import SectionSkyline from '@/components/homepage/SectionSkyline.vue'
 import SectionMissions from '@/components/homepage/SectionMissions.vue'
+import AgentHub from '@/components/homepage/AgentHub.vue'
 import TrainFlow from '@/views/TrainFlow.vue'
 
 const loaded = ref(false)
+const activeHubBeatId = ref('profile')
+const controlBeatId = ref('profile')
+const controlNonce = ref(0)
+
+const hubStages = [
+  { id: 'profile', role: 'PROFILE', name: '画像智能体', color: '#8FA7FF', note: '识别薄弱知识点、学习偏好和卡顿信号' },
+  { id: 'path', role: 'PATH', name: '路径规划智能体', color: '#35E0D8', note: '根据画像重排补弱路径和学习顺序' },
+  { id: 'resource', role: 'RESOURCE', name: '资源推荐智能体', color: '#45D483', note: '匹配视频、例题、练习和补充材料' },
+  { id: 'tutor', role: 'TUTOR', name: 'AI 辅导智能体', color: '#F0B24A', note: '把资源转成讲解、追问和辅导记录' },
+  { id: 'eval', role: 'EVAL', name: '评估智能体', color: '#F0586E', note: '生成诊断题并判断是否真正掌握' },
+  { id: 'loop', role: 'WRITE-BACK', name: '反馈回写', color: '#FFD78A', note: '把评估结果回写画像和下一轮路径' },
+]
+
+const currentHubStage = computed(() => (
+  hubStages.find(stage => stage.id === activeHubBeatId.value) ?? hubStages[0]
+))
+
+function handleAgentHubBeat(event: MessageEvent) {
+  if (event.data?.type !== 'agenthub:beat') return
+  activeHubBeatId.value = event.data.id
+}
+
+function jumpToAgent(id: string) {
+  activeHubBeatId.value = id
+  controlBeatId.value = id
+  controlNonce.value += 1
+}
 
 onMounted(() => {
   setTimeout(() => { loaded.value = true }, 100)
+  window.addEventListener('message', handleAgentHubBeat)
+})
+
+onBeforeUnmount(() => {
+  window.removeEventListener('message', handleAgentHubBeat)
 })
 </script>
 
 <template>
   <div class="welcome">
-    <div class="cosmos-bg">
-      <div class="cosmos-bg-image" />
-      <div class="cosmos-nebula nebula-1" />
-      <div class="cosmos-nebula nebula-2" />
-      <div class="cosmos-nebula nebula-3" />
-      <div class="cosmos-stars" />
-      <div class="cosmos-vignette" />
-    </div>
-
-    <!-- Hero constellation -->
     <HeroConstellation />
 
-    <!-- TrainFlow: Multi-agent collaboration visualization -->
-    <TrainFlow />
+    <section class="hub-workbench">
+      <aside class="hub-context-card" :style="{ '--stage-color': currentHubStage.color }">
+        <span class="hub-context-kicker">AGENT ROLES</span>
+        <h2>每个智能体负责什么</h2>
+
+        <div class="hub-agent-list" aria-label="智能体职责说明">
+          <button
+            v-for="stage in hubStages"
+            :key="stage.id"
+            type="button"
+            class="hub-agent-item"
+            :class="{ active: stage.id === activeHubBeatId }"
+            :style="{ '--stage-color': stage.color }"
+            @click="jumpToAgent(stage.id)"
+          >
+            <span class="hub-agent-role">{{ stage.role }}</span>
+            <strong>{{ stage.name }}</strong>
+            <small>{{ stage.note }}</small>
+          </button>
+        </div>
+      </aside>
+
+      <div class="hub-workbench-main">
+        <AgentHub :control-beat-id="controlBeatId" :control-nonce="controlNonce" />
+        <TrainFlow embedded-stage-only :active-beat-id="activeHubBeatId" />
+      </div>
+    </section>
 
     <!-- Agent live ticker -->
     <AgentLiveTicker />
 
     <!-- Collaboration telemetry -->
     <SectionTelemetry />
-
-    <!-- Knowledge skyline -->
     <SectionSkyline />
-
-    <!-- Mission console -->
     <SectionMissions />
 
     <footer class="footer">
-      <p>多智能体学习闭环 · 科大讯飞 AI 教育系统</p>
+      <p>多智能体学习闭环 - 科大讯飞 AI 教育系统</p>
     </footer>
   </div>
 </template>
@@ -54,103 +98,298 @@ onMounted(() => {
   position: relative;
   min-height: 100vh;
   background: transparent;
+  isolation: isolate;
 }
 
-/* ── Cosmic background ── */
-.cosmos-bg {
-  position: fixed;
-  inset: 0;
-  z-index: 0;
-  pointer-events: none;
+/* Home section transparency */
+:deep(.hero-constellation),
+:deep(.agent-hub-section),
+:deep(.trainflow-page),
+:deep(.section-telemetry),
+:deep(.section-skyline),
+:deep(.section-missions),
+:deep(.section-loop),
+:deep(.section-schematic),
+:deep(.section-agent-chain),
+:deep(.agent-writing-section) {
+  background: transparent !important;
+}
+
+:deep(.hero-constellation) {
+  overflow: visible;
+}
+
+:deep(.agent-hub-section) {
+  position: relative;
+  z-index: 1;
+  padding: 72px 36px 52px;
+}
+
+:deep(.agent-hub-frame) {
+  display: block;
+  width: 100%;
+  height: 560px;
+  min-height: 0;
+  border: 0;
+  border-radius: 18px;
+  background: transparent;
+}
+
+:deep(.hero-grid),
+:deep(.hero-starfield) {
+  opacity: 0.46;
+}
+
+:deep(.sky-canvas),
+:deep(.mission-rail),
+:deep(.mission-rail-shell),
+:deep(.tele-chart),
+:deep(.loop-stage),
+:deep(.schematic-stage),
+:deep(.chain-board),
+:deep(.tf-shell),
+:deep(.log-container),
+:deep(.agent-stage),
+:deep(.hub-frame-shell),
+:deep(.hero-visual-shell),
+:deep(.hero-dashboard),
+:deep(.hero-card),
+:deep(.hero-side-panel) {
+  background:
+    radial-gradient(ellipse at 62% 20%, rgba(0, 212, 255, 0.08), transparent 58%),
+    linear-gradient(145deg, rgba(7, 10, 24, 0.30), rgba(4, 7, 18, 0.12)) !important;
+  backdrop-filter: blur(8px) saturate(1.18);
+}
+
+:deep(.sky-callout),
+:deep(.activity-chip .chip-card),
+:deep(.tele-detail-card),
+:deep(.tele-stats),
+:deep(.sky-stats),
+:deep(.mis-quota),
+:deep(.stage-work-order),
+:deep(.course-chip),
+:deep(.handoff-strip),
+:deep(.loop-leap),
+:deep(.writeback-strip),
+:deep(.mission-card),
+:deep(.mission-detail),
+:deep(.mission-agent-row),
+:deep(.metric-card),
+:deep(.domain-card),
+:deep(.activity-chip),
+:deep(.chip-card) {
+  background: rgba(8, 12, 30, 0.26) !important;
+  backdrop-filter: blur(10px) saturate(1.2);
+}
+
+:deep(.agent-stage) {
+  border-color: rgba(120, 160, 220, 0.18) !important;
+}
+
+:deep(.stage-watermark) {
+  opacity: 0.045 !important;
+}
+
+.hub-workbench {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: minmax(260px, 0.34fr) minmax(0, 1fr);
+  gap: 18px;
+  align-items: stretch;
+  max-width: 1760px;
+  margin: 0 auto;
+  padding: 72px 36px 56px;
+}
+
+.hub-context-card {
+  --stage-color: #00d4ff;
+  min-height: 640px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 24px;
+  border: 1px solid color-mix(in srgb, var(--stage-color) 32%, rgba(120, 160, 220, 0.14));
+  border-radius: 18px;
+  background:
+    linear-gradient(90deg, color-mix(in srgb, var(--stage-color) 36%, transparent), transparent 1px) 0 0 / 100% 52px,
+    radial-gradient(circle at 0% 0%, color-mix(in srgb, var(--stage-color) 12%, transparent), transparent 52%),
+    linear-gradient(145deg, rgba(7, 10, 24, 0.22), rgba(4, 7, 18, 0.08));
+  backdrop-filter: blur(10px) saturate(1.2);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+.hub-context-kicker {
+  color: var(--stage-color);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.18em;
+}
+
+.hub-context-card h2 {
+  margin: 0;
+  color: #fff;
+  font-family: var(--font-display);
+  font-size: clamp(28px, 2.4vw, 38px);
+  font-weight: 500;
+  line-height: 1.06;
+}
+
+.hub-agent-list {
+  display: grid;
+  gap: 9px;
+  margin-top: 2px;
+}
+
+.hub-agent-item {
+  --stage-color: #00d4ff;
+  display: grid;
+  grid-template-columns: 78px minmax(0, 1fr);
+  gap: 4px 12px;
+  align-items: start;
+  width: 100%;
+  appearance: none;
+  text-align: left;
+  cursor: pointer;
+  padding: 12px;
+  border: 1px solid color-mix(in srgb, var(--stage-color) 18%, rgba(120, 160, 220, 0.12));
+  border-radius: 13px;
+  background: rgba(8, 12, 30, 0.14);
+  transition:
+    transform 0.24s cubic-bezier(0.16, 1, 0.3, 1),
+    border-color 0.28s ease,
+    background 0.28s ease,
+    box-shadow 0.28s ease;
+}
+
+.hub-agent-item:hover {
+  transform: translateX(3px);
+  border-color: color-mix(in srgb, var(--stage-color) 44%, rgba(120, 160, 220, 0.16));
+  background: color-mix(in srgb, var(--stage-color) 7%, rgba(8, 12, 30, 0.18));
+}
+
+.hub-agent-item:active {
+  transform: translateX(3px) scale(0.985);
+}
+
+.hub-agent-item:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--stage-color) 70%, white);
+  outline-offset: 3px;
+}
+
+.hub-agent-role {
+  grid-row: span 2;
+  color: var(--stage-color);
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 0.12em;
+  line-height: 1.4;
+}
+
+.hub-agent-item strong {
+  color: #f7fbff;
+  font-size: 14px;
+  line-height: 1.3;
+}
+
+.hub-agent-item small {
+  color: #8da3c8;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.hub-agent-item.active {
+  border-color: color-mix(in srgb, var(--stage-color) 58%, transparent);
+  background:
+    linear-gradient(90deg, color-mix(in srgb, var(--stage-color) 42%, transparent), transparent 4px),
+    radial-gradient(circle at 0% 0%, color-mix(in srgb, var(--stage-color) 14%, transparent), transparent 60%),
+    rgba(8, 12, 30, 0.20);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.08),
+    0 10px 28px color-mix(in srgb, var(--stage-color) 12%, transparent);
+}
+
+.hub-workbench-main {
+  min-width: 0;
+}
+
+.hub-workbench-main :deep(.agent-hub-section) {
+  max-width: none;
+  padding: 0;
+}
+
+.hub-workbench-main :deep(.agent-hub-frame) {
+  height: 560px;
+}
+
+.hub-workbench-main :deep(.hub-head) {
+  margin-top: 14px;
+}
+
+.hub-workbench-main :deep(.hub-head h2) {
+  font-size: clamp(24px, 2vw, 32px);
+}
+
+.hub-workbench-main :deep(.trainflow-page) {
+  padding: 0;
+  margin-top: 14px;
+}
+
+.hub-workbench-main :deep(.agent-stage) {
+  min-height: 0;
+}
+
+.hub-workbench-main :deep(.stage-grid-2) {
+  grid-template-columns: 240px minmax(0, 1fr);
+  gap: 18px;
+  padding: 18px;
+  height: auto;
+}
+
+.hub-workbench-main :deep(.stage-agent-name) {
+  font-size: 25px;
+}
+
+.hub-workbench-main :deep(.mastery-section) {
+  margin-top: 12px;
+}
+
+.hub-workbench-main :deep(.stage-watermark) {
+  font-size: 190px;
+  right: -28px;
+}
+
+.hub-workbench-main :deep(.course-chip) {
+  max-width: 100%;
+}
+
+.hub-workbench-main :deep(.course-name) {
   overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
-.cosmos-bg-image {
-  position: absolute;
-  inset: 0;
-  background-image: url('/shouye-background-2.png');
-  background-size: cover;
-  background-position: center top;
-  background-repeat: no-repeat;
-  opacity: 0.45;
+.hub-workbench-main :deep(.thinking-thread) {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
 }
 
-.cosmos-nebula {
-  position: absolute;
-  border-radius: 50%;
-  filter: blur(80px);
-  animation: nebulaDrift 20s ease-in-out infinite alternate;
+.hub-workbench-main :deep(.think-step) {
+  align-items: flex-start;
 }
 
-.nebula-1 {
-  top: -15%;
-  left: -10%;
-  width: 600px;
-  height: 500px;
-  background: radial-gradient(ellipse, rgba(0, 212, 255, 0.08), rgba(124, 58, 237, 0.04), transparent 70%);
-  animation-duration: 25s;
+.hub-workbench-main :deep(.think-connector) {
+  display: none;
 }
 
-.nebula-2 {
-  top: 30%;
-  right: -8%;
-  width: 500px;
-  height: 400px;
-  background: radial-gradient(ellipse, rgba(124, 58, 237, 0.06), rgba(59, 130, 246, 0.03), transparent 70%);
-  animation-duration: 30s;
-  animation-delay: -5s;
+.hub-workbench-main :deep(.courses-section) {
+  margin-top: 14px;
 }
 
-.nebula-3 {
-  bottom: -10%;
-  left: 20%;
-  width: 700px;
-  height: 450px;
-  background: radial-gradient(ellipse, rgba(6, 214, 160, 0.04), rgba(0, 212, 255, 0.03), transparent 70%);
-  animation-duration: 22s;
-  animation-delay: -10s;
-}
-
-@keyframes nebulaDrift {
-  0% { transform: translate(0, 0) scale(1); }
-  100% { transform: translate(30px, -20px) scale(1.05); }
-}
-
-.cosmos-stars {
-  position: absolute;
-  inset: 0;
-  background-image:
-    radial-gradient(1px 1px at 10% 20%, rgba(255, 255, 255, 0.6), transparent),
-    radial-gradient(1px 1px at 25% 45%, rgba(255, 255, 255, 0.4), transparent),
-    radial-gradient(1.5px 1.5px at 40% 15%, rgba(0, 212, 255, 0.5), transparent),
-    radial-gradient(1px 1px at 55% 70%, rgba(255, 255, 255, 0.5), transparent),
-    radial-gradient(1px 1px at 70% 30%, rgba(255, 255, 255, 0.3), transparent),
-    radial-gradient(1.5px 1.5px at 85% 55%, rgba(124, 58, 237, 0.4), transparent),
-    radial-gradient(1px 1px at 15% 80%, rgba(255, 255, 255, 0.4), transparent),
-    radial-gradient(1px 1px at 90% 10%, rgba(0, 212, 255, 0.3), transparent),
-    radial-gradient(1px 1px at 50% 90%, rgba(255, 255, 255, 0.35), transparent),
-    radial-gradient(1.5px 1.5px at 35% 60%, rgba(59, 130, 246, 0.4), transparent),
-    radial-gradient(1px 1px at 65% 85%, rgba(255, 255, 255, 0.3), transparent),
-    radial-gradient(1px 1px at 80% 75%, rgba(255, 255, 255, 0.45), transparent),
-    radial-gradient(1px 1px at 5% 55%, rgba(0, 212, 255, 0.35), transparent),
-    radial-gradient(1px 1px at 45% 35%, rgba(255, 255, 255, 0.5), transparent),
-    radial-gradient(1.5px 1.5px at 95% 45%, rgba(124, 58, 237, 0.3), transparent),
-    radial-gradient(1px 1px at 20% 95%, rgba(255, 255, 255, 0.4), transparent),
-    radial-gradient(1px 1px at 75% 5%, rgba(0, 212, 255, 0.4), transparent),
-    radial-gradient(1px 1px at 60% 50%, rgba(255, 255, 255, 0.3), transparent);
-  animation: twinkle 8s ease-in-out infinite alternate;
-}
-
-@keyframes twinkle {
-  0% { opacity: 0.6; }
-  50% { opacity: 1; }
-  100% { opacity: 0.7; }
-}
-
-.cosmos-vignette {
-  position: absolute;
-  inset: 0;
-  background: radial-gradient(ellipse at center, transparent 40%, rgba(5, 5, 16, 0.6) 100%);
+.hub-workbench-main :deep(.handoff-strip) {
+  margin-top: 14px;
 }
 
 /* ── Section headers ── */
@@ -203,19 +442,43 @@ onMounted(() => {
 
 /* ── Responsive ── */
 @media (max-width: 900px) {
+  .hub-workbench {
+    grid-template-columns: 1fr;
+    padding: 48px 16px 36px;
+  }
+
+  .hub-context-card,
+  .hub-workbench-main :deep(.agent-stage) {
+    min-height: auto;
+  }
+
   .agent-collab-section {
     padding: 40px 24px 60px;
+  }
+  :deep(.agent-hub-section) {
+    padding: 48px 16px 36px;
+  }
+  :deep(.agent-hub-frame) {
+    height: 460px;
+    min-height: 0;
   }
   .footer {
     padding: 32px 24px;
   }
 }
 
-/* ── Reduced motion ── */
-@media (prefers-reduced-motion: reduce) {
-  .cosmos-nebula,
-  .cosmos-stars {
-    animation: none !important;
+@media (min-width: 901px) and (max-width: 1320px) {
+  .hub-workbench {
+    grid-template-columns: 1fr;
+  }
+
+  .hub-context-card {
+    min-height: auto;
+  }
+
+  .hub-workbench-main :deep(.stage-grid-2) {
+    grid-template-columns: 300px minmax(0, 1fr);
   }
 }
+
 </style>
