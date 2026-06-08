@@ -42,3 +42,6 @@ _tailwind.css
 
 # Claude 工作树
 .claude/worktrees/
+
+# Windows 误生成的设备名文件
+nul
