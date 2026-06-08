@@ -14,9 +14,9 @@
           <Tv class="w-4 h-4" :class="statusIconClass" />
           <span class="absolute -top-1 -right-1 flex h-2 w-2">
             <span class="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75"
-              :class="avatarStatus === 'connected' ? 'bg-emerald-400' : 'bg-amber-400'" />
+              :class="avatarStatus === 'connected' ? 'bg-emerald-400' : 'bg-blue-400'" />
             <span class="relative inline-flex rounded-full h-2 w-2"
-              :class="avatarStatus === 'connected' ? 'bg-emerald-500' : 'bg-amber-500'" />
+              :class="avatarStatus === 'connected' ? 'bg-emerald-500' : 'bg-blue-500'" />
           </span>
         </div>
         <div>
@@ -35,9 +35,9 @@
       <div
         ref="avatarStageRef"
         class="relative rounded-2xl border overflow-hidden flex flex-col transition-all duration-300 group h-[800px]"
-        style="background: transparent; border-color: rgba(201, 168, 76, 0.05)"
+        style="background: transparent; border-color: rgba(59, 130, 246, 0.05)"
       >
-        <div class="absolute inset-0 pointer-events-none" style="background-image: radial-gradient(rgba(201, 168, 76, 0.03) 1px, transparent 1px); background-size: 12px 12px; opacity: 0.3" />
+        <div class="absolute inset-0 pointer-events-none" style="background-image: radial-gradient(rgba(59, 130, 246, 0.03) 1px, transparent 1px); background-size: 12px 12px; opacity: 0.3" />
 
         <!-- Status bar -->
         <div class="relative z-10 flex justify-between items-center text-[10px] p-3">
@@ -59,15 +59,15 @@
 
           <!-- Idle placeholder -->
           <div v-if="avatarStatus !== 'connected'" class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none z-20 gap-3">
-            <div class="w-16 h-16 rounded-full border-2 border-dashed flex items-center justify-center" style="border-color: rgba(201, 168, 76, 0.25)">
-              <Tv class="w-7 h-7" style="color: rgba(201, 168, 76, 0.4)" />
+            <div class="w-16 h-16 rounded-full border-2 border-dashed flex items-center justify-center" style="border-color: rgba(59, 130, 246, 0.25)">
+              <Tv class="w-7 h-7" style="color: rgba(59, 130, 246, 0.4)" />
             </div>
             <div class="text-center space-y-1">
-              <p class="text-sm font-bold tracking-wider" style="color: rgba(217, 188, 96, 0.6)">AI VIRTUAL TUTOR</p>
+              <p class="text-sm font-bold tracking-wider" style="color: rgba(96, 165, 250, 0.6)">AI VIRTUAL TUTOR</p>
               <p class="text-[10px]" style="color: var(--text-muted)">3D 虚拟导师待机中</p>
             </div>
             <div class="flex items-center gap-1.5 mt-1">
-              <span class="w-1.5 h-1.5 rounded-full animate-pulse" style="background: rgba(201, 168, 76, 0.4)" />
+              <span class="w-1.5 h-1.5 rounded-full animate-pulse" style="background: rgba(59, 130, 246, 0.4)" />
               <span class="text-[9px] font-mono" style="color: var(--text-muted)">STANDBY</span>
             </div>
           </div>
@@ -95,7 +95,7 @@
 
         <!-- Subtitle -->
         <div class="relative z-10 border rounded-xl mx-3 mb-3 px-2.5 py-2 text-left max-h-[72px] overflow-y-auto"
-          style="background: rgba(22, 18, 32, 0.15); border-color: rgba(201, 168, 76, 0.05)">
+          style="background: rgba(22, 18, 32, 0.15); border-color: rgba(59, 130, 246, 0.05)">
           <p class="text-[10px] font-medium leading-relaxed animate-fade-in whitespace-pre-line" style="color: var(--gold-300)">
             {{ currentSubtitle }}
           </p>
@@ -154,7 +154,7 @@
             <label for="nlp-toggle" class="text-[8px] cursor-pointer select-none" :class="useNlp ? 'text-emerald-400' : ''" style="color: useNlp ? undefined : 'var(--text-muted)'">
               {{ useNlp ? '语义理解' : '纯文本' }}
             </label>
-            <input type="checkbox" v-model="useNlp" id="nlp-toggle" class="h-2.5 w-2.5 rounded accent-amber-500 cursor-pointer" />
+            <input type="checkbox" v-model="useNlp" id="nlp-toggle" class="h-2.5 w-2.5 rounded accent-blue-500 cursor-pointer" />
           </div>
         </div>
         <div class="flex gap-2">
@@ -201,11 +201,11 @@
             </button>
           </div>
           <input type="range" min="0" max="100" :value="xunfeiVolume" @input="handleVolumeChange"
-            class="w-full h-1 rounded-lg appearance-none cursor-pointer accent-amber-500" style="background: rgba(22, 18, 32, 0.8)" />
+            class="w-full h-1 rounded-lg appearance-none cursor-pointer accent-blue-500" style="background: rgba(22, 18, 32, 0.8)" />
         </div>
         <div class="flex items-center justify-between pt-1" style="border-top: 1px solid var(--border-subtle)">
           <div class="flex items-center gap-1.5">
-            <input type="checkbox" v-model="syncToMainChat" id="sync-chat" class="h-2.5 w-2.5 rounded accent-amber-500 cursor-pointer" />
+            <input type="checkbox" v-model="syncToMainChat" id="sync-chat" class="h-2.5 w-2.5 rounded accent-blue-500 cursor-pointer" />
             <label for="sync-chat" class="text-[9px] cursor-pointer select-none" style="color: var(--text-muted)">聊天区同步</label>
           </div>
           <button @click="avatarResize()" :disabled="avatarStatus !== 'connected'"
@@ -242,7 +242,7 @@
             连接管理
           </span>
           <span class="text-[8px] px-1.5 py-0.5 rounded-full border font-mono"
-            :class="avatarStatus === 'connected' ? 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30' : avatarStatus === 'loading' ? 'bg-amber-500/15 text-amber-400 border-amber-500/30 animate-pulse' : ''"
+            :class="avatarStatus === 'connected' ? 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30' : avatarStatus === 'loading' ? 'bg-blue-500/15 text-blue-400 border-blue-500/30 animate-pulse' : ''"
             :style="avatarStatus !== 'connected' && avatarStatus !== 'loading' ? { background: 'rgba(74, 70, 60, 0.15)', color: 'var(--text-muted)', borderColor: 'rgba(74, 70, 60, 0.3)' } : {}">
             {{ avatarStatus === 'connected' ? 'LIVE' : avatarStatus === 'loading' ? 'CONNECTING' : avatarStatus === 'error' ? 'ERROR' : 'STANDBY' }}
           </span>
@@ -256,7 +256,7 @@
           </button>
           <button @click="handleViewReport"
             class="py-2 rounded-xl text-[10px] font-bold transition-all cursor-pointer flex items-center justify-center gap-1"
-            style="color: var(--gold-400); background: rgba(201, 168, 76, 0.1); border: 1px solid rgba(201, 168, 76, 0.2)">
+            style="color: var(--gold-400); background: rgba(59, 130, 246, 0.1); border: 1px solid rgba(59, 130, 246, 0.2)">
             查看报告
           </button>
         </div>
@@ -309,17 +309,17 @@ const avatarActions = [
 
 // ---- Derived status ----
 const statusIconClass = computed(() => {
-  if (avatarStatus.value === 'loading') return 'text-amber-400 animate-pulse'
+  if (avatarStatus.value === 'loading') return 'text-blue-400 animate-pulse'
   if (avatarStatus.value === 'connected') return 'text-emerald-400'
   if (avatarStatus.value === 'error') return 'text-rose-400'
-  return 'animate-pulse' // default gold
+  return 'animate-pulse' // default blue
 })
 
 const statusBadgeClass = computed(() => {
-  if (avatarStatus.value === 'loading') return 'bg-amber-500/20 text-amber-400 border-amber-500/30 animate-pulse'
+  if (avatarStatus.value === 'loading') return 'bg-blue-500/20 text-blue-400 border-blue-500/30 animate-pulse'
   if (avatarStatus.value === 'connected') return 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30'
   if (avatarStatus.value === 'error') return 'bg-rose-500/20 text-rose-400 border-rose-500/30'
-  return 'bg-amber-500/10 text-amber-400 border-amber-500/20'
+  return 'bg-blue-500/10 text-blue-400 border-blue-500/20'
 })
 
 const statusText = computed(() => {

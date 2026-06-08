@@ -61,6 +61,6 @@ export interface HistoryPreset {
   report: StudyReport
 }
 
-export type ThemeAccent = 'gold' | 'teal' | 'ruby' | 'amber'
+export type ThemeAccent = 'blue' | 'teal' | 'ruby' | 'cyan'
 export type VirtualStyle = 'standard' | 'hologram' | 'cyber'
 export type RecommendCategory = 'all' | 'course' | 'project' | 'literature'

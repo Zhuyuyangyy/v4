@@ -29,13 +29,13 @@ function handleNavClick(id: typeof activeMenu.value) {
 </script>
 
 <template>
-  <div class="dialogue-root flex h-screen text-[var(--text-primary)] overflow-hidden font-sans selection:bg-amber-500/25 selection:text-white relative z-0" style="background: var(--bg-deep)">
+  <div class="dialogue-root flex h-screen text-[var(--text-primary)] overflow-hidden font-sans selection:bg-blue-500/25 selection:text-white relative z-0" style="background: var(--bg-deep)">
     <CosmicBackground />
 
     <!-- Notification Banner -->
     <div v-if="exportNotification" class="fixed top-4 left-1/2 -translate-x-1/2 z-50 glass-card py-2.5 px-6 rounded-xl shadow-lg text-xs font-medium flex items-center gap-2 animate-fade-in">
-      <span class="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
-      <span class="text-amber-200">{{ exportNotification }}</span>
+      <span class="w-1.5 h-1.5 rounded-full bg-blue-400 animate-pulse" />
+      <span class="text-blue-200">{{ exportNotification }}</span>
     </div>
 
     <!-- Left Navigation Sidebar -->
@@ -57,12 +57,12 @@ function handleNavClick(id: typeof activeMenu.value) {
             : 'border-transparent text-[var(--text-muted)] hover:text-[var(--text-secondary)] hover:bg-[var(--bg-hover)]'"
         >
           <span v-if="isNavActive(item.id)"
-            class="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-7 bg-gradient-to-b from-amber-400 to-amber-600 rounded-r-full shadow-[0_0_10px_rgba(217,188,96,0.5)]"
+            class="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-7 bg-gradient-to-b from-blue-400 to-blue-600 rounded-r-full shadow-[0_0_10px_rgba(96,165,250,0.5)]"
           />
           <component :is="item.icon" class="w-5.5 h-5.5 transition-transform duration-200 group-hover:scale-105"
-            :class="isNavActive(item.id) ? 'text-amber-300' : 'text-[var(--text-muted)] group-hover:text-amber-400/70'" />
+            :class="isNavActive(item.id) ? 'text-blue-300' : 'text-[var(--text-muted)] group-hover:text-blue-400/70'" />
           <span class="text-[11px] tracking-wider transition-all duration-200"
-            :class="isNavActive(item.id) ? 'text-amber-200 font-semibold' : 'text-[var(--text-dim)] group-hover:text-[var(--text-secondary)]'"
+            :class="isNavActive(item.id) ? 'text-blue-200 font-semibold' : 'text-[var(--text-dim)] group-hover:text-[var(--text-secondary)]'"
           >{{ item.title }}</span>
         </button>
       </nav>

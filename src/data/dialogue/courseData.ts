@@ -569,7 +569,7 @@ export const courses: Course[] = [
     name: '计算机视觉',
     difficulty: '进阶',
     prerequisites: '深度学习、线性代数',
-    color: '#f59e0b',
+    color: '#3b82f6',
     icon: 'Eye',
     direction: 'ai',
     knowledgePoints: [
@@ -695,7 +695,7 @@ export const courses: Course[] = [
 
 export const difficultyColors: Record<string, string> = {
   '入门': 'bg-emerald-950/40 text-emerald-400 border-emerald-900/50',
-  '进阶': 'bg-amber-950/40 text-amber-400 border-amber-900/50',
+  '进阶': 'bg-blue-950/40 text-blue-400 border-blue-900/50',
   '高级': 'bg-rose-950/40 text-rose-400 border-rose-900/50',
 }
 

@@ -1,92 +1,17 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { BASE_KNOWLEDGE_ITEMS, buildMetroView } from './mapTransforms'
+import type { MetroLine, MetroStation } from './mapTypes'
 
-interface Station {
-  x: number; y: number; label: string; m: number;
-  interchange?: string[]; recommended?: boolean; youAreHere?: boolean;
-  lineId?: string; lineColor?: string;
-}
-interface MetroLine {
-  id: string; name: string; color: string;
-  waypoints: [number, number][]; stations: Station[];
-}
+const emit = defineEmits<{ 'select-node': [nodeId: string] }>()
+
+type Station = MetroStation & { lineId?: string; lineColor?: string }
 
 const KP = { bg: '#07070d', text: '#e8edf5', textSub: '#8892b0', emerald: '#06d6a0', cyan: '#00d4ff', purple: '#7c3aed', amber: '#f59e0b', rose: '#f43f5e', blue: '#3b82f6' }
 
-const lines = ref<MetroLine[]>([
-  {
-    id: 'math', name: '数学基础', color: '#00d4ff',
-    waypoints: [[120, 240], [1280, 240]],
-    stations: [
-      { x: 140, y: 240, label: '集合 / 线代基础', m: 1.0 },
-      { x: 310, y: 240, label: '矩阵运算', m: 1.0, interchange: ['ml'] },
-      { x: 470, y: 240, label: '特征值与分解', m: 0.85 },
-      { x: 640, y: 240, label: '微积分', m: 0.72, interchange: ['ml', 'dl'] },
-      { x: 820, y: 240, label: '概率与统计', m: 0.78 },
-      { x: 980, y: 240, label: '凸优化', m: 0.30, interchange: ['ml', 'dl'], recommended: true },
-      { x: 1150, y: 240, label: '信息论', m: 0.05 },
-    ],
-  },
-  {
-    id: 'ml', name: '机器学习', color: '#7c3aed',
-    waypoints: [[120, 410], [1280, 410]],
-    stations: [
-      { x: 140, y: 410, label: 'Python 基础', m: 1.0 },
-      { x: 310, y: 410, label: '数据预处理', m: 0.88, interchange: ['math'] },
-      { x: 470, y: 410, label: '监督学习', m: 0.82 },
-      { x: 640, y: 410, label: '回归与分类', m: 0.66, interchange: ['math', 'dl'] },
-      { x: 820, y: 410, label: '集成方法', m: 0.52 },
-      { x: 980, y: 410, label: '模型评估', m: 0.46, interchange: ['math', 'dl'] },
-      { x: 1150, y: 410, label: 'AutoML', m: 0.10 },
-    ],
-  },
-  {
-    id: 'dl', name: '深度学习', color: '#06d6a0',
-    waypoints: [[400, 580], [1280, 580]],
-    stations: [
-      { x: 420, y: 580, label: '感知机 / MLP', m: 0.62 },
-      { x: 640, y: 580, label: '神经网络', m: 0.50, interchange: ['math', 'ml'] },
-      { x: 820, y: 580, label: 'CNN', m: 0.32 },
-      { x: 980, y: 580, label: 'RNN / LSTM', m: 0.22, interchange: ['math', 'ml'] },
-      { x: 1140, y: 580, label: 'Transformer', m: 0.12, youAreHere: true },
-      { x: 1280, y: 580, label: '大模型预训练', m: 0.04 },
-    ],
-  },
-  {
-    id: 'algo', name: '算法与数据结构', color: '#f59e0b',
-    waypoints: [[120, 750], [1180, 750]],
-    stations: [
-      { x: 140, y: 750, label: '基础数据结构', m: 0.95 },
-      { x: 310, y: 750, label: '排序与查找', m: 0.92 },
-      { x: 470, y: 750, label: '递归与分治', m: 0.78 },
-      { x: 640, y: 750, label: '树与图', m: 0.58 },
-      { x: 820, y: 750, label: '动态规划', m: 0.35 },
-      { x: 980, y: 750, label: '高级算法', m: 0.18 },
-      { x: 1150, y: 750, label: '并发与并行', m: 0.05 },
-    ],
-  },
-  {
-    id: 'eng', name: '工程实践', color: '#3b82f6',
-    waypoints: [[50, 800], [50, 580], [50, 410], [50, 240]],
-    stations: [
-      { x: 50, y: 800, label: 'Git', m: 0.85 },
-      { x: 50, y: 580, label: 'Python 工程', m: 0.65 },
-      { x: 50, y: 410, label: '测试 / 部署', m: 0.35 },
-      { x: 50, y: 240, label: 'CI / CD', m: 0.15 },
-    ],
-  },
-])
-
-const branches = ref<MetroLine[]>([
-  {
-    id: 'nlp', name: 'NLP 应用', color: '#f43f5e',
-    waypoints: [[1140, 580], [1140, 660], [1200, 720], [1280, 720]],
-    stations: [
-      { x: 1140, y: 660, label: '词嵌入', m: 0.35 },
-      { x: 1280, y: 720, label: '微调与对齐', m: 0.05 },
-    ],
-  },
-])
+const allMetroLines = buildMetroView(BASE_KNOWLEDGE_ITEMS)
+const lines = ref<MetroLine[]>(allMetroLines.filter(l => l.id !== 'nlp'))
+const branches = ref<MetroLine[]>(allMetroLines.filter(l => l.id === 'nlp'))
 
 function buildPath(waypoints: [number, number][], radius = 14): string {
   if (waypoints.length < 2) return ''
@@ -109,9 +34,9 @@ function buildPath(waypoints: [number, number][], radius = 14): string {
   return d
 }
 
-function stationFill(m: number, lineColor: string): string {
-  if (m >= 0.8) return lineColor
-  if (m >= 0.4) return lineColor + '66'
+function stationFill(mastery: number, lineColor: string): string {
+  if (mastery >= 0.8) return lineColor
+  if (mastery >= 0.4) return lineColor + '66'
   return KP.bg
 }
 
@@ -124,14 +49,20 @@ const allStations = computed(() => {
 
 // Interchange columns
 const interchangeCols = computed(() => {
-  const cols = [310, 640, 980]
-  return cols.map(col => {
-    const here = allStations.value.filter(s => s.x === col && s.interchange)
-    if (here.length < 2) return null
-    const ys = here.map(s => s.y).sort((a, b) => a - b)
-    return { col, y1: ys[0], y2: ys[ys.length - 1] }
-  }).filter(Boolean)
+  const xGroups: Record<number, Station[]> = {}
+  allStations.value.filter(s => s.interchange).forEach(s => {
+    if (!xGroups[s.x]) xGroups[s.x] = []
+    xGroups[s.x].push(s)
+  })
+  return Object.entries(xGroups)
+    .filter(([, sts]) => sts.length >= 2)
+    .map(([col, sts]) => {
+      const ys = sts.map(s => s.y).sort((a, b) => a - b)
+      return { col: Number(col), y1: ys[0], y2: ys[ys.length - 1] }
+    })
 })
+
+const youAreHereStation = computed(() => allStations.value.find(s => s.youAreHere))
 
 // Inject keyframes
 let styleEl: HTMLStyleElement | null = null
@@ -194,7 +125,7 @@ onUnmounted(() => { styleEl?.remove() })
         </g>
 
         <!-- Stations -->
-        <g v-for="(s, i) in allStations" :key="'st-'+i">
+        <g v-for="(s, i) in allStations" :key="'st-'+i" class="metro-station" @click="emit('select-node', s.id)">
           <circle v-if="s.interchange" :cx="s.x" :cy="s.y" :r="(s.interchange ? 13 : 9) + 4"
             fill="none" stroke="#fff" stroke-opacity="0.25" stroke-width="1" />
           <circle v-if="s.recommended" :cx="s.x" :cy="s.y" :r="(s.interchange ? 13 : 9) + 2"
@@ -207,9 +138,9 @@ onUnmounted(() => { styleEl?.remove() })
               :style="{ transformOrigin: `${s.x}px ${s.y}px`, animation: 'metro-pulse 1.8s ease-out 0.6s infinite' }" />
           </g>
           <circle :cx="s.x" :cy="s.y" :r="s.interchange ? 13 : 9"
-            :fill="stationFill(s.m, s.lineColor!)" :stroke="s.lineColor" stroke-width="2.5"
-            :filter="s.m >= 0.5 ? 'url(#m-glow-sm)' : undefined" />
-          <path v-if="s.m >= 0.4 && s.m < 0.8"
+            :fill="stationFill(s.mastery, s.lineColor!)" :stroke="s.lineColor" stroke-width="2.5"
+            :filter="s.mastery >= 0.5 ? 'url(#m-glow-sm)' : undefined" />
+          <path v-if="s.mastery >= 0.4 && s.mastery < 0.8"
             :d="`M ${s.x} ${s.y - 9} A 9 9 0 0 1 ${s.x} ${s.y + 9} Z`" :fill="s.lineColor" />
         </g>
       </svg>
@@ -234,11 +165,11 @@ onUnmounted(() => { styleEl?.remove() })
             left: (s.x / 1400 * 100) + '%',
             top: ((s.y + (line.id === 'math' ? -38 : line.id === 'ml' ? -42 : 40)) / 900 * 100) + '%',
           }">
-          <div class="station-name" :style="{ fontSize: s.interchange ? '12px' : '11px', fontWeight: s.interchange ? 600 : 500, color: s.m >= 0.6 ? KP.text : KP.textSub }">
+          <div class="station-name" :style="{ fontSize: s.interchange ? '12px' : '11px', fontWeight: s.interchange ? 600 : 500, color: s.mastery >= 0.6 ? KP.text : KP.textSub }">
             {{ s.label }}
           </div>
-          <div v-if="s.m > 0 && s.m < 1" class="station-pct" :style="{ color: line.color }">
-            {{ Math.round(s.m * 100) }}%
+          <div v-if="s.mastery > 0 && s.mastery < 1" class="station-pct" :style="{ color: line.color }">
+            {{ Math.round(s.mastery * 100) }}%
           </div>
         </div>
       </template>
@@ -253,7 +184,8 @@ onUnmounted(() => { styleEl?.remove() })
       </template>
 
       <!-- You are here -->
-      <div class="you-are-here">
+      <div v-if="youAreHereStation" class="you-are-here"
+        :style="{ left: (youAreHereStation.x / 1400 * 100) + '%', top: ((youAreHereStation.y - 60) / 900 * 100) + '%' }">
         <div class="yah-pill">
           <span class="yah-dot"></span>
           你现在在这里
@@ -341,6 +273,7 @@ onUnmounted(() => { styleEl?.remove() })
   position: absolute; transform: translateX(-50%);
   pointer-events: none; white-space: nowrap; text-align: center;
 }
+.metro-station { cursor: pointer; }
 .station-name { font-weight: 500; text-shadow: 0 1px 4px rgba(0,0,0,0.8); letter-spacing: 0.01em; }
 .station-pct { font-size: 9px; font-family: var(--font-mono); margin-top: 2px; letter-spacing: 0.05em; opacity: 0.85; }
 
@@ -352,7 +285,7 @@ onUnmounted(() => { styleEl?.remove() })
 .branch-tag { font-family: var(--font-mono); font-size: 9px; margin-right: 6px; letter-spacing: 0.15em; }
 
 .you-are-here {
-  position: absolute; left: calc(1140 / 1400 * 100%); top: calc((580 - 60) / 900 * 100%);
+  position: absolute;
   transform: translateX(-50%); z-index: 10; pointer-events: none;
 }
 .yah-pill {

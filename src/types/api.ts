@@ -92,6 +92,36 @@ export interface LearningPathResponse {
   }>
 }
 
+export interface EvaluationDashboardMetric {
+  key: string
+  label: string
+  stage0: number
+  stage1: number
+  stage2: number
+}
+
+export interface EvaluationDashboardWeakness {
+  id: string
+  label: string
+  severity: 'low' | 'medium' | 'high'
+  reason: string
+  impact: string
+  action: string
+}
+
+export interface EvaluationDashboardPayload {
+  flow: string[]
+  profileMetrics: EvaluationDashboardMetric[]
+  weaknesses: EvaluationDashboardWeakness[]
+  evidenceRounds: Array<{
+    stage: 0 | 1 | 2
+    trigger: string
+    evidence: string[]
+    profileUpdates: string[]
+    pathImpact: string
+  }>
+}
+
 export interface EvaluationResponse {
   generatedAt: string
   stats: Array<{
@@ -102,6 +132,7 @@ export interface EvaluationResponse {
     icon?: string
   }>
   suggestions: ApiSuggestion[]
+  dashboard?: EvaluationDashboardPayload
 }
 
 export type ProfileAnalyzeRequest = SurveyAnswers
@@ -182,12 +213,24 @@ export interface EvidenceSummary {
 
 export interface AgentResult {
   agentName: string
-  input: string
+  inputSummary: string
+  outputSummary: string
+  input: unknown
   output: unknown
   confidence: number
   evidence: string[]
   durationMs: number
   status: string
+  fallbackUsed: boolean
+}
+
+export interface TraceAgentResult {
+  agentName: string
+  inputSummary: string
+  outputSummary: string
+  confidence: number
+  evidence: string[]
+  durationMs: number
   fallbackUsed: boolean
 }
 
@@ -201,6 +244,7 @@ export interface TraceRecord {
   riskFlags: string[]
   fallbackUsed: boolean
   durationMs: number
+  agentResults: TraceAgentResult[]
 }
 
 export interface ResourceGenerateRequest {
@@ -262,33 +306,22 @@ export interface FullEvaluationResponse {
   trace: TraceRecord
 }
 
-export interface KnowledgeHit {
-  id: string
-  source: 'local' | 'vector'
-  title: string
-  type: string
-  tags: string[]
-  summary: string
-  agentHint: string
-  score: number
+export interface FullRunRequest {
+  answers?: unknown
+  topic?: string
+  resourceType?: string
+  question?: string
+  mode?: string
 }
 
-export interface KnowledgeContextResponse {
-  query: string
-  matches: KnowledgeHit[]
-  embedding: {
-    model: string
-    dimensions: number
-    indexSize: number
-    generatedAt: string
-  }
-}
-
-export interface KnowledgeStatusResponse {
-  model: string
-  dimensions: number
-  localDocuments: number
-  vectorDocuments: number
-  syncedAgents: string[]
-  updatedAt: string
+export interface FullRunResponse {
+  workflowId: string
+  agentResults: AgentResult[]
+  resourcePackage: ResourcePackage
+  tutoringAnswer: string
+  evaluation: unknown
+  path: LearningPathResponse & { replanReason?: string }
+  reflection: unknown
+  profile: ProfileResult
+  trace: TraceRecord
 }

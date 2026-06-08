@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import HeroConstellation from '@/components/homepage/HeroConstellation.vue'
+import AgentLiveTicker from '@/components/homepage/AgentLiveTicker.vue'
 import SectionTelemetry from '@/components/homepage/SectionTelemetry.vue'
 import SectionSkyline from '@/components/homepage/SectionSkyline.vue'
 import SectionMissions from '@/components/homepage/SectionMissions.vue'
@@ -78,6 +79,10 @@ onBeforeUnmount(() => {
       </div>
     </section>
 
+    <!-- Agent live ticker -->
+    <AgentLiveTicker />
+
+    <!-- Collaboration telemetry -->
     <SectionTelemetry />
     <SectionSkyline />
     <SectionMissions />

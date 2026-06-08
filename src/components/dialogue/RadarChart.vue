@@ -3,8 +3,8 @@
     <svg :width="size" :height="size" class="overflow-visible">
       <defs>
         <radialGradient id="radar-glow" cx="50%" cy="50%" r="50%">
-          <stop offset="0%" stop-color="rgba(201, 168, 76, 0.15)" />
-          <stop offset="100%" stop-color="rgba(201, 168, 76, 0)" />
+          <stop offset="0%" stop-color="rgba(59, 130, 246, 0.15)" />
+          <stop offset="100%" stop-color="rgba(59, 130, 246, 0)" />
         </radialGradient>
       </defs>
 
@@ -31,14 +31,14 @@
 
       <path
         :d="dataPath"
-        fill="rgba(201, 168, 76, 0.18)"
-        stroke="#c9a84c"
+        fill="rgba(59, 130, 246, 0.18)"
+        stroke="#3b82f6"
         stroke-width="2.5"
         class="transition-all duration-700 ease-out"
       />
 
       <g v-for="(pt, i) in dataPoints" :key="'data-dot-' + i" class="transition-all duration-700 ease-out">
-        <circle :cx="pt.x" :cy="pt.y" r="4.5" fill="#c9a84c" stroke="#ffffff" stroke-width="1.5" />
+        <circle :cx="pt.x" :cy="pt.y" r="4.5" fill="#3b82f6" stroke="#ffffff" stroke-width="1.5" />
         <circle :cx="pt.x" :cy="pt.y" r="9" fill="transparent" class="hover:fill-[rgba(59,130,246,0.1)] cursor-pointer">
           <title>{{ points[i].dimension }}: {{ points[i].score }}</title>
         </circle>
@@ -57,7 +57,7 @@
           :y="getLabelCoords(i).y + (Math.sin(getAngle(i)) > 0.8 ? 16 : 11)"
           :text-anchor="getLabelAnchor(i)"
           dy="0.33em"
-          class="text-[10px] font-bold fill-current" style="color: var(--gold-500)"
+          class="text-[10px] font-bold fill-current" style="color: var(--gold-400)"
         >{{ p.score }}</text>
       </g>
     </svg>

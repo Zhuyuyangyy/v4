@@ -45,16 +45,16 @@ onMounted(() => {
   window.addEventListener('mousemove', handleMouseMove)
   document.addEventListener('mouseleave', handleMouseLeave)
 
-  // --- Warm observatory palette ---
+  // --- Cool tech-blue observatory palette ---
   const colors = {
-    warmWhite: 'rgba(245, 242, 235, ',
-    amber: 'rgba(217, 188, 96, ',
-    gold: 'rgba(201, 168, 76, ',
-    deepGold: 'rgba(184, 146, 58, ',
-    brightGold: 'rgba(232, 202, 110, ',
-    teal: 'rgba(45, 212, 184, ',
-    ruby: 'rgba(214, 74, 122, ',
-    softRuby: 'rgba(200, 100, 140, ',
+    warmWhite: 'rgba(220, 230, 255, ',
+    amber: 'rgba(96, 165, 250, ',
+    gold: 'rgba(59, 130, 246, ',
+    deepGold: 'rgba(37, 99, 235, ',
+    brightGold: 'rgba(147, 197, 253, ',
+    teal: 'rgba(34, 211, 238, ',
+    ruby: 'rgba(129, 140, 248, ',
+    softRuby: 'rgba(165, 180, 252, ',
   }
   const starPalette = [colors.warmWhite, colors.amber, colors.gold, colors.deepGold, colors.brightGold, colors.teal, colors.ruby]
 
@@ -188,7 +188,7 @@ onMounted(() => {
           Math.min(this.starA.opacity, this.starB.opacity) *
           (0.8 + 0.2 * Math.sin(time * 0.0005 + this.starA.x * 0.01))
         if (alpha > 0.01) {
-          c.strokeStyle = `rgba(201, 168, 76, ${alpha})`
+          c.strokeStyle = `rgba(59, 130, 246, ${alpha})`
           c.lineWidth = 0.4
           c.beginPath(); c.moveTo(this.starA.x, this.starA.y); c.lineTo(this.starB.x, this.starB.y); c.stroke()
         }
@@ -270,7 +270,7 @@ onMounted(() => {
       this.x = Math.random() * width; this.y = Math.random() * height
       this.size = Math.min(width, height) * (0.35 + Math.random() * 0.4)
       const nebulaColors = [
-        'rgba(201, 168, 76,', 'rgba(184, 146, 58,', 'rgba(45, 212, 184,',
+        'rgba(59, 130, 246,', 'rgba(37, 99, 235,', 'rgba(34, 211, 238,',
         'rgba(214, 74, 122,', 'rgba(160, 80, 120,', 'rgba(232, 228, 216,',
       ]
       this.colorBase = nebulaColors[Math.floor(Math.random() * nebulaColors.length)]
@@ -368,7 +368,7 @@ onMounted(() => {
       // Glowing head
       const glowGrad = c.createRadialGradient(this.x, this.y, 0, this.x, this.y, 8)
       glowGrad.addColorStop(0, 'rgba(255, 255, 255, 0.9)')
-      glowGrad.addColorStop(1, 'rgba(217, 188, 96, 0)')
+      glowGrad.addColorStop(1, 'rgba(96, 165, 250, 0)')
       c.fillStyle = glowGrad
       c.beginPath(); c.arc(this.x, this.y, 8, 0, Math.PI * 2); c.fill()
 
@@ -376,8 +376,8 @@ onMounted(() => {
       const trail = c.createLinearGradient(this.x, this.y, this.x - this.vx * 2, this.y - this.vy * 2)
       if (this.colorIndex === 0) {
         trail.addColorStop(0, 'rgba(255, 255, 255, 1.0)')
-        trail.addColorStop(0.15, 'rgba(232, 202, 110, 0.95)')
-        trail.addColorStop(0.5, 'rgba(201, 168, 76, 0.2)')
+        trail.addColorStop(0.15, 'rgba(147, 197, 253, 0.95)')
+        trail.addColorStop(0.5, 'rgba(59, 130, 246, 0.2)')
       } else if (this.colorIndex === 1) {
         trail.addColorStop(0, 'rgba(255, 255, 255, 1.0)')
         trail.addColorStop(0.15, 'rgba(45, 212, 184, 0.9)')
@@ -407,7 +407,7 @@ onMounted(() => {
       this.maxRadius = Math.min(width, height) * (0.3 + Math.random() * 0.4)
       this.speed = 0.3 + Math.random() * 0.3
       const r = Math.random()
-      this.color = r < 0.4 ? 'rgba(201, 168, 76,' : r < 0.7 ? 'rgba(232, 202, 110,' : 'rgba(45, 212, 184,'
+      this.color = r < 0.4 ? 'rgba(59, 130, 246,' : r < 0.7 ? 'rgba(147, 197, 253,' : 'rgba(34, 211, 238,'
     }
     update() {
       this.radius += this.speed
@@ -493,15 +493,15 @@ onMounted(() => {
     const minDim = Math.min(width, height)
     particlesList.forEach(p => { p.update(time, mouse.x, mouse.y, mouse.active); p.draw(ctx, cx, cy, time) })
 
-    // Galaxy center — warm golden glow
+    // Galaxy center — cool tech-blue glow
     const scaleY = 0.35, rotation = -0.38
     const majorRad = minDim * 0.28
     ctx.save(); ctx.translate(cx, cy); ctx.rotate(rotation); ctx.scale(1, scaleY)
     const coronaGrad = ctx.createRadialGradient(0, 0, 0, 0, 0, majorRad)
-    coronaGrad.addColorStop(0, 'rgba(232, 202, 110, 0.2)')
-    coronaGrad.addColorStop(0.2, 'rgba(201, 168, 76, 0.14)')
-    coronaGrad.addColorStop(0.5, 'rgba(184, 146, 58, 0.06)')
-    coronaGrad.addColorStop(0.8, 'rgba(45, 212, 184, 0.02)')
+    coronaGrad.addColorStop(0, 'rgba(147, 197, 253, 0.2)')
+    coronaGrad.addColorStop(0.2, 'rgba(59, 130, 246, 0.14)')
+    coronaGrad.addColorStop(0.5, 'rgba(37, 99, 235, 0.06)')
+    coronaGrad.addColorStop(0.8, 'rgba(34, 211, 238, 0.02)')
     coronaGrad.addColorStop(1, 'rgba(0,0,0,0)')
     ctx.fillStyle = coronaGrad
     ctx.beginPath(); ctx.arc(0, 0, majorRad, 0, Math.PI * 2); ctx.fill()
@@ -511,10 +511,10 @@ onMounted(() => {
     const pulseIntensity = 0.85 + 0.15 * Math.sin(time * 0.0015)
     ctx.save(); ctx.translate(cx, cy); ctx.rotate(rotation); ctx.scale(1, scaleY)
     const coreGrad = ctx.createRadialGradient(0, 0, 0, 0, 0, minDim * 0.06 * pulseIntensity)
-    coreGrad.addColorStop(0, 'rgba(255, 252, 245, 1.0)')
-    coreGrad.addColorStop(0.1, 'rgba(232, 202, 110, 0.9)')
-    coreGrad.addColorStop(0.35, 'rgba(217, 188, 96, 0.4)')
-    coreGrad.addColorStop(0.7, 'rgba(201, 168, 76, 0.1)')
+    coreGrad.addColorStop(0, 'rgba(224, 242, 254, 1.0)')
+    coreGrad.addColorStop(0.1, 'rgba(147, 197, 253, 0.9)')
+    coreGrad.addColorStop(0.35, 'rgba(96, 165, 250, 0.4)')
+    coreGrad.addColorStop(0.7, 'rgba(59, 130, 246, 0.1)')
     coreGrad.addColorStop(1, 'rgba(0,0,0,0)')
     ctx.fillStyle = coreGrad
     ctx.beginPath(); ctx.arc(0, 0, minDim * 0.06 * pulseIntensity, 0, Math.PI * 2)

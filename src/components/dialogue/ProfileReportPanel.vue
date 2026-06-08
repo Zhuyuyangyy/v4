@@ -26,7 +26,7 @@
           </div>
           <div class="flex items-center gap-1.5 mt-2">
             <div class="flex gap-0.5">
-              <Sparkles v-for="i in 5" :key="'s-' + i" class="w-3.5 h-3.5" :class="i < 4 ? 'text-amber-400 fill-amber-400' : 'text-amber-400/30'" />
+              <Sparkles v-for="i in 5" :key="'s-' + i" class="w-3.5 h-3.5" :class="i < 4 ? 'text-blue-400 fill-blue-400' : 'text-blue-400/30'" />
             </div>
             <span class="text-xs font-bold text-emerald-400 bg-emerald-950/45 border border-emerald-900/50 px-2 py-0.5 rounded-full">{{ report.evaluation }}</span>
           </div>
@@ -63,9 +63,9 @@
             </div>
           </div>
           <div class="space-y-1.5">
-            <h4 class="text-xs font-bold text-amber-400">基础通识底座</h4>
+            <h4 class="text-xs font-bold text-blue-400">基础通识底座</h4>
             <div class="flex flex-wrap gap-1.5">
-              <span v-for="sk in report.skills.foundation" :key="'f-' + sk" class="bg-amber-950/40 text-amber-400 font-bold text-sm px-3 py-1.5 rounded-xl border border-amber-900/50">♦ {{ sk }}</span>
+              <span v-for="sk in report.skills.foundation" :key="'f-' + sk" class="bg-blue-950/40 text-blue-400 font-bold text-sm px-3 py-1.5 rounded-xl border border-blue-900/50">♦ {{ sk }}</span>
             </div>
           </div>
           <div class="space-y-1.5">

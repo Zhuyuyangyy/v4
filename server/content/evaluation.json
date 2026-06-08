@@ -1,15 +1,176 @@
 {
   "generatedAt": "2026-05-12",
   "stats": [
-    { "label": "学习时长", "value": "128h", "change": "+12h", "color": "#00d4ff", "icon": "Clock" },
-    { "label": "完成课时", "value": "47", "change": "+5", "color": "#7c3aed", "icon": "PenTool" },
-    { "label": "平均正确率", "value": "82%", "change": "+3%", "color": "#06d6a0", "icon": "Target" },
-    { "label": "知识掌握度", "value": "68%", "change": "+8%", "color": "#f59e0b", "icon": "TrendingUp" }
+    {
+      "label": "学习时长",
+      "value": "128h",
+      "change": "+12h",
+      "color": "#00d4ff",
+      "icon": "Clock"
+    },
+    {
+      "label": "完成课时",
+      "value": "47",
+      "change": "+5",
+      "color": "#7c3aed",
+      "icon": "PenTool"
+    },
+    {
+      "label": "平均正确率",
+      "value": "82%",
+      "change": "+3%",
+      "color": "#06d6a0",
+      "icon": "Target"
+    },
+    {
+      "label": "知识掌握度",
+      "value": "68%",
+      "change": "+8%",
+      "color": "#f59e0b",
+      "icon": "TrendingUp"
+    }
   ],
   "suggestions": [
-    { "text": "概率论与数理统计是当前短板，建议安排两次专项复习。", "type": "weakness" },
-    { "text": "机器学习基础掌握较稳，可以逐步加入项目实战。", "type": "strength" },
-    { "text": "本周学习时长较上周提升 15%，可以继续保持当前节奏。", "type": "positive" },
-    { "text": "建议增加编程实战时间，理论与实践比例可以调整到 1:1。", "type": "action" }
-  ]
+    {
+      "text": "概率论与数理统计是当前短板，建议安排两次专项复习。",
+      "type": "weakness"
+    },
+    {
+      "text": "机器学习基础掌握较稳，可以逐步加入项目实战。",
+      "type": "strength"
+    },
+    {
+      "text": "本周学习时长较上周提升 15%，可以继续保持当前节奏。",
+      "type": "positive"
+    },
+    {
+      "text": "建议增加编程实战时间，理论与实践比例可以调整到 1:1。",
+      "type": "action"
+    }
+  ],
+  "dashboard": {
+    "flow": [
+      "测评输入",
+      "知识点诊断",
+      "画像更新",
+      "路径重规划",
+      "资源推荐"
+    ],
+    "profileMetrics": [
+      {
+        "key": "breadth",
+        "label": "知识广度",
+        "stage0": 42,
+        "stage1": 58,
+        "stage2": 78
+      },
+      {
+        "key": "depth",
+        "label": "知识深度",
+        "stage0": 38,
+        "stage1": 52,
+        "stage2": 76
+      },
+      {
+        "key": "application",
+        "label": "应用能力",
+        "stage0": 35,
+        "stage1": 61,
+        "stage2": 82
+      },
+      {
+        "key": "innovation",
+        "label": "创新力",
+        "stage0": 28,
+        "stage1": 52,
+        "stage2": 74
+      },
+      {
+        "key": "engineering",
+        "label": "工程实践",
+        "stage0": 41,
+        "stage1": 57,
+        "stage2": 82
+      },
+      {
+        "key": "transfer",
+        "label": "知识迁移",
+        "stage0": 33,
+        "stage1": 48,
+        "stage2": 68
+      }
+    ],
+    "weaknesses": [
+      {
+        "id": "double-pointer-params",
+        "label": "二级指针传参",
+        "severity": "high",
+        "reason": "值传递与地址传递混淆",
+        "impact": "影响链表插入与资源句柄回收",
+        "action": "完成栈帧示意与参数传递修复题"
+      },
+      {
+        "id": "bfs-queue-advance",
+        "label": "BFS 队列推进",
+        "severity": "medium",
+        "reason": "visited 标记时机偏晚",
+        "impact": "影响图搜索复杂度与最短路径专题",
+        "action": "观看队列快照并完成逐帧推演"
+      },
+      {
+        "id": "dynamic-memory-release",
+        "label": "动态内存释放",
+        "severity": "medium",
+        "reason": "异常分支释放意识不足",
+        "impact": "影响内存模型与系统编程项目",
+        "action": "补做内存泄漏定位小实验"
+      }
+    ],
+    "evidenceRounds": [
+      {
+        "stage": 0,
+        "trigger": "历史记录生成初始画像",
+        "evidence": [
+          "历史行为 18 条",
+          "基础练习 32 题"
+        ],
+        "profileUpdates": [
+          "建立六维画像基线"
+        ],
+        "pathImpact": "保留初始主路径"
+      },
+      {
+        "stage": 1,
+        "trigger": "初次评估",
+        "evidence": [
+          "完成 12 道基础题",
+          "正确率 67%",
+          "发现 3 个薄弱知识点",
+          "学习行为记录 5 条"
+        ],
+        "profileUpdates": [
+          "知识深度 38→52",
+          "应用能力 35→61",
+          "知识迁移 33→48"
+        ],
+        "pathImpact": "插入参数传递补救"
+      },
+      {
+        "stage": 2,
+        "trigger": "深度评估",
+        "evidence": [
+          "完成 4 道迁移任务",
+          "错因复盘 3 条",
+          "资源学习完成 2 个",
+          "路径重规划 1 次"
+        ],
+        "profileUpdates": [
+          "工程实践 57→82",
+          "应用能力 61→82",
+          "综合掌握度提升 18%"
+        ],
+        "pathImpact": "转向迁移任务和项目化训练"
+      }
+    ]
+  }
 }

@@ -9,28 +9,28 @@
   --bg-card: #110e1a;
   --bg-hover: #1a1628;
 
-  --gold-300: #e8d48b;
-  --gold-400: #d9bc60;
-  --gold-500: #c9a84c;
-  --gold-600: #b8923a;
-  --gold-glow: rgba(201, 168, 76, 0.15);
+  --gold-300: #93c5fd;
+  --gold-400: #60a5fa;
+  --gold-500: #3b82f6;
+  --gold-600: #2563eb;
+  --gold-glow: rgba(59, 130, 246, 0.15);
 
-  --teal-400: #2dd4b8;
-  --teal-500: #1a9a8a;
-  --teal-600: #147a6c;
+  --teal-400: #22d3ee;
+  --teal-500: #06b6d4;
+  --teal-600: #0891b2;
 
-  --ruby-400: #d64a7a;
-  --ruby-500: #9e2a5a;
-  --ruby-600: #7a1e44;
+  --ruby-400: #818cf8;
+  --ruby-500: #6366f1;
+  --ruby-600: #4f46e5;
 
-  --text-primary: #e8e4d8;
-  --text-secondary: #b8b2a4;
-  --text-muted: #7a7568;
-  --text-dim: #4a463c;
+  --text-primary: #e0e7ff;
+  --text-secondary: #a5b4d8;
+  --text-muted: #6b7fa8;
+  --text-dim: #3d4f78;
 
-  --border-subtle: rgba(201, 168, 76, 0.1);
-  --border-medium: rgba(201, 168, 76, 0.2);
-  --border-strong: rgba(201, 168, 76, 0.35);
+  --border-subtle: rgba(59, 130, 246, 0.1);
+  --border-medium: rgba(59, 130, 246, 0.2);
+  --border-strong: rgba(59, 130, 246, 0.35);
 }
 
 .dialogue-root h1,
@@ -44,7 +44,7 @@
 }
 
 .dialogue-root ::selection {
-  background: rgba(201, 168, 76, 0.25);
+  background: rgba(59, 130, 246, 0.25);
   color: #fff;
 }
 

@@ -1,18 +1,9 @@
 import * as THREE from 'three'
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js'
 import { CSS2DObject } from 'three/examples/jsm/renderers/CSS2DRenderer.js'
 import type { Galaxy, Course } from '../types'
 import { useUniverseStore } from '../stores/universeStore'
 import { useSpiralLayout } from './useSpiralLayout'
-
-const DIFFICULTY_INTERMEDIATE = '\u8fdb\u9636'
-const DIFFICULTY_ADVANCED = '\u9ad8\u7ea7'
-
-const PLANET_TEXTURES = [
-  '/planet/planet_cyan.png',
-  '/planet/planet_emerald.png',
-  '/planet/planet_amber.png',
-  '/planet/planet_purple.png',
-]
 
 function createPlanetLabel(name: string, yOffset: number): CSS2DObject {
   const div = document.createElement('div')
@@ -33,95 +24,11 @@ function createPlanetLabel(name: string, yOffset: number): CSS2DObject {
   return label
 }
 
-export function usePlanetLoader(parentGroup: THREE.Group) {
-  const textureLoader = new THREE.TextureLoader()
-  const textureCache = new Map<string, THREE.Texture>()
+export function usePlanetLoader(
+  parentGroup: THREE.Group,
+) {
+  const gltfLoader = new GLTFLoader()
   const planetMeshes = new Map<number, THREE.Object3D>()
-
-  function loadTexture(path: string) {
-    const cached = textureCache.get(path)
-    if (cached) return cached
-
-    const texture = textureLoader.load(path)
-    texture.colorSpace = THREE.SRGBColorSpace
-    texture.anisotropy = 16
-    texture.minFilter = THREE.LinearMipmapLinearFilter
-    texture.magFilter = THREE.LinearFilter
-    texture.generateMipmaps = true
-    textureCache.set(path, texture)
-    return texture
-  }
-
-  function getCourseRadius(course?: Course) {
-    if (course?.difficulty === DIFFICULTY_ADVANCED) return 2.5
-    if (course?.difficulty === DIFFICULTY_INTERMEDIATE) return 2.0
-    return 1.6
-  }
-
-  function createProceduralPlanet(
-    course: Course | undefined,
-    galaxy: Galaxy | undefined,
-    courseId: number,
-    textureIndex: number,
-  ) {
-    const group = new THREE.Group()
-    group.userData.courseId = courseId
-    group.name = `planet-${courseId}`
-
-    const radius = getCourseRadius(course) + (Math.random() - 0.5) * 0.25
-    const baseColor = new THREE.Color(course?.themeColor || galaxy?.color || '#4488aa')
-
-    const material = new THREE.MeshStandardMaterial({
-      map: loadTexture(PLANET_TEXTURES[textureIndex % PLANET_TEXTURES.length]),
-      color: baseColor,
-      roughness: 0.52,
-      metalness: 0.18,
-      emissive: baseColor.clone().multiplyScalar(0.12),
-      emissiveIntensity: 0.35,
-    })
-    const planet = new THREE.Mesh(new THREE.SphereGeometry(radius, 64, 64), material)
-    planet.castShadow = true
-    planet.receiveShadow = true
-    planet.userData.courseId = courseId
-    planet.name = `planet-core-${courseId}`
-    group.add(planet)
-
-    const glowMaterial = new THREE.MeshBasicMaterial({
-      color: baseColor,
-      transparent: true,
-      opacity: 0.14,
-      blending: THREE.AdditiveBlending,
-      depthWrite: false,
-    })
-    const glow = new THREE.Mesh(new THREE.SphereGeometry(radius * 1.08, 48, 48), glowMaterial)
-    glow.userData.courseId = courseId
-    glow.name = `planet-glow-${courseId}`
-    group.add(glow)
-
-    if (courseId % 3 === 0) {
-      const ringMaterial = new THREE.MeshBasicMaterial({
-        map: loadTexture('/planet/ring_glow.png'),
-        color: baseColor,
-        transparent: true,
-        opacity: 0.45,
-        side: THREE.DoubleSide,
-        blending: THREE.AdditiveBlending,
-        depthWrite: false,
-      })
-      const ring = new THREE.Mesh(new THREE.RingGeometry(radius * 1.35, radius * 1.85, 96), ringMaterial)
-      ring.rotation.x = Math.PI / 2.7
-      ring.rotation.z = Math.PI / 7
-      ring.userData.courseId = courseId
-      ring.name = `planet-ring-${courseId}`
-      group.add(ring)
-    }
-
-    if (course) {
-      group.add(createPlanetLabel(course.name, radius + 0.7))
-    }
-
-    return group
-  }
 
   async function loadAllPlanets(
     galaxies: Galaxy[],
@@ -132,35 +39,115 @@ export function usePlanetLoader(parentGroup: THREE.Group) {
     const spiral = useSpiralLayout(galaxies)
     const planetLayouts = spiral.computePlanetPositions()
 
-    planetMeshes.clear()
-
-    for (let index = 0; index < planetLayouts.length; index++) {
-      const layout = planetLayouts[index]
+    // Create placeholders at ring positions
+    for (const layout of planetLayouts) {
       const galaxy = galaxies.find(g => g.id === layout.galaxyId)
-      const course = courses.find((c) => c.id === layout.courseId)
-      const model = createProceduralPlanet(course, galaxy, layout.courseId, index)
-      model.position.copy(layout.position)
-
-      applyPlanetState(model, store.getPlanetState(layout.courseId))
-
-      parentGroup.add(model)
-      planetMeshes.set(layout.courseId, model)
-      onProgress(((index + 1) / planetLayouts.length) * 100)
+      const placeholderGeo = new THREE.SphereGeometry(1.0, 32, 32)
+      const placeholderMat = new THREE.MeshStandardMaterial({
+        color: new THREE.Color(galaxy?.color || '#4488aa'),
+        roughness: 0.5,
+        metalness: 0.2,
+        emissive: new THREE.Color(galaxy?.color || '#4488aa'),
+        emissiveIntensity: 0.3,
+      })
+      const placeholder = new THREE.Mesh(placeholderGeo, placeholderMat)
+      placeholder.position.copy(layout.position)
+      placeholder.userData.courseId = layout.courseId
+      placeholder.name = `planet-${layout.courseId}`
+      parentGroup.add(placeholder)
+      planetMeshes.set(layout.courseId, placeholder)
     }
 
+    let loaded = 0
+    const total = 24
+    const loadPromises: Promise<void>[] = []
+
+    for (let i = 1; i <= total; i++) {
+      const promise = gltfLoader
+        .loadAsync(`/models/planet_${i}.glb`)
+        .then((gltf) => {
+          const model = gltf.scene
+
+          const placeholder = planetMeshes.get(i)
+          if (placeholder) {
+            parentGroup.remove(placeholder)
+            if (placeholder instanceof THREE.Mesh) {
+              placeholder.geometry.dispose()
+              ;(placeholder.material as THREE.Material).dispose()
+            }
+          }
+
+          const savedPos = placeholder?.position.clone() || new THREE.Vector3()
+          model.userData.courseId = i
+          model.name = `planet-${i}`
+
+          // Center the model geometry around its local origin
+          const box = new THREE.Box3().setFromObject(model)
+          const center = box.getCenter(new THREE.Vector3())
+          const size = box.getSize(new THREE.Vector3())
+          const maxDim = Math.max(size.x, size.y, size.z)
+
+          // Offset children so geometry center is at local origin, model stays at spiral position
+          model.children.forEach((child) => {
+            child.position.sub(center)
+          })
+          model.position.copy(savedPos)
+
+          const courseData = courses.find((c) => c.id === i)
+          const diff = courseData?.difficulty
+          const baseRadius = diff === '高级' ? 2.5 : diff === '进阶' ? 2.0 : 1.6
+          const variation = (Math.random() - 0.5) * 0.25
+          const targetRadius = baseRadius + variation
+          const scale = targetRadius / maxDim
+          model.scale.setScalar(scale)
+
+          model.traverse((child) => {
+            if (child instanceof THREE.Mesh) {
+              child.castShadow = true
+              child.receiveShadow = true
+              child.userData.courseId = i
+            }
+          })
+
+          const state = store.getPlanetState(i)
+          applyPlanetState(model, state)
+
+          // Attach course name label just above the planet surface
+          if (courseData) {
+            model.add(createPlanetLabel(courseData.name, maxDim / 2 + 0.2))
+          }
+
+          parentGroup.add(model)
+          planetMeshes.set(i, model)
+
+          loaded++
+          onProgress((loaded / total) * 100)
+        })
+        .catch((err) => {
+          console.warn(`Failed to load planet_${i}.glb:`, err)
+          loaded++
+          onProgress((loaded / total) * 100)
+        })
+
+      loadPromises.push(promise)
+    }
+
+    await Promise.all(loadPromises)
     return planetMeshes
   }
 
-  function applyPlanetState(model: THREE.Object3D, state: string) {
+  function applyPlanetState(model: THREE.Group, state: string) {
     model.traverse((child) => {
-      if (child instanceof THREE.Mesh && child.material instanceof THREE.MeshStandardMaterial) {
-        const mat = child.material
+      if (child instanceof THREE.Mesh && child.material) {
+        const mat = child.material as THREE.MeshStandardMaterial
 
+        // Ensure smooth normals for all models
         if (child.geometry && !child.geometry.attributes.normal) {
           child.geometry.computeVertexNormals()
         }
         mat.flatShading = false
 
+        // Fix textures: generate mipmaps + anisotropic filtering for sharp rendering at distance
         const textures = [mat.map, mat.roughnessMap, mat.metalnessMap, mat.normalMap, mat.aoMap, mat.emissiveMap]
         const hasTextures = textures.some((tex) => tex !== null && tex !== undefined)
         textures.forEach((tex) => {

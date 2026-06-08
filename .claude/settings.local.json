@@ -8,7 +8,16 @@
       "Bash(npx vue-tsc *)",
       "Bash(npx vite *)",
       "Bash(Get-ChildItem *)",
-      "Bash(Select-Object Name)"
+      "Bash(Select-Object Name)",
+      "Bash(git stash *)",
+      "Bash(git restore *)",
+      "Bash(git add *)",
+      "Bash(git commit *)",
+      "Bash(git push *)",
+      "WebFetch(domain:www.bilibili.com)",
+      "Bash(curl *)",
+      "mcp__playwright__browser_navigate",
+      "mcp__playwright__browser_run_code_unsafe"
     ]
   }
 }

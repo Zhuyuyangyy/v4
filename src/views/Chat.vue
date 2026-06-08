@@ -29,8 +29,8 @@ import {
   Zap,
   X,
 } from 'lucide-vue-next'
-import { sendChatMessage } from '@/lib/api'
-import type { ChatReply, ChatResource, MultimodalContent } from '@/types/api'
+import { sendChatMessage, fetchChatHistory } from '@/lib/api'
+import type { ChatReply, ChatResource, MultimodalContent, ChatHistoryItem } from '@/types/api'
 
 interface Message {
   id: number
@@ -80,14 +80,27 @@ const agents = ref<AgentNode[]>([
   { name: '质量评估', icon: BarChart3, status: 'idle', color: '#f59e0b', desc: '评估学习效果与反馈' },
 ])
 
-const historySessions = [
-  { id: 1, title: 'Python 机器学习入门', time: '10分钟前', category: 'ML' },
-  { id: 2, title: '微积分复习 — 泰勒展开', time: '2小时前', category: '数学' },
-  { id: 3, title: '数据结构与算法练习', time: '昨天', category: '算法' },
-  { id: 4, title: '线性代数基础梳理', time: '3天前', category: '数学' },
-  { id: 5, title: '深度学习基础概念', time: '5天前', category: 'DL' },
-  { id: 6, title: 'Python 基础概念', time: '6天前', category: 'Python' },
-]
+const historySessions = ref<Array<{ id: number; title: string; time: string; category: string }>>([])
+
+async function loadChatHistory() {
+  try {
+    const items = await fetchChatHistory()
+    historySessions.value = items
+      .filter((item: ChatHistoryItem) => item.role === 'user' && item.content.trim())
+      .map((item: ChatHistoryItem, index: number) => ({
+        id: item.id || index + 1,
+        title: item.content.slice(0, 30) + (item.content.length > 30 ? '...' : ''),
+        time: item.time,
+        category: '对话',
+      }))
+  } catch {
+    historySessions.value = [
+      { id: 1, title: 'Python 机器学习入门', time: '10分钟前', category: 'ML' },
+      { id: 2, title: '微积分复习 — 泰勒展开', time: '2小时前', category: '数学' },
+      { id: 3, title: '数据结构与算法练习', time: '昨天', category: '算法' },
+    ]
+  }
+}
 
 const resourceIcons: Record<ChatResource['type'], unknown> = {
   doc: FileText,
@@ -304,7 +317,10 @@ function formatContent(content: string) {
     .replace(/\n/g, '<br/>')
 }
 
-onMounted(scrollToBottom)
+onMounted(() => {
+  scrollToBottom()
+  loadChatHistory()
+})
 </script>
 
 <template>

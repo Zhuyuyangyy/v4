@@ -69,8 +69,28 @@ async function handleGenerate() {
   loading.value = true
   error.value = null
   try {
-    const result = await generateResources()
-    resources.value = result.items
+    const result = await generateResources() as any
+    if (result.items && Array.isArray(result.items)) {
+      resources.value = result.items
+    } else if (result.resourcePackage) {
+      const rp = result.resourcePackage
+      resources.value = [{
+        id: '1',
+        concept: rp.concept || '',
+        example: rp.example?.title ? `${rp.example.title}: ${rp.example.description}` : '',
+        exercise: rp.exercise?.title || '',
+        mistakeReminder: rp.errorTip || '',
+        recommendReason: rp.recommendReason || '',
+        evidence: {
+          profileSource: rp.profileEvidence || '',
+          evaluationReason: rp.recommendReason || '',
+          pathStage: '',
+          formatReason: '',
+        },
+      }]
+    } else {
+      resources.value = FALLBACK_DATA
+    }
     generated.value = true
   } catch (e: any) {
     error.value = e?.message || '生成失败，已使用示例数据'
@@ -337,14 +357,14 @@ const EVIDENCE_FIELDS: { key: keyof GeneratedResource['evidence']; label: string
 }
 
 .dark .rgp-card {
-  background: #1e293b;
-  border-color: rgba(51, 65, 85, 0.6);
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+  background: var(--edu-bg-card, #111630);
+  border-color: var(--edu-border, rgba(96, 165, 250, 0.12));
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(96, 165, 250, 0.03);
 }
 
 .dark .rgp-card:hover {
-  box-shadow: 0 6px 20px rgba(74, 108, 247, 0.15);
-  border-color: #475569;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.5), 0 0 24px rgba(96, 165, 250, 0.06);
+  border-color: rgba(96, 165, 250, 0.25);
 }
 
 .rgp-card-header {
@@ -421,8 +441,8 @@ const EVIDENCE_FIELDS: { key: keyof GeneratedResource['evidence']; label: string
 }
 
 .dark .rgp-section-label--concept {
-  background: rgba(22, 119, 255, 0.15);
-  color: #69b1ff;
+  background: rgba(96, 165, 250, 0.14);
+  color: #93c5fd;
 }
 
 .dark .rgp-section-label--example {
@@ -441,8 +461,8 @@ const EVIDENCE_FIELDS: { key: keyof GeneratedResource['evidence']; label: string
 }
 
 .dark .rgp-section-label--reason {
-  background: rgba(74, 108, 247, 0.15);
-  color: #6a8cff;
+  background: rgba(96, 165, 250, 0.14);
+  color: #93c5fd;
 }
 
 .rgp-section-text {
@@ -453,7 +473,7 @@ const EVIDENCE_FIELDS: { key: keyof GeneratedResource['evidence']; label: string
 }
 
 .dark .rgp-section-text {
-  color: #94a3b8;
+  color: var(--edu-text-muted, #8b9bc0);
 }
 
 .rgp-card-footer {
@@ -462,7 +482,7 @@ const EVIDENCE_FIELDS: { key: keyof GeneratedResource['evidence']; label: string
 }
 
 .dark .rgp-card-footer {
-  border-top-color: #334155;
+  border-top-color: var(--edu-border, rgba(96, 165, 250, 0.1));
 }
 
 .rgp-evidence-btn {
@@ -487,14 +507,14 @@ const EVIDENCE_FIELDS: { key: keyof GeneratedResource['evidence']; label: string
 }
 
 .dark .rgp-evidence-btn {
-  background: rgba(74, 108, 247, 0.08);
-  border-color: #334155;
-  color: #6a8cff;
+  background: rgba(96, 165, 250, 0.08);
+  border-color: var(--edu-border, rgba(96, 165, 250, 0.12));
+  color: #93c5fd;
 }
 
 .dark .rgp-evidence-btn:hover {
-  background: rgba(74, 108, 247, 0.15);
-  border-color: #4a6cf7;
+  background: rgba(96, 165, 250, 0.15);
+  border-color: var(--edu-accent, #60a5fa);
 }
 
 .rgp-overlay {
@@ -524,8 +544,8 @@ const EVIDENCE_FIELDS: { key: keyof GeneratedResource['evidence']; label: string
 }
 
 .dark .rgp-modal {
-  background: #1e293b;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+  background: var(--edu-bg-card, #111630);
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(96, 165, 250, 0.08);
 }
 
 @keyframes rgp-modal-in {
@@ -548,7 +568,7 @@ const EVIDENCE_FIELDS: { key: keyof GeneratedResource['evidence']; label: string
 }
 
 .dark .rgp-modal-header {
-  border-bottom-color: #334155;
+  border-bottom-color: var(--edu-border, rgba(96, 165, 250, 0.1));
 }
 
 .rgp-modal-title-row {
@@ -593,8 +613,8 @@ const EVIDENCE_FIELDS: { key: keyof GeneratedResource['evidence']; label: string
 }
 
 .dark .rgp-modal-close:hover {
-  background: #334155;
-  color: #fff;
+  background: rgba(96, 165, 250, 0.12);
+  color: var(--edu-text-main, #fff);
 }
 
 .rgp-modal-body {
@@ -613,8 +633,8 @@ const EVIDENCE_FIELDS: { key: keyof GeneratedResource['evidence']; label: string
 }
 
 .dark .rgp-modal-concept {
-  color: #fff;
-  border-bottom-color: #334155;
+  color: var(--edu-text-main, #fff);
+  border-bottom-color: var(--edu-border, rgba(96, 165, 250, 0.1));
 }
 
 .rgp-modal-fields {
@@ -638,7 +658,7 @@ const EVIDENCE_FIELDS: { key: keyof GeneratedResource['evidence']; label: string
 }
 
 .dark .rgp-modal-field-label {
-  color: #64748b;
+  color: var(--edu-text-dim, #6880a8);
 }
 
 .rgp-modal-field-value {
@@ -652,9 +672,9 @@ const EVIDENCE_FIELDS: { key: keyof GeneratedResource['evidence']; label: string
 }
 
 .dark .rgp-modal-field-value {
-  color: #e2e8f0;
-  background: #0f172a;
-  border-color: #334155;
+  color: var(--edu-text-main, #e0e7ff);
+  background: var(--edu-bg-page, #080b16);
+  border-color: var(--edu-border, rgba(96, 165, 250, 0.1));
 }
 
 .rgp-modal-enter-active {
