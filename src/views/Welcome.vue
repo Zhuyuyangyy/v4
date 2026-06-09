@@ -49,6 +49,12 @@ onBeforeUnmount(() => {
 
 <template>
   <div class="welcome">
+    <div class="home-image-layer" aria-hidden="true">
+      <img class="home-art home-art-hero" src="/homepage/agent-constellation-hero.png" alt="">
+      <img class="home-art home-art-path" src="/homepage/learning-path-repair.png" alt="">
+      <img class="home-art home-art-profile" src="/homepage/profile-evidence-orb.png" alt="">
+    </div>
+
     <HeroConstellation />
 
     <section class="hub-workbench">
@@ -87,9 +93,7 @@ onBeforeUnmount(() => {
     <SectionSkyline />
     <SectionMissions />
 
-    <footer class="footer">
-      <p>多智能体学习闭环 - 科大讯飞 AI 教育系统</p>
-    </footer>
+    <footer class="footer" aria-hidden="true" />
   </div>
 </template>
 
@@ -99,6 +103,51 @@ onBeforeUnmount(() => {
   min-height: 100vh;
   background: transparent;
   isolation: isolate;
+  overflow: hidden;
+}
+
+.home-image-layer {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.home-art {
+  position: absolute;
+  display: block;
+  object-fit: cover;
+  user-select: none;
+  mix-blend-mode: screen;
+  filter: saturate(0.88) contrast(1.03);
+}
+
+.home-art-hero {
+  top: 72px;
+  right: -12vw;
+  width: min(1120px, 64vw);
+  opacity: 0.68;
+  transform: rotate(-1.5deg);
+  mask-image: radial-gradient(ellipse at 62% 48%, #000 0%, rgba(0, 0, 0, 0.9) 58%, transparent 92%);
+}
+
+.home-art-path {
+  top: 1320px;
+  left: -10vw;
+  width: min(760px, 50vw);
+  opacity: 0.52;
+  transform: rotate(3deg);
+  mask-image: radial-gradient(ellipse at 48% 50%, #000 0%, rgba(0, 0, 0, 0.84) 58%, transparent 90%);
+}
+
+.home-art-profile {
+  top: 2320px;
+  right: -8vw;
+  width: min(680px, 46vw);
+  opacity: 0.48;
+  transform: rotate(-4deg);
+  mask-image: radial-gradient(ellipse at 50% 50%, #000 0%, rgba(0, 0, 0, 0.82) 58%, transparent 88%);
 }
 
 /* Home section transparency */
@@ -442,6 +491,19 @@ onBeforeUnmount(() => {
 
 /* ── Responsive ── */
 @media (max-width: 900px) {
+  .home-art-hero {
+    top: 96px;
+    right: -44vw;
+    width: 118vw;
+    opacity: 0.36;
+  }
+
+  .home-art-path,
+  .home-art-profile {
+    width: 92vw;
+    opacity: 0.22;
+  }
+
   .hub-workbench {
     grid-template-columns: 1fr;
     padding: 48px 16px 36px;

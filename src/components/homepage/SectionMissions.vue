@@ -3,87 +3,56 @@ import { useRouter } from 'vue-router'
 
 const router = useRouter()
 
-const T = {
-  cyan: '#00d4ff', purple: '#7c3aed', emerald: '#06d6a0',
-  amber: '#f59e0b', rose: '#f43f5e',
-  text: '#e8edf5', textSub: '#8892b0', textTri: '#4a5568',
-  serif: "'Instrument Serif', 'Noto Serif SC', serif",
-  sans: "'Outfit', 'PingFang SC', sans-serif",
-  mono: "'JetBrains Mono', monospace",
-}
-
-interface AgentInfo { id: string; color: string; role: string }
-const agentMap: AgentInfo[] = [
-  { id: 'profile', color: '#7c3aed', role: 'PROFILE' },
-  { id: 'path', color: '#00d4ff', role: 'PATH' },
-  { id: 'resource', color: '#06d6a0', role: 'RESOURCE' },
-  { id: 'tutor', color: '#f59e0b', role: 'TUTOR' },
-  { id: 'eval', color: '#f43f5e', role: 'EVAL' },
-  { id: 'feedback', color: '#3b82f6', role: 'FEEDBACK' },
-]
-
-interface Mission {
-  code: string; priority: string; priorityColor: string
-  title: string; objective: string; duration: string
-  agents: string[]
-  outcome: { label: string; value: string; color: string }
-  cta: string; state: 'ready' | 'scheduled' | 'optional'
-}
-
-const missions: Mission[] = [
+const actions = [
   {
-    code: 'TASK-A1', priority: 'P0', priorityColor: T.amber,
-    title: '攻克指针与内存薄弱域', objective: '二级指针传参掌握度仅 42%，路径智能体已插入专项训练节点',
-    duration: '35 min', agents: ['path', 'resource', 'tutor'],
-    outcome: { label: '预期收益', value: '指针掌握度 42% → 65%', color: T.emerald },
-    cta: '启动任务', state: 'ready',
+    id: 'remedial',
+    eyebrow: 'PATH + TUTOR',
+    title: '先补一个关键薄弱点',
+    desc: '二级指针和 BFS visited 是本轮路径里最影响后续学习的两个节点。',
+    cta: '进入补弱路径',
+    focus: 'remedial',
+    tone: '#35e0d8',
   },
   {
-    code: 'TASK-B2', priority: 'P0', priorityColor: T.rose,
-    title: '补强 4 个评估盲点', objective: '阶段测评发现：二级指针 · BFS visited · 悬空引用 · 队列空判',
-    duration: '20 min', agents: ['resource', 'tutor', 'eval', 'feedback'],
-    outcome: { label: '预期收益', value: '4 个盲点全部点亮', color: T.rose },
-    cta: '直接进入', state: 'ready',
+    id: 'resource',
+    eyebrow: 'RESOURCE',
+    title: '把图结构做成可视资料',
+    desc: '打开已经生成的思维导图、例题拆解和专项练习，不再从空白页开始。',
+    cta: '查看推荐资源',
+    focus: 'recommended',
+    tone: '#f0b24a',
   },
   {
-    code: 'TASK-C3', priority: 'P1', priorityColor: T.cyan,
-    title: '完成图结构思维导图', objective: '资源推荐智能体已为你生成图结构知识思维导图，覆盖 BFS/DFS/最短路径',
-    duration: '25 min', agents: ['resource', 'profile'],
-    outcome: { label: '预期收益', value: '图结构 38% → 55%', color: T.purple },
-    cta: '查看资源', state: 'ready',
+    id: 'evaluation',
+    eyebrow: 'EVAL + FEEDBACK',
+    title: '用一次小测刷新画像',
+    desc: '评估结果会回写到画像和下一轮路径，让系统知道你是真的掌握了。',
+    cta: '查看评估建议',
+    focus: 'evaluation',
+    tone: '#f0586e',
   },
   {
-    code: 'TASK-D1', priority: 'P2', priorityColor: T.textSub,
-    title: '触发本周阶段测评', objective: '让评估智能体重新校准画像 — 反馈智能体将结果写入 24 维向量',
-    duration: '25 min', agents: ['eval', 'feedback', 'profile'],
-    outcome: { label: '预期收益', value: '画像 24 维全部刷新', color: T.cyan },
-    cta: '查看测评', state: 'scheduled',
+    id: 'dialogue',
+    eyebrow: 'AI DIALOGUE',
+    title: '和智能导师直接聊',
+    desc: '不知道先做哪一步时，直接把困惑丢给 AI，它会继续补全画像并拆出下一步。',
+    cta: '打开智能对话',
+    focus: 'dialogue',
+    tone: '#8fa7ff',
   },
 ]
 
-const stateLabel: Record<string, { text: string; color: string }> = {
-  ready: { text: 'READY · 待启动', color: T.emerald },
-  scheduled: { text: 'SCHEDULED · 已排期', color: T.amber },
-  optional: { text: 'OPTIONAL · 可选', color: T.textSub },
-}
+const signals = [
+  { label: '薄弱节点', value: '4', note: '已定位' },
+  { label: '路径调整', value: '+3', note: '补救节点' },
+  { label: '今日建议', value: '35', note: '分钟' },
+]
 
 const quickQuestions = [
-  '帮我制定 6 阶段完整学习计划（24 门课程）',
-  '二级指针传参和数组指针有什么区别？',
-  'BFS 中 visited 数组的作用是什么？',
-  '机器学习中的过拟合怎么解决？',
+  '帮我解释二级指针',
+  'BFS visited 到底什么时候标记？',
+  '给我 20 分钟复习安排',
 ]
-
-const focusMap: Record<string, string> = {
-  '启动任务': 'remedial',
-  '直接进入': 'remedial',
-  '查看资源': 'recommended',
-  '查看测评': 'evaluation',
-}
-
-function getAgent(id: string) {
-  return agentMap.find(a => a.id === id)
-}
 
 function goToResources(focus: string, extraQuery: Record<string, string> = {}) {
   router.push({
@@ -96,106 +65,72 @@ function goToResources(focus: string, extraQuery: Record<string, string> = {}) {
   })
 }
 
-function onMissionCta(m: Mission) {
-  const focus = focusMap[m.cta] || 'today'
-  goToResources(focus, { mission: m.code })
+function onActionClick(action: (typeof actions)[number]) {
+  if (action.id === 'dialogue') {
+    router.push('/dialogue')
+    return
+  }
+  goToResources(action.focus, { mission: action.id })
+}
+
+function askTutor(question: string) {
+  router.push({ path: '/dialogue', query: { q: question } })
 }
 </script>
 
 <template>
-  <section class="section-missions">
-    <div class="mis-inner">
-      <!-- Header -->
-      <div class="mis-header">
-        <div>
-          <div class="mis-eyebrow" :style="`color: ${T.amber}`">
-            <span class="eyebrow-dot" :style="`background: ${T.amber}`" />
-            MISSION CONSOLE · 任务台
+  <section class="section-missions" aria-labelledby="next-step-title">
+    <div class="mission-shell">
+      <img class="mission-bg-art" src="/homepage/next-action-beacon.png" alt="" aria-hidden="true">
+      <div class="mission-orbit" aria-hidden="true">
+        <span />
+        <span />
+      </div>
+
+      <div class="mission-copy">
+        <p class="mission-kicker">NEXT BEST STEP</p>
+        <h2 id="next-step-title">你的下一步学习，已经整理好了。</h2>
+        <p class="mission-desc">
+          系统已经把画像、路径、资源和评估结果合成了一条更短的学习建议：
+          今天先处理最卡人的薄弱点，再用小测把结果写回画像。
+        </p>
+
+        <div class="signal-row" aria-label="今日学习信号">
+          <div v-for="signal in signals" :key="signal.label" class="signal-card">
+            <strong>{{ signal.value }}</strong>
+            <span>{{ signal.label }}</span>
+            <small>{{ signal.note }}</small>
           </div>
-          <h2 class="mis-title">下一步执行哪个任务</h2>
-          <p class="mis-desc">
-            4 个任务都是系统按你当下画像和评估反馈生成的 — 不是固定模板。点 ▶ 启动后会调度对应智能体协作完成。
-          </p>
-        </div>
-        <div class="mis-quota">
-          <span class="mis-quota-label">本周配额</span>
-          <div class="mis-quota-bars">
-            <div v-for="i in 7" :key="i" class="mis-quota-bar"
-              :class="{ 'mis-quota-bar-done': i <= 5 }" />
-          </div>
-          <span class="mis-quota-val">5 / 7 完成</span>
         </div>
       </div>
 
-      <!-- Mission cards -->
-      <div class="mis-grid">
-        <div v-for="m in missions" :key="m.code" class="mis-card"
-          :style="`--accent: ${m.priorityColor}`">
-          <div class="mis-card-top">
-            <div class="mis-card-top-left">
-              <span class="mis-priority" :style="`color: ${m.priorityColor}; background: ${m.priorityColor}18; border-color: ${m.priorityColor}55`">
-                ◆ {{ m.priority }}
-              </span>
-              <span class="mis-code">{{ m.code }}</span>
-            </div>
-            <span class="mis-state" :style="`color: ${stateLabel[m.state].color}`">
-              <span class="mis-state-dot"
-                :class="{ 'mis-state-dot-pulse': m.state === 'ready' }"
-                :style="`background: ${stateLabel[m.state].color}; box-shadow: 0 0 6px ${stateLabel[m.state].color}`" />
-              {{ stateLabel[m.state].text }}
-            </span>
-          </div>
-
-          <div class="mis-card-title">{{ m.title }}</div>
-          <div class="mis-card-objective">{{ m.objective }}</div>
-
-          <div class="mis-card-specs">
-            <div>
-              <div class="mis-spec-label">预计时长</div>
-              <div class="mis-spec-val">{{ m.duration }}</div>
-            </div>
-            <div class="mis-spec-divider" />
-            <div>
-              <div class="mis-spec-label">调用智能体</div>
-              <div class="mis-spec-agents">
-                <span v-for="aid in m.agents" :key="aid" class="mis-agent-badge"
-                  :style="`color: ${getAgent(aid)?.color}; background: ${getAgent(aid)?.color}14; border-color: ${getAgent(aid)?.color}33`">
-                  <span class="mis-agent-dot" :style="`background: ${getAgent(aid)?.color}`" />
-                  {{ getAgent(aid)?.role }}
-                </span>
-              </div>
-            </div>
-          </div>
-
-          <div class="mis-outcome"
-            :style="`background: ${m.outcome.color}10; border-color: ${m.outcome.color}33`">
-            <div>
-              <div class="mis-outcome-label">{{ m.outcome.label }}</div>
-              <div class="mis-outcome-val" :style="`color: ${m.outcome.color}`">{{ m.outcome.value }}</div>
-            </div>
-            <span class="mis-outcome-arrow" :style="`color: ${m.outcome.color}`">↗</span>
-          </div>
-
-          <button class="mis-cta"
-            :style="`background: linear-gradient(135deg, ${m.priorityColor}, ${m.priorityColor}CC)`"
-            @click="onMissionCta(m)">
-            ▶ {{ m.cta }}
-          </button>
-        </div>
+      <div class="action-panel">
+        <button
+          v-for="action in actions"
+          :key="action.id"
+          type="button"
+          class="action-card"
+          :style="{ '--tone': action.tone }"
+          @click="onActionClick(action)"
+        >
+          <span class="action-line" />
+          <span class="action-meta">{{ action.eyebrow }}</span>
+          <strong>{{ action.title }}</strong>
+          <span class="action-desc">{{ action.desc }}</span>
+          <span class="action-cta">{{ action.cta }} <i>↗</i></span>
+        </button>
       </div>
 
-      <!-- Free dialogue -->
-      <div class="mis-free">
-        <div class="mis-free-left">
-          <div class="mis-free-eyebrow" :style="`color: ${T.cyan}`">OR · 自由对话</div>
-          <div class="mis-free-title">不想跟着任务走？直接问它一个问题</div>
-        </div>
-        <div class="mis-free-questions">
-          <button v-for="q in quickQuestions" :key="q" class="mis-free-btn"
-            @click="router.push('/chat')">
-            {{ q }}
-          </button>
-        </div>
+      <div class="question-strip">
+        <span>想自由问？</span>
+        <button
+          v-for="question in quickQuestions"
+          :key="question"
+          type="button"
+          @click="askTutor(question)"
+        >
+          {{ question }}
+        </button>
       </div>
     </div>
   </section>
@@ -203,389 +138,316 @@ function onMissionCta(m: Mission) {
 
 <style scoped>
 .section-missions {
-  padding: 90px 56px 80px;
   position: relative;
+  padding: 78px clamp(24px, 4vw, 56px) 88px;
 }
 
-.mis-inner {
+.mission-shell {
+  position: relative;
   max-width: 1760px;
   margin: 0 auto;
+  display: grid;
+  grid-template-columns: minmax(280px, 0.78fr) minmax(420px, 1fr);
+  gap: clamp(24px, 4vw, 58px);
+  overflow: hidden;
+  padding: clamp(28px, 4vw, 54px);
+  border: 1px solid rgba(143, 167, 255, 0.18);
+  border-radius: 28px;
+  background:
+    linear-gradient(120deg, rgba(8, 14, 34, 0.22), rgba(5, 10, 24, 0.06)),
+    radial-gradient(circle at 16% 10%, rgba(53, 224, 216, 0.07), transparent 34%),
+    radial-gradient(circle at 92% 24%, rgba(240, 178, 74, 0.05), transparent 30%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06), 0 24px 72px rgba(0, 0, 0, 0.16);
+  backdrop-filter: blur(4px) saturate(1.04);
 }
 
-.mis-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-end;
-  margin-bottom: 32px;
-  flex-wrap: wrap;
-  gap: 16px;
+.mission-shell::after {
+  content: '';
+  position: absolute;
+  inset: 18px;
+  pointer-events: none;
+  border-radius: 22px;
+  border: 1px solid rgba(255, 255, 255, 0.04);
 }
 
-.mis-eyebrow {
-  font-size: 10px;
-  letter-spacing: 0.24em;
-  font-family: 'JetBrains Mono', monospace;
-  font-weight: 500;
-  margin-bottom: 8px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
+.mission-bg-art {
+  position: absolute;
+  top: 0;
+  right: -8%;
+  width: min(860px, 56vw);
+  height: 100%;
+  object-fit: cover;
+  opacity: 0.64;
+  mix-blend-mode: screen;
+  filter: saturate(1.04) contrast(1.08);
+  mask-image: linear-gradient(90deg, transparent 0%, rgba(0, 0, 0, 0.18) 10%, #000 30%, #000 100%);
+  pointer-events: none;
 }
 
-.eyebrow-dot {
-  display: inline-block;
-  width: 6px;
-  height: 6px;
+.mission-orbit {
+  position: absolute;
+  inset: auto -120px -170px auto;
+  width: 460px;
+  height: 460px;
+  border: 1px solid rgba(53, 224, 216, 0.16);
   border-radius: 50%;
-  animation: pulse-soft 1.5s ease-in-out infinite;
+  opacity: 0.9;
 }
 
-.mis-title {
-  margin: 0;
-  font-family: 'Instrument Serif', serif;
-  font-size: 40px;
+.mission-orbit span {
+  position: absolute;
+  border-radius: 50%;
+  border: 1px dashed rgba(143, 167, 255, 0.18);
+}
+
+.mission-orbit span:first-child {
+  inset: 58px;
+}
+
+.mission-orbit span:last-child {
+  inset: 128px;
+}
+
+.mission-copy,
+.action-panel,
+.question-strip {
+  position: relative;
+  z-index: 1;
+}
+
+.mission-copy {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.mission-kicker,
+.action-meta {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 0.2em;
+  color: #35e0d8;
+}
+
+.mission-copy h2 {
+  max-width: 760px;
+  margin: 12px 0 16px;
+  color: #f3f7ff;
+  font-family: 'Instrument Serif', 'Noto Serif SC', serif;
+  font-size: clamp(34px, 4.2vw, 64px);
   font-weight: 500;
-  color: #e8edf5;
-  letter-spacing: -0.02em;
-  line-height: 1.1;
+  line-height: 0.98;
+  letter-spacing: -0.035em;
   text-wrap: balance;
 }
 
-.mis-desc {
-  margin: 10px 0 0;
-  font-size: 13.5px;
-  color: #8892b0;
-  max-width: 560px;
+.mission-desc {
+  max-width: 660px;
+  margin: 0;
+  color: #9aa9c8;
+  font-size: 15px;
+  line-height: 1.85;
 }
 
-.mis-quota {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  background: rgba(10, 12, 28, 0.7);
-  border: 1px solid rgba(255,255,255,0.06);
-  border-radius: 12px;
-  padding: 10px 16px;
-}
-
-.mis-quota-label {
-  font-size: 10px;
-  color: #8892b0;
-  letter-spacing: 0.16em;
-  font-family: 'JetBrains Mono', monospace;
-}
-
-.mis-quota-bars {
-  display: flex;
-  gap: 3px;
-}
-
-.mis-quota-bar {
-  width: 8px;
-  height: 18px;
-  border-radius: 2px;
-  background: rgba(255,255,255,0.08);
-}
-
-.mis-quota-bar-done {
-  background: #06d6a0;
-  box-shadow: 0 0 5px #06d6a0;
-}
-
-.mis-quota-val {
-  font-size: 11px;
-  color: #e8edf5;
-  font-family: 'JetBrains Mono', monospace;
-  font-variant-numeric: tabular-nums;
-}
-
-/* Grid */
-.mis-grid {
+.signal-row {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
-  gap: 16px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 34px;
 }
 
-.mis-card {
+.signal-card {
+  padding: 16px 18px;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.022);
+}
+
+.signal-card strong {
+  display: block;
+  color: #ffffff;
+  font-family: 'Instrument Serif', serif;
+  font-size: 34px;
+  font-weight: 500;
+  line-height: 1;
+}
+
+.signal-card span,
+.signal-card small {
+  display: block;
+  font-size: 12px;
+}
+
+.signal-card span {
+  margin-top: 8px;
+  color: #d7e3ff;
+}
+
+.signal-card small {
+  margin-top: 2px;
+  color: #667493;
+}
+
+.action-panel {
+  display: grid;
+  gap: 12px;
+  align-content: center;
+}
+
+.action-card {
+  --tone: #35e0d8;
   position: relative;
-  padding: 24px;
-  background: rgba(10, 14, 32, 0.7);
-  border: 1px solid rgba(255,255,255,0.07);
-  border-radius: 16px;
-  backdrop-filter: blur(14px);
-  cursor: pointer;
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-  min-height: 280px;
-  transition: border-color 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease;
-}
-
-.mis-card:hover {
-  border-color: color-mix(in srgb, var(--accent) 40%, transparent);
-  transform: translateY(-4px);
-  box-shadow: 0 24px 60px rgba(0,0,0,0.5), 0 0 28px color-mix(in srgb, var(--accent) 20%, transparent);
-}
-
-.mis-card-top {
-  display: flex;
+  display: grid;
+  grid-template-columns: 6px 1fr auto;
+  column-gap: 18px;
   align-items: center;
-  justify-content: space-between;
+  min-height: 124px;
+  padding: 20px 22px;
+  text-align: left;
+  color: #eef4ff;
+  border: 1px solid color-mix(in srgb, var(--tone) 22%, rgba(255, 255, 255, 0.08));
+  border-radius: 22px;
+  background:
+    linear-gradient(90deg, color-mix(in srgb, var(--tone) 14%, transparent), transparent 46%),
+    rgba(6, 11, 28, 0.34);
+  cursor: pointer;
+  transition: transform 0.24s ease, border-color 0.24s ease, background 0.24s ease;
 }
 
-.mis-card-top-left {
-  display: flex;
+.action-card:hover {
+  transform: translateX(-6px);
+  border-color: color-mix(in srgb, var(--tone) 52%, rgba(255, 255, 255, 0.1));
+  background:
+    linear-gradient(90deg, color-mix(in srgb, var(--tone) 22%, transparent), transparent 54%),
+    rgba(8, 14, 34, 0.50);
+}
+
+.action-line {
+  grid-row: 1 / span 4;
+  width: 6px;
+  height: 76px;
+  border-radius: 999px;
+  background: var(--tone);
+  box-shadow: 0 0 18px color-mix(in srgb, var(--tone) 58%, transparent);
+}
+
+.action-meta,
+.action-card strong,
+.action-desc {
+  grid-column: 2;
+}
+
+.action-card strong {
+  margin-top: 8px;
+  color: #f4f8ff;
+  font-size: 19px;
+  line-height: 1.25;
+}
+
+.action-desc {
+  margin-top: 6px;
+  color: #8fa0c0;
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+.action-cta {
+  grid-column: 3;
+  grid-row: 1 / span 4;
+  display: inline-flex;
   align-items: center;
   gap: 8px;
-}
-
-.mis-priority {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  padding: 3px 8px;
-  border-radius: 4px;
-  border: 1px solid;
-  font-size: 9.5px;
-  font-family: 'JetBrains Mono', monospace;
-  letter-spacing: 0.15em;
-  font-weight: 600;
-}
-
-.mis-code {
-  font-size: 10px;
-  color: #8892b0;
-  font-family: 'JetBrains Mono', monospace;
-  letter-spacing: 0.15em;
-}
-
-.mis-state {
-  font-size: 9.5px;
-  font-family: 'JetBrains Mono', monospace;
-  letter-spacing: 0.14em;
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-}
-
-.mis-state-dot {
-  width: 5px;
-  height: 5px;
-  border-radius: 50%;
-}
-
-.mis-state-dot-pulse {
-  animation: pulse-soft 1.5s ease-in-out infinite;
-}
-
-.mis-card-title {
-  font-family: 'Instrument Serif', serif;
-  font-size: 24px;
-  line-height: 1.15;
-  color: #e8edf5;
-  letter-spacing: -0.01em;
-}
-
-.mis-card-objective {
-  font-size: 12.5px;
-  color: #8892b0;
-  line-height: 1.5;
-}
-
-.mis-card-specs {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  padding-top: 12px;
-  padding-bottom: 12px;
-  border-top: 1px solid rgba(255,255,255,0.05);
-  border-bottom: 1px solid rgba(255,255,255,0.05);
-  flex-wrap: wrap;
-}
-
-.mis-spec-label {
-  font-size: 9px;
-  color: #4a5568;
-  font-family: 'JetBrains Mono', monospace;
-  letter-spacing: 0.18em;
-  margin-bottom: 3px;
-}
-
-.mis-spec-val {
-  font-family: 'Instrument Serif', serif;
-  font-size: 16px;
-  color: #e8edf5;
-  line-height: 1;
-  font-variant-numeric: tabular-nums;
-}
-
-.mis-spec-divider {
-  width: 1px;
-  height: 24px;
-  background: rgba(255,255,255,0.06);
-}
-
-.mis-spec-agents {
-  display: flex;
-  gap: 4px;
-  align-items: center;
-  flex-wrap: wrap;
-}
-
-.mis-agent-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  padding: 3px 8px;
-  border-radius: 100px;
-  border: 1px solid;
-  font-size: 10px;
-  font-family: 'JetBrains Mono', monospace;
-  letter-spacing: 0.1em;
-  font-weight: 500;
-}
-
-.mis-agent-dot {
-  width: 4px;
-  height: 4px;
-  border-radius: 50%;
-}
-
-.mis-outcome {
-  padding: 12px 14px;
-  border: 1px solid;
-  border-radius: 8px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.mis-outcome-label {
-  font-size: 9.5px;
-  color: #8892b0;
-  letter-spacing: 0.16em;
-  font-family: 'JetBrains Mono', monospace;
-  margin-bottom: 2px;
-}
-
-.mis-outcome-val {
-  font-family: 'Outfit', sans-serif;
-  font-size: 14px;
-  font-weight: 600;
-}
-
-.mis-outcome-arrow {
-  font-size: 18px;
-  opacity: 0.6;
-}
-
-.mis-cta {
-  margin-top: auto;
-  background: linear-gradient(135deg, #00d4ff, #00d4ffCC);
-  color: #0a0e1c;
-  border: none;
-  border-radius: 10px;
-  padding: 12px 16px;
+  align-self: center;
+  color: var(--tone);
   font-size: 13px;
   font-weight: 700;
-  font-family: 'Outfit', sans-serif;
-  cursor: pointer;
-  letter-spacing: 0.04em;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  transition: transform 0.2s ease;
-}
-
-.mis-cta:hover {
-  transform: translateY(-1px);
-}
-
-/* Free dialogue */
-.mis-free {
-  margin-top: 32px;
-  padding: 20px 28px;
-  background: rgba(10, 14, 32, 0.5);
-  border: 1px dashed rgba(255,255,255,0.1);
-  border-radius: 14px;
-  display: flex;
-  align-items: center;
-  gap: 18px;
-  flex-wrap: wrap;
-}
-
-.mis-free-left {
-  flex: 1 1 320px;
-}
-
-.mis-free-eyebrow {
-  font-size: 9.5px;
-  letter-spacing: 0.2em;
-  font-family: 'JetBrains Mono', monospace;
-  margin-bottom: 4px;
-}
-
-.mis-free-title {
-  font-family: 'Instrument Serif', serif;
-  font-size: 18px;
-  color: #e8edf5;
-}
-
-.mis-free-questions {
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
-  flex: 2 1 600px;
-  justify-content: flex-end;
-}
-
-.mis-free-btn {
-  padding: 8px 14px;
-  background: rgba(0, 212, 255, 0.06);
-  border: 1px solid rgba(0, 212, 255, 0.2);
-  border-radius: 100px;
-  color: #e8edf5;
-  font-size: 12px;
-  font-family: 'Outfit', sans-serif;
   white-space: nowrap;
+}
+
+.action-cta i {
+  font-style: normal;
+  transition: transform 0.24s ease;
+}
+
+.action-card:hover .action-cta i {
+  transform: translate(3px, -3px);
+}
+
+.question-strip {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 4px;
+  padding-top: 24px;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.question-strip span {
+  color: #7281a1;
+  font-size: 13px;
+}
+
+.question-strip button {
+  border: 1px solid rgba(53, 224, 216, 0.18);
+  border-radius: 999px;
+  background: rgba(53, 224, 216, 0.06);
+  color: #dce8ff;
+  padding: 9px 14px;
+  font-size: 13px;
   cursor: pointer;
-  transition: background 0.2s ease;
+  transition: background 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
 }
 
-.mis-free-btn:hover {
-  background: rgba(0, 212, 255, 0.14);
-}
-
-@keyframes pulse-soft {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.4; }
+.question-strip button:hover {
+  transform: translateY(-1px);
+  border-color: rgba(53, 224, 216, 0.42);
+  background: rgba(53, 224, 216, 0.13);
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .eyebrow-dot, .mis-state-dot-pulse {
-    animation: none !important;
-  }
-  .mis-card {
+  .action-card,
+  .action-cta i,
+  .question-strip button {
     transition: none !important;
   }
 }
 
-@media (max-width: 900px) {
-  .section-missions {
-    padding: 60px 24px 60px;
-  }
-  .mis-title { font-size: 28px; }
-  .mis-grid {
+@media (max-width: 980px) {
+  .mission-shell {
     grid-template-columns: 1fr;
   }
-  .mis-free {
-    flex-direction: column;
-    align-items: stretch;
+
+  .mission-bg-art {
+    right: -42%;
+    width: 118vw;
+    opacity: 0.24;
   }
-  .mis-free-questions {
-    justify-content: flex-start;
+
+  .action-card {
+    grid-template-columns: 6px 1fr;
+  }
+
+  .action-cta {
+    grid-column: 2;
+    grid-row: auto;
+    margin-top: 10px;
+  }
+}
+
+@media (max-width: 640px) {
+  .section-missions {
+    padding: 54px 18px 64px;
+  }
+
+  .mission-shell {
+    padding: 24px;
+    border-radius: 22px;
+  }
+
+  .signal-row {
+    grid-template-columns: 1fr;
   }
 }
 </style>

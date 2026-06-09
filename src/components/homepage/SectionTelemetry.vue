@@ -521,13 +521,13 @@ onBeforeUnmount(() => {
 
 .timeline-shell,
 .chain-detail {
-  border: 1px solid rgba(150, 175, 220, 0.13);
+  border: 1px solid rgba(150, 175, 220, 0.10);
   border-radius: 18px;
   background:
-    radial-gradient(ellipse at 22% 8%, rgba(53, 224, 216, 0.10), transparent 40%),
-    linear-gradient(180deg, rgba(8, 12, 30, 0.28), rgba(5, 7, 18, 0.16));
-  backdrop-filter: blur(10px) saturate(1.14);
-  box-shadow: inset 0 1px 0 rgba(255,255,255,0.08);
+    radial-gradient(ellipse at 22% 8%, rgba(53, 224, 216, 0.06), transparent 42%),
+    linear-gradient(180deg, rgba(8, 12, 30, 0.13), rgba(5, 7, 18, 0.05));
+  backdrop-filter: blur(4px) saturate(1.06);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.045);
 }
 
 .timeline-shell {
@@ -544,7 +544,7 @@ onBeforeUnmount(() => {
   position: absolute;
   inset: 0;
   pointer-events: none;
-  background: linear-gradient(100deg, transparent 0%, rgba(255,255,255,0.08) 46%, transparent 58%);
+  background: linear-gradient(100deg, transparent 0%, rgba(255,255,255,0.035) 46%, transparent 58%);
   animation: board-scan 6.5s cubic-bezier(0.16, 1, 0.3, 1) infinite;
 }
 
@@ -569,9 +569,9 @@ onBeforeUnmount(() => {
   border-radius: 14px;
   background:
     linear-gradient(90deg, color-mix(in srgb, var(--footer-color) 10%, transparent), transparent),
-    rgba(4, 8, 18, 0.42);
-  backdrop-filter: blur(12px) saturate(1.12);
-  box-shadow: inset 0 1px 0 rgba(255,255,255,0.08);
+    rgba(4, 8, 18, 0.20);
+  backdrop-filter: blur(5px) saturate(1.06);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.05);
 }
 
 .footer-story {
@@ -806,8 +806,8 @@ onBeforeUnmount(() => {
   min-height: 0;
   padding: 18px;
   background:
-    radial-gradient(circle at 100% 0%, color-mix(in srgb, var(--detail-color) 16%, transparent), transparent 42%),
-    rgba(8, 12, 30, 0.28);
+    radial-gradient(circle at 100% 0%, color-mix(in srgb, var(--detail-color) 10%, transparent), transparent 42%),
+    rgba(8, 12, 30, 0.14);
 }
 
 .detail-kicker,
