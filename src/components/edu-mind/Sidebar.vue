@@ -68,7 +68,7 @@ function handleNavClick(itemName: string) {
 
   <aside
     :class="[
-      'w-[280px] bg-white dark:bg-[#0f172a] border-r border-[#e8e8e8] dark:border-slate-700 flex flex-col fixed h-screen overflow-y-auto z-40 transition-transform duration-300 ease-in-out lg:translate-x-0',
+      'w-[280px] bg-white dark:bg-[#080b16] border-r border-[#e8e8e8] dark:border-[rgba(59,130,246,0.08)] flex flex-col fixed h-screen overflow-y-auto z-40 transition-transform duration-300 ease-in-out lg:translate-x-0',
       isOpen ? 'translate-x-0' : '-translate-x-full'
     ]"
     id="app-sidebar"
@@ -95,8 +95,8 @@ function handleNavClick(itemName: string) {
         :class="[
           'flex items-center gap-2.5 px-3 py-2 rounded-lg cursor-pointer transition-all duration-200 text-[15px]',
           item.name === currentTab
-            ? 'bg-[#f0f4ff] dark:bg-[#4a6cf7]/15 text-accent dark:text-[#6a8cff] font-medium'
-            : 'text-slate-500 dark:text-slate-400 hover:bg-[#f5f7fa] dark:hover:bg-slate-800 hover:text-slate-800 dark:hover:text-white'
+            ? 'bg-[#f0f4ff] dark:bg-[rgba(59,130,246,0.1)] text-accent dark:text-[#93c5fd] font-medium'
+            : 'text-slate-500 dark:text-[#6880a8] hover:bg-[#f5f7fa] dark:hover:bg-[rgba(14,18,34,0.5)] hover:text-slate-800 dark:hover:text-[#e0e7ff]'
         ]"
       >
         <component
@@ -104,13 +104,13 @@ function handleNavClick(itemName: string) {
           :size="16"
           :class="[
             'shrink-0',
-            item.name === currentTab ? 'text-accent dark:text-[#6a8cff]' : 'text-slate-400 dark:text-slate-500'
+            item.name === currentTab ? 'text-accent dark:text-[#93c5fd]' : 'text-slate-400 dark:text-[#4d6590]'
           ]"
         />
         <span>{{ item.name }}</span>
         <span
           v-if="item.name === currentTab"
-          class="ml-auto w-1.5 h-1.5 bg-[#4a6cf7] rounded-full"
+          class="ml-auto w-1.5 h-1.5 bg-[#3b82f6] rounded-full"
         />
       </div>
     </nav>
@@ -121,7 +121,7 @@ function handleNavClick(itemName: string) {
         @click="toggleTheme"
         :class="[
           'flex items-center gap-2.5 px-3 py-2 rounded-lg cursor-pointer transition-all duration-200 text-[15px] group',
-          'text-slate-500 dark:text-slate-400 hover:bg-[#f5f7fa] dark:hover:bg-slate-800 hover:text-slate-800 dark:hover:text-white'
+          'text-slate-500 dark:text-[#6880a8] hover:bg-[#f5f7fa] dark:hover:bg-[rgba(14,18,34,0.5)] hover:text-slate-800 dark:hover:text-[#e0e7ff]'
         ]"
         :title="isDark ? '切换到浅色模式' : '切换到深色模式'"
       >
@@ -168,8 +168,8 @@ function handleNavClick(itemName: string) {
     </div>
 
     <!-- Sidebar Footer -->
-    <div class="p-3 border-t border-[#e8e8e8] dark:border-slate-700 bg-white dark:bg-[#0f172a]">
-      <div class="flex items-center gap-2.5 p-2.5 bg-[#f9fafb] dark:bg-slate-800/60 rounded-lg border border-[#e8e8e8] dark:border-slate-700/60">
+    <div class="p-3 border-t border-[#e8e8e8] dark:border-[rgba(59,130,246,0.08)] bg-white dark:bg-[#080b16]">
+      <div class="flex items-center gap-2.5 p-2.5 bg-[#f9fafb] dark:bg-[rgba(14,18,34,0.6)] rounded-lg border border-[#e8e8e8] dark:border-[rgba(59,130,246,0.08)]">
         <div class="w-8 h-8 rounded-full bg-slate-200 dark:bg-slate-600 overflow-hidden shrink-0 border border-slate-300 dark:border-slate-500">
           <img
             src="https://api.dicebear.com/7.x/avataaars/svg?seed=xiaoming"
@@ -179,8 +179,8 @@ function handleNavClick(itemName: string) {
           />
         </div>
         <div class="leading-tight">
-          <h4 class="text-[15px] font-medium text-slate-800 dark:text-white">小明同学</h4>
-          <div class="flex items-center gap-1 text-[13px] text-slate-400 dark:text-slate-400 mt-0.5">
+          <h4 class="text-[15px] font-medium text-slate-800 dark:text-[#e0e7ff]">小明同学</h4>
+          <div class="flex items-center gap-1 text-[13px] text-slate-400 dark:text-[#6880a8] mt-0.5">
             <span>Lv.12</span>
             <span class="bg-[#fff2e8] text-[#fa8c16] px-1 rounded-sm text-[12px] font-semibold">V</span>
           </div>
@@ -188,21 +188,21 @@ function handleNavClick(itemName: string) {
       </div>
 
       <!-- Weekly Progress Tracker -->
-      <div class="mt-3 p-2.5 bg-[#f9fafb] dark:bg-slate-800/60 rounded-lg border border-[#e8e8e8] dark:border-slate-700/60">
+      <div class="mt-3 p-2.5 bg-[#f9fafb] dark:bg-[rgba(14,18,34,0.6)] rounded-lg border border-[#e8e8e8] dark:border-[rgba(59,130,246,0.08)]">
         <h5 class="text-[13px] text-slate-400 font-medium mb-1.5">学习进度</h5>
         <div class="flex justify-between text-[14px] mb-1.5">
           <span class="text-slate-500 dark:text-slate-400">本周学习</span>
-          <span class="text-accent dark:text-[#6a8cff] font-semibold">{{ weeklyHours }} 小时</span>
+          <span class="text-accent dark:text-[#93c5fd] font-semibold">{{ weeklyHours }} 小时</span>
         </div>
 
-        <div class="h-1.5 bg-[#e8e8e8] dark:bg-slate-700/60 rounded-full overflow-hidden mb-1.5">
+        <div class="h-1.5 bg-[#e8e8e8] dark:bg-[rgba(59,130,246,0.08)] rounded-full overflow-hidden mb-1.5">
           <div
-            class="h-full bg-gradient-to-r from-[#4a6cf7] to-[#6a8cff] rounded-full transition-[width] duration-500 ease-out"
+            class="h-full bg-gradient-to-r from-[#3b82f6] to-[#60a5fa] rounded-full transition-[width] duration-500 ease-out"
             :style="{ width: `${progressWidth}%` }"
           />
         </div>
 
-        <div class="text-[12px] text-slate-400 flex justify-between">
+        <div class="text-[12px] text-slate-400 dark:text-[#4d6590] flex justify-between">
           <span>目标 {{ goalHours }} 小时</span>
           <span>{{ percentage }}%</span>
         </div>

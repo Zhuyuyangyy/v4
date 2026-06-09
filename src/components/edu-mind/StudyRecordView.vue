@@ -36,16 +36,33 @@ const stats = ref([
 ])
 
 const weeklyData = ref([
-  { day: '周一', hours: 2.5 },
-  { day: '周二', hours: 1.8 },
-  { day: '周三', hours: 3.2 },
-  { day: '周四', hours: 2.0 },
-  { day: '周五', hours: 4.1 },
-  { day: '周六', hours: 3.5 },
-  { day: '周日', hours: 1.4 }
+  { day: '周一', total: 2.5, video: 1.2, practice: 0.8, reading: 0.5 },
+  { day: '周二', total: 1.8, video: 0.6, practice: 0.9, reading: 0.3 },
+  { day: '周三', total: 3.2, video: 1.5, practice: 1.0, reading: 0.7 },
+  { day: '周四', total: 2.0, video: 0.8, practice: 0.7, reading: 0.5 },
+  { day: '周五', total: 4.1, video: 2.0, practice: 1.3, reading: 0.8 },
+  { day: '周六', total: 3.5, video: 1.5, practice: 1.5, reading: 0.5 },
+  { day: '周日', total: 1.4, video: 0.4, practice: 0.6, reading: 0.4 }
 ])
 
-const maxWeeklyHours = computed(() => Math.max(...weeklyData.value.map(d => d.hours)))
+const maxWeeklyHours = computed(() => Math.max(...weeklyData.value.map(d => d.total)))
+const weeklyTotal = computed(() => weeklyData.value.reduce((a, b) => a + b.total, 0))
+const weeklyAvg = computed(() => +(weeklyTotal.value / 7).toFixed(1))
+const bestDay = computed(() => {
+  const sorted = [...weeklyData.value].sort((a, b) => b.total - a.total)
+  return sorted[0]
+})
+
+// 高级简约配色 — 同一色系不同明度，营造渐变感
+const activityColors = {
+  video: { bg: '#4f46e5', label: '观看视频', lighter: '#6366f1' },
+  practice: { bg: '#6366f1', label: '完成练习', lighter: '#818cf8' },
+  reading: { bg: '#818cf8', label: '阅读资料', lighter: '#a5b4fc' },
+}
+
+function getBarStackHeight(item: typeof weeklyData.value[0], field: 'video' | 'practice' | 'reading') {
+  return (item[field] / maxWeeklyHours.value) * 100
+}
 
 const timeline = ref([
   {
@@ -137,68 +154,180 @@ const getTypeBadgeClass = (type: string) => {
       </div>
     </div>
 
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-5">
-      <div class="lg:col-span-2 bg-white dark:bg-[#1e293b] rounded-2xl border border-slate-200 dark:border-slate-700 shadow-xs p-5">
-        <div class="flex items-center justify-between mb-5">
-          <div class="flex items-center gap-2">
-            <Activity class="w-4 h-4 text-[#4a6cf7] dark:text-[#6a8cff]" />
-            <h3 class="text-[15px] font-bold text-[#1e293b] dark:text-white">本周学习时长</h3>
+    <div class="grid grid-cols-1 lg:grid-cols-5 gap-5">
+      <!-- 左侧：本周学习时长柱状图（重新设计） -->
+      <div class="lg:col-span-3 bg-white dark:bg-[#1e293b] rounded-2xl border border-slate-200 dark:border-slate-700 shadow-xs p-5 flex flex-col">
+        <!-- 图表头部：简洁 -->
+        <div class="flex items-center justify-between mb-6">
+          <div class="flex items-center gap-3">
+            <div class="w-7 h-7 rounded-lg bg-indigo-50 dark:bg-indigo-500/10 flex items-center justify-center">
+              <Activity class="w-3.5 h-3.5 text-indigo-500 dark:text-indigo-400" />
+            </div>
+            <div>
+              <h3 class="text-[14px] font-semibold text-slate-800 dark:text-white leading-tight">本周学习</h3>
+              <p class="text-[11px] text-slate-400 dark:text-slate-500">日均 {{ weeklyAvg }}h · 累计 {{ weeklyTotal.toFixed(1) }}h</p>
+            </div>
           </div>
-          <span class="text-[12px] text-slate-400 dark:text-slate-500 bg-slate-50 dark:bg-slate-800 px-2.5 py-1 rounded-lg font-medium">
-            共 {{ weeklyData.reduce((a, b) => a + b.hours, 0).toFixed(1) }}h
-          </span>
+          <div class="flex items-center gap-3">
+            <span class="flex items-center gap-1.5 text-[11px] text-slate-400 dark:text-slate-500">
+              <span class="w-2 h-2 rounded-sm" style="background:#4f46e5" />
+              视频
+            </span>
+            <span class="flex items-center gap-1.5 text-[11px] text-slate-400 dark:text-slate-500">
+              <span class="w-2 h-2 rounded-sm" style="background:#6366f1" />
+              练习
+            </span>
+            <span class="flex items-center gap-1.5 text-[11px] text-slate-400 dark:text-slate-500">
+              <span class="w-2 h-2 rounded-sm" style="background:#818cf8" />
+              阅读
+            </span>
+          </div>
         </div>
 
-        <div class="flex items-end justify-between gap-3 h-44 px-1">
-          <div
-            v-for="item in weeklyData"
-            :key="item.day"
-            class="flex-1 flex flex-col items-center gap-2"
-          >
-            <span class="text-[12px] font-bold text-[#4a6cf7] dark:text-[#6a8cff] font-mono">{{ item.hours }}h</span>
-            <div class="w-full flex items-end justify-center" style="height: 120px">
+        <!-- 柱状图区域 -->
+        <div class="relative flex flex-col flex-1">
+          <!-- Y轴刻度（极简） -->
+          <div class="absolute right-0 top-0 flex flex-col justify-between pointer-events-none select-none" style="height: 280px">
+            <span class="text-[10px] text-slate-300 dark:text-slate-600 font-mono font-medium">{{ maxWeeklyHours.toFixed(1) }}</span>
+            <span class="text-[10px] text-slate-300 dark:text-slate-600 font-mono font-medium">0</span>
+          </div>
+
+          <!-- 上部弹性空间：把柱子推到容器底部 -->
+          <div class="flex-1" />
+
+          <!-- 柱子区 -->
+          <div class="relative">
+            <div class="flex items-end gap-6" style="height: 280px">
               <div
-                class="w-full max-w-[36px] rounded-t-lg transition-all duration-300 hover:opacity-80"
-                :style="{
-                  height: `${(item.hours / maxWeeklyHours) * 100}%`,
-                  background: 'linear-gradient(180deg, #4a6cf7, #6a8cff)',
-                  minHeight: '8px'
-                }"
-              />
+                v-for="(item, idx) in weeklyData"
+                :key="item.day"
+                class="flex-1 flex flex-col items-center justify-end h-full group"
+              >
+                <!-- 堆叠柱子 -->
+                <div class="relative flex flex-col justify-end transition-all duration-500 ease-out"
+                  :style="{ height: `${(item.total / maxWeeklyHours) * 100}%`, minHeight: item.total > 0 ? '8px' : 0, width: '56px' }">
+
+                  <!-- 每个柱子的悬浮提示（极简） -->
+                  <div class="absolute -top-2 left-1/2 -translate-x-1/2 -translate-y-full opacity-0 group-hover:opacity-100 transition-all duration-200 pointer-events-none z-10">
+                    <div class="bg-white dark:bg-slate-800 text-slate-800 dark:text-white rounded-lg px-3 py-2 shadow-lg border border-slate-200 dark:border-slate-700 whitespace-nowrap">
+                      <div class="text-[13px] font-semibold text-center mb-1.5">{{ item.day }} · {{ item.total }}h</div>
+                      <div class="space-y-1 text-[11px]">
+                        <div class="flex items-center justify-between gap-4">
+                          <span class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-sm" style="background:#4f46e5" />视频</span>
+                          <span class="font-semibold font-mono">{{ item.video }}h</span>
+                        </div>
+                        <div class="flex items-center justify-between gap-4">
+                          <span class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-sm" style="background:#6366f1" />练习</span>
+                          <span class="font-semibold font-mono">{{ item.practice }}h</span>
+                        </div>
+                        <div class="flex items-center justify-between gap-4">
+                          <span class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-sm" style="background:#818cf8" />阅读</span>
+                          <span class="font-semibold font-mono">{{ item.reading }}h</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- 三段柱子（同色系渐变） -->
+                  <div class="w-full transition-all duration-500 ease-out group-hover:brightness-110"
+                    :style="{
+                      height: `${(item.reading / item.total) * 100}%`,
+                      minHeight: item.reading > 0 ? '4px' : 0,
+                      background: `linear-gradient(180deg, #a5b4fc, #818cf8)`,
+                      borderTopLeftRadius: '4px',
+                      borderTopRightRadius: '4px',
+                    }"
+                  />
+                  <div class="w-full transition-all duration-500 ease-out group-hover:brightness-110"
+                    :style="{
+                      height: `${(item.practice / item.total) * 100}%`,
+                      minHeight: item.practice > 0 ? '4px' : 0,
+                      background: '#6366f1',
+                    }"
+                  />
+                  <div class="w-full transition-all duration-500 ease-out group-hover:brightness-110"
+                    :style="{
+                      height: `${(item.video / item.total) * 100}%`,
+                      minHeight: item.video > 0 ? '4px' : 0,
+                      background: `linear-gradient(180deg, #6366f1, #4f46e5)`,
+                      borderBottomLeftRadius: '4px',
+                      borderBottomRightRadius: '4px',
+                    }"
+                  />
+                </div>
+
+                <!-- 日期标签 -->
+                <span class="mt-2 text-[11px] font-medium text-slate-400 dark:text-slate-500 transition-colors"
+                  :class="idx === 4 ? 'text-indigo-500 dark:text-indigo-400 font-semibold' : ''"
+                >{{ item.day }}</span>
+              </div>
             </div>
-            <span class="text-[12px] text-slate-500 dark:text-slate-400 font-medium">{{ item.day }}</span>
           </div>
         </div>
       </div>
 
-      <div class="bg-white dark:bg-[#1e293b] rounded-2xl border border-slate-200 dark:border-slate-700 shadow-xs p-5">
-        <div class="flex items-center gap-2 mb-4">
-          <Target class="w-4 h-4 text-[#4a6cf7] dark:text-[#6a8cff]" />
-          <h3 class="text-[15px] font-bold text-[#1e293b] dark:text-white">课程进度</h3>
+      <!-- 右侧：课程进度 -->
+      <div class="lg:col-span-2 bg-white dark:bg-[#1e293b] rounded-2xl border border-slate-200 dark:border-slate-700 shadow-xs p-5">
+        <div class="flex items-center justify-between mb-5">
+          <div class="flex items-center gap-2.5">
+            <div class="w-8 h-8 rounded-lg bg-emerald-500/10 dark:bg-emerald-500/20 flex items-center justify-center">
+              <Target class="w-4 h-4 text-emerald-500 dark:text-emerald-400" />
+            </div>
+            <h3 class="text-[15px] font-bold text-[#1e293b] dark:text-white">课程进度</h3>
+          </div>
+          <span class="text-[11px] text-slate-400 dark:text-slate-500 font-mono">{{ courseProgress.length }} 门</span>
         </div>
 
-        <div class="flex flex-col gap-4">
+        <div class="flex flex-col gap-3.5">
           <div
-            v-for="course in courseProgress"
+            v-for="(course, idx) in courseProgress"
             :key="course.name"
-            class="group"
+            class="group relative"
           >
-            <div class="flex items-center justify-between mb-1.5">
-              <span class="text-[13px] font-semibold text-[#1e293b] dark:text-white truncate max-w-[65%]">{{ course.name }}</span>
-              <span class="text-[12px] font-bold text-[#4a6cf7] dark:text-[#6a8cff] font-mono">{{ course.progress }}%</span>
-            </div>
-            <div class="w-full h-2 bg-slate-100 dark:bg-slate-700 rounded-full overflow-hidden">
+            <!-- 课程卡片 -->
+            <div class="flex items-center gap-3 p-3 rounded-xl bg-slate-50/80 dark:bg-slate-800/40 border border-slate-100 dark:border-slate-700/40 hover:border-slate-200 dark:hover:border-slate-600 transition-all duration-200 cursor-pointer">
+              <!-- 排名标识 -->
               <div
-                class="h-full rounded-full transition-all duration-500"
+                class="w-7 h-7 rounded-lg flex items-center justify-center shrink-0 text-[11px] font-bold font-mono"
                 :style="{
-                  width: `${course.progress}%`,
-                  backgroundColor: course.color
+                  background: idx === 0 ? 'linear-gradient(135deg, #f59e0b, #fbbf24)' : idx === 1 ? 'linear-gradient(135deg, #94a3b8, #cbd5e1)' : idx === 2 ? 'linear-gradient(135deg, #b45309, #d97706)' : 'rgba(148,163,184,0.1)',
+                  color: idx < 3 ? '#fff' : '#94a3b8'
                 }"
-              />
-            </div>
-            <div class="flex items-center gap-1 mt-1.5">
-              <Timer class="w-3 h-3 text-slate-400 dark:text-slate-500" />
-              <span class="text-[11.5px] text-slate-400 dark:text-slate-500">{{ course.lastStudied }}</span>
+              >
+                {{ idx + 1 }}
+              </div>
+
+              <div class="flex-1 min-w-0">
+                <div class="flex items-center justify-between mb-2">
+                  <span class="text-[13px] font-semibold text-[#1e293b] dark:text-white truncate">{{ course.name }}</span>
+                  <span class="text-[12px] font-bold font-mono ml-2 shrink-0" :style="{ color: course.color }">{{ course.progress }}%</span>
+                </div>
+
+                <!-- 进度条 -->
+                <div class="w-full h-1.5 bg-slate-200/60 dark:bg-slate-700/60 rounded-full overflow-hidden">
+                  <div
+                    class="h-full rounded-full transition-all duration-700 ease-out relative"
+                    :style="{ width: `${course.progress}%`, background: `linear-gradient(90deg, ${course.color}, ${course.color}cc)` }"
+                  >
+                    <!-- 光泽效果 -->
+                    <div class="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent animate-shimmer" />
+                  </div>
+                </div>
+
+                <div class="flex items-center justify-between mt-1.5">
+                  <div class="flex items-center gap-1">
+                    <Timer class="w-3 h-3 text-slate-400 dark:text-slate-500" />
+                    <span class="text-[11px] text-slate-400 dark:text-slate-500">{{ course.lastStudied }}</span>
+                  </div>
+                  <!-- 状态标签 -->
+                  <span
+                    class="text-[10px] px-1.5 py-0.5 rounded font-semibold"
+                    :class="course.progress >= 80 ? 'bg-emerald-50 text-emerald-600 dark:bg-emerald-500/15 dark:text-emerald-400' : course.progress >= 50 ? 'bg-blue-50 text-blue-600 dark:bg-blue-500/15 dark:text-blue-400' : 'bg-amber-50 text-amber-600 dark:bg-amber-500/15 dark:text-amber-400'"
+                  >
+                    {{ course.progress >= 80 ? '已掌握' : course.progress >= 50 ? '学习中' : '入门' }}
+                  </span>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -295,34 +424,70 @@ const getTypeBadgeClass = (type: string) => {
 
     <div class="bg-white dark:bg-[#1e293b] rounded-2xl border border-slate-200 dark:border-slate-700 shadow-xs p-5">
       <div class="flex items-center justify-between mb-5">
-        <div class="flex items-center gap-2">
-          <TrendingUp class="w-4 h-4 text-[#4a6cf7] dark:text-[#6a8cff]" />
-          <h3 class="text-[15px] font-bold text-[#1e293b] dark:text-white">学习成就</h3>
+        <div class="flex items-center gap-2.5">
+          <div class="w-8 h-8 rounded-lg bg-amber-500/10 dark:bg-amber-500/20 flex items-center justify-center">
+            <TrendingUp class="w-4 h-4 text-amber-500 dark:text-amber-400" />
+          </div>
+          <div>
+            <h3 class="text-[15px] font-bold text-[#1e293b] dark:text-white leading-tight">学习成就</h3>
+            <p class="text-[11px] text-slate-400 dark:text-slate-500 mt-0.5">已完成 4/6 个成就</p>
+          </div>
+        </div>
+        <div class="flex items-center gap-1">
+          <div v-for="i in 4" :key="i" class="w-2 h-2 rounded-full bg-amber-400 dark:bg-amber-500" />
+          <div v-for="i in 2" :key="'e'+i" class="w-2 h-2 rounded-full bg-slate-200 dark:bg-slate-700" />
         </div>
       </div>
 
       <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        <div class="bg-gradient-to-br from-[#f0f4ff] to-white dark:from-[#4a6cf7]/10 dark:to-[#1e293b] rounded-xl border border-[#e2ebff] dark:border-slate-700 p-4 text-center">
-          <div class="text-[28px] mb-1">🔥</div>
-          <div class="text-[14px] font-bold text-[#1e293b] dark:text-white">连续打卡</div>
-          <div class="text-[12px] text-slate-500 dark:text-slate-400 mt-0.5">坚持15天不间断</div>
+        <div class="group relative bg-gradient-to-br from-[#f0f4ff] to-white dark:from-[#4a6cf7]/10 dark:to-[#1e293b] rounded-xl border border-[#e2ebff] dark:border-slate-700 p-4 text-center hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 cursor-pointer overflow-hidden">
+          <div class="absolute top-0 right-0 w-16 h-16 bg-[#4a6cf7]/5 dark:bg-[#4a6cf7]/10 rounded-bl-full" />
+          <div class="text-[32px] mb-2 relative z-10">🔥</div>
+          <div class="text-[13px] font-bold text-[#1e293b] dark:text-white relative z-10">连续打卡</div>
+          <div class="text-[11px] text-slate-500 dark:text-slate-400 mt-1 relative z-10">坚持15天不间断</div>
+          <div class="mt-2.5 flex justify-center relative z-10">
+            <span class="text-[10px] px-2 py-0.5 rounded-full bg-[#4a6cf7]/10 text-[#4a6cf7] dark:text-[#6a8cff] font-semibold">已达成</span>
+          </div>
         </div>
-        <div class="bg-gradient-to-br from-emerald-50 to-white dark:from-emerald-500/10 dark:to-[#1e293b] rounded-xl border border-emerald-100 dark:border-slate-700 p-4 text-center">
-          <div class="text-[28px] mb-1">📚</div>
-          <div class="text-[14px] font-bold text-[#1e293b] dark:text-white">课程达人</div>
-          <div class="text-[12px] text-slate-500 dark:text-slate-400 mt-0.5">完成12门课程学习</div>
+        <div class="group relative bg-gradient-to-br from-emerald-50 to-white dark:from-emerald-500/10 dark:to-[#1e293b] rounded-xl border border-emerald-100 dark:border-slate-700 p-4 text-center hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 cursor-pointer overflow-hidden">
+          <div class="absolute top-0 right-0 w-16 h-16 bg-emerald-500/5 dark:bg-emerald-500/10 rounded-bl-full" />
+          <div class="text-[32px] mb-2 relative z-10">📚</div>
+          <div class="text-[13px] font-bold text-[#1e293b] dark:text-white relative z-10">课程达人</div>
+          <div class="text-[11px] text-slate-500 dark:text-slate-400 mt-1 relative z-10">完成12门课程</div>
+          <div class="mt-2.5 flex justify-center relative z-10">
+            <span class="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-semibold">已达成</span>
+          </div>
         </div>
-        <div class="bg-gradient-to-br from-amber-50 to-white dark:from-amber-500/10 dark:to-[#1e293b] rounded-xl border border-amber-100 dark:border-slate-700 p-4 text-center">
-          <div class="text-[28px] mb-1">✍️</div>
-          <div class="text-[14px] font-bold text-[#1e293b] dark:text-white">练习高手</div>
-          <div class="text-[12px] text-slate-500 dark:text-slate-400 mt-0.5">累计完成86道练习</div>
+        <div class="group relative bg-gradient-to-br from-amber-50 to-white dark:from-amber-500/10 dark:to-[#1e293b] rounded-xl border border-amber-100 dark:border-slate-700 p-4 text-center hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 cursor-pointer overflow-hidden">
+          <div class="absolute top-0 right-0 w-16 h-16 bg-amber-500/5 dark:bg-amber-500/10 rounded-bl-full" />
+          <div class="text-[32px] mb-2 relative z-10">✍️</div>
+          <div class="text-[13px] font-bold text-[#1e293b] dark:text-white relative z-10">练习高手</div>
+          <div class="text-[11px] text-slate-500 dark:text-slate-400 mt-1 relative z-10">累计86道练习</div>
+          <div class="mt-2.5 flex justify-center relative z-10">
+            <span class="text-[10px] px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400 font-semibold">已达成</span>
+          </div>
         </div>
-        <div class="bg-gradient-to-br from-rose-50 to-white dark:from-rose-500/10 dark:to-[#1e293b] rounded-xl border border-rose-100 dark:border-slate-700 p-4 text-center">
-          <div class="text-[28px] mb-1">⏱️</div>
-          <div class="text-[14px] font-bold text-[#1e293b] dark:text-white">百小时学者</div>
-          <div class="text-[12px] text-slate-500 dark:text-slate-400 mt-0.5">总学习时长突破100h</div>
+        <div class="group relative bg-gradient-to-br from-rose-50 to-white dark:from-rose-500/10 dark:to-[#1e293b] rounded-xl border border-rose-100 dark:border-slate-700 p-4 text-center hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 cursor-pointer overflow-hidden">
+          <div class="absolute top-0 right-0 w-16 h-16 bg-rose-500/5 dark:bg-rose-500/10 rounded-bl-full" />
+          <div class="text-[32px] mb-2 relative z-10">⏱️</div>
+          <div class="text-[13px] font-bold text-[#1e293b] dark:text-white relative z-10">百小时学者</div>
+          <div class="text-[11px] text-slate-500 dark:text-slate-400 mt-1 relative z-10">突破100小时</div>
+          <div class="mt-2.5 flex justify-center relative z-10">
+            <span class="text-[10px] px-2 py-0.5 rounded-full bg-rose-500/10 text-rose-600 dark:text-rose-400 font-semibold">已达成</span>
+          </div>
         </div>
       </div>
     </div>
   </div>
 </template>
+
+<style scoped>
+@keyframes shimmer {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(200%); }
+}
+
+.animate-shimmer {
+  animation: shimmer 2s ease-in-out infinite;
+}
+</style>

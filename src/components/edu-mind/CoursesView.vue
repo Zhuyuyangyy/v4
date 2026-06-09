@@ -314,10 +314,10 @@ const getSyllabusForCourse = (courseId: string) => {
         title: '01 基础入门',
         meta: '5 节课 · 95分钟',
         lectures: [
-          { id: '1.1', title: '1.1 C语言简介与开发环境搭建', type: '视频', duration: '15分钟', progress: 80 },
-          { id: '1.2', title: '1.2 第一个C程序: Hello World', type: '视频', duration: '12分钟', progress: 100 },
-          { id: '1.3', title: '1.3 变量与数据类型', type: '视频', duration: '18分钟', progress: 100 },
-          { id: '1.4', title: '1.4 输入输出与格式化', type: '视频', duration: '20分钟', progress: 75 },
+          { id: '1.1', title: '1.1 C语言简介与开发环境搭建', type: '视频', duration: '15分钟', progress: 80, bilibili: { bvid: BILIBILI_BVID, part: 1 }, locked: false },
+          { id: '1.2', title: '1.2 第一个C程序: Hello World', type: '视频', duration: '12分钟', progress: 100, bilibili: { bvid: BILIBILI_BVID, part: 6 }, locked: false },
+          { id: '1.3', title: '1.3 变量与数据类型', type: '视频', duration: '18分钟', progress: 100, bilibili: { bvid: BILIBILI_BVID, part: 11 }, locked: false },
+          { id: '1.4', title: '1.4 输入输出与格式化', type: '视频', duration: '20分钟', progress: 75, bilibili: { bvid: BILIBILI_BVID, part: 14 }, locked: false },
           { id: '1.5', title: '1.5 课后练习: 基础编程题', type: '练习', duration: '30分钟', progress: 0, locked: true },
         ]
       },
@@ -326,10 +326,10 @@ const getSyllabusForCourse = (courseId: string) => {
         title: '02 流程控制',
         meta: '4 节课 · 80分钟',
         lectures: [
-          { id: '2.1', title: '2.1 if-else分支判定结构', type: '视频', duration: '20分钟', progress: 0 },
-          { id: '2.2', title: '2.2 switch-case多项选择机制', type: '视频', duration: '15分钟', progress: 0 },
-          { id: '2.3', title: '2.3 while与do-while循环结构', type: '视频', duration: '20分钟', progress: 0 },
-          { id: '2.4', title: '2.4 for循环高维嵌套及break控制', type: '视频', duration: '25分钟', progress: 0 },
+          { id: '2.1', title: '2.1 if-else分支判定结构', type: '视频', duration: '20分钟', progress: 0, bilibili: { bvid: BILIBILI_BVID, part: 24 }, locked: false },
+          { id: '2.2', title: '2.2 switch-case多项选择机制', type: '视频', duration: '15分钟', progress: 0, bilibili: { bvid: BILIBILI_BVID, part: 31 }, locked: false },
+          { id: '2.3', title: '2.3 while与do-while循环结构', type: '视频', duration: '20分钟', progress: 0, bilibili: { bvid: BILIBILI_BVID, part: 33 }, locked: false },
+          { id: '2.4', title: '2.4 for循环高维嵌套及break控制', type: '视频', duration: '25分钟', progress: 0, bilibili: { bvid: BILIBILI_BVID, part: 38 }, locked: false },
         ]
       },
       {
@@ -337,10 +337,10 @@ const getSyllabusForCourse = (courseId: string) => {
         title: '03 数组与字符串',
         meta: '4 节课 · 75分钟',
         lectures: [
-          { id: '3.1', title: '3.1 一维数组存储声明与指针偏置', type: '视频', duration: '15分钟', progress: 0 },
-          { id: '3.2', title: '3.2 二维数组网格数据映射机制', type: '视频', duration: '20分钟', progress: 0 },
-          { id: '3.3', title: '3.3 字符数组、字符串与标准库函数', type: '视频', duration: '20分钟', progress: 0 },
-          { id: '3.4', title: '3.4 数组冒泡与选择排序底层演习', type: '练习', duration: '20分钟', progress: 0 }
+          { id: '3.1', title: '3.1 一维数组存储声明与指针偏置', type: '视频', duration: '15分钟', progress: 0, bilibili: { bvid: BILIBILI_BVID, part: 73 }, locked: false },
+          { id: '3.2', title: '3.2 二维数组网格数据映射机制', type: '视频', duration: '20分钟', progress: 0, bilibili: { bvid: BILIBILI_BVID, part: 78 }, locked: false },
+          { id: '3.3', title: '3.3 字符数组、字符串与标准库函数', type: '视频', duration: '20分钟', progress: 0, bilibili: { bvid: BILIBILI_BVID, part: 86 }, locked: false },
+          { id: '3.4', title: '3.4 数组冒泡与选择排序底层演习', type: '练习', duration: '20分钟', progress: 0, locked: false }
         ]
       },
       {
@@ -348,9 +348,9 @@ const getSyllabusForCourse = (courseId: string) => {
         title: '04 函数',
         meta: '3 节课 · 60分钟',
         lectures: [
-          { id: '4.1', title: '4.1 函数声明、形参实参与返回值', type: '视频', duration: '20分钟', progress: 0 },
-          { id: '4.2', title: '4.2 模块化封装：局部与全局变量作用域', type: '视频', duration: '20分钟', progress: 0 },
-          { id: '4.3', title: '4.3 递归函数原理与分支防爆规避', type: '练习', duration: '20分钟', progress: 0 }
+          { id: '4.1', title: '4.1 函数声明、形参实参与返回值', type: '视频', duration: '20分钟', progress: 0, bilibili: { bvid: BILIBILI_BVID, part: 66 }, locked: false },
+          { id: '4.2', title: '4.2 模块化封装：局部与全局变量作用域', type: '视频', duration: '20分钟', progress: 0, bilibili: { bvid: BILIBILI_BVID, part: 71 }, locked: false },
+          { id: '4.3', title: '4.3 递归函数原理与分支防爆规避', type: '练习', duration: '20分钟', progress: 0, locked: false }
         ]
       },
       {
@@ -358,10 +358,10 @@ const getSyllabusForCourse = (courseId: string) => {
         title: '05 指针与内存',
         meta: '4 节课 · 90分钟',
         lectures: [
-          { id: '5.1', title: '5.1 指针概念：地址、引用与间接寻址', type: '视频', duration: '20分钟', progress: 0 },
-          { id: '5.2', title: '5.2 指针与数组：地址计算与指针偏移', type: '视频', duration: '25分钟', progress: 0 },
-          { id: '5.3', title: '5.3 指针作为参数传递值与传递引用', type: '视频', duration: '20分钟', progress: 0 },
-          { id: '5.4', title: '5.4 动态内存分配 malloc/free 详解', type: '练习', duration: '25分钟', progress: 0 }
+          { id: '5.1', title: '5.1 指针概念：地址、引用与间接寻址', type: '视频', duration: '20分钟', progress: 0, bilibili: { bvid: BILIBILI_BVID, part: 80 }, locked: false },
+          { id: '5.2', title: '5.2 指针与数组：地址计算与指针偏移', type: '视频', duration: '25分钟', progress: 0, bilibili: { bvid: BILIBILI_BVID, part: 82 }, locked: false },
+          { id: '5.3', title: '5.3 指针作为参数传递值与传递引用', type: '视频', duration: '20分钟', progress: 0, bilibili: { bvid: BILIBILI_BVID, part: 81 }, locked: false },
+          { id: '5.4', title: '5.4 动态内存分配 malloc/free 详解', type: '练习', duration: '25分钟', progress: 0, locked: false }
         ]
       }
     ]
@@ -373,9 +373,9 @@ const getSyllabusForCourse = (courseId: string) => {
       title: '01 课程简介与基础起航',
       meta: '3 节课 · 45分钟',
       lectures: [
-        { id: '1.1', title: '1.1 学前大纲串讲与核心概念先修', type: '视频', duration: '15分钟', progress: 100 },
-        { id: '1.2', title: '1.2 上手第一个Demo流程演示', type: '视频', duration: '15分钟', progress: 50 },
-        { id: '1.3', title: '1.3 本章节重点要领自主思考练习', type: '练习', duration: '15分钟', progress: 0 }
+        { id: '1.1', title: '1.1 学前大纲串讲与核心概念先修', type: '视频', duration: '15分钟', progress: 100, bilibili: { bvid: BILIBILI_BVID, part: 1 }, locked: false },
+        { id: '1.2', title: '1.2 上手第一个Demo流程演示', type: '视频', duration: '15分钟', progress: 50, bilibili: { bvid: BILIBILI_BVID, part: 6 }, locked: false },
+        { id: '1.3', title: '1.3 本章节重点要领自主思考练习', type: '练习', duration: '15分钟', progress: 0, locked: false }
       ]
     },
     {
@@ -383,8 +383,8 @@ const getSyllabusForCourse = (courseId: string) => {
       title: '02 原理剖析与深度开发',
       meta: '3 节课 · 60分钟',
       lectures: [
-        { id: '2.1', title: '2.1 常见的算法结构或者是系统逻辑', type: '视频', duration: '20分钟', progress: 0 },
-        { id: '2.2', title: '2.2 核心应用场景与架构模型讲解', type: '视频', duration: '20分钟', progress: 0 },
+        { id: '2.1', title: '2.1 常见的算法结构或者是系统逻辑', type: '视频', duration: '20分钟', progress: 0, bilibili: { bvid: BILIBILI_BVID, part: 73 }, locked: false },
+        { id: '2.2', title: '2.2 核心应用场景与架构模型讲解', type: '视频', duration: '20分钟', progress: 0, bilibili: { bvid: BILIBILI_BVID, part: 66 }, locked: false },
         { id: '2.3', title: '2.3 课后作业与高频笔试题测试', type: '练习', duration: '20分钟', progress: 0, locked: true }
       ]
     }
@@ -483,6 +483,22 @@ const getLectureDetail = (lectureId: string, courseId: string) => {
   }
 }
 
+/**
+ * Bilibili 视频嵌入相关
+ */
+const BILIBILI_BVID = 'BV13P4y117m4' // 翁恺 C语言程序设计
+
+const getBilibiliEmbedUrl = (lect: any): string | undefined => {
+  if (!lect.bilibili || !lect.bilibili.bvid) return undefined
+  const { bvid, part } = lect.bilibili
+  // 使用 Bilibili 官方推荐的 embed 格式，加 isOutside=true 适配外站嵌入
+  return `https://player.bilibili.com/player.html?isOutside=true&bvid=${bvid}&p=${part}&high_quality=1&danmaku=0`
+}
+
+const hasBilibiliVideo = (lect: any): boolean => {
+  return !!(lect.bilibili && lect.bilibili.bvid)
+}
+
 const getCategoryBadgeClass = (category: string) => {
   switch (category) {
     case '编程与算法基础':
@@ -517,6 +533,12 @@ const currentLectureDetail = computed(() => {
 const currentSyllabus = computed(() => {
   if (!selectedCourse.value) return []
   return getSyllabusForCourse(selectedCourse.value.id)
+})
+
+/** 当前选中的章节对象（包含 bilibili 视频信息） */
+const currentLecture = computed<any>(() => {
+  if (!activeLectureId.value || !currentSyllabus.value.length) return null
+  return currentSyllabus.value.flatMap(ch => ch.lectures).find(l => l.id === activeLectureId.value) || null
 })
 
 const totalLectures = computed(() => {
@@ -961,8 +983,11 @@ const directions = ['全部', '编程与算法基础', '计算机系统', '软�
                       <span :class="['text-[14px] font-medium leading-relaxed block', activeLectureId === lect.id ? 'text-accent font-bold' : 'text-slate-600 dark:text-slate-300']">
                         {{ lect.title }}
                       </span>
-                      <span class="text-[11.5px] text-slate-400 font-sans block mt-0.5">
+                      <span class="text-[11.5px] text-slate-400 font-sans block mt-0.5 flex items-center gap-1.5 flex-wrap">
                         {{ lect.type === '练习' ? '课后实操训练' : '在线微课' }} · {{ lect.duration }}
+                        <span v-if="hasBilibiliVideo(lect)" class="inline-flex items-center gap-0.5 text-[10px] font-bold text-pink-600 dark:text-pink-400 bg-pink-50 dark:bg-pink-500/10 px-1.5 py-0.5 rounded-sm leading-none">
+                          B站
+                        </span>
                       </span>
                       <button
                         v-if="lect.type === '练习'"
@@ -1006,7 +1031,7 @@ const directions = ['全部', '编程与算法基础', '计算机系统', '软�
                   <div class="leading-tight pr-4">
                     <span class="text-[11px] font-mono font-bold bg-[#f0f4ff] dark:bg-slate-700 text-accent px-1.5 py-0.5 rounded">章节要义</span>
                     <h3 class="text-[15px] font-bold text-slate-800 dark:text-white tracking-tight mt-1 line-clamp-1">
-                      {{ activeLectureId }} {{ currentSyllabus.flatMap(ch => ch.lectures).find(l => l.id === activeLectureId)?.title.split(' ')[1] || '当前专题' }}
+                      {{ activeLectureId }} {{ currentLecture?.title?.split(' ')[1] || '当前专题' }}
                     </h3>
                   </div>
                   <button
@@ -1035,7 +1060,32 @@ const directions = ['全部', '编程与算法基础', '计算机系统', '软�
                   </button>
                 </div>
 
-                <div v-if="lectureDetailTab === '详情'" class="flex flex-col gap-4 text-[14px] overflow-y-auto max-h-[480px]">
+                <div v-if="lectureDetailTab === '详情'" class="flex flex-col gap-4 text-[14px] overflow-y-auto max-h-[520px]">
+                  <!-- Bilibili 视频嵌入 + 跳转链接 -->
+                  <div v-if="currentLecture && hasBilibiliVideo(currentLecture)" class="flex flex-col gap-2">
+                    <div class="rounded-xl overflow-hidden border border-slate-200 dark:border-slate-700 bg-black">
+                      <div class="relative w-full aspect-video bg-black flex items-center justify-center">
+                        <iframe
+                          :src="getBilibiliEmbedUrl(currentLecture)"
+                          scrolling="no"
+                          frameborder="no"
+                          class="absolute inset-0 w-full h-full"
+                          style="border:none"
+                          allow="autoplay; fullscreen"
+                        />
+                      </div>
+                    </div>
+                    <a
+                      :href="`https://www.bilibili.com/video/${currentLecture.bilibili.bvid}?p=${currentLecture.bilibili.part}`"
+                      target="_blank"
+                      class="flex items-center justify-center gap-1.5 text-[12px] font-bold text-pink-600 dark:text-pink-400 bg-pink-50 dark:bg-pink-500/10 hover:bg-pink-100 dark:hover:bg-pink-500/20 rounded-lg py-2 transition-colors no-underline"
+                    >
+                      <span>📺</span>
+                      <span>在 Bilibili 中打开观看第 {{ currentLecture.bilibili.part }} 集</span>
+                      <ExternalLink class="w-3 h-3" />
+                    </a>
+                  </div>
+
                   <p class="text-slate-500 dark:text-slate-400 leading-relaxed font-sans bg-slate-50 dark:bg-slate-800 p-3 rounded-xl border border-slate-100 dark:border-slate-700">
                     {{ currentLectureDetail.description }}
                   </p>
