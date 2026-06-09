@@ -68,7 +68,7 @@ function handleNavClick(itemName: string) {
 
   <aside
     :class="[
-      'w-[280px] bg-white dark:bg-[#080b16] border-r border-[#e8e8e8] dark:border-[rgba(59,130,246,0.08)] flex flex-col fixed h-screen overflow-y-auto z-40 transition-transform duration-300 ease-in-out lg:translate-x-0',
+      'edu-sidebar w-[280px] flex flex-col fixed h-screen overflow-y-auto z-40 transition-transform duration-300 ease-in-out lg:translate-x-0',
       isOpen ? 'translate-x-0' : '-translate-x-full'
     ]"
     id="app-sidebar"
@@ -86,17 +86,17 @@ function handleNavClick(itemName: string) {
     </div>
 
     <!-- Navigation -->
-    <nav class="p-3 flex-1 space-y-0.5">
+    <nav class="p-5 flex-1 space-y-3">
       <div
         v-for="(item, index) in menuItems"
         :key="index"
         :id="`nav-item-${index}`"
         @click="handleNavClick(item.name)"
         :class="[
-          'flex items-center gap-2.5 px-3 py-2 rounded-lg cursor-pointer transition-all duration-200 text-[15px]',
+          'edu-sidebar__item flex items-center gap-3 px-4 py-3 rounded-lg cursor-pointer transition-all duration-200 text-[15px]',
           item.name === currentTab
-            ? 'bg-[#f0f4ff] dark:bg-[rgba(59,130,246,0.1)] text-accent dark:text-[#93c5fd] font-medium'
-            : 'text-slate-500 dark:text-[#6880a8] hover:bg-[#f5f7fa] dark:hover:bg-[rgba(14,18,34,0.5)] hover:text-slate-800 dark:hover:text-[#e0e7ff]'
+            ? 'is-active text-white font-bold'
+            : 'text-[#9ba4d8] hover:text-white'
         ]"
       >
         <component
@@ -104,24 +104,29 @@ function handleNavClick(itemName: string) {
           :size="16"
           :class="[
             'shrink-0',
-            item.name === currentTab ? 'text-accent dark:text-[#93c5fd]' : 'text-slate-400 dark:text-[#4d6590]'
+            item.name === currentTab ? 'text-[#d9cdff]' : 'text-[#818ac4]'
           ]"
         />
         <span>{{ item.name }}</span>
         <span
           v-if="item.name === currentTab"
-          class="ml-auto w-1.5 h-1.5 bg-[#3b82f6] rounded-full"
+          class="ml-auto w-1.5 h-1.5 bg-[#b48cff] rounded-full shadow-[0_0_14px_rgba(180,140,255,0.95)]"
         />
       </div>
     </nav>
 
+    <div class="edu-sidebar__mascot" aria-hidden="true">
+      <div class="edu-sidebar__sprite" />
+      <div class="edu-sidebar__halo" />
+    </div>
+
     <!-- Theme Toggle -->
-    <div class="px-3 pb-2">
+    <div class="px-5 pb-3">
       <div
         @click="toggleTheme"
         :class="[
-          'flex items-center gap-2.5 px-3 py-2 rounded-lg cursor-pointer transition-all duration-200 text-[15px] group',
-          'text-slate-500 dark:text-[#6880a8] hover:bg-[#f5f7fa] dark:hover:bg-[rgba(14,18,34,0.5)] hover:text-slate-800 dark:hover:text-[#e0e7ff]'
+          'edu-sidebar__item flex items-center gap-3 px-4 py-3 rounded-lg cursor-pointer transition-all duration-200 text-[15px] group',
+          'text-[#9ba4d8] hover:text-white'
         ]"
         :title="isDark ? '切换到浅色模式' : '切换到深色模式'"
       >
@@ -168,8 +173,8 @@ function handleNavClick(itemName: string) {
     </div>
 
     <!-- Sidebar Footer -->
-    <div class="p-3 border-t border-[#e8e8e8] dark:border-[rgba(59,130,246,0.08)] bg-white dark:bg-[#080b16]">
-      <div class="flex items-center gap-2.5 p-2.5 bg-[#f9fafb] dark:bg-[rgba(14,18,34,0.6)] rounded-lg border border-[#e8e8e8] dark:border-[rgba(59,130,246,0.08)]">
+    <div class="p-5 pt-3">
+      <div class="flex items-center gap-2.5 p-3 edu-sidebar__profile rounded-lg">
         <div class="w-8 h-8 rounded-full bg-slate-200 dark:bg-slate-600 overflow-hidden shrink-0 border border-slate-300 dark:border-slate-500">
           <img
             src="https://api.dicebear.com/7.x/avataaars/svg?seed=xiaoming"
@@ -188,7 +193,7 @@ function handleNavClick(itemName: string) {
       </div>
 
       <!-- Weekly Progress Tracker -->
-      <div class="mt-3 p-2.5 bg-[#f9fafb] dark:bg-[rgba(14,18,34,0.6)] rounded-lg border border-[#e8e8e8] dark:border-[rgba(59,130,246,0.08)]">
+      <div class="mt-3 p-3 edu-sidebar__profile rounded-lg">
         <h5 class="text-[13px] text-slate-400 font-medium mb-1.5">学习进度</h5>
         <div class="flex justify-between text-[14px] mb-1.5">
           <span class="text-slate-500 dark:text-slate-400">本周学习</span>
@@ -210,3 +215,67 @@ function handleNavClick(itemName: string) {
     </div>
   </aside>
 </template>
+
+<style scoped>
+.edu-sidebar {
+  background:
+    radial-gradient(circle at 42% 24%, rgba(122, 79, 255, 0.18), transparent 32%),
+    linear-gradient(180deg, rgba(14, 16, 48, 0.96), rgba(7, 9, 29, 0.98));
+  border-right: 1px solid rgba(104, 91, 234, 0.26);
+  box-shadow: inset -1px 0 0 rgba(255, 255, 255, 0.03), 18px 0 54px rgba(4, 5, 22, 0.34);
+}
+
+.edu-sidebar__item {
+  position: relative;
+  background: transparent;
+}
+
+.edu-sidebar__item:hover {
+  background: rgba(104, 88, 255, 0.12);
+  box-shadow: inset 0 0 0 1px rgba(142, 116, 255, 0.16);
+}
+
+.edu-sidebar__item.is-active {
+  background: linear-gradient(90deg, rgba(111, 68, 255, 0.78), rgba(72, 47, 173, 0.42));
+  box-shadow:
+    inset 0 0 0 1px rgba(176, 143, 255, 0.32),
+    0 0 28px rgba(104, 74, 255, 0.42);
+}
+
+.edu-sidebar__mascot {
+  position: relative;
+  height: 260px;
+  margin: 4px 18px 12px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+
+.edu-sidebar__sprite {
+  width: 158px;
+  height: 210px;
+  background-image: url('/desktop-pet/peachu-idle-transparent.png');
+  background-repeat: no-repeat;
+  background-size: 980px auto;
+  background-position: -48px -14px;
+  filter: drop-shadow(0 18px 28px rgba(91, 72, 255, 0.42));
+  z-index: 2;
+}
+
+.edu-sidebar__halo {
+  position: absolute;
+  bottom: 2px;
+  width: 138px;
+  height: 22px;
+  border-radius: 50%;
+  border: 1px solid rgba(123, 92, 255, 0.8);
+  background: radial-gradient(ellipse, rgba(91, 70, 255, 0.44), transparent 68%);
+  box-shadow: 0 0 26px rgba(111, 92, 255, 0.72);
+}
+
+.edu-sidebar__profile {
+  background: rgba(11, 13, 42, 0.78);
+  border: 1px solid rgba(109, 91, 238, 0.16);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+</style>

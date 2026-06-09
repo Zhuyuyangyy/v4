@@ -364,7 +364,7 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <div id="edu-mind-app" class="w-full max-w-full min-h-screen bg-white font-sans flex antialiased select-none" style="background-color: var(--edu-bg-page); color: var(--edu-text-main);">
+  <div id="edu-mind-app" class="w-full max-w-full h-screen font-sans flex antialiased select-none" style="background-color: var(--edu-bg-page); color: var(--edu-text-main);">
     <Sidebar
       :weeklyHours="weeklyHours"
       :goalHours="goalHours"
@@ -374,7 +374,7 @@ onBeforeUnmount(() => {
       @close="mobileSidebarOpen = false"
     />
 
-    <div class="flex-1 flex flex-col lg:ml-[280px] ml-0 min-w-0 min-h-screen">
+    <div class="flex-1 flex flex-col ml-0 min-w-0 h-screen overflow-y-auto">
       <Header
         :searchValue="searchValue"
         @searchChange="(val: string) => searchValue = val"
@@ -382,7 +382,7 @@ onBeforeUnmount(() => {
         @toggleSidebar="mobileSidebarOpen = !mobileSidebarOpen"
       />
 
-      <div class="flex-1 p-6 flex flex-col dark:bg-[#0f172a]">
+      <div class="edu-main-stage flex-1 p-5 sm:p-6 flex flex-col">
         <div v-if="currentTab === '首页'" class="flex flex-col lg:flex-row gap-6">
           <div class="flex-1 min-w-0">
             <HomeView :weeklyHours="weeklyHours" :goalHours="goalHours" @navigateToTab="(tab: string) => currentTab = tab" />
@@ -401,6 +401,29 @@ onBeforeUnmount(() => {
         </div>
 
         <div v-if="currentTab === '课程'" class="w-full">
+          <section class="edu-course-hero" aria-label="学习概览">
+            <div class="edu-course-hero__copy">
+              <span class="edu-hero-kicker">SYSTEM ONLINE</span>
+              <h1>晚上好,小明同学 <span aria-hidden="true">👋</span></h1>
+              <p>坚持学习的第 <strong>35</strong> 天，继续加油!</p>
+              <div class="edu-hero-progress">
+                <span>本周学习</span>
+                <strong>{{ weeklyHours }}h / {{ goalHours }}h · {{ Math.min(Math.round((weeklyHours / goalHours) * 100), 100) }}%</strong>
+                <div class="edu-hero-progress__bar">
+                  <span :style="{ width: `${Math.min(Math.round((weeklyHours / goalHours) * 100), 100)}%` }" />
+                </div>
+              </div>
+            </div>
+            <div class="edu-course-hero__visual" aria-hidden="true">
+              <div class="edu-planet" />
+              <div class="edu-orbit-card edu-orbit-card--one">
+                <BookOpen :size="30" />
+              </div>
+              <div class="edu-orbit-card edu-orbit-card--two">
+                <Network :size="28" />
+              </div>
+            </div>
+          </section>
           <CoursesView @addWeeklyHours="handleMarkAsCompleted" @navigateToTab="(tab: string) => currentTab = tab" />
         </div>
 
@@ -649,6 +672,31 @@ onBeforeUnmount(() => {
 #edu-mind-app {
   font-family: "Inter", system-ui, -apple-system, sans-serif;
   font-size: 18px;
+  position: relative;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 77% 10%, rgba(124, 58, 237, 0.32), transparent 30%),
+    radial-gradient(circle at 10% 34%, rgba(45, 212, 191, 0.12), transparent 28%),
+    linear-gradient(180deg, #090b24 0%, #07091c 52%, #060718 100%);
+}
+
+#edu-mind-app::before {
+  content: "";
+  position: fixed;
+  inset: var(--header-height) 0 0 0;
+  pointer-events: none;
+  background-image:
+    radial-gradient(circle, rgba(122, 114, 255, 0.45) 0 1px, transparent 1.5px),
+    linear-gradient(rgba(116, 87, 255, 0.045) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(116, 87, 255, 0.035) 1px, transparent 1px);
+  background-size: 140px 140px, 64px 64px, 64px 64px;
+  opacity: 0.55;
+  z-index: 0;
+}
+
+#edu-mind-app > * {
+  position: relative;
+  z-index: 1;
 }
 
 /* Subtle transition for all interactive elements */
@@ -823,32 +871,32 @@ html.dark #edu-mind-app .dark\:hover\:border-slate-600:hover {
 
 /* ===== CSS Variables for dark theme ===== */
 #edu-mind-app {
-  --edu-bg-page: #ffffff;
-  --edu-bg-card: #ffffff;
-  --edu-bg-inset: #f9fafb;
-  --edu-bg-elevated: #f5f7fa;
-  --edu-bg-deep: #f0f4ff;
-  --edu-border: #e8e8e8;
-  --edu-border-subtle: #f0f0f0;
-  --edu-text-main: #1a1a2e;
-  --edu-text-muted: #8c8c8c;
-  --edu-text-dim: #bfbfbf;
-  --edu-accent: #4a6cf7;
-  --edu-accent-soft: rgba(74, 108, 247, 0.15);
+  --edu-bg-page: #080a21;
+  --edu-bg-card: rgba(18, 20, 58, 0.78);
+  --edu-bg-inset: rgba(13, 15, 44, 0.82);
+  --edu-bg-elevated: rgba(33, 28, 78, 0.86);
+  --edu-bg-deep: rgba(96, 72, 255, 0.18);
+  --edu-border: rgba(123, 100, 255, 0.22);
+  --edu-border-subtle: rgba(119, 98, 255, 0.12);
+  --edu-text-main: #f4f2ff;
+  --edu-text-muted: #9aa4d9;
+  --edu-text-dim: #6670a7;
+  --edu-accent: #8d5cff;
+  --edu-accent-soft: rgba(140, 92, 255, 0.18);
 }
 html.dark #edu-mind-app {
-  --edu-bg-page: #080b16;
-  --edu-bg-card: #111630;
-  --edu-bg-inset: #141a32;
-  --edu-bg-elevated: #161d3a;
-  --edu-bg-deep: rgba(59, 130, 246, 0.12);
-  --edu-border: rgba(59, 130, 246, 0.1);
-  --edu-border-subtle: rgba(59, 130, 246, 0.06);
-  --edu-text-main: #e0e7ff;
-  --edu-text-muted: #6880a8;
-  --edu-text-dim: #4d6590;
-  --edu-accent: #60a5fa;
-  --edu-accent-soft: rgba(96, 165, 250, 0.12);
+  --edu-bg-page: #080a21;
+  --edu-bg-card: rgba(18, 20, 58, 0.78);
+  --edu-bg-inset: rgba(13, 15, 44, 0.82);
+  --edu-bg-elevated: rgba(33, 28, 78, 0.86);
+  --edu-bg-deep: rgba(96, 72, 255, 0.18);
+  --edu-border: rgba(123, 100, 255, 0.22);
+  --edu-border-subtle: rgba(119, 98, 255, 0.12);
+  --edu-text-main: #f4f2ff;
+  --edu-text-muted: #9aa4d9;
+  --edu-text-dim: #6670a7;
+  --edu-accent: #8d5cff;
+  --edu-accent-soft: rgba(140, 92, 255, 0.18);
   background: var(--edu-bg-page);
   color: var(--edu-text-main);
 }
@@ -1020,6 +1068,183 @@ html.dark #edu-mind-app textarea:focus {
 
 /* ===== 模态遮罩在深色下更深、更模糊 ===== */
 html.dark #edu-mind-app .bg-slate-900\/60 { background-color: rgba(0, 0, 0, 0.75) !important; backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); }
+
+.edu-main-stage {
+  background:
+    radial-gradient(circle at 72% 0%, rgba(101, 61, 255, 0.22), transparent 36%),
+    radial-gradient(circle at 20% 68%, rgba(22, 211, 238, 0.08), transparent 30%);
+}
+
+.edu-course-hero {
+  min-height: 190px;
+  margin-bottom: 24px;
+  border: 1px solid rgba(126, 106, 255, 0.28);
+  border-radius: 14px;
+  position: relative;
+  overflow: hidden;
+  padding: 34px 38px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 420px;
+  align-items: center;
+  background:
+    linear-gradient(90deg, rgba(9, 11, 38, 0.98) 0%, rgba(13, 13, 48, 0.86) 42%, rgba(44, 18, 102, 0.62) 100%),
+    url('/assets/cosmos/hubble-ultra-deep-field.jpg') center/cover;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    0 24px 70px rgba(6, 8, 35, 0.56),
+    0 0 40px rgba(94, 70, 255, 0.1);
+}
+
+.edu-course-hero::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle at 78% 48%, rgba(117, 86, 255, 0.24), transparent 18%),
+    linear-gradient(90deg, transparent, rgba(119, 92, 255, 0.08), transparent);
+  pointer-events: none;
+}
+
+.edu-course-hero__copy {
+  position: relative;
+  z-index: 2;
+}
+
+.edu-hero-kicker {
+  color: #5aa7ff;
+  display: inline-block;
+  font-family: "JetBrains Mono", ui-monospace, monospace;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.36em;
+  margin-bottom: 14px;
+}
+
+.edu-course-hero h1 {
+  color: #ffffff;
+  font-size: clamp(26px, 2.1vw, 34px);
+  line-height: 1.1;
+  font-weight: 900;
+  margin: 0 0 14px;
+  letter-spacing: 0;
+  text-shadow: 0 0 28px rgba(189, 174, 255, 0.42);
+}
+
+.edu-course-hero p {
+  color: #c6ccff;
+  font-size: 16px;
+  margin: 0;
+}
+
+.edu-course-hero p strong {
+  color: #76a8ff;
+}
+
+.edu-hero-progress {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: #47b8ff;
+  font-family: "JetBrains Mono", ui-monospace, monospace;
+  font-size: 13px;
+  font-weight: 800;
+  margin-top: 22px;
+}
+
+.edu-hero-progress__bar {
+  width: min(230px, 24vw);
+  height: 5px;
+  border-radius: 999px;
+  background: rgba(72, 71, 148, 0.8);
+  overflow: hidden;
+  box-shadow: 0 0 18px rgba(108, 91, 255, 0.35);
+}
+
+.edu-hero-progress__bar span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #934dff, #4ba8ff);
+}
+
+.edu-course-hero__visual {
+  position: relative;
+  z-index: 1;
+  min-height: 168px;
+}
+
+.edu-planet {
+  position: absolute;
+  right: 92px;
+  top: 12px;
+  width: 190px;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at 32% 24%, rgba(255, 255, 255, 0.72), transparent 4%),
+    radial-gradient(circle at 36% 32%, #a591ff 0 8%, #6636e4 28%, #251069 58%, #070824 72%);
+  box-shadow:
+    -28px 0 40px rgba(151, 112, 255, 0.26) inset,
+    0 0 46px rgba(109, 80, 255, 0.72),
+    0 0 120px rgba(85, 45, 214, 0.38);
+}
+
+.edu-planet::after {
+  content: "";
+  position: absolute;
+  inset: 32% -24%;
+  border: 2px solid rgba(216, 177, 112, 0.56);
+  border-radius: 50%;
+  transform: rotate(-18deg);
+  filter: blur(0.5px);
+}
+
+.edu-orbit-card {
+  position: absolute;
+  width: 86px;
+  height: 86px;
+  border-radius: 16px;
+  display: grid;
+  place-items: center;
+  color: #f4f2ff;
+  background: linear-gradient(145deg, rgba(45, 30, 112, 0.82), rgba(18, 18, 58, 0.92));
+  border: 1px solid rgba(135, 111, 255, 0.5);
+  box-shadow: 0 0 28px rgba(116, 91, 255, 0.42), inset 0 0 24px rgba(132, 91, 255, 0.16);
+}
+
+.edu-orbit-card--one {
+  right: 42px;
+  top: 18px;
+}
+
+.edu-orbit-card--two {
+  right: 0;
+  bottom: 18px;
+  border-radius: 50%;
+}
+
+@media (max-width: 1100px) {
+  .edu-course-hero {
+    grid-template-columns: 1fr;
+  }
+  .edu-course-hero__visual {
+    display: none;
+  }
+}
+
+@media (max-width: 640px) {
+  .edu-course-hero {
+    padding: 24px;
+    min-height: auto;
+  }
+  .edu-hero-progress {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+  .edu-hero-progress__bar {
+    width: 100%;
+  }
+}
 </style>
 
 <style scoped>
