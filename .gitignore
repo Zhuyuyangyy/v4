@@ -61,3 +61,11 @@ __pycache__/
 *.pyc
 server/evidence-data/
 *_extracted/
+/*-preview.png
+/*-render.png
+/*-current.png
+/agenthub-*.png
+/reverse-evaluation-*.png
+
+# Windows 误生成的设备名文件
+nul

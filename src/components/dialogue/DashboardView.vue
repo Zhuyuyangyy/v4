@@ -54,35 +54,6 @@
       </div>
     </section>
 
-    <!-- ===== 学习热力图（单月） ===== -->
-    <section class="dash-section dash-section-heatmap">
-      <div class="section-inner">
-        <div class="hm-top">
-          <h2 class="sec-title">学习记录</h2>
-          <div class="hm-summary">
-            <span>42 天</span>
-            <span>连续 7 天</span>
-            <span>日均 4.2h</span>
-          </div>
-        </div>
-        <div class="hm-month-nav">
-          <button class="hm-month-btn" :class="{ active: hmMonth === i }" v-for="i in 5" :key="i" @click="hmMonth = i">{{ i }}月</button>
-        </div>
-        <div class="hm-month-grid">
-          <div v-for="week in monthWeeks" :key="week.label" class="hm-week-row">
-            <span class="hm-week-label">{{ week.label }}</span>
-            <div class="hm-week-cells">
-              <div v-for="cell in week.days" :key="cell.key" class="hm-cell"
-                :class="{ empty: !cell.inMonth }"
-                :style="cell.inMonth ? { background: monthHeatColor(cell.level) } : {}"
-                :data-tip="cell.tip" />
-            </div>
-          </div>
-        </div>
-        <div class="hm-legend"><span>少</span><span v-for="l in heatLevels" :key="l" class="lbb" :style="{ background: l }" /><span>多</span></div>
-      </div>
-    </section>
-
     <!-- ===== 双栏：技能 + 图表 ===== -->
     <section class="dash-section">
       <div class="section-inner two-col">
@@ -140,6 +111,35 @@
             <span class="ach-desc">{{ a.desc }}</span>
           </div>
         </div>
+      </div>
+    </section>
+
+    <!-- ===== 学习热力图（单月） ===== -->
+    <section class="dash-section dash-section-heatmap">
+      <div class="section-inner">
+        <div class="hm-top">
+          <h2 class="sec-title">学习记录</h2>
+          <div class="hm-summary">
+            <span>42 天</span>
+            <span>连续 7 天</span>
+            <span>日均 4.2h</span>
+          </div>
+        </div>
+        <div class="hm-month-nav">
+          <button class="hm-month-btn" :class="{ active: hmMonth === i }" v-for="i in 5" :key="i" @click="hmMonth = i">{{ i }}月</button>
+        </div>
+        <div class="hm-month-grid">
+          <div v-for="week in monthWeeks" :key="week.label" class="hm-week-row">
+            <span class="hm-week-label">{{ week.label }}</span>
+            <div class="hm-week-cells">
+              <div v-for="cell in week.days" :key="cell.key" class="hm-cell"
+                :class="{ empty: !cell.inMonth }"
+                :style="cell.inMonth ? { background: monthHeatColor(cell.level) } : {}"
+                :data-tip="cell.tip" />
+            </div>
+          </div>
+        </div>
+        <div class="hm-legend"><span>少</span><span v-for="l in heatLevels" :key="l" class="lbb" :style="{ background: l }" /><span>多</span></div>
       </div>
     </section>
 

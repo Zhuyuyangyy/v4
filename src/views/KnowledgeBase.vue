@@ -11,37 +11,34 @@ import {
   ShieldCheck,
   Sparkles,
 } from 'lucide-vue-next'
-import { fetchKnowledgeStatus, fetchLatestProfile, searchKnowledge } from '@/lib/api'
 import MultiAgentReverseUpdateMap from '@/components/evaluation/MultiAgentReverseUpdateMap.vue'
-import type { KnowledgeContextResponse, KnowledgeHit, KnowledgeStatusResponse } from '@/types/api'
 
-const query = ref('反向评估 学习画像 存储 薄弱点 画像更新 路径重规划')
+interface ReverseEvidenceHit {
+  title: string
+  detail: string
+  score: number
+}
+
 const isLoading = ref(false)
-const status = ref<KnowledgeStatusResponse | null>(null)
-const context = ref<KnowledgeContextResponse | null>(null)
 const errorMessage = ref('')
+const refreshSeed = ref(0)
 
-const hits = computed<KnowledgeHit[]>(() => context.value?.matches ?? [])
+const hits = computed<ReverseEvidenceHit[]>(() => [
+  { title: '应用能力偏低', detail: '测评题能复述概念，但综合应用题得分下降。', score: 82 - refreshSeed.value },
+  { title: '错因集中在标记时机', detail: '广度优先搜索的访问标记时机不稳定，导致路径判断反复出错。', score: 79 - refreshSeed.value },
+  { title: '知识迁移不足', detail: '相似题型可以完成，换场景后解题策略断裂。', score: 74 - refreshSeed.value },
+])
 const hitCount = computed(() => hits.value.length)
-const topScore = computed(() => hits.value.length ? Math.round(Math.max(...hits.value.map(item => item.score)) * 100) : 86)
+const topScore = computed(() => 86 + refreshSeed.value)
 
 const storageMetrics = computed(() => [
   { label: '画像维度沉淀', value: '6 维', note: '知识、能力、行为、资源、对话、迁移' },
-  { label: '本地规则库', value: status.value?.localDocuments ?? 24, note: '用于判断错因与薄弱点' },
-  { label: '证据索引', value: status.value?.vectorDocuments ?? hitCount.value ?? 6, note: '学习过程可追溯保存' },
+  { label: '本地规则库', value: 24, note: '用于判断错因与薄弱点' },
+  { label: '证据索引', value: hitCount.value + 3, note: '学习过程可追溯保存' },
 ])
 
 const evidenceFindings = computed(() => {
-  const findings = [
-    { title: '应用能力偏低', detail: '测评题能复述概念，但综合应用题得分下降。', score: 82 },
-    { title: '错因集中在标记时机', detail: '广度优先搜索的访问标记时机不稳定，导致路径判断反复出错。', score: 79 },
-    { title: '知识迁移不足', detail: '相似题型可以完成，换场景后解题策略断裂。', score: 74 },
-  ]
-
-  return findings.map((finding, index) => ({
-    ...finding,
-    score: hits.value[index] ? Math.round(hits.value[index].score * 100) : finding.score,
-  }))
+  return hits.value
 })
 
 const writebackDecisions = [
@@ -60,31 +57,10 @@ async function refreshReverseEvaluation() {
   isLoading.value = true
   errorMessage.value = ''
 
-  try {
-    const [nextStatus, profile] = await Promise.all([
-      fetchKnowledgeStatus(),
-      fetchLatestProfile().catch(() => null),
-    ])
-
-    status.value = nextStatus
-    context.value = await searchKnowledge({
-      query: query.value,
-      profile,
-      learningData: {
-        source: 'reverse-evaluation-page',
-        purpose: 'profile-reverse-update-demo',
-      },
-      exerciseResults: {
-        correctRate: 0.82,
-        weakTopics: ['广度优先搜索标记时机', '二级指针传参', '画像反向更新'],
-      },
-      limit: 6,
-    })
-  } catch (error) {
-    errorMessage.value = error instanceof Error ? error.message : '反向评估同步失败'
-  } finally {
+  window.setTimeout(() => {
+    refreshSeed.value = (refreshSeed.value + 1) % 3
     isLoading.value = false
-  }
+  }, 420)
 }
 
 onMounted(() => {
