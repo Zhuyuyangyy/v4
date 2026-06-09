@@ -115,11 +115,6 @@ function handleNavClick(itemName: string) {
       </div>
     </nav>
 
-    <div class="edu-sidebar__mascot" aria-hidden="true">
-      <div class="edu-sidebar__sprite" />
-      <div class="edu-sidebar__halo" />
-    </div>
-
     <!-- Sidebar Footer -->
     <div class="p-5 pt-3">
       <div class="flex items-center gap-2.5 p-3 edu-sidebar__profile rounded-lg">

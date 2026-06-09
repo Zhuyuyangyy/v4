@@ -2,65 +2,48 @@
   <div
     v-if="viewMode === 'list'"
     @click="emit('cardClick', resource.id)"
-    :class="[
-      'w-full bg-white dark:bg-[#1e293b] rounded-xl p-4 border transition-all duration-200 hover:shadow-md flex items-center gap-4 cursor-pointer relative',
-      resource.featured
-        ? 'border-[#4a6cf7] bg-[#fafbff] dark:bg-[#4a6cf7]/10'
-        : 'border-[#e8e8e8] hover:border-[#bfbfbf] dark:border-slate-700/60 dark:hover:border-slate-600'
-    ]"
+    class="edu-resource-card edu-resource-card--list flex items-center gap-4 p-4 rounded-xl cursor-pointer relative group"
   >
     <div
-      :class="[
-        'px-2.5 py-1.5 rounded-lg flex flex-col items-center justify-center shrink-0 w-20 text-center gap-1',
-        categoryStyle.containerClass
-      ]"
+      class="edu-resource-card__category inline-flex items-center gap-1 px-2.5 py-1.5 rounded-md text-[12px] font-semibold shrink-0 w-20 text-center flex-col gap-1"
     >
       <component :is="categoryStyle.icon" class="w-4 h-4" />
-      <span class="text-[12px] font-semibold dark:text-slate-200">{{ resource.category }}</span>
+      <span>{{ resource.category }}</span>
     </div>
 
     <div class="flex-1 min-w-0">
       <div class="flex items-center gap-2 mb-1">
-        <h4 class="text-[16px] font-semibold text-[#1a1a2e] dark:text-white truncate">{{ resource.title }}</h4>
-        <span
-          :class="[
-            'text-[11px] font-medium px-1.5 py-0.5 rounded',
-            resource.difficulty === '高级'
-              ? 'bg-red-50 text-red-600 border border-red-100 dark:bg-red-900/20 dark:text-red-400 dark:border-red-800'
-              : resource.difficulty === '中级'
-                ? 'bg-orange-50 text-orange-600 border border-orange-100 dark:bg-orange-900/20 dark:text-orange-400 dark:border-orange-800'
-                : 'bg-green-50 text-green-600 border border-green-100 dark:bg-green-900/20 dark:text-green-400 dark:border-green-800'
-          ]"
-        >
+        <h4 class="text-[15px] font-bold text-white truncate">{{ resource.title }}</h4>
+        <span class="edu-resource-card__level text-[11px] font-semibold px-1.5 py-0.5 rounded">
           {{ resource.difficulty }}
         </span>
       </div>
-      <p class="text-[14px] text-[#8c8c8c] dark:text-slate-500 line-clamp-1 mb-2 leading-relaxed">
+      <p class="text-[13px] text-[#98a0cf] line-clamp-1 leading-relaxed">
         {{ resource.description }}
       </p>
-      <div class="flex flex-wrap gap-1.5">
+      <div class="flex flex-wrap gap-1.5 mt-1.5">
         <span
           v-for="(tag, idx) in resource.tags"
           :key="idx"
-          class="bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 rounded px-2 py-0.5 text-[12px]"
+          class="px-1.5 py-0.5 bg-white/5 text-[#8f98d3] text-[11px] rounded-sm border border-white/5"
         >
           {{ tag }}
         </span>
       </div>
     </div>
 
-    <div class="flex flex-col items-end shrink-0 text-right gap-1.5 min-w-[100px]">
-      <div class="text-[13px] text-[#8c8c8c] dark:text-slate-500 flex items-center gap-1">
-        <Eye class="w-3.5 h-3.5" />
-        <span>{{ resource.views >= 1000 ? `${(resource.views / 1000).toFixed(1)}k` : resource.views }} 次阅读</span>
+    <div class="flex flex-col items-end shrink-0 text-right gap-1.5 min-w-[90px]">
+      <div class="text-[12px] text-[#8f98d3] flex items-center gap-1">
+        <Eye class="w-3 h-3" />
+        <span>{{ resource.views >= 1000 ? `${(resource.views / 1000).toFixed(1)}k` : resource.views }}</span>
       </div>
-      <span class="text-[13px] text-[#bfbfbf] dark:text-slate-600 font-mono">{{ resource.date }}</span>
+      <span class="text-[11px] text-[#6b74a8] font-mono">{{ resource.date }}</span>
     </div>
 
     <div class="flex items-center gap-1 shrink-0" @click.stop>
       <button
         @click="emit('toggleStar', resource.id)"
-        class="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-[#d9d9d9] hover:text-[#faad14] transition-colors cursor-pointer"
+        class="p-1.5 rounded-lg hover:bg-white/10 text-[#6b74a8] hover:text-[#fadb14] transition-colors cursor-pointer"
       >
         <Star :class="['w-4 h-4', resource.starred ? 'text-[#fadb14] fill-[#fadb14]' : '']" />
       </button>
@@ -68,33 +51,33 @@
       <div class="relative" ref="dropdownRef">
         <button
           @click="showOptions = !showOptions"
-          class="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-[#bfbfbf] hover:text-[#595959] dark:hover:text-slate-300 transition-colors cursor-pointer"
+          class="p-1.5 rounded-lg hover:bg-white/10 text-[#6b74a8] hover:text-slate-300 transition-colors cursor-pointer"
         >
           <MoreVertical class="w-4 h-4" />
         </button>
 
         <div
           v-if="showOptions"
-          class="absolute right-0 mt-1.5 w-36 bg-white dark:bg-[#1e293b] rounded-lg shadow-xl border border-[#e8e8e8] dark:border-slate-700/60 py-1 z-20 animate-fade-in text-left"
+          class="absolute right-0 mt-1.5 w-36 bg-[#1e1b4b] rounded-lg shadow-xl border border-[rgba(117,98,255,0.25)] py-1 z-20 animate-fade-in text-left"
         >
           <button
             @click="handleMarkCompleted"
-            class="w-full text-left flex items-center gap-2 px-3 py-1.5 text-[13px] text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 font-medium"
+            class="w-full text-left flex items-center gap-2 px-3 py-1.5 text-[13px] text-emerald-400 hover:bg-emerald-900/30 font-medium"
           >
             <CheckCircle class="w-3.5 h-3.5" />
             <span>标记学完 (+{{ simulatedHours }}h)</span>
           </button>
           <button
             @click="handleToggleStarFromMenu"
-            class="w-full text-left flex items-center gap-2 px-3 py-1.5 text-[13px] text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800"
+            class="w-full text-left flex items-center gap-2 px-3 py-1.5 text-[13px] text-slate-300 hover:bg-white/5"
           >
             <Star class="w-3.5 h-3.5 text-amber-500" />
             <span>{{ resource.starred ? '取消收藏' : '加入收藏' }}</span>
           </button>
-          <div class="border-t border-slate-100 dark:border-slate-700 my-1"></div>
+          <div class="border-t border-white/10 my-1"></div>
           <button
             @click="handleCardClickFromMenu"
-            class="w-full text-left flex items-center gap-2 px-3 py-1.5 text-[13px] text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/30"
+            class="w-full text-left flex items-center gap-2 px-3 py-1.5 text-[13px] text-blue-400 hover:bg-blue-900/30"
           >
             <BookOpen class="w-3.5 h-3.5" />
             <span>新窗口阅读</span>
@@ -104,24 +87,15 @@
     </div>
   </div>
 
+  <!-- Grid 模式 -->
   <div
     v-else
     @click="emit('cardClick', resource.id)"
-    :class="[
-      'bg-white dark:bg-[#1e293b] border rounded-xl p-4 cursor-pointer hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300 relative flex flex-col justify-between',
-      resource.featured
-        ? 'border-[#4a6cf7] bg-gradient-to-b from-[#fafbff] to-white dark:from-[#4a6cf7]/10 dark:to-[#1e293b]'
-        : 'border-[#e8e8e8] hover:border-[#bfbfbf] dark:border-slate-700 dark:hover:border-slate-600'
-    ]"
+    class="edu-resource-card rounded-xl p-4 cursor-pointer relative flex flex-col justify-between h-[245px] group"
   >
     <div>
       <div class="flex justify-between items-center mb-2.5">
-        <div
-          :class="[
-            'inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-[13px] font-semibold shadow-2xs',
-            categoryStyle.containerClass
-          ]"
-        >
+        <div class="edu-resource-card__category inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-[13px] font-semibold">
           <component :is="categoryStyle.icon" class="w-3.5 h-3.5 shrink-0" />
           <span>{{ resource.category }}</span>
         </div>
@@ -129,7 +103,7 @@
         <div class="flex items-center gap-1" @click.stop>
           <button
             @click="emit('toggleStar', resource.id)"
-            class="p-1 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 hover:scale-105 transition-all text-[#d9d9d9] hover:text-[#fadb14] cursor-pointer"
+            class="p-1 rounded-full hover:bg-white/10 hover:scale-105 transition-all text-[#6b74a8] hover:text-[#fadb14] cursor-pointer"
             title="加入我的收藏"
           >
             <Star :class="['w-4 h-4', resource.starred ? 'text-[#fadb14] fill-[#fadb14]' : '']" />
@@ -137,29 +111,20 @@
         </div>
       </div>
 
-      <div class="mb-2">
+      <div class="mb-2.5">
         <div class="flex items-center gap-1.5 mb-1 flex-wrap">
           <h4
-            class="text-[16px] font-semibold text-[#1a1a2e] dark:text-white leading-snug line-clamp-1 hover:text-[#4a6cf7] dark:hover:text-[#6a8cff] duration-150 transition-colors"
+            class="text-[16px] font-bold text-white leading-snug line-clamp-1 duration-150 transition-colors"
             :title="resource.title"
           >
             {{ resource.title }}
           </h4>
-          <span
-            :class="[
-              'text-[11px] font-medium px-1.5 py-0.2 rounded shrink-0',
-              resource.difficulty === '高级'
-                ? 'bg-red-50 text-red-600 border border-red-100 dark:bg-red-900/20 dark:text-red-400 dark:border-red-800'
-                : resource.difficulty === '中级'
-                  ? 'bg-orange-50 text-orange-600 border border-orange-100 dark:bg-orange-900/20 dark:text-orange-400 dark:border-orange-800'
-                  : 'bg-green-50 text-green-600 border border-green-100 dark:bg-green-900/20 dark:text-green-400 dark:border-green-800'
-            ]"
-          >
+          <span class="edu-resource-card__level text-[11px] font-semibold px-1.5 py-0.5 rounded shrink-0">
             {{ resource.difficulty }}
           </span>
         </div>
         <p
-          class="text-[14px] text-[#8c8c8c] dark:text-slate-500 line-clamp-2 leading-relaxed h-[36px]"
+          class="text-[13px] text-[#98a0cf] line-clamp-2 leading-relaxed h-[36px]"
           :title="resource.description"
         >
           {{ resource.description }}
@@ -170,53 +135,60 @@
         <span
           v-for="(tag, idx) in resource.tags"
           :key="idx"
-          class="px-1.5 py-0.5 bg-[#f5f7fa] dark:bg-slate-800 text-[#8c8c8c] dark:text-slate-400 text-[12px] rounded-sm transition-colors hover:bg-slate-200 dark:hover:bg-slate-700"
+          class="px-1.5 py-0.5 bg-white/5 text-[#8f98d3] text-[11px] rounded-sm border border-white/5"
         >
           {{ tag }}
         </span>
       </div>
     </div>
 
-    <div class="border-t border-[#e8e8e8] dark:border-slate-700/60 pt-2.5 flex justify-between items-center mt-2.5">
-      <div class="flex items-center gap-2 text-[13px] text-[#8c8c8c] dark:text-slate-500">
-        <span class="font-mono text-[#bfbfbf] dark:text-slate-600">{{ resource.date }}</span>
-        <span class="w-1 h-1 bg-slate-300 dark:bg-slate-600 rounded-full"></span>
+    <div class="pt-2.5 flex justify-between items-center mt-auto">
+      <div class="text-[12px] text-[#8b92cc] flex items-center gap-2 font-mono">
+        <span>{{ resource.date }}</span>
+        <span class="w-1 h-1 bg-[#4a4680] rounded-full"></span>
         <span class="flex items-center gap-0.5">
-          <Eye class="w-3 h-3 text-[#bfbfbf] dark:text-slate-600" />
-          {{ resource.views >= 1000 ? `${(resource.views / 1000).toFixed(1)}k` : resource.views }} 次阅读
+          <Eye class="w-3 h-3" />
+          {{ resource.views >= 1000 ? `${(resource.views / 1000).toFixed(1)}k` : resource.views }}
         </span>
       </div>
 
-      <div class="relative" ref="dropdownRef" @click.stop>
+      <span class="edu-resource-card__cta flex items-center justify-center gap-1 text-[13px] font-bold transition-transform duration-200">
+        <BookOpen class="w-3 h-3" />
+        查看详情
+      </span>
+    </div>
+
+    <div class="absolute top-2 right-2" @click.stop>
+      <div class="relative" ref="dropdownRef">
         <button
           @click="showOptions = !showOptions"
-          class="p-1 rounded text-[#bfbfbf] hover:text-[#595959] dark:hover:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 shrink-0 cursor-pointer"
+          class="p-1 rounded hover:bg-white/10 text-[#6b74a8] hover:text-slate-300 shrink-0 cursor-pointer transition-colors"
         >
           <MoreVertical class="w-3.5 h-3.5" />
         </button>
 
         <div
           v-if="showOptions"
-          class="absolute right-0 bottom-full mb-1.5 w-36 bg-white dark:bg-[#1e293b] rounded-lg shadow-xl border border-[#e8e8e8] dark:border-slate-700/60 py-1 z-20 animate-fade-in text-left"
+          class="absolute right-0 mt-1 w-36 bg-[#1e1b4b] rounded-lg shadow-xl border border-[rgba(117,98,255,0.25)] py-1 z-20 animate-fade-in text-left"
         >
           <button
             @click="handleMarkCompleted"
-            class="w-full text-left flex items-center gap-2 px-3 py-1.5 text-[13px] text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 font-medium whitespace-nowrap"
+            class="w-full text-left flex items-center gap-2 px-3 py-1.5 text-[13px] text-emerald-400 hover:bg-emerald-900/30 font-medium whitespace-nowrap"
           >
             <CheckCircle class="w-3.5 h-3.5" />
             <span>标记学完 (+{{ simulatedHours }}h)</span>
           </button>
           <button
             @click="handleToggleStarFromMenu"
-            class="w-full text-left flex items-center gap-2 px-3 py-1.5 text-[13px] text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 whitespace-nowrap"
+            class="w-full text-left flex items-center gap-2 px-3 py-1.5 text-[13px] text-slate-300 hover:bg-white/5 whitespace-nowrap"
           >
             <Star class="w-3.5 h-3.5 text-amber-500" />
             <span>{{ resource.starred ? '取消收藏' : '加入收藏' }}</span>
           </button>
-          <div class="border-t border-[#e8e8e8] dark:border-slate-700/60 my-1"></div>
+          <div class="border-t border-white/10 my-1"></div>
           <button
             @click="handleCardClickFromMenu"
-            class="w-full text-left flex items-center gap-2 px-3 py-1.5 text-[13px] text-blue-600 dark:text-blue-400 hover:bg-[#ebf3ff] dark:hover:bg-blue-900/30 whitespace-nowrap"
+            class="w-full text-left flex items-center gap-2 px-3 py-1.5 text-[13px] text-blue-400 hover:bg-blue-900/30 whitespace-nowrap"
           >
             <BookOpen class="w-3.5 h-3.5" />
             <span>新窗口阅读</span>
@@ -257,43 +229,15 @@ const emit = defineEmits<{
 const showOptions = ref(false)
 const dropdownRef = ref<HTMLElement | null>(null)
 
-function getCategoryStyles(category: ResourceCategory): { icon: Component; containerClass: string } {
+function getCategoryStyles(category: ResourceCategory): { icon: Component } {
   switch (category) {
-    case '文档':
-      return {
-        icon: FileText,
-        containerClass: 'bg-[#e6f4ff] text-[#1677ff] border border-[#bae0ff]'
-      }
-    case '思维导图':
-      return {
-        icon: Network,
-        containerClass: 'bg-[#f6ffed] text-[#52c41a] border border-[#d9f7be]'
-      }
-    case '流程图':
-      return {
-        icon: Network,
-        containerClass: 'bg-[#f9f0ff] text-[#722ed1] border border-[#efdbff]'
-      }
-    case '习题':
-      return {
-        icon: HelpCircle,
-        containerClass: 'bg-[#fff7e6] text-[#fa8c16] border border-[#ffd591]'
-      }
-    case '视频':
-      return {
-        icon: Video,
-        containerClass: 'bg-[#fff1f0] text-[#ff4d4f] border border-[#ffccc7]'
-      }
-    case '代码':
-      return {
-        icon: Code,
-        containerClass: 'bg-[#e6fffb] text-[#13c2c2] border border-[#b5f5ec]'
-      }
-    default:
-      return {
-        icon: FileText,
-        containerClass: 'bg-gray-100 text-gray-700 border border-gray-200'
-      }
+    case '文档': return { icon: FileText }
+    case '思维导图': return { icon: Network }
+    case '流程图': return { icon: Network }
+    case '习题': return { icon: HelpCircle }
+    case '视频': return { icon: Video }
+    case '代码': return { icon: Code }
+    default: return { icon: FileText }
   }
 }
 
@@ -334,3 +278,74 @@ function handleCardClickFromMenu() {
   showOptions.value = false
 }
 </script>
+
+<style scoped>
+.edu-resource-card {
+  border: none;
+  background:
+    linear-gradient(180deg, rgba(29, 27, 83, 0.82), rgba(11, 13, 46, 0.96)),
+    radial-gradient(circle at 26% 0%, rgba(117, 71, 255, 0.22), transparent 36%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.05),
+    0 14px 42px rgba(3, 5, 22, 0.28);
+  overflow: hidden;
+}
+
+.edu-resource-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(90deg, transparent, rgba(149, 118, 255, 0.08), transparent),
+    radial-gradient(circle at 100% 100%, rgba(79, 56, 214, 0.2), transparent 34%);
+  opacity: 0;
+  transition: opacity 0.25s ease;
+  pointer-events: none;
+  border-radius: inherit;
+}
+
+.edu-resource-card:hover {
+  transform: translateY(-4px);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    0 18px 52px rgba(17, 10, 64, 0.5),
+    0 0 28px rgba(116, 79, 255, 0.22);
+}
+
+.edu-resource-card:hover::before {
+  opacity: 1;
+}
+
+.edu-resource-card--list:hover {
+  transform: none;
+}
+
+.edu-resource-card__category {
+  background: rgba(92, 75, 226, 0.26);
+  color: #c7d7ff;
+  border: 1px solid rgba(134, 116, 255, 0.3);
+  box-shadow: inset 0 0 16px rgba(118, 88, 255, 0.12);
+}
+
+.edu-resource-card__level {
+  border-color: rgba(255, 172, 83, 0.22);
+  background: rgba(255, 143, 58, 0.14);
+  color: #ffae4a;
+}
+
+.edu-resource-card__cta {
+  min-width: 0;
+  max-width: 130px;
+  height: 34px;
+  padding: 0 14px;
+  color: #fff;
+  border-radius: 7px;
+  background: linear-gradient(135deg, #7e3cff, #4e33b6);
+  box-shadow: 0 10px 24px rgba(76, 48, 180, 0.3);
+}
+
+.edu-resource-card:hover .edu-resource-card__cta {
+  transform: translateY(-1px);
+  box-shadow: 0 12px 30px rgba(126, 78, 255, 0.44);
+}
+</style>
