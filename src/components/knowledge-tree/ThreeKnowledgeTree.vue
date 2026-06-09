@@ -42,6 +42,12 @@ const props = withDefaults(
     knowledgePoints?: KnowledgePoint[]
     sceneScale?: number
     sceneOffsetY?: number
+    sceneStretchY?: number
+    hideExposedRoots?: boolean
+    horizontalOnlyControls?: boolean
+    showBackgroundStage?: boolean
+    sceneDepthOffset?: number
+    sceneOffsetX?: number
   }>(),
   {
     modelUrl: PRIMARY_TREE_MODEL_URL,
@@ -50,6 +56,12 @@ const props = withDefaults(
     knowledgePoints: () => [],
     sceneScale: 11.4,
     sceneOffsetY: 4.35,
+    sceneStretchY: 1,
+    hideExposedRoots: false,
+    horizontalOnlyControls: false,
+    showBackgroundStage: true,
+    sceneDepthOffset: -0.25,
+    sceneOffsetX: 0.5,
   },
 )
 
@@ -61,6 +73,7 @@ const canvasRef = ref<HTMLCanvasElement | null>(null)
 const loading = ref(true)
 const loadError = ref(false)
 const activeMarker = ref<GraphMarker | null | any>(null)
+const selectedMarkerId = ref<string | null>(null)
 const activeMarkerView = computed<GraphMarker>(() => activeMarker.value ?? {
   id: 'empty',
   type: 'knowledge',
@@ -113,6 +126,7 @@ let camera: THREE.PerspectiveCamera | null = null
 let controls: OrbitControls | null = null
 let animationId = 0
 let rootGroup: THREE.Group | null = null
+let worldRotationGroup: THREE.Group | null = null
 let backgroundStageGroup: THREE.Group | null = null
 let starGroup: THREE.Group | null = null
 let markerGroup: THREE.Group | null = null
@@ -125,6 +139,10 @@ let fluidGlowTexture: THREE.CanvasTexture | null = null
 let fluidBumpTexture: THREE.CanvasTexture | null = null
 const fluidMaterials: THREE.MeshStandardMaterial[] = []
 const streamMaterials: THREE.MeshBasicMaterial[] = []
+let isTreeDragging = false
+let treeDragStartX = 0
+let treeDragLastX = 0
+let treeDragMoved = false
 
 type DisposableObject = THREE.Object3D & {
   geometry?: THREE.BufferGeometry
@@ -135,6 +153,10 @@ function createScene() {
   scene = new THREE.Scene()
   scene.background = null
   scene.fog = new THREE.Fog(0x080914, 18, 48)
+
+  worldRotationGroup = new THREE.Group()
+  worldRotationGroup.name = 'KnowledgeTreeWorldRotationGroup'
+  scene.add(worldRotationGroup)
 
   camera = new THREE.PerspectiveCamera(38, 1, 0.1, 100)
   camera.position.set(5.8, 7.9, 13.2)
@@ -311,6 +333,20 @@ function createAttachedStar(position: THREE.Vector3, size: number, point: Knowle
   apple.scale.setScalar(weak ? 1.06 : 1)
   group.add(apple)
 
+  const hitTarget = new THREE.Mesh(
+    new THREE.SphereGeometry(size * (complete ? 3.05 : 2.55), 22, 16),
+    new THREE.MeshBasicMaterial({
+      color: 0xffffff,
+      transparent: true,
+      opacity: 0,
+      depthWrite: false,
+      depthTest: false,
+    }),
+  )
+  hitTarget.name = 'AppleClickTarget'
+  hitTarget.renderOrder = 30
+  group.add(hitTarget)
+
   setMarkerData(group, marker)
   return group
 }
@@ -342,6 +378,66 @@ function createMarkerStar(position: THREE.Vector3, size: number, color: number, 
   const apple = createAppleMesh(size, color, marker.type === 'course')
   apple.renderOrder = 20
   group.add(apple)
+
+  const hitTarget = new THREE.Mesh(
+    new THREE.SphereGeometry(size * (marker.type === 'course' ? 3.1 : 2.35), 22, 16),
+    new THREE.MeshBasicMaterial({
+      color: 0xffffff,
+      transparent: true,
+      opacity: 0,
+      depthWrite: false,
+      depthTest: false,
+    }),
+  )
+  hitTarget.name = 'AppleClickTarget'
+  hitTarget.renderOrder = 30
+  group.add(hitTarget)
+
+  setMarkerData(group, marker)
+  return group
+}
+
+function createBranchHotspot(position: THREE.Vector3, marker: GraphMarker, index: number, progress: number) {
+  const group = new THREE.Group()
+  group.name = `CourseBranchHotspot-${index}`
+  group.position.copy(position)
+  group.rotation.set(-0.34, 0.1, -0.42 + index * 0.42)
+  group.userData = {
+    complete: progress >= 75,
+    marker,
+  }
+
+  const hitTarget = new THREE.Mesh(
+    new THREE.SphereGeometry(1, 24, 14),
+    new THREE.MeshBasicMaterial({
+      color: 0xffffff,
+      transparent: true,
+      opacity: 0,
+      depthWrite: false,
+      depthTest: false,
+    }),
+  )
+  hitTarget.name = 'CourseBranchClickTarget'
+  hitTarget.scale.set(3.1, 0.74, 1.15)
+  group.add(hitTarget)
+
+  const tone = progress >= 80 ? 0xdb3f36 : progress >= 55 ? 0x65dca2 : 0xf5a13d
+  const branchAura = new THREE.Mesh(
+    new THREE.RingGeometry(0.58, 0.62, 72),
+    new THREE.MeshBasicMaterial({
+      color: tone,
+      transparent: true,
+      opacity: 0.24,
+      depthWrite: false,
+      depthTest: false,
+      blending: THREE.AdditiveBlending,
+      side: THREE.DoubleSide,
+    }),
+  )
+  branchAura.name = 'CourseBranchAura'
+  branchAura.scale.set(3.15, 0.42, 1)
+  branchAura.renderOrder = 16
+  group.add(branchAura)
 
   setMarkerData(group, marker)
   return group
@@ -470,6 +566,7 @@ function addGraphMarkers(model: THREE.Group) {
     items: branchGroups.value.map(group => group.label),
   }
   markerGroup.add(createMarkerStar(new THREE.Vector3(0.08, 12.15, 3.55), 0.38, 0xdb3f36, courseMarker, -0.08))
+  markerGroup.add(createBranchHotspot(new THREE.Vector3(0.08, 8.7, 3.18), courseMarker, -1, courseProgress.value))
 
   const branchAnchors = [
     new THREE.Vector3(-3.65, 10.2, 3.05),
@@ -488,7 +585,9 @@ function addGraphMarkers(model: THREE.Group) {
       items: group.points.map(point => `${point.name} · ${markerStatusLabel(point.status)} · ${point.progress ?? 0}%`),
     }
 
-    markerGroup!.add(createMarkerStar(branchAnchors[index] ?? branchAnchors[0], 0.3, progress >= 80 ? 0xdb3f36 : 0x65dca2, marker, index * 0.22))
+    const anchor = branchAnchors[index] ?? branchAnchors[index % branchAnchors.length] ?? branchAnchors[0]
+    markerGroup!.add(createBranchHotspot(anchor, marker, index, progress))
+    markerGroup!.add(createMarkerStar(anchor, 0.3, progress >= 80 ? 0xdb3f36 : 0x65dca2, marker, index * 0.22))
   })
 
   model.add(markerGroup)
@@ -713,15 +812,16 @@ function enhanceBackgroundStage(model: THREE.Group) {
       material.depthWrite = true
 
       if (material instanceof THREE.MeshStandardMaterial) {
-        material.roughness = 0.62
-        material.metalness = Math.max(material.metalness, 0.18)
-        material.envMapIntensity = 0.55
+        material.roughness = 0.56
+        material.metalness = Math.max(material.metalness, 0.16)
+        material.envMapIntensity = 0.72
         if (name.includes('light') || name.includes('blue') || name.includes('crystal') || name.includes('emissive')) {
           material.emissive = new THREE.Color(0x139cff)
-          material.emissiveIntensity = 1.05
+          material.emissiveIntensity = 1.18
         } else {
-          material.emissive = new THREE.Color(0x06152a)
-          material.emissiveIntensity = 0.18
+          material.color.lerp(new THREE.Color(0xf3d6d9), 0.18)
+          material.emissive = new THREE.Color(0x1b2235)
+          material.emissiveIntensity = 0.24
         }
       }
     })
@@ -753,16 +853,16 @@ function fitBackgroundStageToScene(model: THREE.Group, role: StagePieceRole) {
   model.traverse(child => {
     child.matrixAutoUpdate = false
   })
-  model.renderOrder = -4
+  model.renderOrder = -1
 }
 
 function loadBackgroundStage() {
-  if (!scene) return
+  if (!worldRotationGroup) return
 
   const loader = new GLTFLoader()
   backgroundStageGroup = new THREE.Group()
   backgroundStageGroup.name = 'KnowledgeTreeStageSet'
-  scene.add(backgroundStageGroup)
+  worldRotationGroup.add(backgroundStageGroup)
 
   const pieces: Array<{ url: string; role: StagePieceRole }> = [
     { url: BACKGROUND_STAGE_MODEL_URL, role: 'main' },
@@ -943,10 +1043,22 @@ function fitModelToScene(model: THREE.Group) {
     const norm = geom.attributes.normal
     const idx = geom.index
     if (!pos || !norm || !idx) return
+    geom.computeBoundingBox()
+    const box = geom.boundingBox
+    if (!box) return
+    const centerX = (box.min.x + box.max.x) * 0.5
+    const centerZ = (box.min.z + box.max.z) * 0.5
+    const lowRootBandY = box.min.y + 2.55
+    const exposedRootRadius = 1.05
     const clipThresholdY = -2.5
     const keepMask = new Uint8Array(pos.count)
     for (let i = 0; i < pos.count; i++) {
-      keepMask[i] = pos.getY(i) >= clipThresholdY ? 1 : 0
+      const x = pos.getX(i) - centerX
+      const y = pos.getY(i)
+      const z = pos.getZ(i) - centerZ
+      const radial = Math.hypot(x, z)
+      const isExposedRoot = props.hideExposedRoots && y < lowRootBandY && radial > exposedRootRadius
+      keepMask[i] = y >= clipThresholdY && !isExposedRoot ? 1 : 0
     }
     const newIdxArr: number[] = []
     for (let i = 0; i < idx.count; i += 3) {
@@ -971,13 +1083,12 @@ function fitModelToScene(model: THREE.Group) {
   const size = box.getSize(new THREE.Vector3())
   const maxDim = Math.max(size.x, size.y, size.z)
   const scale = props.sceneScale / maxDim
+  const scaleY = scale * props.sceneStretchY
 
-  model.scale.setScalar(scale)
-  model.position.sub(center.multiplyScalar(scale))
-  model.position.y -= box.min.y * scale
+  model.scale.set(scale, scaleY, scale)
+  model.position.set(-center.x * scale, -center.y * scaleY, -center.z * scale)
+  model.position.y -= box.min.y * scaleY
   model.position.y += props.sceneOffsetY - 3.2
-  model.position.x += 0.5
-  model.position.z += 0.3
 }
 
 function loadModel(modelUrl = props.modelUrl, hasTriedFallback = false) {
@@ -997,7 +1108,9 @@ function loadModel(modelUrl = props.modelUrl, hasTriedFallback = false) {
         addGraphMarkers(rootGroup)
         addAttachedStars(rootGroup)
 
-        scene!.add(rootGroup)
+        rootGroup.position.x += props.sceneOffsetX
+        rootGroup.position.z += props.sceneDepthOffset
+        worldRotationGroup!.add(rootGroup)
         loadError.value = false
         loading.value = false
       } catch (error) {
@@ -1056,7 +1169,9 @@ function initRenderer() {
   controls = new OrbitControls(camera!, canvasRef.value)
   controls.enableDamping = true
   controls.dampingFactor = 0.06
+  controls.enabled = !props.horizontalOnlyControls
   controls.enablePan = false
+  controls.enableRotate = !props.horizontalOnlyControls
   controls.minDistance = 3.4
   controls.maxDistance = 22
   controls.target.set(0, 5.9, 0)
@@ -1064,11 +1179,14 @@ function initRenderer() {
   controls.update()
 
   raycaster = new THREE.Raycaster()
+  canvasRef.value.addEventListener('pointerdown', handlePointerDown)
   canvasRef.value.addEventListener('pointermove', handlePointerMove)
+  canvasRef.value.addEventListener('pointerup', handlePointerUp)
+  canvasRef.value.addEventListener('pointerleave', handlePointerUp)
   canvasRef.value.addEventListener('click', handleCanvasClick)
 }
 
-function markerFromIntersection(event: PointerEvent) {
+function markerHitFromIntersection(event: PointerEvent) {
   if (!canvasRef.value || !camera || !raycaster || !interactiveObjects.length) return null
 
   const rect = canvasRef.value.getBoundingClientRect()
@@ -1077,18 +1195,69 @@ function markerFromIntersection(event: PointerEvent) {
   raycaster.setFromCamera(pointer, camera)
 
   const hits = raycaster.intersectObjects(interactiveObjects, true)
-  const hit = hits.find(item => item.object.userData.marker)
-  return (hit?.object.userData.marker ?? null) as GraphMarker | null
+  const markerHits = hits.filter(item => item.object.userData.marker)
+  const hit = markerHits.find(item => item.object.userData.marker?.type === 'knowledge') ?? markerHits[0]
+  if (!hit) return null
+  const marker = hit.object.userData.marker as GraphMarker
+  let object = hit.object
+  while (object.parent?.userData.marker?.id === marker.id) {
+    object = object.parent
+  }
+  return { marker, object }
+}
+
+function markerFromIntersection(event: PointerEvent) {
+  return markerHitFromIntersection(event)?.marker ?? null
+}
+
+function handlePointerDown(event: PointerEvent) {
+  if (!props.horizontalOnlyControls || !canvasRef.value) return
+  isTreeDragging = true
+  treeDragMoved = false
+  treeDragStartX = event.clientX
+  treeDragLastX = event.clientX
+  canvasRef.value.setPointerCapture?.(event.pointerId)
+  canvasRef.value.style.cursor = 'grabbing'
 }
 
 function handlePointerMove(event: PointerEvent) {
   if (!canvasRef.value) return
+  if (props.horizontalOnlyControls && isTreeDragging && worldRotationGroup) {
+    const dx = event.clientX - treeDragLastX
+    if (Math.abs(event.clientX - treeDragStartX) > 4) {
+      treeDragMoved = true
+    }
+    worldRotationGroup.rotation.y += dx * 0.006
+    treeDragLastX = event.clientX
+    canvasRef.value.style.cursor = 'grabbing'
+    return
+  }
   canvasRef.value.style.cursor = markerFromIntersection(event) ? 'pointer' : 'grab'
 }
 
+function handlePointerUp(event: PointerEvent) {
+  if (!canvasRef.value) return
+  if (
+    props.horizontalOnlyControls
+    && isTreeDragging
+    && canvasRef.value.hasPointerCapture?.(event.pointerId)
+  ) {
+    canvasRef.value.releasePointerCapture(event.pointerId)
+  }
+  isTreeDragging = false
+  canvasRef.value.style.cursor = 'grab'
+}
+
 function handleCanvasClick(event: PointerEvent) {
-  const marker = markerFromIntersection(event)
-  if (marker) {
+  if (treeDragMoved) {
+    treeDragMoved = false
+    return
+  }
+  const hit = markerHitFromIntersection(event)
+  if (hit?.marker) {
+    const { marker, object } = hit
+    object.userData.clickedUntil = performance.now() + 720
+    selectedMarkerId.value = marker.id
     activeMarker.value = marker
     emit('markerSelect', marker)
   }
@@ -1097,8 +1266,7 @@ function handleCanvasClick(event: PointerEvent) {
 function animate() {
   animationId = requestAnimationFrame(animate)
 
-  if (rootGroup) {
-    rootGroup.rotation.y += 0.0012
+  if (rootGroup && worldRotationGroup) {
     const t = performance.now() * 0.004
     const flow = (performance.now() * 0.00018) % 1
     if (fluidSurfaceTexture) fluidSurfaceTexture.offset.y = -flow * 0.35
@@ -1112,11 +1280,17 @@ function animate() {
     })
     starGroup?.children.forEach((star, index) => {
       const pulse = 1 + Math.sin(t + index * 0.7) * (star.userData.complete ? 0.095 : 0.035)
-      star.scale.setScalar(pulse)
+      const clickedUntil = star.userData.clickedUntil ?? 0
+      const clickBoost = clickedUntil > performance.now() ? 0.22 * ((clickedUntil - performance.now()) / 720) : 0
+      const selectedBoost = star.userData.marker?.id === selectedMarkerId.value ? 0.1 : 0
+      star.scale.setScalar(pulse + clickBoost + selectedBoost)
     })
     markerGroup?.children.forEach((star, index) => {
       const pulse = 1 + Math.sin(t * 0.8 + index * 0.9) * 0.075
-      star.scale.setScalar(pulse)
+      const clickedUntil = star.userData.clickedUntil ?? 0
+      const clickBoost = clickedUntil > performance.now() ? 0.18 * ((clickedUntil - performance.now()) / 720) : 0
+      const selectedBoost = star.userData.marker?.id === selectedMarkerId.value ? 0.08 : 0
+      star.scale.setScalar(pulse + clickBoost + selectedBoost)
     })
     auraGroup?.children.forEach((aura, index) => {
       const pulse = 1 + Math.sin(t * 0.65 + index * 1.2) * 0.055
@@ -1150,8 +1324,10 @@ function disposeObject(object: DisposableObject) {
 }
 
 function removeCurrentModel() {
-  if (rootGroup && scene) {
-    scene.remove(rootGroup)
+  if (rootGroup && worldRotationGroup) {
+    worldRotationGroup.remove(rootGroup)
+  }
+  if (rootGroup) {
     rootGroup.traverse(child => disposeObject(child as DisposableObject))
   }
   rootGroup = null
@@ -1164,8 +1340,8 @@ function removeCurrentModel() {
 }
 
 function removeBackgroundStage() {
-  if (backgroundStageGroup && scene) {
-    scene.remove(backgroundStageGroup)
+  if (backgroundStageGroup && worldRotationGroup) {
+    worldRotationGroup.remove(backgroundStageGroup)
     backgroundStageGroup.traverse(child => disposeObject(child as DisposableObject))
   }
   backgroundStageGroup = null
@@ -1174,7 +1350,9 @@ function removeBackgroundStage() {
 onMounted(() => {
   createScene()
   initRenderer()
-  loadBackgroundStage()
+  if (props.showBackgroundStage) {
+    loadBackgroundStage()
+  }
   loadModel()
   animate()
   window.addEventListener('resize', handleResize)
@@ -1184,7 +1362,10 @@ onBeforeUnmount(() => {
   cancelAnimationFrame(animationId)
   window.removeEventListener('resize', handleResize)
   controls?.dispose()
+  canvasRef.value?.removeEventListener('pointerdown', handlePointerDown)
   canvasRef.value?.removeEventListener('pointermove', handlePointerMove)
+  canvasRef.value?.removeEventListener('pointerup', handlePointerUp)
+  canvasRef.value?.removeEventListener('pointerleave', handlePointerUp)
   canvasRef.value?.removeEventListener('click', handleCanvasClick)
   removeCurrentModel()
   removeBackgroundStage()
@@ -1193,6 +1374,7 @@ onBeforeUnmount(() => {
   fluidGlowTexture?.dispose()
   fluidBumpTexture?.dispose()
   scene?.clear()
+  worldRotationGroup = null
 })
 
 watch(() => props.modelUrl, () => {
