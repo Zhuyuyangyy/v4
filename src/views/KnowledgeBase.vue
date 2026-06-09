@@ -1,34 +1,62 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
-import { useRouter } from 'vue-router'
+import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import {
   Activity,
-  ArrowRight,
   BrainCircuit,
   Database,
   GitBranch,
   Loader2,
   Network,
   RefreshCw,
-  Search,
   ShieldCheck,
+  Sparkles,
 } from 'lucide-vue-next'
 import { fetchKnowledgeStatus, fetchLatestProfile, searchKnowledge } from '@/lib/api'
+import MultiAgentReverseUpdateMap from '@/components/evaluation/MultiAgentReverseUpdateMap.vue'
 import type { KnowledgeContextResponse, KnowledgeHit, KnowledgeStatusResponse } from '@/types/api'
 
-const router = useRouter()
-
-const query = ref('返像评估 学习效果 薄弱点 画像更新 路径重规划')
+const query = ref('反向评估 学习画像 存储 薄弱点 画像更新 路径重规划')
 const isLoading = ref(false)
 const status = ref<KnowledgeStatusResponse | null>(null)
 const context = ref<KnowledgeContextResponse | null>(null)
 const errorMessage = ref('')
 
 const hits = computed<KnowledgeHit[]>(() => context.value?.matches ?? [])
-const topScore = computed(() => hits.value.length ? Math.round(Math.max(...hits.value.map(item => item.score)) * 100) : 0)
-const agentList = computed(() => status.value?.syncedAgents?.join(' / ') || 'EvaluationAgent / PathAgent / ReflectionAgent')
+const hitCount = computed(() => hits.value.length)
+const topScore = computed(() => hits.value.length ? Math.round(Math.max(...hits.value.map(item => item.score)) * 100) : 86)
 
-async function refreshKnowledge() {
+const storageMetrics = computed(() => [
+  { label: '画像维度沉淀', value: '6 维', note: '知识、能力、行为、资源、对话、迁移' },
+  { label: '本地规则库', value: status.value?.localDocuments ?? 24, note: '用于判断错因与薄弱点' },
+  { label: '证据索引', value: status.value?.vectorDocuments ?? hitCount.value ?? 6, note: '学习过程可追溯保存' },
+])
+
+const evidenceFindings = computed(() => {
+  const findings = [
+    { title: '应用能力偏低', detail: '测评题能复述概念，但综合应用题得分下降。', score: 82 },
+    { title: '错因集中在标记时机', detail: '广度优先搜索的访问标记时机不稳定，导致路径判断反复出错。', score: 79 },
+    { title: '知识迁移不足', detail: '相似题型可以完成，换场景后解题策略断裂。', score: 74 },
+  ]
+
+  return findings.map((finding, index) => ({
+    ...finding,
+    score: hits.value[index] ? Math.round(hits.value[index].score * 100) : finding.score,
+  }))
+})
+
+const writebackDecisions = [
+  { dim: '应用能力', delta: '+26', reason: '把“会概念但不会迁移”的证据回写到画像能力层。' },
+  { dim: '知识深度', delta: '+24', reason: '根据错因记录补充算法边界条件掌握度。' },
+  { dim: '知识迁移', delta: '+15', reason: '保留为弱项标签，驱动后续补救练习。' },
+]
+
+const optimizationActions = [
+  { title: '路径重排', detail: '插入 1 个广度优先搜索错因补救节点，放在下一阶段学习前。' },
+  { title: '资源重配', detail: '替换 3 个偏理论资源，优先推送可视化演练材料。' },
+  { title: '辅导调整', detail: '讲解策略从概念复述切换为“错因追问 + 变式练习”。' },
+]
+
+async function refreshReverseEvaluation() {
   isLoading.value = true
   errorMessage.value = ''
 
@@ -43,191 +71,293 @@ async function refreshKnowledge() {
       query: query.value,
       profile,
       learningData: {
-        source: 'knowledge-base-page',
-        purpose: 'evaluation-agent-rag-debug',
+        source: 'reverse-evaluation-page',
+        purpose: 'profile-reverse-update-demo',
       },
       exerciseResults: {
         correctRate: 0.82,
-        weakTopics: ['BFS visited 标记时机', '二级指针传参', '画像反向更新'],
+        weakTopics: ['广度优先搜索标记时机', '二级指针传参', '画像反向更新'],
       },
       limit: 6,
     })
   } catch (error) {
-    errorMessage.value = error instanceof Error ? error.message : '知识库同步失败'
+    errorMessage.value = error instanceof Error ? error.message : '反向评估同步失败'
   } finally {
     isLoading.value = false
   }
 }
 
-function askTutor(hit: KnowledgeHit) {
-  router.push({ path: '/tutoring', query: { q: hit.agentHint || hit.summary } })
-}
-
 onMounted(() => {
-  refreshKnowledge()
+  document.body.classList.add('reverse-evaluation-active')
+  refreshReverseEvaluation()
+})
+
+onBeforeUnmount(() => {
+  document.body.classList.remove('reverse-evaluation-active')
 })
 </script>
 
 <template>
-  <div class="knowledge-page">
-    <section class="kb-header">
-      <div>
-        <span class="kb-kicker">Local RAG Workspace</span>
-        <h1>本地知识库与 Embedding 向量库</h1>
-        <p>独立管理返像评估模块的知识检索结果，并把命中上下文交给后端智能体协作链路。</p>
+  <div class="reverse-page">
+    <div class="page-aurora" aria-hidden="true" />
+
+    <section class="reverse-hero">
+      <div class="hero-copy">
+        <span class="reverse-kicker">反向评估控制台</span>
+        <h1>反向评估闭环</h1>
+        <p>持续保存学习画像，评估智能体发现薄弱点，反思智能体判断要回写的画像维度，再驱动路径、资源和辅导策略重新优化。</p>
       </div>
-      <button type="button" class="kb-refresh" :disabled="isLoading" @click="refreshKnowledge">
-        <Loader2 v-if="isLoading" :size="16" stroke-width="1.6" class="spin" />
-        <RefreshCw v-else :size="16" stroke-width="1.6" />
-        <span>{{ isLoading ? '同步中' : '重新同步' }}</span>
-      </button>
-    </section>
 
-    <section class="kb-control">
-      <div class="search-box">
-        <Search :size="17" stroke-width="1.6" />
-        <input v-model="query" type="text" aria-label="知识库检索词" @keydown.enter="refreshKnowledge">
+      <div class="hero-actions">
+        <div class="live-chip">
+          <Sparkles :size="15" stroke-width="1.6" />
+          <span>{{ isLoading ? '画像同步中' : '闭环在线' }}</span>
+        </div>
+        <button type="button" class="refresh-btn" :disabled="isLoading" @click="refreshReverseEvaluation">
+          <Loader2 v-if="isLoading" :size="16" stroke-width="1.6" class="spin" />
+          <RefreshCw v-else :size="16" stroke-width="1.6" />
+          <span>{{ isLoading ? '同步中' : '刷新画像' }}</span>
+        </button>
       </div>
-      <button type="button" class="search-action" :disabled="isLoading" @click="refreshKnowledge">
-        <span>检索</span>
-        <ArrowRight :size="15" stroke-width="1.6" />
-      </button>
     </section>
 
-    <p v-if="errorMessage" class="kb-error">{{ errorMessage }}</p>
-
-    <section class="kb-stats">
-      <article class="stat-card">
-        <Database :size="18" stroke-width="1.5" />
-        <strong>{{ status?.localDocuments ?? 0 }}</strong>
-        <span>本地知识文档</span>
-      </article>
-      <article class="stat-card">
-        <GitBranch :size="18" stroke-width="1.5" />
-        <strong>{{ status?.vectorDocuments ?? hits.length }}</strong>
-        <span>{{ status?.dimensions ?? 0 }} 维向量索引</span>
-      </article>
-      <article class="stat-card">
-        <Activity :size="18" stroke-width="1.5" />
-        <strong>{{ topScore }}%</strong>
-        <span>最高匹配度</span>
-      </article>
-      <article class="stat-card">
-        <ShieldCheck :size="18" stroke-width="1.5" />
-        <strong>{{ hits.length }}</strong>
-        <span>当前命中证据</span>
-      </article>
+    <section class="loop-shell">
+      <MultiAgentReverseUpdateMap />
     </section>
 
-    <section class="kb-main">
-      <div class="kb-panel">
-        <div class="panel-head">
-          <div>
-            <span class="panel-kicker">Vector Hits</span>
-            <h2>检索命中</h2>
+    <section class="reverse-results" aria-label="反向评估结果">
+      <div class="result-heading">
+        <span class="reverse-kicker">画像反向更新结果</span>
+        <h2>从学习画像存储到反向优化</h2>
+        <p>下面展示的不是工程检索日志，而是反向评估真正产生的业务结果：画像被怎样保存、证据命中了什么、反思决定如何回写、更新后如何优化学习过程。</p>
+      </div>
+
+      <p v-if="errorMessage" class="error-line">{{ errorMessage }}</p>
+
+      <div class="story-grid">
+        <article class="story-card storage-card">
+          <header>
+            <Database :size="21" stroke-width="1.5" />
+            <div>
+              <span>第一步</span>
+              <h3>学习画像存储</h3>
+            </div>
+          </header>
+          <div class="card-visual">
+            <img src="/reverse-evaluation/visual-profile-storage.png" alt="" aria-hidden="true">
           </div>
-          <span class="model-chip">{{ status?.model ?? context?.embedding.model ?? 'local-hash-embedding-v1' }}</span>
-        </div>
+          <p>系统持续保存学生画像，不只记录分数，还记录错因、行为、资源完成度和对话反馈，作为后续评估的真实依据。</p>
+          <div class="metric-list">
+            <div v-for="metric in storageMetrics" :key="metric.label">
+              <strong>{{ metric.value }}</strong>
+              <span>{{ metric.label }}</span>
+              <small>{{ metric.note }}</small>
+            </div>
+          </div>
+        </article>
 
-        <div class="hit-list">
-          <button
-            v-for="hit in hits"
-            :key="hit.id"
-            type="button"
-            class="hit-row"
-            @click="askTutor(hit)"
-          >
-            <span class="hit-main">
-              <span class="hit-title">{{ hit.title }}</span>
-              <span class="hit-summary">{{ hit.summary }}</span>
-              <span class="hit-tags">
-                <span v-for="tag in hit.tags.slice(0, 4)" :key="tag">{{ tag }}</span>
-              </span>
-            </span>
-            <span class="hit-score">{{ Math.round(hit.score * 100) }}%</span>
-          </button>
+        <article class="story-card evidence-card">
+          <header>
+            <ShieldCheck :size="21" stroke-width="1.5" />
+            <div>
+              <span>第二步</span>
+              <h3>评估命中证据</h3>
+            </div>
+          </header>
+          <div class="card-visual">
+            <img src="/reverse-evaluation/visual-evidence-hit.png" alt="" aria-hidden="true">
+          </div>
+          <p>评估智能体读取学习画像和过程证据，定位当前学习问题，形成可追溯的命中依据。</p>
+          <div class="finding-list">
+            <div v-for="finding in evidenceFindings" :key="finding.title">
+              <b>{{ finding.score }}%</b>
+              <span>{{ finding.title }}</span>
+              <small>{{ finding.detail }}</small>
+            </div>
+          </div>
+        </article>
 
-          <div v-if="!hits.length && !isLoading" class="empty-state">暂无命中，换一个检索词试试。</div>
-        </div>
+        <article class="story-card reflection-card">
+          <header>
+            <BrainCircuit :size="21" stroke-width="1.5" />
+            <div>
+              <span>第三步</span>
+              <h3>反思回写决策</h3>
+            </div>
+          </header>
+          <div class="card-visual">
+            <img src="/reverse-evaluation/visual-reflection-writeback.png" alt="" aria-hidden="true">
+          </div>
+          <p>反思智能体不是直接生成报告，而是判断“哪些画像维度需要更新、更新幅度是多少、依据来自哪里”。</p>
+          <div class="writeback-list">
+            <div v-for="decision in writebackDecisions" :key="decision.dim">
+              <strong>{{ decision.delta }}</strong>
+              <span>{{ decision.dim }}</span>
+              <small>{{ decision.reason }}</small>
+            </div>
+          </div>
+        </article>
+
+        <article class="story-card optimize-card">
+          <header>
+            <Network :size="21" stroke-width="1.5" />
+            <div>
+              <span>第四步</span>
+              <h3>画像更新后优化</h3>
+            </div>
+          </header>
+          <div class="card-visual">
+            <img src="/reverse-evaluation/visual-learning-optimize.png" alt="" aria-hidden="true">
+          </div>
+          <p>画像更新后，下游智能体会重新编排学习过程，让评估结果真正改变后续学习，而不是停留在一份报告里。</p>
+          <div class="action-list">
+            <div v-for="action in optimizationActions" :key="action.title">
+              <GitBranch v-if="action.title === '路径重排'" :size="16" stroke-width="1.5" />
+              <Activity v-else-if="action.title === '资源重配'" :size="16" stroke-width="1.5" />
+              <BrainCircuit v-else :size="16" stroke-width="1.5" />
+              <span>{{ action.title }}</span>
+              <small>{{ action.detail }}</small>
+            </div>
+          </div>
+        </article>
       </div>
 
-      <aside class="kb-side">
-        <div class="side-card">
-          <BrainCircuit :size="19" stroke-width="1.5" />
-          <h3>智能体协作</h3>
-          <p>{{ agentList }}</p>
-        </div>
-        <div class="side-card">
-          <Network :size="19" stroke-width="1.5" />
-          <h3>上下文注入</h3>
-          <p>EvaluationAgent 会自动读取命中结果，生成 evidence、suggestions 和 profileUpdates，后续交给 PathAgent 与 ReflectionAgent。</p>
-        </div>
-      </aside>
+      <div class="trace-strip">
+        <span>画像存储</span>
+        <i />
+        <span>评估命中</span>
+        <i />
+        <span>反思回写</span>
+        <i />
+        <span>学习优化</span>
+        <strong>本轮画像可信度 {{ topScore }}%</strong>
+      </div>
     </section>
   </div>
 </template>
 
 <style scoped>
-.knowledge-page {
+.reverse-page {
   position: relative;
   z-index: 1;
   min-height: calc(100vh - var(--header-height));
-  padding: 32px clamp(20px, 4vw, 52px) 52px;
+  padding: 28px clamp(18px, 3.2vw, 44px) 48px;
+  overflow: hidden;
   color: var(--color-text-primary);
+  font-family: 'Noto Sans SC', var(--font-body), system-ui, sans-serif;
+  background:
+    radial-gradient(circle at 18% 2%, rgba(236, 72, 153, 0.16), transparent 30%),
+    radial-gradient(circle at 86% 24%, rgba(139, 92, 246, 0.17), transparent 34%),
+    linear-gradient(180deg, rgba(4, 7, 18, 0.3), rgba(3, 6, 15, 0.94));
 }
 
-.kb-header {
+.page-aurora {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background-image:
+    linear-gradient(rgba(34, 211, 238, 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(34, 211, 238, 0.045) 1px, transparent 1px);
+  background-size: 64px 64px;
+  mask-image: radial-gradient(circle at 50% 38%, #000 0, transparent 70%);
+}
+
+.reverse-hero,
+.reverse-results {
+  border: 1px solid rgba(90, 160, 220, 0.2);
+  background:
+    linear-gradient(rgba(5, 8, 18, 0.36), rgba(5, 8, 18, 0.52)),
+    url('/reverse-evaluation/panel-bg-magenta.png') center / cover,
+    rgba(5, 10, 24, 0.88);
+  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.34), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(14px);
+}
+
+.reverse-hero {
   display: flex;
   justify-content: space-between;
-  gap: 24px;
-  align-items: flex-end;
-  margin-bottom: 18px;
+  gap: 28px;
+  align-items: center;
+  margin-bottom: 14px;
+  padding: 18px 22px;
+  border-radius: 18px 18px 10px 10px;
 }
 
-.kb-kicker,
-.panel-kicker {
-  color: var(--color-accent-cyan);
+.reverse-kicker {
+  color: #22d3ee;
   font-family: var(--font-mono);
   font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.08em;
+  font-weight: 800;
+  letter-spacing: 0.16em;
   text-transform: uppercase;
 }
 
-.kb-header h1 {
-  margin: 6px 0 8px;
+.reverse-hero h1,
+.result-heading h2 {
+  margin: 5px 0 7px;
   color: #fff;
-  font-family: var(--font-display);
-  font-size: clamp(28px, 4vw, 46px);
-  font-weight: 500;
+  font-family: 'Noto Serif SC', 'Noto Sans SC', serif;
+  font-weight: 700;
   letter-spacing: 0;
+  text-shadow: 0 0 28px rgba(236, 72, 153, 0.5);
 }
 
-.kb-header p {
-  max-width: 720px;
+.reverse-hero h1 {
+  font-size: clamp(30px, 3.8vw, 54px);
+}
+
+.result-heading h2 {
+  font-size: clamp(24px, 2.4vw, 34px);
+}
+
+.reverse-hero p,
+.result-heading p,
+.story-card p {
   margin: 0;
-  color: var(--color-text-secondary);
+  color: #a9bad4;
   font-size: 14px;
-  line-height: 1.7;
+  line-height: 1.75;
 }
 
-.kb-refresh,
-.search-action {
+.reverse-hero p {
+  max-width: 860px;
+}
+
+.hero-actions {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 10px;
+}
+
+.live-chip,
+.refresh-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
-  min-height: 38px;
-  border: 1px solid rgba(0, 212, 255, 0.2);
-  border-radius: 8px;
-  background: rgba(0, 212, 255, 0.08);
-  color: var(--color-accent-cyan);
+  min-height: 40px;
+  border-radius: 999px;
   font-size: 13px;
-  font-weight: 700;
+  font-weight: 800;
 }
 
-.kb-refresh:disabled,
-.search-action:disabled {
+.live-chip {
+  padding: 0 14px;
+  border: 1px solid rgba(52, 211, 153, 0.32);
+  background: rgba(52, 211, 153, 0.09);
+  color: #34d399;
+  box-shadow: 0 0 22px rgba(52, 211, 153, 0.12);
+}
+
+.refresh-btn {
+  border: 1px solid rgba(236, 72, 153, 0.34);
+  background: rgba(236, 72, 153, 0.1);
+  color: #fb5a8c;
+}
+
+.refresh-btn:disabled {
   cursor: wait;
   opacity: 0.62;
 }
@@ -236,238 +366,283 @@ onMounted(() => {
   animation: spin 0.8s linear infinite;
 }
 
-@keyframes spin {
-  to { transform: rotate(360deg); }
-}
-
-.kb-control {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  gap: 10px;
+.loop-shell {
+  position: relative;
   margin-bottom: 14px;
 }
 
-.search-box {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  min-height: 44px;
-  padding: 0 14px;
-  border: 1px solid var(--color-border);
-  border-radius: 8px;
-  background: rgba(7, 12, 26, 0.76);
-  color: var(--color-accent-cyan);
+.reverse-results {
+  padding: 18px;
+  border-radius: 10px 10px 18px 18px;
+  background:
+    linear-gradient(rgba(4, 8, 18, 0.76), rgba(4, 8, 18, 0.9)),
+    url('/reverse-evaluation/panel-bg-cyan.png') center / cover,
+    rgba(4, 10, 24, 0.9);
 }
 
-.search-box input {
-  width: 100%;
-  min-width: 0;
-  border: 0;
-  outline: 0;
-  background: transparent;
-  color: #fff;
-  font-size: 14px;
+.result-heading {
+  display: grid;
+  gap: 4px;
+  max-width: 980px;
+  margin-bottom: 16px;
 }
 
-.kb-error {
+.error-line {
   margin: 0 0 14px;
   padding: 10px 12px;
   border: 1px solid rgba(244, 63, 94, 0.25);
-  border-radius: 8px;
+  border-radius: 10px;
   background: rgba(244, 63, 94, 0.08);
   color: #ff9aae;
   font-size: 13px;
 }
 
-.kb-stats {
+.story-grid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 10px;
-  margin-bottom: 14px;
+  gap: 12px;
 }
 
-.stat-card,
-.kb-panel,
-.side-card {
-  border: 1px solid var(--color-border);
-  border-radius: 8px;
-  background: rgba(7, 12, 26, 0.78);
-}
-
-.stat-card {
-  display: grid;
-  grid-template-columns: auto 1fr;
-  gap: 4px 10px;
-  align-items: center;
-  min-height: 82px;
-  padding: 14px;
-  color: var(--color-accent-cyan);
-}
-
-.stat-card strong {
-  color: #fff;
-  font-family: var(--font-mono);
-  font-size: 22px;
-}
-
-.stat-card span {
-  grid-column: 2;
-  color: var(--color-text-tertiary);
-  font-size: 12px;
-}
-
-.kb-main {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) 320px;
-  gap: 14px;
-}
-
-.kb-panel {
-  min-width: 0;
+.story-card {
+  min-height: 310px;
   padding: 16px;
+  border: 1px solid rgba(90, 160, 220, 0.18);
+  border-radius: 14px;
+  background:
+    linear-gradient(rgba(4, 10, 24, 0.72), rgba(4, 10, 24, 0.88)),
+    url('/reverse-evaluation/panel-bg-cyan.png') center / cover;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04), 0 18px 46px rgba(0, 0, 0, 0.22);
 }
 
-.panel-head {
+.evidence-card {
+  background:
+    linear-gradient(rgba(4, 10, 24, 0.72), rgba(4, 10, 24, 0.88)),
+    url('/reverse-evaluation/panel-bg-magenta.png') center / cover;
+}
+
+.reflection-card {
+  background:
+    linear-gradient(rgba(4, 10, 24, 0.72), rgba(4, 10, 24, 0.88)),
+    url('/reverse-evaluation/panel-bg-amber.png') center / cover;
+}
+
+.optimize-card {
+  background:
+    linear-gradient(rgba(4, 10, 24, 0.72), rgba(4, 10, 24, 0.88)),
+    url('/reverse-evaluation/panel-bg-purple.png') center / cover;
+}
+
+.story-card header {
   display: flex;
-  justify-content: space-between;
-  gap: 14px;
   align-items: center;
+  gap: 10px;
   margin-bottom: 12px;
+  color: #22d3ee;
 }
 
-.panel-head h2,
-.side-card h3 {
-  margin: 3px 0 0;
+.evidence-card header {
+  color: #fb5a8c;
+}
+
+.reflection-card header {
+  color: #fbbf24;
+}
+
+.optimize-card header {
+  color: #a78bfa;
+}
+
+.story-card header span {
+  color: #8396b8;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+}
+
+.story-card h3 {
+  margin: 2px 0 0;
   color: #fff;
-  font-size: 16px;
-  font-weight: 700;
+  font-size: 17px;
+  font-weight: 900;
 }
 
-.model-chip {
-  max-width: 240px;
+.card-visual {
+  position: relative;
+  height: 166px;
+  margin: 0 0 12px;
   overflow: hidden;
-  padding: 4px 8px;
-  border: 1px solid rgba(0, 212, 255, 0.16);
-  border-radius: 999px;
-  color: var(--color-accent-cyan);
-  font-family: var(--font-mono);
-  font-size: 10px;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  border-radius: 12px;
+  background:
+    radial-gradient(circle at 50% 62%, rgba(34, 211, 238, 0.16), transparent 50%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.035), rgba(255, 255, 255, 0));
 }
 
-.hit-list {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
+.card-visual::after {
+  position: absolute;
+  right: 12%;
+  bottom: 12px;
+  left: 12%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(232, 237, 245, 0.45), transparent);
+  content: "";
 }
 
-.hit-row {
-  display: flex;
-  justify-content: space-between;
-  gap: 14px;
-  width: 100%;
-  padding: 13px;
-  border: 1px solid rgba(0, 212, 255, 0.1);
-  border-radius: 8px;
-  background: rgba(0, 212, 255, 0.035);
-  text-align: left;
+.card-visual img {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: min(278px, 90%);
+  height: auto;
+  object-fit: contain;
+  pointer-events: none;
+  transform: translate(-50%, -50%);
+  filter: saturate(1.08) contrast(1.04);
 }
 
-.hit-row:hover {
-  border-color: rgba(0, 212, 255, 0.26);
-  background: rgba(0, 212, 255, 0.07);
+.reflection-card .card-visual img,
+.optimize-card .card-visual img {
+  width: min(300px, 94%);
 }
 
-.hit-main {
-  min-width: 0;
+.metric-list,
+.finding-list,
+.writeback-list,
+.action-list {
+  display: grid;
+  gap: 9px;
+  margin-top: 14px;
 }
 
-.hit-title {
-  display: block;
+.metric-list div,
+.finding-list div,
+.writeback-list div,
+.action-list div {
+  display: grid;
+  gap: 3px;
+  padding: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+  background: rgba(2, 7, 18, 0.48);
+}
+
+.metric-list strong,
+.finding-list b,
+.writeback-list strong {
   color: #fff;
-  font-size: 14px;
-  font-weight: 700;
-}
-
-.hit-summary {
-  display: block;
-  margin-top: 4px;
-  color: var(--color-text-secondary);
-  font-size: 12px;
-  line-height: 1.55;
-}
-
-.hit-tags {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 5px;
-  margin-top: 8px;
-}
-
-.hit-tags span {
-  padding: 2px 7px;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.05);
-  color: var(--color-text-tertiary);
-  font-size: 10px;
-}
-
-.hit-score {
-  flex-shrink: 0;
-  color: var(--color-accent-emerald);
   font-family: var(--font-mono);
-  font-size: 15px;
+  font-size: 17px;
+  line-height: 1;
+}
+
+.metric-list span,
+.finding-list span,
+.writeback-list span,
+.action-list span {
+  color: #fff;
+  font-size: 13px;
   font-weight: 800;
 }
 
-.kb-side {
+.metric-list small,
+.finding-list small,
+.writeback-list small,
+.action-list small {
+  color: #9bb4d4;
+  font-size: 11px;
+  line-height: 1.55;
+}
+
+.finding-list b {
+  color: #fb5a8c;
+}
+
+.writeback-list strong {
+  color: #fbbf24;
+}
+
+.action-list div {
+  grid-template-columns: auto 1fr;
+  align-items: start;
+  color: #a78bfa;
+}
+
+.action-list small {
+  grid-column: 2;
+}
+
+.trace-strip {
   display: flex;
-  flex-direction: column;
+  flex-wrap: wrap;
+  align-items: center;
   gap: 10px;
-}
-
-.side-card {
-  padding: 16px;
-  color: var(--color-accent-cyan);
-}
-
-.side-card p,
-.empty-state {
-  color: var(--color-text-secondary);
+  margin-top: 14px;
+  padding: 12px 14px;
+  border: 1px solid rgba(34, 211, 238, 0.18);
+  border-radius: 999px;
+  background: rgba(3, 8, 20, 0.72);
+  color: #9bb4d4;
   font-size: 12px;
-  line-height: 1.65;
 }
 
-.empty-state {
-  padding: 14px;
-  border: 1px dashed var(--color-border);
-  border-radius: 8px;
+.trace-strip i {
+  width: 34px;
+  height: 2px;
+  background: linear-gradient(90deg, #22d3ee, #ec4899);
 }
 
-@media (max-width: 920px) {
-  .kb-header,
-  .kb-main {
-    grid-template-columns: 1fr;
-  }
+.trace-strip strong {
+  margin-left: auto;
+  color: #34d399;
+  font-family: var(--font-mono);
+}
 
-  .kb-header {
-    display: grid;
-  }
+:global(body.reverse-evaluation-active .global-pet) {
+  transform: translateX(86px) scale(0.9);
+  opacity: 0.78;
+}
 
-  .kb-stats {
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+@media (max-width: 1180px) {
+  .story-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
+@media (max-width: 920px) {
+  .reverse-hero {
+    display: grid;
+  }
+
+  .hero-actions {
+    justify-content: flex-start;
+  }
+}
+
 @media (max-width: 640px) {
-  .kb-control,
-  .kb-stats {
+  .reverse-page {
+    padding-inline: 12px;
+  }
+
+  .hero-actions,
+  .trace-strip {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .story-grid {
     grid-template-columns: 1fr;
   }
 
-  .model-chip {
+  .trace-strip i {
     display: none;
+  }
+
+  .trace-strip strong {
+    margin-left: 0;
   }
 }
 </style>

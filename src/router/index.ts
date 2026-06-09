@@ -32,6 +32,11 @@ const router = createRouter({
       component: () => import('@/views/Evaluation.vue'),
     },
     {
+      path: '/reverse-evaluation',
+      name: 'reverse-evaluation',
+      component: () => import('@/views/KnowledgeBase.vue'),
+    },
+    {
       path: '/tutoring',
       name: 'tutoring',
       component: () => import('@/views/Tutoring.vue'),
