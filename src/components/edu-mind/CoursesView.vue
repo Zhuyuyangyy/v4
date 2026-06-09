@@ -1559,31 +1559,6 @@ const directions = ['全部', '编程与算法基础', '计算机系统', '软�
             </span>
           </button>
         </div>
-
-        <div class="edu-filter-bar flex flex-col sm:flex-row gap-3 p-3.5 rounded-xl">
-          <div class="edu-filter-bar__search flex items-center gap-2 flex-1 relative rounded-lg px-3 py-2 transition-all">
-            <Search class="w-4 h-4 text-slate-500 shrink-0" />
-            <input
-              type="text"
-              placeholder="搜索感兴趣的精品核心课程名称..."
-              v-model="searchQuery"
-              class="bg-transparent border-none outline-none text-[15px] text-[#dce3ff] w-full placeholder-[#566094] font-sans"
-            />
-          </div>
-
-          <div class="edu-filter-bar__select flex items-center gap-2 px-3 py-2 rounded-lg shrink-0">
-            <span class="text-[13px] text-[#74a9ff] font-bold uppercase select-none">难度</span>
-            <select
-              v-model="difficultyFilter"
-              class="bg-transparent border-none outline-none text-[14px] text-[#eef1ff] font-medium cursor-pointer"
-            >
-              <option value="全部">全部</option>
-              <option value="入门">🌱 入门</option>
-              <option value="进阶">🍂 进阶</option>
-              <option value="高级">🔥 高级</option>
-            </select>
-          </div>
-        </div>
       </div>
 
       <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4" id="courses-grid-list">
@@ -1697,23 +1672,6 @@ const directions = ['全部', '编程与算法基础', '计算机系统', '软�
   background: linear-gradient(135deg, rgba(117, 61, 255, 0.9), rgba(77, 48, 179, 0.72));
   border: 1px solid rgba(185, 146, 255, 0.38);
   box-shadow: 0 0 18px rgba(132, 84, 255, 0.38), inset 0 1px 0 rgba(255, 255, 255, 0.12);
-}
-
-.edu-filter-bar {
-  background: rgba(13, 15, 50, 0.76);
-  border: 1px solid rgba(115, 96, 255, 0.18);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.035);
-}
-
-.edu-filter-bar__search,
-.edu-filter-bar__select {
-  background: rgba(8, 10, 34, 0.72);
-  border: 1px solid rgba(112, 100, 255, 0.16);
-}
-
-.edu-filter-bar__search:focus-within {
-  border-color: rgba(151, 112, 255, 0.68);
-  box-shadow: 0 0 0 3px rgba(124, 82, 255, 0.12);
 }
 
 .edu-course-card {
