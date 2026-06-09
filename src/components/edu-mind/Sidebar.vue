@@ -120,58 +120,6 @@ function handleNavClick(itemName: string) {
       <div class="edu-sidebar__halo" />
     </div>
 
-    <!-- Theme Toggle -->
-    <div class="px-5 pb-3">
-      <div
-        @click="toggleTheme"
-        :class="[
-          'edu-sidebar__item flex items-center gap-3 px-4 py-3 rounded-lg cursor-pointer transition-all duration-200 text-[15px] group',
-          'text-[#9ba4d8] hover:text-white'
-        ]"
-        :title="isDark ? '切换到浅色模式' : '切换到深色模式'"
-      >
-        <svg
-          v-if="!isDark"
-          xmlns="http://www.w3.org/2000/svg"
-          width="16"
-          height="16"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          stroke-width="2"
-          stroke-linecap="round"
-          stroke-linejoin="round"
-          class="shrink-0 text-slate-400 group-hover:text-slate-800 transition-colors"
-        >
-          <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z" />
-        </svg>
-        <svg
-          v-else
-          xmlns="http://www.w3.org/2000/svg"
-          width="16"
-          height="16"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          stroke-width="2"
-          stroke-linecap="round"
-          stroke-linejoin="round"
-          class="shrink-0 text-slate-400 dark:text-slate-500 group-hover:text-slate-800 dark:group-hover:text-white transition-colors"
-        >
-          <circle cx="12" cy="12" r="4" />
-          <path d="M12 2v2" />
-          <path d="M12 20v2" />
-          <path d="m4.93 4.93 1.41 1.41" />
-          <path d="m17.66 17.66 1.41 1.41" />
-          <path d="M2 12h2" />
-          <path d="M20 12h2" />
-          <path d="m6.34 17.66-1.41 1.41" />
-          <path d="m19.07 4.93-1.41 1.41" />
-        </svg>
-        <span>{{ isDark ? '浅色模式' : '深色模式' }}</span>
-      </div>
-    </div>
-
     <!-- Sidebar Footer -->
     <div class="p-5 pt-3">
       <div class="flex items-center gap-2.5 p-3 edu-sidebar__profile rounded-lg">

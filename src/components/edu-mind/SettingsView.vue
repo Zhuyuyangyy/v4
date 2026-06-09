@@ -8,8 +8,6 @@ import {
   Shield,
   Globe,
   Monitor,
-  Moon,
-  Sun,
   ChevronRight,
   Volume2,
   VolumeX,
@@ -401,27 +399,7 @@ const sections = [
 
           <div class="flex flex-col gap-5">
             <div>
-              <label class="block text-[13px] font-semibold text-slate-600 dark:text-slate-400 mb-2.5">主题模式</label>
-              <div class="grid grid-cols-3 gap-3">
-                <button
-                  v-for="opt in ([{ val: 'light' as const, label: '浅色模式', icon: Sun }, { val: 'dark' as const, label: '深色模式', icon: Moon }, { val: 'auto' as const, label: '跟随系统', icon: Monitor }])"
-                  :key="opt.val"
-                  @click="setTheme(opt.val)"
-                  :class="[
-                    'flex flex-col items-center gap-2 p-4 rounded-xl border-2 cursor-pointer transition-all',
-                    themeMode === opt.val
-                      ? 'border-[#4a6cf7] bg-[#f0f4ff] dark:bg-[#4a6cf7]/15'
-                      : 'border-slate-200 dark:border-slate-600 bg-white dark:bg-[#1e293b] hover:border-slate-300 dark:hover:border-slate-500'
-                  ]"
-                >
-                  <component :is="opt.icon" :size="22" :class="themeMode === opt.val ? 'text-[#4a6cf7]' : 'text-slate-400'" />
-                  <span :class="['text-[13px] font-bold', themeMode === opt.val ? 'text-[#4a6cf7] dark:text-[#6a8cff]' : 'text-slate-600 dark:text-slate-400']">{{ opt.label }}</span>
-                </button>
-              </div>
-            </div>
-
-            <div>
-              <label class="block text-[13px] font-semibold text-slate-600 dark:text-slate-400 mb-2.5">字体大小</label>
+              <label class="block text-[13px] font-semibold text-slate-400 mb-2.5">字体大小</label>
               <div class="grid grid-cols-3 gap-3">
                 <button
                   v-for="opt in ([{ val: 'small' as const, label: '小', sample: '13px' }, { val: 'medium' as const, label: '中', sample: '15px' }, { val: 'large' as const, label: '大', sample: '17px' }])"

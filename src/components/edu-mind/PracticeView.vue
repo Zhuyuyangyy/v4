@@ -24,8 +24,6 @@ import {
   ChevronDown,
   Star,
   Share2,
-  Sun,
-  Moon,
   MessageSquare,
   History,
   CornerDownRight,
@@ -590,11 +588,6 @@ function handleViewTutorial() {
   }
 }
 
-function handleToggleTheme() {
-  toggleTheme()
-  triggerToast(isDarkTheme.value ? "🌙 已切换为沉浸式护眼深色主题" : "☀ 已切换为高亮清晰白色主题")
-}
-
 const lineNumbers = Array.from({ length: 14 }, (_, i) => i + 1)
 </script>
 
@@ -667,21 +660,6 @@ const lineNumbers = Array.from({ length: 14 }, (_, i) => i + 1)
         >
           <Share2 :size="14" />
           <span>分享</span>
-        </button>
-
-        <button
-          @click="handleToggleTheme"
-          :class="[
-            'flex items-center gap-1.5 px-3 py-1 rounded text-[13.5px] font-bold border transition-all cursor-pointer',
-            isDarkTheme
-              ? 'bg-[#1f293d] border-[#384a6c] text-[#a5b4fc] hover:bg-[#25324c]'
-              : 'bg-[#fff] border-[#4a6cf7] text-[#4a6cf7] hover:bg-[#f0f4ff]'
-          ]"
-        >
-          <Sun v-if="isDarkTheme" :size="14" class="text-amber-400 shrink-0" />
-          <Moon v-else :size="14" class="shrink-0" />
-          <span>{{ isDarkTheme ? '切换为白色主题' : '切换为暗黑主题' }}</span>
-          <span class="text-[11px] opacity-60">⌘</span>
         </button>
       </div>
     </div>

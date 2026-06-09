@@ -869,22 +869,8 @@ html.dark #edu-mind-app .dark\:hover\:border-slate-600:hover {
   animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
 
-/* ===== CSS Variables for dark theme ===== */
+/* ===== CSS Variables — 仅深色主题 ===== */
 #edu-mind-app {
-  --edu-bg-page: #080a21;
-  --edu-bg-card: rgba(18, 20, 58, 0.78);
-  --edu-bg-inset: rgba(13, 15, 44, 0.82);
-  --edu-bg-elevated: rgba(33, 28, 78, 0.86);
-  --edu-bg-deep: rgba(96, 72, 255, 0.18);
-  --edu-border: rgba(123, 100, 255, 0.22);
-  --edu-border-subtle: rgba(119, 98, 255, 0.12);
-  --edu-text-main: #f4f2ff;
-  --edu-text-muted: #9aa4d9;
-  --edu-text-dim: #6670a7;
-  --edu-accent: #8d5cff;
-  --edu-accent-soft: rgba(140, 92, 255, 0.18);
-}
-html.dark #edu-mind-app {
   --edu-bg-page: #080a21;
   --edu-bg-card: rgba(18, 20, 58, 0.78);
   --edu-bg-inset: rgba(13, 15, 44, 0.82);

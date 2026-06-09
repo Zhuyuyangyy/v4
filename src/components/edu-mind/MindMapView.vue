@@ -68,20 +68,6 @@ type StructureStyle = 'curved' | 'logic-right' | 'org-vertical'
 
 const PREMIUM_THEMES: MindTheme[] = [
   {
-    id: 'classic-snow',
-    name: '极地晴雪',
-    bgClass: 'bg-[#fafbfe]',
-    canvasBg: '#fafbfe',
-    gridColor: '#e2e8f0',
-    rootBox: 'bg-gradient-to-r from-[#4a6cf7] to-[#3b82f6] text-white border-none shadow-md',
-    rootText: 'text-white',
-    branchColors: ['#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#06b6d4', '#ef4444'],
-    nodeBorder: 'border-[#cbd5e1] hover:border-[#4a6cf7]',
-    textColor: 'text-[#334155]',
-    accentColor: '#4a6cf7',
-    isDark: false
-  },
-  {
     id: 'midnight-charcoal',
     name: '黑曜重力',
     bgClass: 'bg-[#0f172a]',
@@ -94,76 +80,6 @@ const PREMIUM_THEMES: MindTheme[] = [
     textColor: 'text-slate-200',
     accentColor: '#ec4899',
     isDark: true
-  },
-  {
-    id: 'fresh-matcha',
-    name: '雨后龙井',
-    bgClass: 'bg-[#f4f7f4]',
-    canvasBg: '#f4f7f4',
-    gridColor: '#e2eae2',
-    rootBox: 'bg-emerald-600 text-white border-none shadow-sm',
-    rootText: 'text-white',
-    branchColors: ['#059669', '#10b981', '#22c55e', '#84cc16', '#65a30d', '#15803d'],
-    nodeBorder: 'border-emerald-200 hover:border-emerald-600 bg-white/90',
-    textColor: 'text-slate-800',
-    accentColor: '#059669',
-    isDark: false
-  },
-  {
-    id: 'macaron-cream',
-    name: '马卡龙奶油',
-    bgClass: 'bg-[#fdbfe7]/10',
-    canvasBg: '#fdfbf7',
-    gridColor: '#f3eade',
-    rootBox: 'bg-gradient-to-r from-pink-400 via-purple-400 to-indigo-400 text-white shadow-md border-none',
-    rootText: 'text-white',
-    branchColors: ['#fb7185', '#c084fc', '#818cf8', '#34d399', '#fbbf24', '#f472b6'],
-    nodeBorder: 'border-pink-200 hover:border-pink-400 bg-white',
-    textColor: 'text-slate-700',
-    accentColor: '#fb7185',
-    isDark: false
-  },
-  {
-    id: 'retro-mustard',
-    name: '中古摩登',
-    bgClass: 'bg-[#f1ecd1]',
-    canvasBg: '#f1ecd1',
-    gridColor: '#e5dbb0',
-    rootBox: 'bg-[#40513B] text-white border-none shadow-md',
-    rootText: 'text-white',
-    branchColors: ['#609966', '#9DC08B', '#f59e0b', '#e11d48', '#8b5cf6', '#06b6d4'],
-    nodeBorder: 'border-stone-450 hover:border-stone-800 bg-[#f7f5e8]',
-    textColor: 'text-stone-850',
-    accentColor: '#40513B',
-    isDark: false
-  },
-  {
-    id: 'ultra-slate',
-    name: '黑胶极简',
-    bgClass: 'bg-white',
-    canvasBg: '#ffffff',
-    gridColor: '#f1f5f9',
-    rootBox: 'bg-slate-900 border-none text-white shadow-lg shadow-slate-900/10',
-    rootText: 'text-white',
-    branchColors: ['#334155', '#475569', '#64748b', '#94a3b8', '#1e293b', '#64748b'],
-    nodeBorder: 'border-slate-250 hover:border-slate-800 bg-white',
-    textColor: 'text-slate-800',
-    accentColor: '#0f172a',
-    isDark: false
-  },
-  {
-    id: 'coral-sunset',
-    name: '日落珊瑚',
-    bgClass: 'bg-[#faf6f0]',
-    canvasBg: '#faf6f0',
-    gridColor: '#ebdcd0',
-    rootBox: 'bg-[#f97316] text-white border-none shadow-md',
-    rootText: 'text-white',
-    branchColors: ['#f97316', '#ea580c', '#fa9043', '#fb923c', '#ca8a04', '#e11d48'],
-    nodeBorder: 'border-orange-200 hover:border-[#f97316] bg-white',
-    textColor: 'text-amber-950',
-    accentColor: '#f97316',
-    isDark: false
   },
   {
     id: 'aurora-navy',
@@ -530,21 +446,11 @@ const getPreConfiguredMindMap = (courseId: string): MindNode => {
 const selectedCourseId = ref<string>(localStorage.getItem('edumind_current_course_id') || 'prog-ds')
 const viewMode = ref<'map' | 'outline'>('map')
 const activeTab = ref<'样式' | '大纲' | '笔记'>('样式')
-const activeThemeId = ref<string>('classic-snow')
+const activeThemeId = ref<string>('midnight-charcoal')
 const currentTheme = computed(() => PREMIUM_THEMES.find(t => t.id === activeThemeId.value) || PREMIUM_THEMES[0])
 
 const { isDark: globalIsDark, setTheme: setGlobalTheme } = useTheme()
-watch(globalIsDark, (val) => {
-  const darkTheme = PREMIUM_THEMES.find(t => t.isDark)
-  const lightTheme = PREMIUM_THEMES.find(t => !t.isDark)
-  activeThemeId.value = val ? (darkTheme?.id || 'midnight-charcoal') : (lightTheme?.id || 'classic-snow')
-}, { immediate: true })
-watch(activeThemeId, (id) => {
-  const theme = PREMIUM_THEMES.find(t => t.id === id)
-  if (theme) {
-    setGlobalTheme(theme.isDark ? 'dark' : 'light')
-  }
-})
+// edu-mind 仅深色模式，主题切换逻辑已移除
 
 const structureStyle = ref<StructureStyle>('curved')
 
