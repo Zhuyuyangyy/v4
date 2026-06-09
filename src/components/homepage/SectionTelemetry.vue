@@ -22,6 +22,7 @@ interface Agent {
   name: string
   role: string
   color: string
+  artSrc: string
 }
 
 interface EventNode {
@@ -44,12 +45,12 @@ interface Chain {
 }
 
 const agents: Agent[] = [
-  { id: 'profile', name: '画像', role: 'PROFILE', color: T.profile },
-  { id: 'path', name: '路径规划', role: 'PATH', color: T.path },
-  { id: 'resource', name: '资源推荐', role: 'RESOURCE', color: T.resource },
-  { id: 'tutor', name: 'AI 辅导', role: 'TUTOR', color: T.tutor },
-  { id: 'eval', name: '评估', role: 'EVAL', color: T.eval },
-  { id: 'feedback', name: '反馈', role: 'FEEDBACK', color: T.feedback },
+  { id: 'profile', name: '画像', role: 'PROFILE', color: T.profile, artSrc: '/homepage/agent-load-profile.png' },
+  { id: 'path', name: '路径规划', role: 'PATH', color: T.path, artSrc: '/homepage/agent-load-path.png' },
+  { id: 'resource', name: '资源推荐', role: 'RESOURCE', color: T.resource, artSrc: '/homepage/agent-load-resource.png' },
+  { id: 'tutor', name: 'AI 辅导', role: 'TUTOR', color: T.tutor, artSrc: '/homepage/agent-load-tutor.png' },
+  { id: 'eval', name: '评估', role: 'EVAL', color: T.eval, artSrc: '/homepage/agent-load-eval.png' },
+  { id: 'feedback', name: '反馈', role: 'FEEDBACK', color: T.feedback, artSrc: '/homepage/agent-load-feedback.png' },
 ]
 
 const events: EventNode[] = [
@@ -342,6 +343,7 @@ onBeforeUnmount(() => {
                 :style="`--step-color: ${agent.color}; --load: ${(events.filter(event => event.agent === agent.id).length / events.length) * 100}%`"
                 @click="selectNode(events.find(event => event.agent === agent.id && activeEventIds.has(event.id)) || events.find(event => event.agent === agent.id) || activeEvents[0])"
               >
+                <img class="footer-step-art" :src="agent.artSrc" alt="" aria-hidden="true">
                 <span>{{ agent.role }}</span>
                 <strong>{{ agent.name }}</strong>
                 <small>{{ events.filter(event => event.agent === agent.id).length }} 次参与</small>
@@ -648,8 +650,10 @@ onBeforeUnmount(() => {
   position: absolute;
   inset: 0;
   background:
-    linear-gradient(90deg, color-mix(in srgb, var(--step-color) 12%, transparent), transparent 64%);
-  opacity: 0;
+    linear-gradient(90deg, color-mix(in srgb, var(--step-color) 12%, transparent), transparent 64%),
+    linear-gradient(180deg, transparent 0%, rgba(4, 8, 18, 0.22) 100%);
+  opacity: 0.28;
+  mix-blend-mode: screen;
   transition: opacity 0.22s ease;
   pointer-events: none;
 }
@@ -663,11 +667,31 @@ onBeforeUnmount(() => {
 
 .footer-step:hover::after,
 .footer-step.active::after {
-  opacity: 1;
+  opacity: 0.48;
 }
 
 .footer-step:active {
   transform: scale(0.98);
+}
+
+.footer-step-art {
+  position: absolute;
+  inset: -14% -18% -16% 18%;
+  width: 102%;
+  height: 132%;
+  object-fit: cover;
+  opacity: 0.34;
+  mix-blend-mode: screen;
+  filter: saturate(0.92) contrast(1.04);
+  mask-image: linear-gradient(90deg, transparent 0%, rgba(0, 0, 0, 0.38) 22%, #000 64%, transparent 100%);
+  pointer-events: none;
+  transition: opacity 0.22s ease, transform 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.footer-step:hover .footer-step-art,
+.footer-step.active .footer-step-art {
+  opacity: 0.52;
+  transform: translateX(-3px) scale(1.02);
 }
 
 .footer-step span {

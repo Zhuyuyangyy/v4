@@ -77,6 +77,14 @@ onBeforeUnmount(() => {
             <small>{{ stage.note }}</small>
           </button>
         </div>
+
+        <div class="hub-role-visual" aria-hidden="true">
+          <img src="/homepage/agent-role-orbit-panel.png" alt="">
+          <div class="hub-role-visual-copy">
+            <span>ROLE ORBIT</span>
+            <strong>{{ currentHubStage.role }}</strong>
+          </div>
+        </div>
       </aside>
 
       <div class="hub-workbench-main">
@@ -359,6 +367,64 @@ onBeforeUnmount(() => {
     0 10px 28px color-mix(in srgb, var(--stage-color) 12%, transparent);
 }
 
+.hub-role-visual {
+  position: relative;
+  min-height: 156px;
+  margin-top: auto;
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--stage-color) 18%, rgba(120, 160, 220, 0.12));
+  border-radius: 16px;
+  background:
+    radial-gradient(circle at 18% 18%, color-mix(in srgb, var(--stage-color) 12%, transparent), transparent 48%),
+    rgba(8, 12, 30, 0.10);
+}
+
+.hub-role-visual img {
+  position: absolute;
+  inset: -18% -18% -18% -12%;
+  width: 130%;
+  height: 136%;
+  object-fit: cover;
+  opacity: 0.48;
+  mix-blend-mode: screen;
+  filter: saturate(0.96) contrast(1.04);
+  mask-image: radial-gradient(ellipse at 58% 52%, #000 0%, rgba(0, 0, 0, 0.82) 52%, transparent 90%);
+}
+
+.hub-role-visual::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(180deg, transparent 0%, rgba(4, 7, 18, 0.34) 100%);
+}
+
+.hub-role-visual-copy {
+  position: absolute;
+  left: 16px;
+  right: 16px;
+  bottom: 14px;
+  z-index: 1;
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.hub-role-visual-copy span {
+  color: #7f93ba;
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 0.16em;
+}
+
+.hub-role-visual-copy strong {
+  color: var(--stage-color);
+  font-family: var(--font-mono);
+  font-size: 13px;
+  letter-spacing: 0.12em;
+}
+
 .hub-workbench-main {
   min-width: 0;
 }
@@ -512,6 +578,10 @@ onBeforeUnmount(() => {
   .hub-context-card,
   .hub-workbench-main :deep(.agent-stage) {
     min-height: auto;
+  }
+
+  .hub-role-visual {
+    min-height: 132px;
   }
 
   .agent-collab-section {

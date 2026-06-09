@@ -81,6 +81,7 @@ function askTutor(question: string) {
 <template>
   <section class="section-missions" aria-labelledby="next-step-title">
     <div class="mission-shell">
+      <img class="mission-bg-art mission-bg-art-soft" src="/homepage/next-step-left-atmosphere.png" alt="" aria-hidden="true">
       <img class="mission-bg-art" src="/homepage/next-action-beacon.png" alt="" aria-hidden="true">
       <div class="mission-orbit" aria-hidden="true">
         <span />
@@ -182,6 +183,17 @@ function askTutor(question: string) {
   filter: saturate(1.04) contrast(1.08);
   mask-image: linear-gradient(90deg, transparent 0%, rgba(0, 0, 0, 0.18) 10%, #000 30%, #000 100%);
   pointer-events: none;
+}
+
+.mission-bg-art-soft {
+  top: -14%;
+  left: -8%;
+  right: auto;
+  width: min(980px, 64vw);
+  height: 132%;
+  opacity: 0.22;
+  filter: saturate(0.92) contrast(1.04);
+  mask-image: radial-gradient(ellipse at 50% 50%, #000 0%, rgba(0, 0, 0, 0.7) 54%, transparent 88%);
 }
 
 .mission-orbit {
@@ -423,6 +435,12 @@ function askTutor(question: string) {
     right: -42%;
     width: 118vw;
     opacity: 0.24;
+  }
+
+  .mission-bg-art-soft {
+    left: -38%;
+    width: 120vw;
+    opacity: 0.16;
   }
 
   .action-card {
