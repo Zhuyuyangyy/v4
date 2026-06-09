@@ -39,15 +39,25 @@ const cardStyle = computed(() => ({
 
 <style scoped>
 .base-card {
-  backdrop-filter: blur(24px);
-  -webkit-backdrop-filter: blur(24px);
+  backdrop-filter: blur(30px) saturate(1.3);
+  -webkit-backdrop-filter: blur(30px) saturate(1.3);
   border: 1px solid var(--glass-border);
   border-radius: var(--radius-lg);
-  box-shadow: var(--glass-shadow);
+  box-shadow: var(--glass-shadow), var(--glass-rim);
   animation: cardFadeIn 0.3s var(--ease-out-expo);
   transition: border-color var(--duration-normal) ease, box-shadow var(--duration-normal) ease;
   position: relative;
   overflow: hidden;
+}
+
+.base-card::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: var(--glass-noise);
+  pointer-events: none;
+  opacity: 0.5;
 }
 
 .base-card.variant-default {

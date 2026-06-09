@@ -12,6 +12,7 @@ import {
   Settings,
   Sparkles,
   Library,
+  Database,
 } from 'lucide-vue-next'
 
 const route = useRoute()
@@ -28,6 +29,7 @@ const navItems = [
   { path: '/learning-path', label: '星图路径', icon: Map },
   { path: '/edu-mind', label: '辅导资源', icon: Library },
   { path: '/evaluation', label: '评估', icon: BarChart3 },
+  { path: '/reverse-evaluation', label: '反向评估', icon: Database },
   { path: '/settings', label: '设置', icon: Settings },
 ]
 watch(
@@ -259,3 +261,4 @@ watch(
   min-height: inherit;
 }
 </style>
+

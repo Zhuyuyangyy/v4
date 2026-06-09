@@ -43,5 +43,29 @@ _tailwind.css
 # Claude 工作树
 .claude/worktrees/
 
+# Local browser/test artifacts
+.tmp-*/
+eval*.png
+learning_path*.png
+test*.png
+homepage-*-preview.png
+homepage-*.png
+tree_fixed.png
+apples_check.png
+modify-file.*
+temp_edit.txt
+test-*.mjs
+
+# Generated caches and runtime data
+__pycache__/
+*.pyc
+server/evidence-data/
+*_extracted/
+/*-preview.png
+/*-render.png
+/*-current.png
+/agenthub-*.png
+/reverse-evaluation-*.png
+
 # Windows 误生成的设备名文件
 nul

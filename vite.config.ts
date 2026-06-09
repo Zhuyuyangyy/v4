@@ -5,9 +5,10 @@ import { resolve } from 'path'
 export default defineConfig({
   plugins: [vue()],
   server: {
+    port: 5175,
     proxy: {
       '/api': {
-        target: 'http://localhost:8787',
+        target: 'http://localhost:8788',
         changeOrigin: true,
       },
     },

@@ -3,46 +3,47 @@ import { ref, onMounted, onUnmounted } from 'vue'
 
 interface TickerItem {
   agent: string
-  t: string
   text: string
 }
 
 interface AgentInfo {
   id: string
   color: string
-  role: string
+  name: string
 }
 
 const agents: AgentInfo[] = [
-  { id: 'profile', color: '#7c3aed', role: 'PROFILE' },
-  { id: 'path', color: '#00d4ff', role: 'PATH' },
-  { id: 'resource', color: '#06d6a0', role: 'RESOURCE' },
-  { id: 'eval', color: '#f43f5e', role: 'EVAL' },
-  { id: 'feedback', color: '#3b82f6', role: 'FEEDBACK' },
-  { id: 'tutor', color: '#f59e0b', role: 'TUTOR' },
+  { id: 'profile', color: '#7c3aed', name: '画像智能体' },
+  { id: 'path', color: '#00d4ff', name: '路径规划' },
+  { id: 'resource', color: '#06d6a0', name: '资源推荐' },
+  { id: 'eval', color: '#f43f5e', name: '学习评估' },
+  { id: 'feedback', color: '#3b82f6', name: '反馈优化' },
+  { id: 'tutor', color: '#f59e0b', name: '智能辅导' },
 ]
 
 const initialItems: TickerItem[] = [
-  { agent: 'profile', t: '14:32:17', text: '检测到学生在「指针与内存」维度掌握度仅 42%，标记为薄弱域' },
-  { agent: 'path', t: '14:32:18', text: '课后巩固阶段插入「二级指针专项训练」节点，优先级 P0' },
-  { agent: 'resource', t: '14:32:19', text: '为图结构薄弱点匹配 5 个资源：思维导图 1 · 专项练习 3 · 图解卡片 1' },
-  { agent: 'eval', t: '14:32:20', text: '阶段测评完成 · 82 分 · 发现 4 个盲点：二级指针 · BFS visited · 悬空引用 · 队列空判' },
-  { agent: 'feedback', t: '14:32:21', text: '反向更新画像：图结构 68%→42% · 指针 65%→42% · 新增学习偏好「思维导图」' },
-  { agent: 'tutor', t: '14:32:23', text: '待命中 · 支持 10 种辅导模式 · 概念讲解 / 代码辅导 / 错题诊断 / 思维导图生成' },
+  { agent: 'profile', text: '识别到「指针与内存」掌握度仅 42%，标记为薄弱知识域' },
+  { agent: 'path', text: '在课后巩固阶段插入「二级指针专项训练」学习节点' },
+  { agent: 'resource', text: '为薄弱点匹配了 5 个学习资源，包括思维导图和专项练习' },
+  { agent: 'eval', text: '完成阶段性测评，发现 4 个知识盲点需要进一步巩固' },
+  { agent: 'feedback', text: '已更新学习画像，指针类知识点优先级提升' },
+  { agent: 'tutor', text: '准备好提供辅导，支持概念讲解、代码辅导、错题诊断等模式' },
 ]
 
 const items = ref<TickerItem[]>([...initialItems])
+const currentIndex = ref(0)
 let timer: ReturnType<typeof setInterval> | null = null
 
 function getAgent(id: string) {
   return agents.find(a => a.id === id)
 }
 
+function nextItem() {
+  currentIndex.value = (currentIndex.value + 1) % items.value.length
+}
+
 onMounted(() => {
-  timer = setInterval(() => {
-    const first = items.value.shift()
-    if (first) items.value.push(first)
-  }, 2800)
+  timer = setInterval(nextItem, 4500)
 })
 
 onUnmounted(() => {
@@ -51,21 +52,24 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div class="ticker-wrap">
-    <div class="ticker-bar">
-      <div class="ticker-indicator">
-        <span class="ticker-dot" />
-        <span class="ticker-label">LIVE AGENT STREAM</span>
-      </div>
-      <div class="ticker-items">
-        <div v-for="(item, i) in items.slice(0, 3)" :key="`${item.agent}-${item.t}-${i}`"
-          class="ticker-item"
-          :class="{ 'ticker-item-1': i === 0, 'ticker-item-2': i === 1, 'ticker-item-3': i === 2 }">
-          <span class="ticker-time">{{ item.t }}</span>
-          <span class="ticker-role" :style="`color: ${getAgent(item.agent)?.color}; background: ${getAgent(item.agent)?.color}15`">
-            {{ getAgent(item.agent)?.role }}
-          </span>
-          <span class="ticker-text">{{ item.text }}</span>
+  <div class="collaboration-log">
+    <div class="log-header">
+      <h3 class="log-title">多智能体协作</h3>
+      <span class="log-desc">六位智能体协同工作，为你构建个性化学习体验</span>
+    </div>
+    
+    <div class="log-container">
+      <div class="log-track">
+        <div 
+          v-for="(item, i) in items" 
+          :key="`${item.agent}-${i}`"
+          class="log-entry"
+          :class="{ 'log-entry-active': i === currentIndex }"
+        >
+          <div class="log-agent" :style="`color: ${getAgent(item.agent)?.color}`">
+            {{ getAgent(item.agent)?.name }}
+          </div>
+          <div class="log-content">{{ item.text }}</div>
         </div>
       </div>
     </div>
@@ -73,118 +77,105 @@ onUnmounted(() => {
 </template>
 
 <style scoped>
-.ticker-wrap {
-  max-width: 1760px;
-  margin: -20px auto 0;
+.collaboration-log {
+  max-width: 1200px;
+  margin: 40px auto 0;
   padding: 0 56px;
   position: relative;
   z-index: 3;
 }
 
-.ticker-bar {
-  background: rgba(10, 12, 28, 0.7);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(255,255,255,0.05);
-  border-radius: 14px;
-  padding: 14px 22px;
-  display: flex;
-  align-items: center;
-  gap: 18px;
-  box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+.log-header {
+  text-align: center;
+  margin-bottom: 32px;
 }
 
-.ticker-indicator {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding-right: 18px;
-  border-right: 1px solid rgba(255,255,255,0.06);
-  flex-shrink: 0;
-}
-
-.ticker-dot {
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  background: #00d4ff;
-  box-shadow: 0 0 8px #00d4ff;
-  animation: pulse-soft 1.4s ease-in-out infinite;
-}
-
-.ticker-label {
-  font-size: 10px;
-  color: #00d4ff;
-  font-family: 'JetBrains Mono', monospace;
-  letter-spacing: 0.2em;
-  font-weight: 500;
-  white-space: nowrap;
-}
-
-.ticker-items {
-  flex: 1;
-  display: flex;
-  align-items: center;
-  gap: 22px;
-  overflow: hidden;
-}
-
-.ticker-item {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  flex: 1;
-  min-width: 0;
-  transition: opacity 0.4s ease;
-}
-
-.ticker-item-1 { opacity: 1; }
-.ticker-item-2 { opacity: 0.7; }
-.ticker-item-3 { opacity: 0.5; }
-
-.ticker-time {
-  font-size: 10px;
-  color: #4a5568;
-  font-family: 'JetBrains Mono', monospace;
-  white-space: nowrap;
-}
-
-.ticker-role {
-  font-size: 9.5px;
-  font-family: 'JetBrains Mono', monospace;
-  letter-spacing: 0.12em;
-  padding: 2px 6px;
-  border-radius: 4px;
-  white-space: nowrap;
-}
-
-.ticker-text {
-  font-size: 12px;
+.log-title {
+  margin: 0;
+  font-family: 'Instrument Serif', 'Georgia', serif;
+  font-size: 28px;
+  font-weight: 400;
   color: #e8edf5;
-  white-space: nowrap;
+  letter-spacing: -0.01em;
+}
+
+.log-desc {
+  margin: 8px 0 0 0;
+  font-size: 14px;
+  color: #8892b0;
+  font-family: 'Outfit', 'Segoe UI', sans-serif;
+}
+
+.log-container {
+  background: rgba(18, 22, 48, 0.75);
+  border: 1px solid rgba(0, 212, 255, 0.12);
+  border-radius: 16px;
+  padding: 28px;
+  position: relative;
   overflow: hidden;
-  text-overflow: ellipsis;
 }
 
-@keyframes pulse-soft {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.4; }
+.log-track {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .ticker-dot {
-    animation: none !important;
-  }
+.log-entry {
+  display: flex;
+  gap: 16px;
+  padding: 14px 0;
+  opacity: 0.4;
+  transition: opacity 0.6s ease;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.log-entry:last-child {
+  border-bottom: none;
+}
+
+.log-entry-active {
+  opacity: 1;
+}
+
+.log-agent {
+  flex-shrink: 0;
+  font-family: 'JetBrains Mono', 'Cascadia Code', monospace;
+  font-size: 12px;
+  font-weight: 500;
+  padding-top: 2px;
+  min-width: 90px;
+}
+
+.log-content {
+  flex: 1;
+  font-family: 'Outfit', 'Segoe UI', sans-serif;
+  font-size: 14px;
+  color: #e8edf5;
+  line-height: 1.7;
 }
 
 @media (max-width: 900px) {
-  .ticker-wrap {
+  .collaboration-log {
     padding: 0 24px;
-    margin-top: -12px;
+    margin-top: 32px;
   }
-  .ticker-item-2,
-  .ticker-item-3 {
-    display: none;
+  
+  .log-title {
+    font-size: 24px;
+  }
+  
+  .log-container {
+    padding: 20px;
+  }
+  
+  .log-entry {
+    flex-direction: column;
+    gap: 4px;
+  }
+  
+  .log-agent {
+    min-width: auto;
   }
 }
 </style>

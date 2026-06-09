@@ -1,8 +1,10 @@
 import http from 'node:http'
 import { URL } from 'node:url'
+import 'dotenv/config'
 import {
   analyzeProfile,
   buildChatReply,
+  buildChatReplyAsync,
   buildTutoringReply,
   getChatHistory,
   getEvaluationPayload,
@@ -31,8 +33,9 @@ import {
 import { getTraces, getTraceSummary, buildTrace, recordTrace } from './evidence/recorder.js'
 import { validateResourceGenerateInput } from './schemas.js'
 import { isLlmAvailable } from './llm/provider.js'
+import { getKnowledgeBaseStats, searchKnowledgeBase } from './knowledge-base/vector-store.js'
 
-const PORT = Number(process.env.PORT || 8787)
+const PORT = Number(process.env.PORT || 8788)
 const MAX_BODY_SIZE = 1024 * 1024
 
 function sendJson(res, statusCode, payload) {
@@ -154,7 +157,7 @@ const server = http.createServer(async (req, res) => {
       const body = await readJson(req)
       const isDialoguePayload = Array.isArray(body.messages)
       const message = isDialoguePayload ? latestUserMessage(body.messages) : String(body.message || '').trim()
-      const reply = buildChatReply(message, body.multimodalContents)
+      const reply = await buildChatReplyAsync(message, body.multimodalContents)
       saveChatHistoryEntry(message, reply, body.multimodalContents)
       const chatTrace = buildTrace({
         requestId: `chat-${Date.now()}`,
@@ -233,6 +236,25 @@ const server = http.createServer(async (req, res) => {
       return
     }
 
+    if (req.method === 'GET' && pathname === '/api/knowledge/status') {
+      sendJson(res, 200, getKnowledgeBaseStats())
+      return
+    }
+
+    if (req.method === 'POST' && pathname === '/api/knowledge/search') {
+      const body = await readJson(req)
+      const profile = body.profile || getLatestProfileResult() || {}
+      const result = searchKnowledgeBase({
+        query: body.query,
+        profile,
+        learningData: body.learningData,
+        exerciseResults: body.exerciseResults,
+        limit: body.limit,
+      })
+      sendJson(res, 200, result)
+      return
+    }
+
     if (req.method === 'POST' && pathname === '/api/resources/generate') {
       const body = await readJson(req)
       const validation = validateResourceGenerateInput(body)
@@ -292,6 +314,7 @@ const server = http.createServer(async (req, res) => {
         profile,
         learningData: body.learningData,
         exerciseResults: body.exerciseResults,
+        knowledgeContext: body.knowledgeContext,
       })
       sendJson(res, 200, result)
       return
