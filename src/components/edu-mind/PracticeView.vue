@@ -596,8 +596,8 @@ const lineNumbers = Array.from({ length: 14 }, (_, i) => i + 1)
     :class="[
       'flex-1 flex flex-col rounded-2xl overflow-hidden transition-all duration-300 border',
       isDarkTheme
-        ? 'bg-[#0f172a] text-slate-300 border-slate-700'
-        : 'bg-white text-[#2c3e50] border-[#e2e8f0] dark:bg-[#0f172a] dark:text-slate-300 dark:border-slate-700'
+        ? 'bg-[#090a24] text-[#b8c4dc] border-[#252060]'
+        : 'bg-white text-[#2c3e50] border-[#e2e8f0] dark:bg-[#090a24] dark:text-[#b8c4dc] dark:border-[#252060]'
     ]"
     id="ideal-ide-workspace-box"
   >
@@ -605,7 +605,7 @@ const lineNumbers = Array.from({ length: 14 }, (_, i) => i + 1)
     <div
       :class="[
         'px-4 py-3 flex flex-col md:flex-row md:items-center justify-between gap-3 border-b select-none',
-        isDarkTheme ? 'bg-[#141625] border-[#1d2136]' : 'bg-white border-[#e9edf4] dark:border-slate-700'
+        isDarkTheme ? 'bg-[#111438] border-[#252060]' : 'bg-white border-[#e9edf4] dark:border-slate-700'
       ]"
       id="ide-top-nav-bar"
     >
@@ -615,7 +615,7 @@ const lineNumbers = Array.from({ length: 14 }, (_, i) => i + 1)
           :class="[
             'flex items-center gap-1 px-2.5 py-1 text-[14px] rounded border transition-all cursor-pointer font-bold',
             isDarkTheme
-              ? 'bg-[#1c1f32] hover:bg-[#252a42] border-[#2d3350] text-[#8c9bbb]'
+              ? 'bg-[#14163a] hover:bg-[#282265] border-[#282265] text-[#8b9bc0]'
               : 'bg-[#f1f3f9] hover:bg-[#e4e8f1] border-[#d5dae6] text-[#607d8b]'
           ]"
           title="返回目录列表"
@@ -624,9 +624,9 @@ const lineNumbers = Array.from({ length: 14 }, (_, i) => i + 1)
           <span>返回</span>
         </button>
 
-        <div :class="['h-4 w-[1px] hidden sm:block', isDarkTheme ? 'bg-[#252940]' : 'bg-[#e2e8f0]']" />
+        <div :class="['h-4 w-[1px] hidden sm:block', isDarkTheme ? 'bg-[#252060]' : 'bg-[#e2e8f0]']" />
 
-        <h1 :class="['text-[15px] font-bold tracking-tight', isDarkTheme ? 'text-[#f0f6fc]' : 'text-[#1e293b]']">
+        <h1 :class="['text-[15px] font-bold tracking-tight', isDarkTheme ? 'text-[#f0f2ff]' : 'text-[#1e293b]']">
           {{ activeConcept.name }}
         </h1>
 
@@ -643,7 +643,7 @@ const lineNumbers = Array.from({ length: 14 }, (_, i) => i + 1)
             starredConcepts[activeConcept.id]
               ? 'bg-amber-950/40 border-amber-600/70 text-amber-400'
               : isDarkTheme
-                ? 'bg-transparent border-[#2d3350] hover:border-slate-500 text-slate-400 hover:text-white'
+                ? 'bg-transparent border-[#282265] hover:border-[#6d5cff] text-[#9aa4d9] hover:text-white'
                 : 'bg-transparent border-[#cbd5e1] hover:border-slate-400 text-slate-500 hover:text-[#1e293b]'
           ]"
         >
@@ -655,7 +655,7 @@ const lineNumbers = Array.from({ length: 14 }, (_, i) => i + 1)
           @click="triggerToast('🔗 题目链接已拷贝到您的剪切板，可发分享给班级圈')"
           :class="[
             'flex items-center gap-1.5 px-3 py-1 bg-transparent rounded text-[13.5px] font-medium border transition-all cursor-pointer',
-            isDarkTheme ? 'border-[#2d3350] hover:border-slate-500 text-slate-400 hover:text-white' : 'border-[#cbd5e1] hover:border-slate-400 text-slate-500 hover:text-[#1e293b]'
+            isDarkTheme ? 'border-[#282265] hover:border-[#6d5cff] text-[#9aa4d9] hover:text-white' : 'border-[#cbd5e1] hover:border-slate-400 text-slate-500 hover:text-[#1e293b]'
           ]"
         >
           <Share2 :size="14" />
@@ -668,7 +668,7 @@ const lineNumbers = Array.from({ length: 14 }, (_, i) => i + 1)
     <div
       :class="[
         'grid grid-cols-1 lg:grid-cols-12 flex-1 text-[14.5px] overflow-hidden',
-        isDarkTheme ? 'bg-[#0f172a]' : 'bg-white dark:bg-[#0f172a]'
+        isDarkTheme ? 'bg-[#090a24]' : 'bg-white dark:bg-[#090a24]'
       ]"
       id="ide-main-canvas"
     >
@@ -676,13 +676,13 @@ const lineNumbers = Array.from({ length: 14 }, (_, i) => i + 1)
       <div
         :class="[
           'lg:col-span-2 border-b lg:border-b-0 lg:border-r p-3.5 flex flex-col justify-between',
-          isDarkTheme ? 'bg-[#10121d] border-[#1a1c27]' : 'bg-[#fff] border-[#e4ebf3] dark:border-slate-700'
+          isDarkTheme ? 'bg-[#0d0f2c] border-[#1e1b4b]' : 'bg-[#fff] border-[#e4ebf3] dark:border-slate-700'
         ]"
         id="ide-column-sidebar-directory"
       >
         <div class="flex flex-col gap-3">
-          <div class="flex flex-col gap-1.5 border-b pb-2 mb-1 border-slate-700/20 select-none">
-            <span :class="['text-[12px] font-bold tracking-wider uppercase', isDarkTheme ? 'text-[#8c9ba5]' : 'text-slate-500']">当前关联课程</span>
+          <div class="flex flex-col gap-1.5 border-b pb-2 mb-1 border-[#252060]/20 select-none">
+            <span :class="['text-[12px] font-bold tracking-wider uppercase', isDarkTheme ? 'text-[#c4b5fd]' : 'text-slate-500']">当前关联课程</span>
             <div class="relative">
               <select
                 :value="currentCourseId"
@@ -690,7 +690,7 @@ const lineNumbers = Array.from({ length: 14 }, (_, i) => i + 1)
                 :class="[
                   'w-full text-[13.5px] font-bold rounded-lg border py-2.5 pl-2.5 pr-8 appearance-none cursor-pointer outline-none transition-all',
                   isDarkTheme
-                    ? 'bg-[#151724] border-[#2c334d] text-[#b4c6ef] hover:border-[#3b82f6]'
+                    ? 'bg-[#151838] border-[#2a2560] text-[#d8def0] hover:border-[#6d5cff]'
                     : 'bg-white border-[#cbd5e1] text-[#4a6cf7] hover:border-[#4a6cf7]'
                 ]"
               >
@@ -698,13 +698,13 @@ const lineNumbers = Array.from({ length: 14 }, (_, i) => i + 1)
                   {{ c.name }}
                 </option>
               </select>
-              <div class="absolute inset-y-0 right-0 flex items-center pr-2.5 pointer-events-none text-slate-400">
+              <div class="absolute inset-y-0 right-0 flex items-center pr-2.5 pointer-events-none text-[#9aa4d9]">
                 <ChevronDown :size="14" />
               </div>
             </div>
           </div>
 
-          <div class="flex items-center justify-between pb-1 text-[#8c9ba5] select-none font-mono">
+          <div class="flex items-center justify-between pb-1 text-[#c4b5fd] select-none font-mono">
             <span class="font-bold text-[13px] tracking-wider uppercase">本栏加练大纲目录</span>
             <span class="text-[12px] font-semibold opacity-85">({{ currentExercises.length }} 题)</span>
           </div>
@@ -718,10 +718,10 @@ const lineNumbers = Array.from({ length: 14 }, (_, i) => i + 1)
                 'group w-full p-2.5 rounded-lg border transition-all duration-150 cursor-pointer flex items-center justify-between text-left relative',
                 selectedConceptId === item.id
                   ? isDarkTheme
-                    ? 'bg-[#1d2d4c] border-[#3b82f6]/50 text-[#60a5fa] font-bold shadow-sm'
+                    ? 'bg-[#1d2d4c] border-[#6d5cff]/50 text-[#c4b5fd] font-bold shadow-sm'
                     : 'bg-[#f0f5ff] border-[#4a6cf7]/40 text-[#4a6cf7] font-bold shadow-sm'
                   : isDarkTheme
-                    ? 'bg-transparent border-transparent text-[#a0a5b5] hover:bg-[#151722] hover:text-[#fff]'
+                    ? 'bg-transparent border-transparent text-[#9aa4d9] hover:bg-[#151835] hover:text-[#fff]'
                     : 'bg-transparent border-transparent text-[#595959] hover:bg-[#f3f6fa] hover:text-[#111]'
               ]"
             >
@@ -729,7 +729,7 @@ const lineNumbers = Array.from({ length: 14 }, (_, i) => i + 1)
                 v-if="selectedConceptId === item.id"
                 :class="[
                   'absolute left-0 top-0 bottom-0 w-1 rounded-l-md',
-                  isDarkTheme ? 'bg-[#3b82f6]' : 'bg-[#4a6cf7]'
+                  isDarkTheme ? 'bg-[#6d5cff]' : 'bg-[#4a6cf7]'
                 ]"
               />
 
@@ -741,22 +741,22 @@ const lineNumbers = Array.from({ length: 14 }, (_, i) => i + 1)
                 :size="14"
                 :class="[
                   'opacity-0 group-hover:opacity-100 transition-opacity shrink-0',
-                  selectedConceptId === item.id ? 'text-blue-400' : 'text-slate-400'
+                  selectedConceptId === item.id ? 'text-[#c4b5fd]' : 'text-[#9aa4d9]'
                 ]"
               />
             </div>
           </div>
         </div>
 
-        <div class="mt-4 pt-3.5 border-t border-slate-700/30 select-none space-y-4">
+        <div class="mt-4 pt-3.5 border-t border-[#252060]/30 select-none space-y-4">
           <div class="font-mono">
             <div class="flex justify-between items-center text-[13px] mb-1 font-bold">
               <span :class="isDarkTheme ? 'text-slate-400' : 'text-slate-500'">学习进度</span>
-              <span :class="isDarkTheme ? 'text-slate-200' : 'text-[#1a1a2e]'">62%</span>
+              <span :class="isDarkTheme ? 'text-[#d8def0]' : 'text-[#1a1a2e]'">62%</span>
             </div>
 
-            <div :class="['h-1.5 rounded-full overflow-hidden', isDarkTheme ? 'bg-[#151926]' : 'bg-[#e2e8f0]']">
-              <div class="h-full bg-[#1677ff] rounded-full" style="width: 62%" />
+            <div :class="['h-1.5 rounded-full overflow-hidden', isDarkTheme ? 'bg-[#151835]' : 'bg-[#e2e8f0]']">
+              <div class="h-full bg-[#6d5cff] rounded-full" style="width: 62%" />
             </div>
           </div>
 
@@ -765,7 +765,7 @@ const lineNumbers = Array.from({ length: 14 }, (_, i) => i + 1)
             :class="[
               'p-2.5 rounded-lg border text-[13px] leading-relaxed cursor-pointer transition-all',
               isDarkTheme
-                ? 'bg-[#131522] border-[#22273c] text-indigo-200 hover:border-slate-500'
+                ? 'bg-[#101235] border-[#282260] text-indigo-200 hover:border-[#6d5cff]'
                 : 'bg-indigo-50/50 border-indigo-100 text-indigo-600 hover:bg-indigo-50'
             ]"
           >
@@ -783,23 +783,23 @@ const lineNumbers = Array.from({ length: 14 }, (_, i) => i + 1)
       <!-- PANEL 2: MIDDLE PROBLEM DESCRIPTION (TABS) -->
       <div
         :class="[
-          'lg:col-span-2 border-b lg:border-b-0 lg:border-r p-3.5 flex flex-col justify-between',
-          isDarkTheme ? 'bg-[#11131c] border-[#1a1c27]' : 'bg-white border-[#e4ebf3] dark:border-slate-700'
+          'lg:col-span-2 border-b lg:border-b-0 lg:border-r p-3.5 flex flex-col justify-between min-w-0 overflow-hidden',
+          isDarkTheme ? 'bg-[#111338] border-[#1e1b4b]' : 'bg-white border-[#e4ebf3] dark:border-slate-700'
         ]"
         id="ide-column-problem-tabs-panel"
       >
-        <div class="flex items-center border-b border-slate-700/20 pb-1.5 mb-3.5 select-none font-sans font-medium text-[14.5px]">
+        <div class="flex items-center border-b border-[#252060]/20 pb-1.5 mb-3.5 select-none font-sans font-medium text-[14.5px]">
           <button
             @click="activeTab = '题目描述'"
             :class="[
               'flex-1 text-center pb-2 relative transition-all cursor-pointer',
               activeTab === '题目描述'
-                ? 'text-[#2e82ff] font-bold'
-                : 'text-slate-400 hover:text-slate-200'
+                ? 'text-[#c4b5fd] font-bold'
+                : 'text-[#8b9bc0] hover:text-[#d8def0]'
             ]"
           >
             题目描述
-            <div v-if="activeTab === '题目描述'" class="absolute bottom-0 left-0 right-0 h-[2px] bg-[#3b82f6]" />
+            <div v-if="activeTab === '题目描述'" class="absolute bottom-0 left-0 right-0 h-[2px] bg-[#6d5cff]" />
           </button>
 
           <button
@@ -807,12 +807,12 @@ const lineNumbers = Array.from({ length: 14 }, (_, i) => i + 1)
             :class="[
               'flex-1 text-center pb-2 relative transition-all cursor-pointer',
               activeTab === '提交记录'
-                ? 'text-[#2e82ff] font-bold'
-                : 'text-slate-400 hover:text-slate-200'
+                ? 'text-[#c4b5fd] font-bold'
+                : 'text-[#8b9bc0] hover:text-[#d8def0]'
             ]"
           >
             提交记录
-            <div v-if="activeTab === '提交记录'" class="absolute bottom-0 left-0 right-0 h-[2px] bg-[#3b82f6]" />
+            <div v-if="activeTab === '提交记录'" class="absolute bottom-0 left-0 right-0 h-[2px] bg-[#6d5cff]" />
           </button>
 
           <button
@@ -820,38 +820,38 @@ const lineNumbers = Array.from({ length: 14 }, (_, i) => i + 1)
             :class="[
               'flex-1 text-center pb-2 relative transition-all cursor-pointer',
               activeTab === '讨论区'
-                ? 'text-[#2e82ff] font-bold'
-                : 'text-slate-400 hover:text-slate-200'
+                ? 'text-[#c4b5fd] font-bold'
+                : 'text-[#8b9bc0] hover:text-[#d8def0]'
             ]"
           >
             讨论区
-            <div v-if="activeTab === '讨论区'" class="absolute bottom-0 left-0 right-0 h-[2px] bg-[#3b82f6]" />
+            <div v-if="activeTab === '讨论区'" class="absolute bottom-0 left-0 right-0 h-[2px] bg-[#6d5cff]" />
           </button>
         </div>
 
         <!-- TAB 1: 题目描述 -->
-        <div v-if="activeTab === '题目描述'" class="flex-1 flex flex-col justify-between overflow-y-auto max-h-[520px] pr-1 scrollbar-thin select-text" id="problem-desc-scroller">
-          <div class="space-y-4">
+        <div v-if="activeTab === '题目描述'" class="flex-1 flex flex-col justify-between overflow-y-auto max-h-[520px] pr-1 scrollbar-thin select-text min-w-0" id="problem-desc-scroller">
+          <div class="space-y-4 min-w-0">
             <div class="space-y-2">
-              <h3 :class="['text-[15.5px] font-bold', isDarkTheme ? 'text-slate-100' : 'text-slate-800']">
+              <h3 :class="['text-[15.5px] font-bold', isDarkTheme ? 'text-[#f0f2ff]' : 'text-slate-800']">
                 题目描述
               </h3>
-              <p :class="['leading-relaxed leading-6 text-[14px] whitespace-pre-line', isDarkTheme ? 'text-slate-300' : 'text-slate-600']">
+              <p :class="['leading-relaxed leading-6 text-[14px] whitespace-pre-line', isDarkTheme ? 'text-[#b8c4dc]' : 'text-slate-600']">
                 {{ activeConcept.description }}
               </p>
             </div>
 
             <div class="space-y-3.5">
               <div class="space-y-1.5">
-                <h4 :class="['text-[14.5px] font-bold font-sans', isDarkTheme ? 'text-[#f0f3f6]' : 'text-slate-800']">输入格式</h4>
-                <p :class="['text-[14px]', isDarkTheme ? 'text-slate-400' : 'text-slate-600']">
+                <h4 :class="['text-[14.5px] font-bold font-sans', isDarkTheme ? 'text-[#f0f2ff]' : 'text-slate-800']">输入格式</h4>
+                <p :class="['text-[14px]', isDarkTheme ? 'text-[#9aa4d9]' : 'text-slate-600']">
                   {{ activeConcept.inputFormat }}
                 </p>
               </div>
 
               <div class="space-y-1.5">
-                <h4 :class="['text-[14.5px] font-bold font-sans', isDarkTheme ? 'text-[#f0f3f6]' : 'text-slate-800']">输出格式</h4>
-                <p :class="['text-[14px]', isDarkTheme ? 'text-slate-400' : 'text-slate-600']">
+                <h4 :class="['text-[14.5px] font-bold font-sans', isDarkTheme ? 'text-[#f0f2ff]' : 'text-slate-800']">输出格式</h4>
+                <p :class="['text-[14px]', isDarkTheme ? 'text-[#9aa4d9]' : 'text-slate-600']">
                   {{ activeConcept.outputFormat }}
                 </p>
               </div>
@@ -859,21 +859,21 @@ const lineNumbers = Array.from({ length: 14 }, (_, i) => i + 1)
 
             <div class="space-y-4 pt-1">
               <div v-for="(sample, sIdx) in activeConcept.samples" :key="sIdx" class="space-y-2">
-                <h4 :class="['text-[14.5px] font-bold', isDarkTheme ? 'text-slate-100' : 'text-slate-800']">
+                <h4 :class="['text-[14.5px] font-bold', isDarkTheme ? 'text-[#f0f2ff]' : 'text-slate-800']">
                   示例 {{ sIdx + 1 }}
                 </h4>
 
                 <div class="space-y-2">
                   <div class="space-y-1">
-                    <span class="text-[13px] text-[#8c9ba5] block font-mono">输入</span>
-                    <div :class="['p-2.5 rounded-lg border font-mono text-[13.5px] leading-relaxed', isDarkTheme ? 'bg-[#0a0c12] border-[#222736]' : 'bg-[#f8fafc] border-[#cbd5e1]']">
+                    <span class="text-[13px] text-[#c4b5fd] block font-mono">输入</span>
+                    <div :class="['p-2.5 rounded-lg border font-mono text-[13.5px] leading-relaxed', isDarkTheme ? 'bg-[#0a0c24] border-[#262058]' : 'bg-[#f8fafc] border-[#cbd5e1]']">
                       {{ sample.input }}
                     </div>
                   </div>
 
                   <div class="space-y-1">
-                    <span class="text-[13px] text-[#8c9ba5] block font-mono">输出</span>
-                    <div :class="['p-2.5 rounded-lg border font-mono text-[13.5px] leading-relaxed', isDarkTheme ? 'bg-[#0a0c12] border-[#222736]' : 'bg-[#f8fafc] border-[#cbd5e1]']">
+                    <span class="text-[13px] text-[#c4b5fd] block font-mono">输出</span>
+                    <div :class="['p-2.5 rounded-lg border font-mono text-[13.5px] leading-relaxed', isDarkTheme ? 'bg-[#0a0c24] border-[#262058]' : 'bg-[#f8fafc] border-[#cbd5e1]']">
                       {{ sample.output }}
                     </div>
                   </div>
@@ -885,7 +885,7 @@ const lineNumbers = Array.from({ length: 14 }, (_, i) => i + 1)
 
         <!-- TAB 2: 提交记录 -->
         <div v-if="activeTab === '提交记录'" class="flex-grow overflow-y-auto max-h-[500px] space-y-3 pr-1" id="sub-history-area">
-          <div class="flex justify-between items-center text-[13px] text-slate-400 pb-1.5 border-b border-slate-700/20">
+          <div class="flex justify-between items-center text-[13px] text-[#9aa4d9] pb-1.5 border-b border-[#252060]/20">
             <span>提交时间</span>
             <span>测评状态</span>
           </div>
@@ -894,7 +894,7 @@ const lineNumbers = Array.from({ length: 14 }, (_, i) => i + 1)
             <div
               v-for="(history, hIdx) in (submissionHistory[activeConcept.id] || [])"
               :key="hIdx"
-              :class="['p-2.5 rounded-lg border transition-all', isDarkTheme ? 'bg-[#151722]/60 border-[#222638]' : 'bg-slate-50 border-slate-100']"
+              :class="['p-2.5 rounded-lg border transition-all', isDarkTheme ? 'bg-[#151835]/60 border-[#26205a]' : 'bg-slate-50 border-slate-100']"
             >
               <div class="flex justify-between items-start mb-1 select-none">
                 <span class="text-[13px] font-mono opacity-80">{{ history.time }}</span>
@@ -902,14 +902,14 @@ const lineNumbers = Array.from({ length: 14 }, (_, i) => i + 1)
                   {{ history.status }}
                 </span>
               </div>
-              <div class="flex justify-between text-[12px] text-slate-400 font-mono">
+              <div class="flex justify-between text-[12px] text-[#9aa4d9] font-mono">
                 <span>语言: {{ history.lang }}</span>
                 <span>资源消耗: {{ history.usage }}</span>
               </div>
             </div>
           </template>
 
-          <div v-else class="text-center py-12 text-slate-500 font-mono">
+          <div v-else class="text-center py-12 text-[#8b9bc0] font-mono">
             [ 针对该专项，暂无提交历史记录 ]
           </div>
         </div>
@@ -921,13 +921,13 @@ const lineNumbers = Array.from({ length: 14 }, (_, i) => i + 1)
               <div
                 v-for="(qa, qIdx) in (conceptQuestions[activeConcept.id] || [])"
                 :key="qIdx"
-                :class="['p-2.5 rounded-lg border leading-relaxed', isDarkTheme ? 'bg-[#131522] border-[#202538]' : 'bg-slate-50 border-slate-100']"
+                :class="['p-2.5 rounded-lg border leading-relaxed', isDarkTheme ? 'bg-[#101235] border-[#201c50]' : 'bg-slate-50 border-slate-100']"
               >
-                <div class="flex justify-between text-[12.5px] mb-1.5 select-none text-slate-400 font-mono">
+                <div class="flex justify-between text-[12.5px] mb-1.5 select-none text-[#9aa4d9] font-mono">
                   <span class="font-bold text-blue-400">{{ qa.user }}</span>
                   <span>{{ qa.time }}</span>
                 </div>
-                <p :class="['text-[13.5px] leading-relaxed select-text', isDarkTheme ? 'text-slate-200' : 'text-slate-700']">
+                <p :class="['text-[13.5px] leading-relaxed select-text', isDarkTheme ? 'text-[#d8def0]' : 'text-slate-700']">
                   {{ qa.content }}
                 </p>
 
@@ -944,12 +944,12 @@ const lineNumbers = Array.from({ length: 14 }, (_, i) => i + 1)
               </div>
             </template>
 
-            <div v-else class="text-center py-12 text-slate-500 font-mono">
+            <div v-else class="text-center py-12 text-[#8b9bc0] font-mono">
               [ 暂无讨论内容，欢迎抢占首评沙发 🛋️ ]
             </div>
           </div>
 
-          <form @submit="handlePostQuestion" class="border-t border-slate-700/20 pt-2.5 mt-2 space-y-2">
+          <form @submit="handlePostQuestion" class="border-t border-[#252060]/20 pt-2.5 mt-2 space-y-2">
             <input
               type="text"
               placeholder="写下疑问或思考..."
@@ -957,7 +957,7 @@ const lineNumbers = Array.from({ length: 14 }, (_, i) => i + 1)
               :class="[
                 'w-full px-2.5 py-1.5 rounded-lg text-[13.5px] outline-none border transition-all',
                 isDarkTheme
-                  ? 'bg-[#090a10] border-[#222538] text-white focus:border-blue-500'
+                  ? 'bg-[#0a0c24] border-[#262058] text-white focus:border-blue-500'
                   : 'bg-slate-50 border-slate-200 text-slate-800 focus:border-[#4a6cf7]'
               ]"
             />
@@ -975,19 +975,19 @@ const lineNumbers = Array.from({ length: 14 }, (_, i) => i + 1)
       <!-- PANEL 3: CODE EDITOR -->
       <div
         :class="[
-          'lg:col-span-5 border-b lg:border-b-0 lg:border-r flex flex-col justify-between',
-          isDarkTheme ? 'bg-[#12131f] border-[#1a1c27]' : 'bg-[#fcfdfe] border-[#e4ebf3] dark:border-slate-700'
+          'lg:col-span-5 border-b lg:border-b-0 lg:border-r flex flex-col justify-between min-w-0',
+          isDarkTheme ? 'bg-[#0d1130] border-[#1e1b4b]' : 'bg-[#fcfdfe] border-[#e4ebf3] dark:border-slate-700'
         ]"
         id="ide-column-code-editor-panel"
       >
         <div
           :class="[
             'px-4 py-3 border-b flex items-center justify-between select-none',
-            isDarkTheme ? 'bg-[#131522] border-[#22253c]' : 'bg-[#f1f4f8] border-[#cbd5e1]'
+            isDarkTheme ? 'bg-[#101235] border-[#252055]' : 'bg-[#f1f4f8] border-[#cbd5e1]'
           ]"
           id="editor-heading-row"
         >
-          <span :class="['font-bold font-sans', isDarkTheme ? 'text-slate-200' : 'text-slate-800']">
+          <span :class="['font-bold font-sans', isDarkTheme ? 'text-[#d8def0]' : 'text-slate-800']">
             代码编辑器
           </span>
 
@@ -997,7 +997,7 @@ const lineNumbers = Array.from({ length: 14 }, (_, i) => i + 1)
               :class="[
                 'text-[13px] font-bold rounded px-2 py-1 leading-none cursor-pointer outline-none border',
                 isDarkTheme
-                  ? 'bg-[#090a10] border-[#252a3f] text-[#3b82f6]'
+                  ? 'bg-[#0a0c24] border-[#25205a] text-[#3b82f6]'
                   : 'bg-[#fff] border-[#cbd5e1] text-[#4a6cf7]'
               ]"
             >
@@ -1008,8 +1008,8 @@ const lineNumbers = Array.from({ length: 14 }, (_, i) => i + 1)
           </div>
         </div>
 
-        <div class="flex-1 flex align-stretch font-mono relative text-[14px] bg-[#07080e]" id="editor-body-zone">
-          <div class="w-9 bg-[#0b0c13] border-r border-[#151928] text-[#555e75] text-right pr-2 py-4 select-none leading-6 text-[14px]">
+        <div class="flex-1 flex align-stretch font-mono relative text-[14px] bg-[#090a22]" id="editor-body-zone">
+          <div class="w-9 bg-[#0b0d28] border-r border-[#1e1a50] text-[#6f7a9e] text-right pr-2 py-4 select-none leading-6 text-[14px]">
             <div v-for="i in lineNumbers" :key="i">{{ i }}</div>
           </div>
 
@@ -1024,7 +1024,7 @@ const lineNumbers = Array.from({ length: 14 }, (_, i) => i + 1)
         <div
           :class="[
             'p-3 border-t flex items-center justify-between select-none',
-            isDarkTheme ? 'bg-[#131522] border-[#22253c]' : 'bg-[#f8fafc] border-[#cbd5e1]'
+            isDarkTheme ? 'bg-[#101235] border-[#252055]' : 'bg-[#f8fafc] border-[#cbd5e1]'
           ]"
           id="editor-action-strip"
         >
@@ -1033,7 +1033,7 @@ const lineNumbers = Array.from({ length: 14 }, (_, i) => i + 1)
             :class="[
               'px-4 py-1.5 text-[13.5px] font-bold font-mono rounded-lg transition-all border cursor-pointer',
               isDarkTheme
-                ? 'bg-[#1b1c2b] border-[#2d324d] hover:border-slate-500 text-slate-300'
+                ? 'bg-[#1b1d45] border-[#2d2660] hover:border-[#6d5cff] text-[#b8c4dc]'
                 : 'bg-white border-slate-300 hover:bg-slate-50 text-slate-700'
             ]"
           >
@@ -1043,7 +1043,7 @@ const lineNumbers = Array.from({ length: 14 }, (_, i) => i + 1)
           <button
             @click="handleRunCode"
             :disabled="compilationProgress === 'running'"
-            class="px-5 py-1.5 text-[13.5px] font-bold tracking-wider rounded-lg flex items-center gap-1.5 bg-[#1677ff] hover:bg-[#4096ff] text-white border-none cursor-pointer transition-all disabled:opacity-50"
+            class="px-5 py-1.5 text-[13.5px] font-bold tracking-wider rounded-lg flex items-center gap-1.5 bg-[#6d5cff] hover:bg-[#7e6dff] text-white border-none cursor-pointer transition-all disabled:opacity-50"
           >
             <Play :size="14" class="fill-white text-white" />
             <span>{{ compilationProgress === 'running' ? '编译中...' : '运行代码' }}</span>
@@ -1054,13 +1054,13 @@ const lineNumbers = Array.from({ length: 14 }, (_, i) => i + 1)
       <!-- PANEL 4: RIGHT PANEL RUN RESULTS -->
       <div
         :class="[
-          'lg:col-span-3 p-4 flex flex-col justify-between',
-          isDarkTheme ? 'bg-[#121421]' : 'bg-white'
+          'lg:col-span-3 p-4 flex flex-col justify-between min-w-0',
+          isDarkTheme ? 'bg-[#0d0f2a]' : 'bg-white'
         ]"
         id="ide-column-run-results-panel"
       >
         <div class="flex flex-col gap-3">
-          <div class="flex items-center justify-between pb-1 border-b border-slate-700/20 text-slate-400 select-none font-sans font-medium">
+          <div class="flex items-center justify-between pb-1 border-b border-[#252060]/20 text-slate-400 select-none font-sans font-medium">
             <span>运行结果</span>
           </div>
 
@@ -1069,20 +1069,20 @@ const lineNumbers = Array.from({ length: 14 }, (_, i) => i + 1)
               <CheckCircle :size="16" class="fill-emerald-500/10 text-emerald-500" stroke-width="2.5" />
               <span>已通过全部测试用例</span>
             </h4>
-            <p class="text-[13px] text-slate-400 font-mono select-none">
+            <p class="text-[13px] text-[#9aa4d9] font-mono select-none">
               执行用时：{{ runTimeMs }}ms   内存使用：{{ memoryUsedMb }}MB
             </p>
           </div>
 
           <div class="space-y-2 max-h-[400px] overflow-y-auto pr-0.5 select-none" id="test-case-suite">
-            <span class="text-[13px] text-slate-400 font-mono block mb-1">测试用例</span>
+            <span class="text-[13px] text-[#9aa4d9] font-mono block mb-1">测试用例</span>
 
             <div
               v-for="(tc, tcIdx) in activeConcept.testCases"
               :key="tc.id"
               :class="[
                 'p-3 rounded-lg border flex flex-col gap-1.5 transition-all',
-                isDarkTheme ? 'bg-[#171a29]/90 border-[#2d324d]' : 'bg-[#f7fafe] border-[#cbd5e1]'
+                isDarkTheme ? 'bg-[#161840] border-[#2d2660]' : 'bg-[#f7fafe] border-[#cbd5e1]'
               ]"
             >
               <div class="flex items-center justify-between">
@@ -1093,12 +1093,12 @@ const lineNumbers = Array.from({ length: 14 }, (_, i) => i + 1)
               <div class="grid grid-cols-12 gap-1.5 font-mono text-[12.5px]">
                 <div class="col-span-12 flex items-center justify-between gap-2">
                   <span class="text-slate-400">输入</span>
-                  <span :class="['px-2 py-0.5 leading-none rounded select-all', isDarkTheme ? 'bg-[#0a0c12] text-slate-300' : 'bg-white text-slate-700']">{{ tc.input || '(空)' }}</span>
+                  <span :class="['px-2 py-0.5 leading-none rounded select-all', isDarkTheme ? 'bg-[#0a0c24] text-[#b8c4dc]' : 'bg-white text-slate-700']">{{ tc.input || '(空)' }}</span>
                 </div>
 
                 <div class="col-span-12 flex items-center justify-between gap-2 bg-[#10ffff]/5 p-1 rounded">
                   <span class="text-slate-400">预期</span>
-                  <span class="text-[#a5b4fc] font-bold">{{ tc.expected }}</span>
+                  <span class="text-[#b8c4dc] font-bold">{{ tc.expected }}</span>
                 </div>
 
                 <div class="col-span-12 flex items-center justify-between gap-2">
@@ -1110,7 +1110,7 @@ const lineNumbers = Array.from({ length: 14 }, (_, i) => i + 1)
           </div>
         </div>
 
-        <div class="flex gap-2 border-t border-slate-700/20 pt-4 mt-auto select-none" id="ide-right-action-row">
+        <div class="flex gap-2 border-t border-[#252060]/20 pt-4 mt-auto select-none" id="ide-right-action-row">
           <button
             @click="handleSubmitCode"
             class="flex-1 py-2 bg-[#27c24c] hover:bg-[#23ae44] text-white font-bold rounded-lg text-[13.5px] border-none shadow-sm cursor-pointer transition-colors"
@@ -1123,7 +1123,7 @@ const lineNumbers = Array.from({ length: 14 }, (_, i) => i + 1)
             :class="[
               'px-4 py-2 text-[13px] font-bold rounded-lg border cursor-pointer transition-all',
               isDarkTheme
-                ? 'bg-[#1b1d28] border-[#22273d] hover:border-slate-500 text-slate-300'
+                ? 'bg-[#1c1e4a] border-[#25205a] hover:border-[#6d5cff] text-[#b8c4dc]'
                 : 'bg-white border-slate-300 hover:bg-slate-50 text-slate-700'
             ]"
           >
@@ -1137,7 +1137,7 @@ const lineNumbers = Array.from({ length: 14 }, (_, i) => i + 1)
     <Transition name="toast-slide">
       <div
         v-if="showToast"
-        class="fixed bottom-6 right-6 px-4 py-3 bg-[#1d2745] hover:bg-[#23315a] border border-[#3b82f6]/60 text-[#a5fcb8] font-mono text-[13.5px] rounded-lg shadow-2xl flex items-center gap-2 select-none z-50"
+        class="fixed bottom-6 right-6 px-4 py-3 bg-[#1a1d48] hover:bg-[#1f2255] border border-[#6d5cff]/60 text-[#c4b5fd] font-mono text-[13.5px] rounded-lg shadow-2xl flex items-center gap-2 select-none z-50"
       >
         <Sparkles :size="16" class="text-emerald-400 animate-spin" />
         <span>{{ toastMsg }}</span>
