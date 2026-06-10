@@ -1,37 +1,40 @@
 <template>
   <aside class="w-full lg:w-[260px] flex-shrink-0 flex flex-col gap-4" id="right-sidebar">
-    <div class="bg-white dark:bg-[#1e293b] rounded-xl p-4 border border-[#e8e8e8] dark:border-slate-700/60 shadow-sm">
+    <div class="edu-side-panel">
       <div class="flex justify-between items-center mb-3">
-        <h4 class="text-[15px] font-semibold text-[#1a1a2e] dark:text-white">为你推荐</h4>
+        <h4 class="text-[15px] font-semibold text-white flex items-center gap-1.5">
+          <Sparkles class="w-4 h-4 text-[#c4b5fd]" />
+          <span>为你推荐</span>
+        </h4>
         <button
           @click="handleRefreshClick"
-          class="flex items-center gap-1 text-[14px] text-[#4a6cf7] dark:text-[#6a8cff] hover:text-[#3b5bdb] dark:hover:text-[#4a6cf7] transition-colors font-medium cursor-pointer"
+          class="edu-side-panel__action flex items-center gap-1 text-[13px] font-semibold cursor-pointer"
         >
           <RotateCw :class="['w-3.5 h-3.5', isRotating ? 'animate-spin' : '']" />
           <span>换一换</span>
         </button>
       </div>
 
-      <div class="space-y-1.5 max-h-[380px] overflow-y-auto">
-        <TransitionGroup name="rec-list" tag="div" class="space-y-1.5">
+      <div class="space-y-2 overflow-y-auto edu-side-scroll edu-side-panel__list">
+        <TransitionGroup name="rec-list" tag="div" class="space-y-2">
           <div
             v-for="item in recommendations"
             :key="item.id"
-            class="flex gap-2.5 p-2 rounded-lg hover:bg-[#f5f7fa] dark:hover:bg-slate-800/60 transition-colors items-center group relative border border-transparent hover:border-[#e8e8e8] dark:hover:border-slate-700/60"
+            class="edu-side-item flex gap-3 px-3 py-3 rounded-lg items-center group relative"
           >
-            <div :class="['w-8 h-8 rounded-lg flex items-center justify-center shrink-0', getIconAndClass(item.category).bgColor, getIconAndClass(item.category).color]">
+            <div :class="['edu-side-item__icon w-9 h-9 rounded-lg flex items-center justify-center shrink-0', getIconAndClass(item.category).bgColor, getIconAndClass(item.category).color]">
               <component :is="getIconAndClass(item.category).icon" class="w-4 h-4" />
             </div>
 
             <div class="flex-1 min-w-0" @click="emit('collectionItemClick', item.id, item.category)">
-              <div class="text-[14px] font-medium text-[#1a1a2e] dark:text-white mb-1 truncate hover:text-[#4a6cf7] dark:hover:text-[#6a8cff] cursor-pointer" :title="item.title">
+              <div class="text-[14.5px] font-semibold text-white mb-1.5 truncate edu-side-item__title cursor-pointer" :title="item.title">
                 {{ item.title }}
               </div>
               <div class="flex items-center gap-2">
-                <span :class="['text-[11px] px-1.5 py-0.5 rounded', getIconAndClass(item.category).badgeClass]">
+                <span :class="['edu-side-item__badge text-[11px] px-1.5 py-0.5 rounded font-medium', getIconAndClass(item.category).badgeClass]">
                   {{ item.category }}
                 </span>
-                <span class="text-[12px] text-[#8c8c8c] dark:text-slate-500 flex items-center gap-0.5">
+                <span class="text-[12px] text-[#8b9bc0] flex items-center gap-0.5 font-mono">
                   {{ item.views >= 1000 ? `${(item.views / 1000).toFixed(1)}k` : item.views }} 次阅读
                 </span>
               </div>
@@ -39,7 +42,8 @@
 
             <button
               @click="emit('toggleRecommendStar', item.id)"
-              class="shrink-0 p-1 rounded hover:bg-slate-200/50 dark:hover:bg-slate-700 cursor-pointer text-slate-300 hover:text-slate-500 dark:hover:text-slate-400 transition-colors"
+              class="shrink-0 p-1 rounded edu-side-item__star cursor-pointer transition-colors"
+              :title="item.starred ? '取消收藏' : '加入收藏'"
             >
               <Star :class="['w-3.5 h-3.5', item.starred ? 'fill-[#fadb14] text-[#fadb14]' : '']" />
             </button>
@@ -48,19 +52,19 @@
       </div>
     </div>
 
-    <div class="bg-white dark:bg-[#1e293b] rounded-xl p-4 border border-[#e8e8e8] dark:border-slate-700/60 shadow-sm">
+    <div class="edu-side-panel">
       <div class="flex justify-between items-center mb-3">
-        <h4 class="text-[15px] font-semibold text-[#1a1a2e] dark:text-white flex items-center gap-1.5">
-          <Bookmark class="w-4 h-4 text-[#4a6cf7] dark:text-[#6a8cff]" />
+        <h4 class="text-[15px] font-semibold text-white flex items-center gap-1.5">
+          <Bookmark class="w-4 h-4 text-[#c4b5fd]" />
           <span>我的收藏</span>
         </h4>
-        <span class="text-[13px] text-[#8c8c8c] dark:text-slate-500">共 {{ collections.length }} 个</span>
+        <span class="text-[12px] text-[#8b9bc0] font-mono">共 {{ collections.length }} 个</span>
       </div>
 
-      <div class="space-y-1.5 max-h-[300px] overflow-y-auto">
+      <div class="space-y-2 overflow-y-auto edu-side-scroll edu-side-panel__list">
         <div
           v-if="collections.length === 0"
-          class="text-center py-6 text-[13px] text-[#8c8c8c] dark:text-slate-500 bg-[#fafafa] dark:bg-slate-800/60 rounded-lg border border-dashed border-[#e8e8e8] dark:border-slate-700/60"
+          class="edu-side-empty text-center py-8 text-[13px] text-[#8b9bc0] rounded-lg"
         >
           暂未收藏任何资源，点击卡片右上角 ⭐ 即可收藏。
         </div>
@@ -69,24 +73,24 @@
             v-for="item in collections"
             :key="item.id"
             @click="emit('collectionItemClick', item.id, item.category)"
-            class="flex items-center gap-2.5 p-2 rounded-lg hover:bg-[#f5f7fa] dark:hover:bg-slate-800/60 transition-colors cursor-pointer border border-transparent hover:border-[#e8e8e8] dark:hover:border-slate-700/60"
+            class="edu-side-item flex items-center gap-3 px-3 py-3 rounded-lg cursor-pointer"
           >
-            <div :class="['w-6 h-6 rounded-md flex items-center justify-center shrink-0', getIconAndClass(item.category).bgColor, getIconAndClass(item.category).color]">
-              <component :is="getIconAndClass(item.category).icon" class="w-3.5 h-3.5" />
+            <div :class="['w-8 h-8 rounded-lg flex items-center justify-center shrink-0', getIconAndClass(item.category).bgColor, getIconAndClass(item.category).color]">
+              <component :is="getIconAndClass(item.category).icon" class="w-4 h-4" />
             </div>
             <div class="flex-1 min-w-0">
-              <p class="text-[14px] text-[#4c4c4c] dark:text-slate-300 hover:text-[#4a6cf7] dark:hover:text-[#6a8cff] transition-colors truncate font-medium">
+              <p class="text-[14.5px] text-[#d8def0] hover:text-white transition-colors truncate font-semibold">
                 {{ item.title }}
               </p>
             </div>
-            <span class="text-[12px] text-[#bfbfbf] dark:text-slate-600 shrink-0 font-mono">
+            <span class="text-[12px] text-[#6f7a9e] shrink-0 font-mono">
               {{ item.date }}
             </span>
           </div>
         </template>
       </div>
 
-      <div class="text-center pt-2.5 mt-2 border-t border-[#e8e8e8] dark:border-slate-700/60 text-[12px] text-[#8c8c8c] dark:text-slate-500">
+      <div class="edu-side-panel__footer text-center pt-3 mt-3 text-[12px] text-[#6f7a9e] font-medium">
         学习千钟计，勤奋是舟楫
       </div>
     </div>
@@ -98,6 +102,7 @@ import { ref } from 'vue'
 import {
   RotateCw,
   Star,
+  Sparkles,
   FileText,
   Video,
   HelpCircle,
@@ -133,60 +138,166 @@ const getIconAndClass = (category: ResourceCategory) => {
     case '文档':
       return {
         icon: FileText,
-        bgColor: 'bg-[#e6f4ff]',
-        color: 'text-[#1677ff]',
-        badgeClass: 'bg-[#e6f4ff] text-[#1677ff]'
+        bgColor: 'bg-[rgba(91,141,239,0.18)]',
+        color: 'text-[#7eb1ff]',
+        badgeClass: 'bg-[rgba(91,141,239,0.18)] text-[#7eb1ff] border border-[rgba(126,177,255,0.28)]'
       }
     case '思维导图':
       return {
         icon: Network,
-        bgColor: 'bg-[#f6ffed]',
-        color: 'text-[#52c41a]',
-        badgeClass: 'bg-[#f6ffed] text-[#52c41a]'
+        bgColor: 'bg-[rgba(110,231,183,0.16)]',
+        color: 'text-[#7be3b8]',
+        badgeClass: 'bg-[rgba(110,231,183,0.16)] text-[#7be3b8] border border-[rgba(123,227,184,0.26)]'
       }
     case '流程图':
       return {
         icon: Network,
-        bgColor: 'bg-[#f9f0ff]',
-        color: 'text-[#722ed1]',
-        badgeClass: 'bg-[#f9f0ff] text-[#722ed1]'
+        bgColor: 'bg-[rgba(186,142,255,0.18)]',
+        color: 'text-[#c4b5fd]',
+        badgeClass: 'bg-[rgba(186,142,255,0.18)] text-[#c4b5fd] border border-[rgba(196,181,253,0.28)]'
       }
     case '习题':
       return {
         icon: HelpCircle,
-        bgColor: 'bg-[#fff7e6]',
-        color: 'text-[#fa8c16]',
-        badgeClass: 'bg-[#fff7e6] text-[#fa8c16]'
+        bgColor: 'bg-[rgba(255,176,108,0.18)]',
+        color: 'text-[#ffb46c]',
+        badgeClass: 'bg-[rgba(255,176,108,0.18)] text-[#ffb46c] border border-[rgba(255,180,108,0.28)]'
       }
     case '视频':
       return {
         icon: Video,
-        bgColor: 'bg-[#fff1f0]',
-        color: 'text-[#ff4d4f]',
-        badgeClass: 'bg-[#fff1f0] text-[#ff4d4f]'
+        bgColor: 'bg-[rgba(255,121,142,0.18)]',
+        color: 'text-[#ff8da1]',
+        badgeClass: 'bg-[rgba(255,121,142,0.18)] text-[#ff8da1] border border-[rgba(255,141,161,0.28)]'
       }
     case '代码':
       return {
         icon: Code,
-        bgColor: 'bg-[#e6fffb]',
-        color: 'text-[#13c2c2]',
-        badgeClass: 'bg-[#e6fffb] text-[#13c2c2]'
+        bgColor: 'bg-[rgba(94,234,212,0.16)]',
+        color: 'text-[#7bf0d8]',
+        badgeClass: 'bg-[rgba(94,234,212,0.16)] text-[#7bf0d8] border border-[rgba(123,240,216,0.28)]'
       }
     default:
       return {
         icon: FileText,
-        bgColor: 'bg-[#f5f7fa]',
-        color: 'text-[#8c8c8c]',
-        badgeClass: 'bg-[#f5f7fa] text-[#8c8c8c]'
+        bgColor: 'bg-[rgba(154,164,217,0.16)]',
+        color: 'text-[#9aa4d9]',
+        badgeClass: 'bg-[rgba(154,164,217,0.16)] text-[#9aa4d9] border border-[rgba(154,164,217,0.24)]'
       }
   }
 }
 </script>
 
 <style scoped>
-.rec-list-enter-active {
+/* === 父级 aside:占满父级高度,让两个子面板自适应均分 === */
+#right-sidebar {
+  height: 100%;
+}
+
+/* === Sidebar 容器:深紫光底,与 edu-course-card 一致 === */
+.edu-side-panel {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 0;
+  min-height: 0;
+  border-radius: 12px;
+  padding: 16px;
+  border: 1px solid rgba(117, 98, 255, 0.2);
+  background:
+    linear-gradient(180deg, rgba(29, 27, 83, 0.82), rgba(11, 13, 46, 0.96)),
+    radial-gradient(circle at 26% 0%, rgba(117, 71, 255, 0.22), transparent 36%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.05),
+    0 14px 42px rgba(3, 5, 22, 0.28);
+  overflow: hidden;
+}
+
+.edu-side-panel::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(90deg, transparent, rgba(149, 118, 255, 0.08), transparent),
+    radial-gradient(circle at 100% 100%, rgba(79, 56, 214, 0.2), transparent 34%);
+  opacity: 0;
+  transition: opacity 0.25s ease;
+  pointer-events: none;
+  border-radius: inherit;
+}
+
+/* === 列表区域:占满容器内剩余高度,内部独立滚动 === */
+.edu-side-panel__list {
+  flex: 1 1 0;
+  min-height: 0;
+  padding-right: 2px;
+}
+
+/* === 顶部动作按钮:换一换 === */
+.edu-side-panel__action {
+  color: #c4b5fd;
+  background: rgba(140, 92, 255, 0.12);
+  border: 1px solid rgba(140, 92, 255, 0.22);
+  padding: 4px 10px;
+  border-radius: 999px;
   transition: all 0.2s ease;
 }
+.edu-side-panel__action:hover {
+  color: #fff;
+  background: rgba(140, 92, 255, 0.28);
+  border-color: rgba(186, 142, 255, 0.55);
+  box-shadow: 0 0 16px rgba(140, 92, 255, 0.32);
+}
+
+/* === 列表项:半透明白 + 紫色边框 hover === */
+.edu-side-item {
+  border: 1px solid transparent;
+  transition: background-color 0.18s ease, border-color 0.18s ease, transform 0.18s ease;
+  position: relative;
+}
+.edu-side-item:hover {
+  background: rgba(140, 92, 255, 0.1);
+  border-color: rgba(145, 111, 255, 0.42);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.02), 0 4px 16px rgba(76, 48, 180, 0.18);
+}
+
+.edu-side-item__title:hover {
+  color: #c4b5fd !important;
+}
+
+.edu-side-item__star {
+  color: #6f7a9e;
+}
+.edu-side-item__star:hover {
+  background: rgba(255, 211, 51, 0.12);
+  color: #fadb14;
+}
+
+/* === 底部脚注 === */
+.edu-side-panel__footer {
+  border-top: 1px solid rgba(117, 98, 255, 0.14);
+  flex-shrink: 0;
+}
+
+/* === 空状态 === */
+.edu-side-empty {
+  background: rgba(13, 15, 44, 0.6);
+  border: 1px dashed rgba(117, 98, 255, 0.22);
+}
+
+/* === 滚动条:与 EduMind.vue 主文件一致 === */
+.edu-side-scroll::-webkit-scrollbar {
+  width: 4px;
+}
+.edu-side-scroll::-webkit-scrollbar-thumb {
+  background: rgba(140, 92, 255, 0.25);
+  border-radius: 4px;
+}
+.edu-side-scroll::-webkit-scrollbar-thumb:hover {
+  background: rgba(140, 92, 255, 0.45);
+}
+
+.rec-list-enter-active,
 .rec-list-leave-active {
   transition: all 0.2s ease;
 }

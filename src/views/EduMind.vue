@@ -47,7 +47,7 @@ import ResourceGeneratePanel from '../components/resource/ResourceGeneratePanel.
 const { isDark } = useTheme()
 const route = useRoute()
 
-const ITEMS_PER_PAGE = 6
+const ITEMS_PER_PAGE = 9
 
 const currentTab = ref<string>((() => {
   const saved = localStorage.getItem('edumind_active_tab')

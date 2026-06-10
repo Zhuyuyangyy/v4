@@ -28,5 +28,45 @@
     "date": "2026-05-10",
     "color": "#06d6a0",
     "reads": 45
+  },
+  {
+    "id": 12,
+    "type": "doc",
+    "title": "数据库索引设计要点",
+    "desc": "覆盖 B+ 树、聚簇索引与覆盖索引的实战选择与代价分析。",
+    "tags": ["数据库", "性能"],
+    "date": "2026-05-09",
+    "color": "#f43f5e",
+    "reads": 132
+  },
+  {
+    "id": 13,
+    "type": "video",
+    "title": "React Hooks 进阶实战",
+    "desc": "从 useState 进阶到 useReducer、自定义 Hook 与性能优化。",
+    "tags": ["前端", "React"],
+    "date": "2026-05-08",
+    "color": "#7c3aed",
+    "reads": 211
+  },
+  {
+    "id": 14,
+    "type": "mindmap",
+    "title": "操作系统核心知识点",
+    "desc": "梳理进程、线程、内存管理与文件系统之间的协作关系。",
+    "tags": ["OS", "基础"],
+    "date": "2026-05-08",
+    "color": "#00d4ff",
+    "reads": 98
+  },
+  {
+    "id": 15,
+    "type": "exercise",
+    "title": "SQL 调优案例集",
+    "desc": "汇总慢查询定位、索引选择与执行计划分析的实战案例。",
+    "tags": ["SQL", "调优"],
+    "date": "2026-05-07",
+    "color": "#f59e0b",
+    "reads": 76
   }
 ]
