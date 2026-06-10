@@ -10,7 +10,7 @@ const API_INFO = {
 
 const GLOBAL_CONFIG = {
   stream: { protocol: 'xrtc' as const, alpha: 1, bitrate: 1000000, fps: 25 as const },
-  avatar: { avatar_id: '110117005', width: 720, height: 1280, scale: 1, move_h: 0, move_v: 0, audio_format: 1 as const },
+  avatar: { avatar_id: '111188001', width: 720, height: 1280, scale: 1, move_h: 0, move_v: 0, audio_format: 1 as const },
   tts: { vcn: 'x4_yuexiaoni_assist', speed: 50, pitch: 50, volume: 100 },
   avatar_dispatch: { interactive_mode: 0 as const, content_analysis: 0 as const },
 }

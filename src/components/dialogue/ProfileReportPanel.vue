@@ -127,7 +127,7 @@
       </div>
       <div class="space-y-1.5 px-4">
         <h3 class="font-extrabold text-white text-base tracking-tight font-display">完整学习画像暂未点亮</h3>
-        <p class="text-sm text-slate-400 leading-relaxed font-semibold">通过和 AI 导师聊天，注入您的背景或动机特征，收集 <strong>≥ 4 个维度</strong> 的特征日志，即可启动智能算力引擎绘制您的专属能力星图和高度定制的路线图。</p>
+        <p class="text-sm text-slate-400 leading-relaxed font-semibold">通过和 AI 导师聊天，注入您的背景或动机特征，收集 <strong>≥ 4 个维度</strong> 的特征日志，即可启动智能算力引擎绘制您的专属学习画像和高度定制的路线图。</p>
         <div class="pt-2">
           <span class="inline-flex items-center gap-1 bg-cyan-950/40 text-cyan-400 text-xs font-extrabold px-3 py-1 rounded-full border border-cyan-900/50">目前进度: {{ collectedCount }}/4 维度</span>
         </div>
