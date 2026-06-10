@@ -335,8 +335,8 @@ onMounted(async () => {
         date: item.date,
         views: item.reads,
         starred: false,
-        difficulty: '中级' as Difficulty,
-        author: '系统推荐',
+        difficulty: (item.difficulty || '中级') as Difficulty,
+        author: item.author || '系统推荐',
         estimatedTime: item.estTime || '30分钟',
         contentMarkdown: item.reason || item.desc,
       }))
