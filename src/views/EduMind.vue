@@ -375,12 +375,7 @@ onBeforeUnmount(() => {
     />
 
     <div class="flex-1 flex flex-col ml-0 min-w-0 h-screen overflow-y-auto">
-      <Header
-        :searchValue="searchValue"
-        @searchChange="(val: string) => searchValue = val"
-        @addNewResourceClick="showAddModal = true"
-        @toggleSidebar="mobileSidebarOpen = !mobileSidebarOpen"
-      />
+
 
       <div class="edu-main-stage flex-1 p-5 sm:p-6 flex flex-col">
         <div v-if="currentTab === '首页'" class="flex flex-col lg:flex-row gap-6">
@@ -414,15 +409,7 @@ onBeforeUnmount(() => {
                 </div>
               </div>
             </div>
-            <div class="edu-course-hero__visual" aria-hidden="true">
-              <div class="edu-planet" />
-              <div class="edu-orbit-card edu-orbit-card--one">
-                <BookOpen :size="30" />
-              </div>
-              <div class="edu-orbit-card edu-orbit-card--two">
-                <Network :size="28" />
-              </div>
-            </div>
+
           </section>
           <CoursesView @addWeeklyHours="handleMarkAsCompleted" @navigateToTab="(tab: string) => currentTab = tab" />
         </div>
@@ -1073,23 +1060,15 @@ html.dark #edu-mind-app .bg-slate-900\/60 { background-color: rgba(0, 0, 0, 0.75
   grid-template-columns: minmax(0, 1fr) 420px;
   align-items: center;
   background:
-    linear-gradient(90deg, rgba(9, 11, 38, 0.98) 0%, rgba(13, 13, 48, 0.86) 42%, rgba(44, 18, 102, 0.62) 100%),
-    url('/assets/cosmos/hubble-ultra-deep-field.jpg') center/cover;
+    linear-gradient(90deg, rgba(9, 11, 38, 0.5) 0%, rgba(13, 13, 48, 0.4) 42%, rgba(44, 18, 102, 0.3) 100%),
+    url('/background-ziyuanzhongxing.png') center/cover;
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.08),
     0 24px 70px rgba(6, 8, 35, 0.56),
     0 0 40px rgba(94, 70, 255, 0.1);
 }
 
-.edu-course-hero::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background:
-    radial-gradient(circle at 78% 48%, rgba(117, 86, 255, 0.24), transparent 18%),
-    linear-gradient(90deg, transparent, rgba(119, 92, 255, 0.08), transparent);
-  pointer-events: none;
-}
+
 
 .edu-course-hero__copy {
   position: relative;
