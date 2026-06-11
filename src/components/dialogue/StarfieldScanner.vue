@@ -116,7 +116,7 @@
         <div class="flex items-center gap-1 px-0.5">
           <Lock class="w-4 h-4 text-slate-500 shrink-0" />
           <span v-if="canUnlockReport" class="text-emerald-400 font-semibold">● 画像也已就绪，立即开启测绘！</span>
-          <span v-else>再聊 <strong class="text-cyan-400 font-bold">{{ Math.max(1, 4 - collectedCount) }}</strong> 个维度即可解锁星图测绘</span>
+          <span v-else>再聊 <strong class="text-cyan-400 font-bold">{{ Math.max(1, 4 - collectedCount) }}</strong> 个维度即可解锁学习画像</span>
         </div>
         <button
           @click="$emit('triggerReport')"
@@ -127,7 +127,7 @@
             : 'bg-slate-900 text-slate-500 border-slate-850 cursor-not-allowed shadow-none'"
         >
           <Sparkles class="w-4 h-4" :class="canUnlockReport ? 'text-cyan-400 animate-pulse' : 'text-slate-500'" />
-          <span>信号充足，可进行星图测绘</span>
+          <span>信号充足，可进行学习画像</span>
         </button>
       </div>
     </div>

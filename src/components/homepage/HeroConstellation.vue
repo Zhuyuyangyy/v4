@@ -243,7 +243,7 @@ function initStarfield() {
       <div class="hero-copy">
         <div class="hero-badge-hp">
           <span class="badge-pulse" />
-          多智能体学习闭环 · LIVE
+          学习画像实时更新 · LIVE
         </div>
 
         <h1 class="hero-title-hp">

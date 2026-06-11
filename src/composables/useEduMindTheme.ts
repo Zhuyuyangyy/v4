@@ -1,24 +1,10 @@
-import { ref, watch } from 'vue'
+import { ref } from 'vue'
 
 export type ThemeMode = 'light' | 'dark' | 'auto'
 
-// 默认深色:仅对未在 localStorage 主动设置过的用户生效
-const themeMode = ref<ThemeMode>((() => {
-  const saved = localStorage.getItem('edumind_theme_mode')
-  if (saved === 'light' || saved === 'dark' || saved === 'auto') return saved
-  return 'dark'
-})())
-
-const computeIsDark = (): boolean => {
-  if (themeMode.value === 'auto') {
-    return typeof window !== 'undefined'
-      && window.matchMedia('(prefers-color-scheme: dark)').matches
-  }
-  return themeMode.value === 'dark'
-}
-
-// isDark 始终反映"当前主题模式应该是不是 dark",与是否激活无关
-const isDark = ref<boolean>(computeIsDark())
+// edu-mind 页面仅保留深色模式，isDark 始终为 true
+const themeMode = ref<ThemeMode>('dark')
+const isDark = ref<boolean>(true)
 
 // 引用计数:多个 EduMind 实例同时挂载也能正确管理 html.dark
 let activeCount = 0
@@ -32,24 +18,8 @@ const applyToHtml = () => {
   }
 }
 
-const refreshTheme = () => {
-  isDark.value = computeIsDark()
-  applyToHtml()
-}
-
-watch(themeMode, (val) => {
-  localStorage.setItem('edumind_theme_mode', val)
-  refreshTheme()
-})
-
-if (typeof window !== 'undefined') {
-  window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
-    if (themeMode.value === 'auto') refreshTheme()
-  })
-}
-
 /**
- * EduMind 页面挂载时调用。把 html.dark class 挂上去(如果当前是 dark 模式),
+ * EduMind 页面挂载时调用。把 html.dark class 挂上去，
  * 让 Tailwind dark: 工具类和全局 override 生效。
  */
 export function activateEduMindTheme() {
@@ -66,13 +36,9 @@ export function deactivateEduMindTheme() {
 }
 
 export function useTheme() {
-  const setTheme = (mode: ThemeMode) => {
-    themeMode.value = mode
-  }
-
-  const toggleTheme = () => {
-    themeMode.value = isDark.value ? 'light' : 'dark'
-  }
+  // edu-mind 仅深色模式，setTheme / toggleTheme 保留签名但为空操作
+  const setTheme = (_mode: ThemeMode) => {}
+  const toggleTheme = () => {}
 
   return {
     themeMode,

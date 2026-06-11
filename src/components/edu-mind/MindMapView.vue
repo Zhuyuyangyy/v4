@@ -68,114 +68,30 @@ type StructureStyle = 'curved' | 'logic-right' | 'org-vertical'
 
 const PREMIUM_THEMES: MindTheme[] = [
   {
-    id: 'classic-snow',
-    name: '极地晴雪',
-    bgClass: 'bg-[#fafbfe]',
-    canvasBg: '#fafbfe',
-    gridColor: '#e2e8f0',
-    rootBox: 'bg-gradient-to-r from-[#4a6cf7] to-[#3b82f6] text-white border-none shadow-md',
-    rootText: 'text-white',
-    branchColors: ['#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#06b6d4', '#ef4444'],
-    nodeBorder: 'border-[#cbd5e1] hover:border-[#4a6cf7]',
-    textColor: 'text-[#334155]',
-    accentColor: '#4a6cf7',
-    isDark: false
-  },
-  {
     id: 'midnight-charcoal',
     name: '黑曜重力',
-    bgClass: 'bg-[#0f172a]',
-    canvasBg: '#0f172a',
-    gridColor: '#1e293b',
-    rootBox: 'bg-gradient-to-r from-[#ef4444] via-[#ec4899] to-[#8b5cf6] text-white border-none shadow-lg shadow-pink-500/10',
+    bgClass: 'bg-[#090a24]',
+    canvasBg: '#090a24',
+    gridColor: '#141230',
+    rootBox: 'bg-[#0d1030] text-white border border-[rgba(117,98,255,0.22)] shadow-xl',
     rootText: 'text-white font-extrabold',
-    branchColors: ['#ec4899', '#f43f5e', '#a855f7', '#3b82f6', '#10b981', '#06b6d4'],
-    nodeBorder: 'border-slate-700 hover:border-pink-500 bg-slate-900',
-    textColor: 'text-slate-200',
-    accentColor: '#ec4899',
+    branchColors: ['#ef4444', '#3b82f6', '#06b6d4', '#a855f7', '#8b5cf6', '#10b981'],
+    nodeBorder: 'border-[#252060] hover:border-[#6d5cff] bg-[#111438]',
+    textColor: 'text-[#d8def0]',
+    accentColor: '#a855f7',
     isDark: true
-  },
-  {
-    id: 'fresh-matcha',
-    name: '雨后龙井',
-    bgClass: 'bg-[#f4f7f4]',
-    canvasBg: '#f4f7f4',
-    gridColor: '#e2eae2',
-    rootBox: 'bg-emerald-600 text-white border-none shadow-sm',
-    rootText: 'text-white',
-    branchColors: ['#059669', '#10b981', '#22c55e', '#84cc16', '#65a30d', '#15803d'],
-    nodeBorder: 'border-emerald-200 hover:border-emerald-600 bg-white/90',
-    textColor: 'text-slate-800',
-    accentColor: '#059669',
-    isDark: false
-  },
-  {
-    id: 'macaron-cream',
-    name: '马卡龙奶油',
-    bgClass: 'bg-[#fdbfe7]/10',
-    canvasBg: '#fdfbf7',
-    gridColor: '#f3eade',
-    rootBox: 'bg-gradient-to-r from-pink-400 via-purple-400 to-indigo-400 text-white shadow-md border-none',
-    rootText: 'text-white',
-    branchColors: ['#fb7185', '#c084fc', '#818cf8', '#34d399', '#fbbf24', '#f472b6'],
-    nodeBorder: 'border-pink-200 hover:border-pink-400 bg-white',
-    textColor: 'text-slate-700',
-    accentColor: '#fb7185',
-    isDark: false
-  },
-  {
-    id: 'retro-mustard',
-    name: '中古摩登',
-    bgClass: 'bg-[#f1ecd1]',
-    canvasBg: '#f1ecd1',
-    gridColor: '#e5dbb0',
-    rootBox: 'bg-[#40513B] text-white border-none shadow-md',
-    rootText: 'text-white',
-    branchColors: ['#609966', '#9DC08B', '#f59e0b', '#e11d48', '#8b5cf6', '#06b6d4'],
-    nodeBorder: 'border-stone-450 hover:border-stone-800 bg-[#f7f5e8]',
-    textColor: 'text-stone-850',
-    accentColor: '#40513B',
-    isDark: false
-  },
-  {
-    id: 'ultra-slate',
-    name: '黑胶极简',
-    bgClass: 'bg-white',
-    canvasBg: '#ffffff',
-    gridColor: '#f1f5f9',
-    rootBox: 'bg-slate-900 border-none text-white shadow-lg shadow-slate-900/10',
-    rootText: 'text-white',
-    branchColors: ['#334155', '#475569', '#64748b', '#94a3b8', '#1e293b', '#64748b'],
-    nodeBorder: 'border-slate-250 hover:border-slate-800 bg-white',
-    textColor: 'text-slate-800',
-    accentColor: '#0f172a',
-    isDark: false
-  },
-  {
-    id: 'coral-sunset',
-    name: '日落珊瑚',
-    bgClass: 'bg-[#faf6f0]',
-    canvasBg: '#faf6f0',
-    gridColor: '#ebdcd0',
-    rootBox: 'bg-[#f97316] text-white border-none shadow-md',
-    rootText: 'text-white',
-    branchColors: ['#f97316', '#ea580c', '#fa9043', '#fb923c', '#ca8a04', '#e11d48'],
-    nodeBorder: 'border-orange-200 hover:border-[#f97316] bg-white',
-    textColor: 'text-amber-950',
-    accentColor: '#f97316',
-    isDark: false
   },
   {
     id: 'aurora-navy',
     name: '极光幽蓝',
-    bgClass: 'bg-[#0b132b]',
-    canvasBg: '#0b132b',
-    gridColor: '#1c2541',
-    rootBox: 'bg-gradient-to-r from-[#00b4d8] to-[#0077b6] text-white border-none shadow-xl',
+    bgClass: 'bg-[#090a24]',
+    canvasBg: '#090a24',
+    gridColor: '#141230',
+    rootBox: 'bg-[#0d1030] text-white border border-[rgba(117,98,255,0.22)] shadow-xl',
     rootText: 'text-white',
-    branchColors: ['#00b4d8', '#00f5d4', '#70e000', '#9b5de5', '#f15bb5', '#fee440'],
-    nodeBorder: 'border-cyan-900 hover:border-cyan-400 bg-[#1c2541]',
-    textColor: 'text-cyan-100',
+    branchColors: ['#00b4d8', '#00f5d4', '#70e000', '#a855f7', '#f15bb5', '#fee440'],
+    nodeBorder: 'border-[#252060] hover:border-cyan-400 bg-[#111438]',
+    textColor: 'text-[#d8def0]',
     accentColor: '#00b4d8',
     isDark: true
   }
@@ -353,73 +269,71 @@ const getPreConfiguredMindMap = (courseId: string): MindNode => {
   if (courseId === 'prog-c' || courseId.toLowerCase().includes('c-') || courseId.includes('C语言')) {
     return {
       id: 'root',
-      label: 'C 语言程序设计',
+      label: 'C 语言存储设计',
       side: 'root', priority: 'None',
       progress: 0,
       children: [
         {
           id: 'c-1',
-          label: '基础语法', priority: 'P1',
-          progress: 100,
+          label: '指针与内存', priority: 'P1',
+          progress: 75,
           children: [
-            { id: 'c-1-1', label: '数据类型与常量变量', priority: 'None', progress: 100 },
-            { id: 'c-1-2', label: '运算符与表达式', priority: 'None', progress: 100 },
-            { id: 'c-1-3', label: '流程控制语句', priority: 'None', progress: 100 },
-            { id: 'c-1-4', label: '函数与递归', priority: 'None', progress: 75 }
+            { id: 'c-1-1', label: '指针基础', priority: 'None', progress: 100 },
+            { id: 'c-1-2', label: '指针与数组', priority: 'None', progress: 75 },
+            { id: 'c-1-3', label: '指针与函数', priority: 'P1', progress: 50 },
+            { id: 'c-1-4', label: 'void 指针与函数指针', priority: 'P1', progress: 25 }
           ]
         },
         {
           id: 'c-2',
-          label: '指针与内存', priority: 'P1',
+          label: '结构体与联合体', priority: 'P2',
           progress: 75,
           children: [
-            { id: 'c-2-1', label: '指针基础', priority: 'None', progress: 100 },
-            { id: 'c-2-2', label: '指针与数组', priority: 'None', progress: 75 },
-            { id: 'c-2-3', label: '指针与函数', priority: 'P1', progress: 50 },
-            { id: 'c-2-4', label: 'void 指针与函数指针', priority: 'P1', progress: 25 }
+            { id: 'c-2-1', label: '结构体定义与使用', priority: 'None', progress: 100 },
+            { id: 'c-2-2', label: '结构体嵌套', priority: 'None', progress: 75 },
+            { id: 'c-2-3', label: '联合体与枚举', priority: 'P2', progress: 50 },
+            { id: 'c-2-4', label: '位字段与内存对齐', priority: 'P2', progress: 0 }
           ]
         },
         {
           id: 'c-3',
-          label: '内存管理', priority: 'P1',
+          label: '预处理与编译', priority: 'P2',
           progress: 50,
           children: [
-            { id: 'c-3-1', label: '堆栈内存分配', priority: 'None', progress: 100 },
-            { id: 'c-3-2', label: 'malloc 与 free', priority: 'None', progress: 75 },
-            { id: 'c-3-3', label: '内存泄漏防范', priority: 'P2', progress: 50 },
-            { id: 'c-3-4', label: '野指针问题', priority: 'P1', progress: 25 }
+            { id: 'c-3-1', label: '宏定义与宏展开', priority: 'None', progress: 75 },
+            { id: 'c-3-2', label: '文件包含与条件编译', priority: 'None', progress: 50 },
+            { id: 'c-3-3', label: '预处理指令详解', priority: 'P2', progress: 0 }
           ]
         },
         {
           id: 'c-4',
-          label: '结构体与联合体', priority: 'P2',
-          progress: 75,
+          label: '基础语法', priority: 'P1',
+          progress: 100,
           children: [
-            { id: 'c-4-1', label: '结构体定义与使用', priority: 'None', progress: 100 },
-            { id: 'c-4-2', label: '结构体指针', priority: 'None', progress: 75 },
-            { id: 'c-4-3', label: '联合体与枚举', priority: 'P2', progress: 50 },
-            { id: 'c-4-4', label: '位段与内存对齐', priority: 'P2', progress: 0 }
+            { id: 'c-4-1', label: '运算符与表达式', priority: 'None', progress: 100 },
+            { id: 'c-4-2', label: '流程控制语句', priority: 'None', progress: 100 },
+            { id: 'c-4-3', label: '函数与调用', priority: 'None', progress: 75 }
           ]
         },
         {
           id: 'c-5',
-          label: '文件操作', priority: 'P2',
+          label: '内存管理', priority: 'P1',
           progress: 50,
           children: [
-            { id: 'c-5-1', label: '文件打开与关闭', priority: 'None', progress: 100 },
-            { id: 'c-5-2', label: '文本文件读写', priority: 'None', progress: 75 },
-            { id: 'c-5-3', label: '二进制文件操作', priority: 'P1', progress: 25 },
-            { id: 'c-5-4', label: '文件定位与缓冲', priority: 'P2', progress: 0 }
+            { id: 'c-5-1', label: '动态内存分配', priority: 'None', progress: 100 },
+            { id: 'c-5-2', label: 'malloc 与 free', priority: 'None', progress: 75 },
+            { id: 'c-5-3', label: '内存泄漏防范', priority: 'P2', progress: 50 },
+            { id: 'c-5-4', label: '野指针问题', priority: 'P1', progress: 25 }
           ]
         },
         {
           id: 'c-6',
-          label: '预处理与编译', priority: 'P2',
+          label: '文件操作', priority: 'P2',
           progress: 50,
           children: [
-            { id: 'c-6-1', label: '宏定义与宏展开', priority: 'None', progress: 75 },
-            { id: 'c-6-2', label: '文件包含与条件编译', priority: 'None', progress: 50 },
-            { id: 'c-6-3', label: '编译过程详解', priority: 'P2', progress: 0 }
+            { id: 'c-6-1', label: '文件打开与关闭', priority: 'None', progress: 100 },
+            { id: 'c-6-2', label: '文本文件读写', priority: 'None', progress: 75 },
+            { id: 'c-6-3', label: '二进制文件读写', priority: 'P1', progress: 25 }
           ]
         }
       ]
@@ -530,21 +444,11 @@ const getPreConfiguredMindMap = (courseId: string): MindNode => {
 const selectedCourseId = ref<string>(localStorage.getItem('edumind_current_course_id') || 'prog-ds')
 const viewMode = ref<'map' | 'outline'>('map')
 const activeTab = ref<'样式' | '大纲' | '笔记'>('样式')
-const activeThemeId = ref<string>('classic-snow')
+const activeThemeId = ref<string>('midnight-charcoal')
 const currentTheme = computed(() => PREMIUM_THEMES.find(t => t.id === activeThemeId.value) || PREMIUM_THEMES[0])
 
 const { isDark: globalIsDark, setTheme: setGlobalTheme } = useTheme()
-watch(globalIsDark, (val) => {
-  const darkTheme = PREMIUM_THEMES.find(t => t.isDark)
-  const lightTheme = PREMIUM_THEMES.find(t => !t.isDark)
-  activeThemeId.value = val ? (darkTheme?.id || 'midnight-charcoal') : (lightTheme?.id || 'classic-snow')
-}, { immediate: true })
-watch(activeThemeId, (id) => {
-  const theme = PREMIUM_THEMES.find(t => t.id === id)
-  if (theme) {
-    setGlobalTheme(theme.isDark ? 'dark' : 'light')
-  }
-})
+// edu-mind 仅深色模式，主题切换逻辑已移除
 
 const structureStyle = ref<StructureStyle>('curved')
 
@@ -1211,42 +1115,39 @@ const getNodeStyle = (layout: NodeLayout, isSelected: boolean) => {
   if (isRoot) {
     nodeStyle = {
       ...nodeStyle,
-      borderRadius: '28px',
+      borderRadius: '20px',
+      background: 'linear-gradient(145deg, #0d1030, #0a0c24)',
+      border: '1px solid rgba(117, 98, 255, 0.25)',
       boxShadow: isSelected
-        ? `0 0 0 4px ${branchColor}40, 0 8px 24px -4px rgba(0,0,0,0.15)`
-        : '0 8px 24px -4px rgba(0,0,0,0.12)',
+        ? `0 0 0 4px ${branchColor}30, 0 12px 40px rgba(0, 0, 0, 0.4), 0 0 60px ${branchColor}15`
+        : '0 12px 40px rgba(0, 0, 0, 0.35), 0 0 30px rgba(117, 98, 255, 0.08)',
+      color: '#f0f2ff',
     }
   } else if (isLevel1) {
     nodeStyle = {
       ...nodeStyle,
       backgroundColor: isSelected
-        ? (currentTheme.value.isDark ? 'rgba(74, 108, 247, 0.22)' : `${branchColor}12`)
-        : (currentTheme.value.isDark ? '#1e293b' : '#ffffff'),
-      borderLeft: layout.side === 'right' ? `5px solid ${branchColor}` : '2px solid transparent',
-      borderRight: layout.side === 'left' ? `5px solid ${branchColor}` : '2px solid transparent',
-      borderTop: isSelected ? `2px solid ${branchColor}` : '2px solid transparent',
-      borderBottom: `3px solid ${branchColor}`,
+        ? 'rgba(109, 92, 255, 0.15)'
+        : 'rgba(17, 20, 56, 0.8)',
+      border: `1.5px solid ${branchColor}35`,
       borderRadius: '14px',
       boxShadow: isSelected
-        ? `0 0 0 3px ${branchColor}30, 0 4px 12px -2px rgba(0,0,0,0.08)`
-        : '0 2px 8px -2px rgba(0,0,0,0.06)',
-      color: currentTheme.value.isDark ? '#f1f5f9' : '#1e293b',
+        ? `0 0 0 3px ${branchColor}25, 0 4px 16px rgba(0, 0, 0, 0.25)`
+        : '0 2px 10px rgba(0, 0, 0, 0.2)',
+      color: '#f0f2ff',
     }
   } else if (isSubTopic) {
     nodeStyle = {
       ...nodeStyle,
-      backgroundColor: isSelected
-        ? (currentTheme.value.isDark ? 'rgba(74, 108, 247, 0.22)' : `${branchColor}10`)
-        : 'transparent',
-      borderBottom: `2.5px solid ${branchColor}`,
-      borderRadius: '10px',
-      borderColor: 'transparent',
+      backgroundColor: 'transparent',
+      border: 'none',
+      borderRadius: '8px',
       boxShadow: 'none',
-      color: currentTheme.value.isDark ? '#cbd5e1' : '#475569',
+      color: '#b8c4dc',
       fontFamily: 'Inter, system-ui, sans-serif',
-      paddingLeft: '6px',
-      paddingRight: '6px',
-      paddingBottom: '4px',
+      paddingLeft: '4px',
+      paddingRight: '4px',
+      paddingBottom: '2px',
     }
   }
 
@@ -1340,19 +1241,19 @@ const onOutlineViewClick = (layoutId: string, label: string) => {
     <Transition name="toast">
       <div
         v-if="toastStr"
-        class="fixed top-8 left-1/2 -translate-x-1/2 bg-slate-900 text-white border border-slate-700 px-6 py-3 rounded-2xl shadow-2xl z-50 text-[15px] font-semibold flex items-center gap-2.5"
+        class="fixed top-8 left-1/2 -translate-x-1/2 bg-[#1a1640] text-white border border-[#252060] px-6 py-3 rounded-2xl shadow-2xl z-50 text-[15px] font-semibold flex items-center gap-2.5"
       >
         <span class="w-2 h-2 bg-emerald-400 rounded-full animate-ping" />
-        <span class="text-slate-100">{{ toastStr }}</span>
+        <span class="text-[#d8def0]">{{ toastStr }}</span>
       </div>
     </Transition>
 
     <!-- UPPER HEADER COMPONENT AND TOGGLES -->
-    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white dark:bg-[#1e293b] px-6 py-4.5 rounded-2xl border border-slate-200/90 dark:border-slate-700 shadow-2xs">
+    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white dark:bg-[#111438] px-6 py-4.5 rounded-2xl border border-[#1e1b4b]/90 dark:border-[#252060] shadow-2xs">
       <div>
         <div class="flex items-center gap-2">
-          <span class="bg-[#4a6cf7]/10 text-[#4a6cf7] px-2.5 py-1 text-[13px] font-bold tracking-wide uppercase rounded-md">Xmind Edition</span>
-          <span class="text-[14px] text-slate-400 dark:text-slate-500 font-medium">快捷、流式、高频考点总览</span>
+          <span class="bg-[rgba(109,92,255,0.12)] text-[#c4b5fd] px-2.5 py-1 text-[13px] font-bold tracking-wide uppercase rounded-md">Xmind Edition</span>
+          <span class="text-[14px] text-[#8b9bc0] dark:text-[#9aa4d9] font-medium">快捷、流式、高频考点总览</span>
         </div>
         <h2 class="text-[20px] font-extrabold text-[#1e293b] dark:text-white mt-1 flex items-center gap-2 tracking-tight">
           <span>智能思维导图</span>
@@ -1361,20 +1262,20 @@ const onOutlineViewClick = (layoutId: string, label: string) => {
       </div>
 
       <div class="flex items-center gap-3 w-full sm:w-auto self-stretch">
-        <div class="flex items-center gap-1 bg-slate-100/80 dark:bg-slate-800 p-1.5 rounded-xl border border-slate-200 dark:border-slate-600">
+        <div class="flex items-center gap-1 bg-[#0d0f2c]/80 dark:bg-[#0d0f2c] p-1.5 rounded-xl border border-[#1e1b4b] dark:border-[#282260]">
           <button
             @click="viewMode = 'map'; showToast('已切换至 心灵制图 模式')"
             :class="`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all border-none cursor-pointer ${
-              viewMode === 'map' ? 'bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-3xs' : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+              viewMode === 'map' ? 'bg-white dark:bg-[#16183c] text-[#f0f2ff] dark:text-white shadow-3xs' : 'text-[#9aa4d9] dark:text-[#8b9bc0] hover:text-[#f0f2ff] dark:hover:text-white'
             }`"
           >
-            <Network class="w-3.5 h-3.5 text-blue-500" />
+            <Network class="w-3.5 h-3.5 text-[#c4b5fd]" />
             <span>导图视图</span>
           </button>
           <button
             @click="viewMode = 'outline'; showToast('已导入 纲要树 结构')"
             :class="`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all border-none cursor-pointer ${
-              viewMode === 'outline' ? 'bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-3xs' : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+              viewMode === 'outline' ? 'bg-white dark:bg-[#16183c] text-[#f0f2ff] dark:text-white shadow-3xs' : 'text-[#9aa4d9] dark:text-[#8b9bc0] hover:text-[#f0f2ff] dark:hover:text-white'
             }`"
           >
             <Layers class="w-3.5 h-3.5 text-orange-500" />
@@ -1382,74 +1283,74 @@ const onOutlineViewClick = (layoutId: string, label: string) => {
           </button>
         </div>
 
-        <div class="h-6 w-[1.5px] bg-slate-200 dark:bg-slate-600 hidden md:block" />
+        <div class="h-6 w-[1.5px] bg-[#1a1640] dark:bg-[#16183c] hidden md:block" />
 
         <select
           :value="selectedCourseId"
           @change="onCourseSelect"
-          class="px-3.5 py-2 text-xs font-bold bg-[#f1f5f9] dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-xl border border-slate-200 dark:border-slate-600 cursor-pointer outline-none focus:ring-1 focus:ring-blue-500"
+          class="px-3.5 py-2 text-xs font-bold bg-[#f1f5f9] dark:bg-[#0d0f2c] hover:bg-[#1a1640] dark:hover:bg-[#16183c] text-[#b8c4dc] dark:text-[#c4b5fd] rounded-xl border border-[#1e1b4b] dark:border-[#282260] cursor-pointer outline-none focus:ring-1 focus:ring-blue-500"
         >
           <option value="prog-ds">📁 数据结构与算法 学习大纲</option>
           <option value="prog-py">📁 Python 程序设计 基础总览</option>
           <option value="prog-java">📁 Java 面向对象核心体系</option>
-          <option value="prog-c">📁 C 语言系统与物理存储</option>
+          <option value="prog-c">📁 C 语言存储设计 学习大纲</option>
         </select>
       </div>
     </div>
 
     <!-- REAL-TIME XMIND SHORTCUT ACTIONS QUICK NAVIGATION RAIL -->
-    <div class="bg-white dark:bg-[#1e293b] border border-slate-200 dark:border-slate-700 p-3 rounded-2xl flex flex-wrap items-center justify-between gap-3 shadow-3xs select-none">
+    <div class="bg-white dark:bg-[#111438] border border-[#1e1b4b] dark:border-[#252060] p-3 rounded-2xl flex flex-wrap items-center justify-between gap-3 shadow-3xs select-none">
       <div class="flex items-center gap-2.5 flex-wrap">
         <button
           @click="handleAddSiblingTopic(selectedNodeId)"
-          class="flex items-center gap-1.5 px-3.5 py-2 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 text-[14px] font-semibold rounded-xl border border-slate-200 dark:border-slate-600 cursor-pointer transition-colors"
+          class="flex items-center gap-1.5 px-3.5 py-2 hover:bg-[#111338] dark:hover:bg-[#0d0f2c] text-[#b8c4dc] dark:text-[#c4b5fd] text-[14px] font-semibold rounded-xl border border-[#1e1b4b] dark:border-[#282260] cursor-pointer transition-colors"
           title="快捷键: Enter"
         >
           <PlusCircle class="w-3.5 h-3.5 text-[#10b981]" />
-          <span>添加同级分支 <kbd class="font-mono text-[11.5px] bg-slate-100 dark:bg-slate-700 px-1 py-0.5 rounded border border-slate-200 dark:border-slate-600 text-slate-500 dark:text-slate-400">Enter</kbd></span>
+          <span>添加同级分支 <kbd class="font-mono text-[11.5px] bg-[#0d0f2c] dark:bg-[#16183c] px-1 py-0.5 rounded border border-[#1e1b4b] dark:border-[#282260] text-[#9aa4d9] dark:text-[#8b9bc0]">Enter</kbd></span>
         </button>
 
         <button
           @click="handleAddChildTopic(selectedNodeId)"
-          class="flex items-center gap-1.5 px-3.5 py-2 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 text-[14px] font-semibold rounded-xl border border-slate-200 dark:border-slate-600 cursor-pointer transition-colors"
+          class="flex items-center gap-1.5 px-3.5 py-2 hover:bg-[#111338] dark:hover:bg-[#0d0f2c] text-[#b8c4dc] dark:text-[#c4b5fd] text-[14px] font-semibold rounded-xl border border-[#1e1b4b] dark:border-[#282260] cursor-pointer transition-colors"
           title="快捷键: Tab"
         >
           <Compass class="w-3.5 h-3.5 text-[#3b82f6]" />
-          <span>插入子课题 <kbd class="font-mono text-[11.5px] bg-slate-100 dark:bg-slate-700 px-1 py-0.5 rounded border border-slate-200 dark:border-slate-600 text-slate-500 dark:text-slate-400">Tab</kbd></span>
+          <span>插入子课题 <kbd class="font-mono text-[11.5px] bg-[#0d0f2c] dark:bg-[#16183c] px-1 py-0.5 rounded border border-[#1e1b4b] dark:border-[#282260] text-[#9aa4d9] dark:text-[#8b9bc0]">Tab</kbd></span>
         </button>
 
         <button
           @click="handleRemoveTopic(selectedNodeId)"
-          class="flex items-center gap-1.5 px-3 py-2 hover:bg-red-50 dark:hover:bg-red-900/30 text-slate-500 dark:text-slate-400 hover:text-red-700 text-[14px] font-semibold rounded-xl border border-transparent cursor-pointer transition-colors"
+          class="flex items-center gap-1.5 px-3 py-2 hover:bg-red-50 dark:hover:bg-red-900/30 text-[#9aa4d9] dark:text-[#8b9bc0] hover:text-red-700 text-[14px] font-semibold rounded-xl border border-transparent cursor-pointer transition-colors"
           title="快捷键: Delete"
         >
           <Trash2 class="w-3.5 h-3.5 text-red-500 transition-transform hover:scale-105" />
-          <span>剪掉节点 <kbd class="font-mono text-[11.5px] bg-slate-100 dark:bg-slate-700 px-1 py-0.5 rounded border border-slate-200 dark:border-slate-600 text-slate-500 dark:text-slate-400">Del</kbd></span>
+          <span>剪掉节点 <kbd class="font-mono text-[11.5px] bg-[#0d0f2c] dark:bg-[#16183c] px-1 py-0.5 rounded border border-[#1e1b4b] dark:border-[#282260] text-[#9aa4d9] dark:text-[#8b9bc0]">Del</kbd></span>
         </button>
 
-        <div class="h-4 w-[1px] bg-slate-200 dark:bg-slate-600" />
+        <div class="h-4 w-[1px] bg-[#1a1640] dark:bg-[#16183c]" />
 
         <button
           @click="handleCollapseAllNodes(true)"
-          class="p-1 px-2 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white text-[13.5px] font-medium rounded-lg border-none bg-transparent cursor-pointer"
+          class="p-1 px-2 hover:bg-[#111438] dark:hover:bg-[#0d0f2c] text-[#9aa4d9] dark:text-[#8b9bc0] hover:text-[#f0f2ff] dark:hover:text-white text-[13.5px] font-medium rounded-lg border-none bg-transparent cursor-pointer"
         >
           收叠所有
         </button>
 
         <button
           @click="handleCollapseAllNodes(false)"
-          class="p-1 px-2 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white text-[13.5px] font-medium rounded-lg border-none bg-transparent cursor-pointer"
+          class="p-1 px-2 hover:bg-[#111438] dark:hover:bg-[#0d0f2c] text-[#9aa4d9] dark:text-[#8b9bc0] hover:text-[#f0f2ff] dark:hover:text-white text-[13.5px] font-medium rounded-lg border-none bg-transparent cursor-pointer"
         >
           展开层级
         </button>
       </div>
 
       <div class="flex items-center gap-3">
-        <div class="flex items-center gap-1 bg-slate-100 dark:bg-slate-800 px-1.5 py-1 rounded-xl border border-slate-200 dark:border-slate-600">
+        <div class="flex items-center gap-1 bg-[#0d0f2c] dark:bg-[#0d0f2c] px-1.5 py-1 rounded-xl border border-[#1e1b4b] dark:border-[#282260]">
           <button
             @click="handleUndo"
             :disabled="historyIndex <= 0"
-            class="p-1.5 hover:bg-white dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 disabled:opacity-45 rounded-lg border-none bg-transparent cursor-pointer transition-all"
+            class="p-1.5 hover:bg-white dark:hover:bg-[#16183c] text-[#6f7a9e] dark:text-[#c4b5fd] disabled:opacity-45 rounded-lg border-none bg-transparent cursor-pointer transition-all"
             title="撤销 (Ctrl+Z)"
           >
             <Undo2 class="w-3.5 h-3.5" />
@@ -1457,26 +1358,26 @@ const onOutlineViewClick = (layoutId: string, label: string) => {
           <button
             @click="handleRedo"
             :disabled="historyIndex >= history.length - 1"
-            class="p-1.5 hover:bg-white dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 disabled:opacity-45 rounded-lg border-none bg-transparent cursor-pointer transition-all"
+            class="p-1.5 hover:bg-white dark:hover:bg-[#16183c] text-[#6f7a9e] dark:text-[#c4b5fd] disabled:opacity-45 rounded-lg border-none bg-transparent cursor-pointer transition-all"
             title="重做"
           >
             <Redo2 class="w-3.5 h-3.5" />
           </button>
         </div>
 
-        <div class="h-4 w-[1px] bg-slate-200 dark:bg-slate-600" />
+        <div class="h-4 w-[1px] bg-[#1a1640] dark:bg-[#16183c]" />
 
-        <div class="relative flex items-center bg-slate-100 dark:bg-slate-800 hover:bg-slate-100/90 dark:hover:bg-slate-800/90 rounded-xl px-2.5 py-1.5 border border-slate-200 dark:border-slate-600">
-          <Search class="w-3.5 h-3.5 text-slate-400 mr-1.5 shrink-0" />
+        <div class="relative flex items-center bg-[#0d0f2c] dark:bg-[#0d0f2c] hover:bg-[#111438]/90 dark:hover:bg-[#0d0f2c]/90 rounded-xl px-2.5 py-1.5 border border-[#1e1b4b] dark:border-[#282260]">
+          <Search class="w-3.5 h-3.5 text-[#8b9bc0] mr-1.5 shrink-0" />
           <input
             type="text"
             placeholder="搜索考点/导图..."
             :value="searchText"
             @input="searchText = ($event.target as HTMLInputElement).value"
-            class="bg-transparent border-none text-[13px] outline-none w-32 font-bold text-slate-700 dark:text-slate-300 placeholder:text-slate-400"
+            class="bg-transparent border-none text-[13px] outline-none w-32 font-bold text-[#b8c4dc] dark:text-[#c4b5fd] placeholder:text-[#8b9bc0]"
           />
           <div v-if="searchMatches.length > 0" class="flex items-center gap-1.5 ml-2">
-            <span class="text-[12px] text-slate-400 font-mono font-bold leading-none">{{ currentMatchIndex + 1 }}/{{ searchMatches.length }}</span>
+            <span class="text-[12px] text-[#8b9bc0] font-mono font-bold leading-none">{{ currentMatchIndex + 1 }}/{{ searchMatches.length }}</span>
             <button
               @click="handleNextSearchMatch"
               class="p-0.5 hover:bg-amber-100 text-amber-600 rounded cursor-pointer border-none bg-transparent text-[11px] font-bold"
@@ -1488,7 +1389,7 @@ const onOutlineViewClick = (layoutId: string, label: string) => {
 
         <button
           @click="showShortcutsHelp = !showShortcutsHelp"
-          class="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 dark:text-slate-400 hover:text-[#4a6cf7] rounded-xl border-none bg-transparent cursor-pointer"
+          class="p-2 hover:bg-[#111438] dark:hover:bg-[#0d0f2c] text-[#9aa4d9] dark:text-[#8b9bc0] hover:text-[#c4b5fd] rounded-xl border-none bg-transparent cursor-pointer"
           title="快捷键图例说明"
         >
           <Keyboard class="w-4 h-4" />
@@ -1500,44 +1401,44 @@ const onOutlineViewClick = (layoutId: string, label: string) => {
     <Transition name="modal">
       <div
         v-if="showShortcutsHelp"
-        class="fixed inset-0 bg-slate-900/35 backdrop-blur-xs z-50 flex items-center justify-center p-4 select-none"
+        class="fixed inset-0 bg-[#1a1640]/35 backdrop-blur-xs z-50 flex items-center justify-center p-4 select-none"
         @click="showShortcutsHelp = false"
       >
         <div
-          class="bg-white dark:bg-[#1e293b] rounded-2xl w-full max-w-sm border border-slate-200 dark:border-slate-700 p-6 shadow-2xl relative"
+          class="bg-white dark:bg-[#111438] rounded-2xl w-full max-w-sm border border-[#1e1b4b] dark:border-[#252060] p-6 shadow-2xl relative"
           @click.stop
         >
-          <h3 class="text-sm font-bold text-slate-800 dark:text-white flex items-center gap-2 mb-4">
-            <Keyboard class="w-4 h-4 text-[#4a6cf7]" />
+          <h3 class="text-sm font-bold text-[#f0f2ff] dark:text-white flex items-center gap-2 mb-4">
+            <Keyboard class="w-4 h-4 text-[#c4b5fd]" />
             <span>Xmind 极速键盘操作流</span>
           </h3>
 
           <div class="flex flex-col gap-3 font-sans">
-            <div class="flex items-center justify-between py-1.5 border-b border-slate-100 font-medium">
-              <span class="text-xs text-slate-500">新建子节点</span>
-              <span class="text-[12.5px] font-mono bg-slate-100 border border-slate-200 text-slate-700 px-2 py-0.5 rounded shadow-3xs font-extrabold">Tab</span>
+            <div class="flex items-center justify-between py-1.5 border-b border-[#1e1b4b] font-medium">
+              <span class="text-xs text-[#9aa4d9]">新建子节点</span>
+              <span class="text-[12.5px] font-mono bg-[#0d0f2c] border border-[#1e1b4b] text-[#b8c4dc] px-2 py-0.5 rounded shadow-3xs font-extrabold">Tab</span>
             </div>
-            <div class="flex items-center justify-between py-1.5 border-b border-slate-100 font-medium">
-              <span class="text-xs text-slate-500">新建同级节点</span>
-              <span class="text-[12.5px] font-mono bg-slate-100 border border-slate-200 text-slate-700 px-2 py-0.5 rounded shadow-3xs font-extrabold">Enter</span>
+            <div class="flex items-center justify-between py-1.5 border-b border-[#1e1b4b] font-medium">
+              <span class="text-xs text-[#9aa4d9]">新建同级节点</span>
+              <span class="text-[12.5px] font-mono bg-[#0d0f2c] border border-[#1e1b4b] text-[#b8c4dc] px-2 py-0.5 rounded shadow-3xs font-extrabold">Enter</span>
             </div>
-            <div class="flex items-center justify-between py-1.5 border-b border-slate-100 font-medium">
-              <span class="text-xs text-slate-500">双击卡片 / 空格修改内容</span>
-              <span class="text-[12.5px] font-mono bg-slate-100 border border-slate-200 text-slate-700 px-2 py-0.5 rounded shadow-3xs font-extrabold">Space</span>
+            <div class="flex items-center justify-between py-1.5 border-b border-[#1e1b4b] font-medium">
+              <span class="text-xs text-[#9aa4d9]">双击卡片 / 空格修改内容</span>
+              <span class="text-[12.5px] font-mono bg-[#0d0f2c] border border-[#1e1b4b] text-[#b8c4dc] px-2 py-0.5 rounded shadow-3xs font-extrabold">Space</span>
             </div>
-            <div class="flex items-center justify-between py-1.5 border-b border-slate-100 font-medium">
-              <span class="text-xs text-slate-500">删除当前分支</span>
-              <span class="text-[12.5px] font-mono bg-slate-100 border border-slate-200 text-slate-700 px-2 py-0.5 rounded shadow-3xs font-extrabold">Delete</span>
+            <div class="flex items-center justify-between py-1.5 border-b border-[#1e1b4b] font-medium">
+              <span class="text-xs text-[#9aa4d9]">删除当前分支</span>
+              <span class="text-[12.5px] font-mono bg-[#0d0f2c] border border-[#1e1b4b] text-[#b8c4dc] px-2 py-0.5 rounded shadow-3xs font-extrabold">Delete</span>
             </div>
-            <div class="flex items-center justify-between py-1.5 border-b border-slate-100 font-medium">
-              <span class="text-xs text-slate-500">关闭当前气泡</span>
-              <span class="text-[12.5px] font-mono bg-slate-100 border border-slate-200 text-slate-700 px-2 py-0.5 rounded shadow-3xs font-extrabold">Esc</span>
+            <div class="flex items-center justify-between py-1.5 border-b border-[#1e1b4b] font-medium">
+              <span class="text-xs text-[#9aa4d9]">关闭当前气泡</span>
+              <span class="text-[12.5px] font-mono bg-[#0d0f2c] border border-[#1e1b4b] text-[#b8c4dc] px-2 py-0.5 rounded shadow-3xs font-extrabold">Esc</span>
             </div>
           </div>
 
           <button
             @click="showShortcutsHelp = false"
-            class="mt-5 w-full bg-[#4a6cf7] hover:bg-blue-600 text-white font-bold text-xs py-2 rounded-xl border-none cursor-pointer"
+            class="mt-5 w-full bg-[#6d5cff] hover:bg-[#6d5cff] text-white font-bold text-xs py-2 rounded-xl border-none cursor-pointer"
           >
             我知道了
           </button>
@@ -1547,7 +1448,7 @@ const onOutlineViewClick = (layoutId: string, label: string) => {
 
     <!-- MAIN GRID WORKSPACE CONFIGURATION -->
     <template v-if="viewMode === 'map'">
-      <div class="grid grid-cols-1 lg:grid-cols-12 grid-rows-[1fr] border border-slate-200 dark:border-slate-700 bg-[#f8fafc] dark:bg-[#0f172a] rounded-2xl overflow-hidden shadow-3xs flex-1 min-h-0">
+      <div class="grid grid-cols-1 lg:grid-cols-12 grid-rows-[1fr] border border-[#1e1b4b] dark:border-[#252060] bg-[#f8fafc] dark:bg-[#090a24] rounded-2xl overflow-hidden shadow-3xs flex-1 min-h-0">
 
         <!-- LEFT 9 COLUMNS: THE XMIND INTERACTIVE CANVAS -->
         <div
@@ -1555,7 +1456,7 @@ const onOutlineViewClick = (layoutId: string, label: string) => {
           @mousemove="handlePanMouseMove"
           @mouseup="handlePanMouseUp"
           @mouseleave="handlePanMouseUp"
-          :class="`col-span-12 lg:col-span-9 h-full overflow-hidden relative select-none border-b lg:border-b-0 lg:border-r border-slate-200 dark:border-slate-700 ${
+          :class="`col-span-12 lg:col-span-9 h-full overflow-hidden relative select-none border-b lg:border-b-0 lg:border-r border-[#1e1b4b] dark:border-[#252060] ${
             currentTheme.bgClass
           } ${isDragging ? 'cursor-grabbing' : 'cursor-grab'}`"
           :style="{ backgroundColor: currentTheme.canvasBg }"
@@ -1572,26 +1473,26 @@ const onOutlineViewClick = (layoutId: string, label: string) => {
           />
 
           <!-- FLOATING ACTION TOOLBAR: ZOOM AND ADAPTATION PANEL -->
-          <div class="absolute bottom-4 right-4 bg-white/95 dark:bg-[#1e293b]/95 backdrop-blur-xs border border-slate-200/90 dark:border-slate-700 px-3 py-2 rounded-2xl shadow-md z-30 flex items-center gap-3">
+          <div class="absolute bottom-4 right-4 bg-white/95 dark:bg-[#111438]/95 backdrop-blur-xs border border-[#1e1b4b]/90 dark:border-[#252060] px-3 py-2 rounded-2xl shadow-md z-30 flex items-center gap-3">
             <button
               @click="handleZoom('out')"
-              class="p-1.5 hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-blue-500 text-slate-500 dark:text-slate-400 rounded-lg cursor-pointer border-none bg-transparent"
+              class="p-1.5 hover:bg-[#111438] dark:hover:bg-[#16183c] hover:text-[#c4b5fd] text-[#9aa4d9] dark:text-[#8b9bc0] rounded-lg cursor-pointer border-none bg-transparent"
               title="缩小"
             >
               <Minus class="w-4 h-4" />
             </button>
-            <span class="text-xs font-mono font-bold text-slate-700 dark:text-slate-300 select-none">{{ zoom }}%</span>
+            <span class="text-xs font-mono font-bold text-[#b8c4dc] dark:text-[#c4b5fd] select-none">{{ zoom }}%</span>
             <button
               @click="handleZoom('in')"
-              class="p-1.5 hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-blue-500 text-slate-500 dark:text-slate-400 rounded-lg cursor-pointer border-none bg-transparent"
+              class="p-1.5 hover:bg-[#111438] dark:hover:bg-[#16183c] hover:text-[#c4b5fd] text-[#9aa4d9] dark:text-[#8b9bc0] rounded-lg cursor-pointer border-none bg-transparent"
               title="放大"
             >
               <Plus class="w-4 h-4" />
             </button>
-            <div class="w-[1.5px] h-4 bg-slate-200 dark:bg-slate-600" />
+            <div class="w-[1.5px] h-4 bg-[#1a1640] dark:bg-[#16183c]" />
             <button
               @click="handleResetCanvasOffset"
-              class="p-1.5 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 bg-transparent border-none rounded-lg cursor-pointer text-xs font-bold"
+              class="p-1.5 hover:bg-[#111438] dark:hover:bg-[#16183c] text-[#b8c4dc] dark:text-[#c4b5fd] bg-transparent border-none rounded-lg cursor-pointer text-xs font-bold"
               title="视野归心居中"
             >
               <Maximize class="w-3.5 h-3.5" />
@@ -1644,63 +1545,34 @@ const onOutlineViewClick = (layoutId: string, label: string) => {
                 @input="editingLabelText = ($event.target as HTMLInputElement).value"
                 @blur="onEditBlur(layout.node.id)"
                 @keydown="onEditKeyDown(layout.node.id, $event)"
-                class="w-full text-center border-none py-0.5 rounded outline-none font-bold text-slate-800 bg-amber-50"
+                class="w-full text-center border-none py-0.5 rounded outline-none font-bold text-[#f0f2ff] bg-amber-50"
                 autofocus
               />
               <div v-else class="flex flex-col gap-1">
-                  <div
-                    v-if="(layout.node.priority && layout.node.priority !== 'None') || (layout.node.progress !== undefined && layout.node.progress > 0)"
-                    class="flex items-center gap-1.5 flex-wrap justify-start mb-0.5"
-                  >
-                    <span
-                      v-if="layout.node.priority && layout.node.priority !== 'None'"
-                    :class="`w-4 h-4 rounded-full flex items-center justify-center text-[11px] font-black border text-center leading-none shadow-xs shrink-0 select-none ${getPriorityBadgeClass(layout.node.priority)}`"
-                    :title="`优先级 ${layout.node.priority}`"
-                  >
-                    {{ layout.node.priority.replace('P', '') }}
-                  </span>
 
-                  <svg
-                    v-if="layout.node.progress !== undefined && layout.node.progress > 0"
-                    :width="getProgressRingAttrs(layout.node.progress, getBranchColor(layout.node.id)).size"
-                    :height="getProgressRingAttrs(layout.node.progress, getBranchColor(layout.node.id)).size"
-                    class="shrink-0 -rotate-90"
+                <!-- Level 1: 编号圆圈 + 标签 -->
+                <div v-if="layout.level === 1" class="flex items-center gap-2.5">
+                  <div
+                    class="w-7 h-7 rounded-full flex items-center justify-center text-[12px] font-bold text-white shrink-0"
+                    :style="{ background: getBranchColor(layout.node.id) }"
                   >
-                    <circle
-                      :cx="getProgressRingAttrs(layout.node.progress, getBranchColor(layout.node.id)).size / 2"
-                      :cy="getProgressRingAttrs(layout.node.progress, getBranchColor(layout.node.id)).size / 2"
-                      :r="getProgressRingAttrs(layout.node.progress, getBranchColor(layout.node.id)).radius"
-                      :stroke="currentTheme.isDark ? '#334155' : '#e2e8f0'"
-                      :stroke-width="1.2"
-                      fill="transparent"
-                    />
-                    <circle
-                      :cx="getProgressRingAttrs(layout.node.progress, getBranchColor(layout.node.id)).size / 2"
-                      :cy="getProgressRingAttrs(layout.node.progress, getBranchColor(layout.node.id)).size / 2"
-                      :r="getProgressRingAttrs(layout.node.progress, getBranchColor(layout.node.id)).radius"
-                      :stroke="getProgressRingAttrs(layout.node.progress, getBranchColor(layout.node.id)).color"
-                      :stroke-width="getProgressRingAttrs(layout.node.progress, getBranchColor(layout.node.id)).strokeWidth"
-                      fill="transparent"
-                      :stroke-dasharray="getProgressRingAttrs(layout.node.progress, getBranchColor(layout.node.id)).circumference"
-                      :stroke-dashoffset="getProgressRingAttrs(layout.node.progress, getBranchColor(layout.node.id)).strokeDashoffset"
-                      stroke-linecap="round"
-                      class="transition-all duration-300"
-                    />
-                  </svg>
+                    {{ (mindmapRoot.children?.findIndex(c => c.id === layout.node.id) ?? 0) + 1 }}
+                  </div>
+                  <span class="text-left font-extrabold text-[14px]">{{ layout.node.label }}</span>
                 </div>
 
-                <div class="flex items-center justify-between gap-1.5">
-                  <span :class="`w-full leading-normal ${
-                    layout.id === 'root' ? 'text-center font-black uppercase' :
-                    layout.level === 1 ? 'text-left font-extrabold' :
-                    'text-left font-semibold text-[13.5px]'
-                  }`">{{ layout.node.label }}</span>
+                <!-- Root: 标签 -->
+                <div v-else-if="layout.id === 'root'" class="flex flex-col items-center gap-1.5">
+                  <span class="text-center font-black uppercase text-[15px] leading-tight">{{ layout.node.label }}</span>
+                </div>
 
-                  <FileText
-                    v-if="(nodeNotes[layout.node.id] || '').trim()"
-                    class="w-3.5 h-3.5 text-slate-400 shrink-0 select-none animate-bounce"
-                    title="该考点带有拓展学习笔记"
+                <!-- Sub-topic: 小圆点 + 标签 -->
+                <div v-else class="flex items-center gap-2">
+                  <span
+                    class="w-2 h-2 rounded-full shrink-0"
+                    :style="{ background: getBranchColor(layout.node.id) }"
                   />
+                  <span class="text-left font-semibold text-[13px]">{{ layout.node.label }}</span>
                 </div>
               </div>
 
@@ -1708,7 +1580,7 @@ const onOutlineViewClick = (layoutId: string, label: string) => {
                 v-if="layout.node.children && layout.node.children.length > 0"
                 @click="onCollapseClick(layout.node.id, $event)"
                 :style="{ transform: 'translate(-50%, -50%)' }"
-                :class="`absolute top-1/2 w-4.5 h-4.5 bg-slate-50 border border-slate-300 text-[12px] rounded-full flex items-center justify-center cursor-pointer shadow-3xs hover:bg-slate-100 z-50 text-slate-600 transition-transform hover:scale-105 pointer-events-auto ${
+                :class="`absolute top-1/2 w-4.5 h-4.5 bg-[#111338] border border-[#282260] text-[12px] rounded-full flex items-center justify-center cursor-pointer shadow-3xs hover:bg-[#111438] z-50 text-[#6f7a9e] transition-transform hover:scale-105 pointer-events-auto ${
                   layout.side === 'left' ? 'left-0.5' : 'right-0.5 translate-x-1'
                 }`"
               >
@@ -1720,15 +1592,15 @@ const onOutlineViewClick = (layoutId: string, label: string) => {
         </div>
 
         <!-- RIGHT 3 COLUMNS: XMIND PROPERTIES FORMATTER SIDEBAR -->
-        <div class="col-span-12 lg:col-span-3 bg-white dark:bg-[#1e293b] p-5 flex flex-col justify-between select-none border-l border-slate-200 dark:border-slate-700">
+        <div class="col-span-12 lg:col-span-3 bg-white dark:bg-[#111438] p-5 flex flex-col justify-between select-none border-l border-[#1e1b4b] dark:border-[#252060]">
           <div class="flex flex-col gap-5">
 
             <!-- Sidebar Header Category selector tabs -->
-            <div class="flex items-center gap-1.5 border-b border-slate-100 dark:border-slate-700 pb-3">
+            <div class="flex items-center gap-1.5 border-b border-[#1e1b4b] dark:border-[#252060] pb-3">
               <button
                 @click="activeTab = '样式'"
                 :class="`flex items-center gap-1 px-3 py-1.5 text-xs font-bold rounded-lg border-none bg-transparent cursor-pointer transition-all ${
-                  activeTab === '样式' ? 'text-blue-600 bg-blue-50/50 dark:bg-blue-900/30' : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white'
+                  activeTab === '样式' ? 'text-[#c4b5fd] bg-[rgba(109,92,255,0.12)] dark:bg-[rgba(109,92,255,0.2)]' : 'text-[#9aa4d9] dark:text-[#8b9bc0] hover:text-[#f0f2ff] dark:hover:text-white'
                 }`"
               >
                 <Palette class="w-3.5 h-3.5" />
@@ -1737,7 +1609,7 @@ const onOutlineViewClick = (layoutId: string, label: string) => {
               <button
                 @click="activeTab = '大纲'"
                 :class="`flex items-center gap-1 px-3 py-1.5 text-xs font-bold rounded-lg border-none bg-transparent cursor-pointer transition-all ${
-                  activeTab === '大纲' ? 'text-blue-600 bg-blue-50/50 dark:bg-blue-900/30' : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white'
+                  activeTab === '大纲' ? 'text-[#c4b5fd] bg-[rgba(109,92,255,0.12)] dark:bg-[rgba(109,92,255,0.2)]' : 'text-[#9aa4d9] dark:text-[#8b9bc0] hover:text-[#f0f2ff] dark:hover:text-white'
                 }`"
               >
                 <FolderOpen class="w-3.5 h-3.5" />
@@ -1746,7 +1618,7 @@ const onOutlineViewClick = (layoutId: string, label: string) => {
               <button
                 @click="activeTab = '笔记'"
                 :class="`flex items-center gap-1 px-3 py-1.5 text-xs font-bold rounded-lg border-none bg-transparent cursor-pointer transition-all ${
-                  activeTab === '笔记' ? 'text-blue-600 bg-blue-50/50 dark:bg-blue-900/30' : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white'
+                  activeTab === '笔记' ? 'text-[#c4b5fd] bg-[rgba(109,92,255,0.12)] dark:bg-[rgba(109,92,255,0.2)]' : 'text-[#9aa4d9] dark:text-[#8b9bc0] hover:text-[#f0f2ff] dark:hover:text-white'
                 }`"
               >
                 <FileText class="w-3.5 h-3.5" />
@@ -1759,81 +1631,81 @@ const onOutlineViewClick = (layoutId: string, label: string) => {
 
               <!-- Category 1: Structural Paths Style -->
               <div>
-                <span class="text-[13.5px] font-bold text-slate-400 dark:text-slate-500 block mb-2 font-sans">1. 导图骨架样式</span>
+                <span class="text-[13.5px] font-bold text-[#8b9bc0] dark:text-[#9aa4d9] block mb-2 font-sans">1. 导图骨架样式</span>
                 <div class="grid grid-cols-3 gap-2">
                   <button
                     @click="structureStyle = 'curved'; showToast('已切换为 Xmind 极光贝塞尔曲线线段')"
-                    :class="`flex flex-col items-center justify-center p-2 rounded-xl border border-slate-200 dark:border-slate-600 cursor-pointer bg-white dark:bg-slate-800 transition-all ${
-                      structureStyle === 'curved' ? 'border-[#4a6cf7] bg-blue-50/35 dark:bg-blue-900/30 ring-1 ring-[#4a6cf7]' : 'hover:border-slate-300 dark:hover:border-slate-500'
+                    :class="`flex flex-col items-center justify-center p-2 rounded-xl border border-[#1e1b4b] dark:border-[#282260] cursor-pointer bg-white dark:bg-[#0d0f2c] transition-all ${
+                      structureStyle === 'curved' ? 'border-[#6d5cff] bg-blue-50/35 dark:bg-[rgba(109,92,255,0.2)] ring-1 ring-[#6d5cff]' : 'hover:border-[#282260] dark:hover:border-[#6d5cff]'
                     }`"
                   >
-                    <Network class="w-4 h-4 text-blue-500" />
-                    <span class="text-[12px] font-bold text-slate-700 dark:text-slate-300 mt-1">贝塞尔曲线</span>
+                    <Network class="w-4 h-4 text-[#c4b5fd]" />
+                    <span class="text-[12px] font-bold text-[#b8c4dc] dark:text-[#c4b5fd] mt-1">贝塞尔曲线</span>
                   </button>
 
                   <button
                     @click="structureStyle = 'logic-right'; showToast('已重塑为直角折线连接方式')"
-                    :class="`flex flex-col items-center justify-center p-2 rounded-xl border border-slate-200 dark:border-slate-600 cursor-pointer bg-white dark:bg-slate-800 transition-all ${
-                      structureStyle === 'logic-right' ? 'border-[#4a6cf7] bg-blue-50/35 dark:bg-blue-900/30 ring-1 ring-[#4a6cf7]' : 'hover:border-slate-300 dark:hover:border-slate-500'
+                    :class="`flex flex-col items-center justify-center p-2 rounded-xl border border-[#1e1b4b] dark:border-[#282260] cursor-pointer bg-white dark:bg-[#0d0f2c] transition-all ${
+                      structureStyle === 'logic-right' ? 'border-[#6d5cff] bg-blue-50/35 dark:bg-[rgba(109,92,255,0.2)] ring-1 ring-[#6d5cff]' : 'hover:border-[#282260] dark:hover:border-[#6d5cff]'
                     }`"
                   >
                     <Layout class="w-4 h-4 text-emerald-500" />
-                    <span class="text-[12px] font-bold text-slate-700 dark:text-slate-300 mt-1">直角折线图</span>
+                    <span class="text-[12px] font-bold text-[#b8c4dc] dark:text-[#c4b5fd] mt-1">直角折线图</span>
                   </button>
 
                   <button
                     @click="structureStyle = 'org-vertical'; showToast('已开启极简直连线连接方式')"
-                    :class="`flex flex-col items-center justify-center p-2 rounded-xl border border-slate-200 dark:border-slate-600 cursor-pointer bg-white dark:bg-slate-800 transition-all ${
-                      structureStyle === 'org-vertical' ? 'border-[#4a6cf7] bg-blue-50/35 dark:bg-blue-900/30 ring-1 ring-[#4a6cf7]' : 'hover:border-slate-300 dark:hover:border-slate-500'
+                    :class="`flex flex-col items-center justify-center p-2 rounded-xl border border-[#1e1b4b] dark:border-[#282260] cursor-pointer bg-white dark:bg-[#0d0f2c] transition-all ${
+                      structureStyle === 'org-vertical' ? 'border-[#6d5cff] bg-blue-50/35 dark:bg-[rgba(109,92,255,0.2)] ring-1 ring-[#6d5cff]' : 'hover:border-[#282260] dark:hover:border-[#6d5cff]'
                     }`"
                   >
                     <Compass class="w-4 h-4 text-orange-500" />
-                    <span class="text-[12px] font-bold text-slate-700 dark:text-slate-300 mt-1">极简直连线</span>
+                    <span class="text-[12px] font-bold text-[#b8c4dc] dark:text-[#c4b5fd] mt-1">极简直连线</span>
                   </button>
                 </div>
               </div>
 
               <!-- Category 2: Xmind Multi-Themes selection Grid -->
               <div>
-                <span class="text-[13.5px] font-bold text-slate-400 dark:text-slate-500 block mb-2 font-sans">2. 预设美学主题 (Core Themes)</span>
+                <span class="text-[13.5px] font-bold text-[#8b9bc0] dark:text-[#9aa4d9] block mb-2 font-sans">2. 预设美学主题 (Core Themes)</span>
                 <div class="grid grid-cols-2 gap-2">
                   <button
                     v-for="theme in PREMIUM_THEMES"
                     :key="theme.id"
                     @click="activeThemeId = theme.id; showToast(`主题切换为 [${theme.name}]`)"
-                    :class="`flex items-center gap-1.5 px-3 py-2 rounded-xl border cursor-pointer border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 transition-all text-left ${
-                      activeThemeId === theme.id ? 'border-[#4a6cf7] bg-blue-50/40 dark:bg-blue-900/30 ring-1 ring-[#4a6cf7]' : 'hover:border-slate-300 dark:hover:border-slate-500'
+                    :class="`flex items-center gap-1.5 px-3 py-2 rounded-xl border cursor-pointer border-[#1e1b4b] dark:border-[#282260] bg-white dark:bg-[#0d0f2c] transition-all text-left ${
+                      activeThemeId === theme.id ? 'border-[#6d5cff] bg-blue-50/40 dark:bg-[rgba(109,92,255,0.2)] ring-1 ring-[#6d5cff]' : 'hover:border-[#282260] dark:hover:border-[#6d5cff]'
                     }`"
                   >
-                    <span class="text-[13px] font-bold text-slate-700 dark:text-slate-300 truncate">{{ theme.name }}</span>
+                    <span class="text-[13px] font-bold text-[#b8c4dc] dark:text-[#c4b5fd] truncate">{{ theme.name }}</span>
                   </button>
                 </div>
               </div>
 
-              <div class="h-[1px] bg-slate-100 dark:bg-slate-700 my-1" />
+              <div class="h-[1px] bg-[#0d0f2c] dark:bg-[#16183c] my-1" />
 
               <!-- Category 3: Selected Node Active topic parameters -->
               <div>
-                <div class="flex items-center gap-1 text-[13.5px] font-bold text-slate-400 dark:text-slate-500 mb-2.5 font-sans">
+                <div class="flex items-center gap-1 text-[13.5px] font-bold text-[#8b9bc0] dark:text-[#9aa4d9] mb-2.5 font-sans">
                   <Sliders class="w-3.5 h-3.5" />
                   <span>3. 激活项属性 (Node Parameters)</span>
                 </div>
 
-                <div v-if="getActiveNode()" class="bg-slate-50/70 dark:bg-slate-800 border border-slate-150 dark:border-slate-600 rounded-xl p-3.5 flex flex-col gap-3.5 font-sans">
-                  <span class="text-[12px] font-bold text-slate-400 dark:text-slate-500 block uppercase">当前节点: <span class="text-[#4a6cf7] font-extrabold">{{ getActiveNode()?.label }}</span></span>
+                <div v-if="getActiveNode()" class="bg-[#111338]/70 dark:bg-[#0d0f2c] border border-[rgba(117,98,255,0.12)] dark:border-[#282260] rounded-xl p-3.5 flex flex-col gap-3.5 font-sans">
+                  <span class="text-[12px] font-bold text-[#8b9bc0] dark:text-[#9aa4d9] block uppercase">当前节点: <span class="text-[#c4b5fd] font-extrabold">{{ getActiveNode()?.label }}</span></span>
 
                   <!-- Option 1: Task Priority Badge selectors -->
                   <div>
-                    <span class="text-[13px] text-slate-500 dark:text-slate-400 block mb-1.5 font-semibold">1. 考点权重优先级</span>
-                    <div class="flex items-center gap-1.5 bg-white dark:bg-slate-900 p-1 rounded-xl border border-slate-150 dark:border-slate-600 justify-between">
+                    <span class="text-[13px] text-[#9aa4d9] dark:text-[#8b9bc0] block mb-1.5 font-semibold">1. 考点权重优先级</span>
+                    <div class="flex items-center gap-1.5 bg-white dark:bg-[#1a1640] p-1 rounded-xl border border-[rgba(117,98,255,0.12)] dark:border-[#282260] justify-between">
                       <button
                         v-for="prio in (['P1', 'P2', 'P3', 'None'] as const)"
                         :key="prio"
                         @click="handleSetPriority(selectedNodeId, prio)"
                         :class="`flex-1 py-1.5 text-[12px] font-bold rounded-lg border cursor-pointer transition-all ${
                           getActiveNode()?.priority === prio
-                            ? prio === 'P1' ? 'bg-rose-500 text-white border-rose-500 shadow-xs' : prio === 'P2' ? 'bg-amber-500 text-white border-amber-500 shadow-xs' : prio === 'P3' ? 'bg-sky-500 text-white border-sky-500 shadow-xs' : 'bg-slate-700 text-white border-slate-705'
-                            : 'bg-white hover:bg-slate-55 text-slate-600 border-transparent'
+                            ? prio === 'P1' ? 'bg-rose-500 text-white border-rose-500 shadow-xs' : prio === 'P2' ? 'bg-amber-500 text-white border-amber-500 shadow-xs' : prio === 'P3' ? 'bg-sky-500 text-white border-sky-500 shadow-xs' : 'bg-[#16183c] text-white border-[#252060]'
+                            : 'bg-white hover:bg-[#0d0f2c] text-[#6f7a9e] border-transparent'
                         }`"
                       >
                         {{ prio === 'None' ? '无权重' : prio }}
@@ -1843,7 +1715,7 @@ const onOutlineViewClick = (layoutId: string, label: string) => {
 
                   <!-- Option 3: Progress completion status indicators -->
                   <div>
-                    <span class="text-[13px] text-slate-500 dark:text-slate-400 block mb-1.5 font-semibold">3. 学习备考掌握度</span>
+                    <span class="text-[13px] text-[#9aa4d9] dark:text-[#8b9bc0] block mb-1.5 font-semibold">3. 学习备考掌握度</span>
                     <div class="grid grid-cols-5 gap-1 text-center font-mono">
                       <button
                         v-for="prog in ([0, 25, 50, 75, 100] as const)"
@@ -1851,8 +1723,8 @@ const onOutlineViewClick = (layoutId: string, label: string) => {
                         @click="handleSetProgress(selectedNodeId, prog)"
                         :class="`py-1 rounded-lg border text-[12px] font-bold cursor-pointer transition-all ${
                           getActiveNode()?.progress === prog
-                            ? 'bg-[#4a6cf7] text-white border-[#4a6cf7]'
-                            : 'bg-white hover:bg-slate-50 text-slate-600 border-slate-150'
+                            ? 'bg-[#6d5cff] text-white border-[#6d5cff]'
+                            : 'bg-white hover:bg-[#111338] text-[#6f7a9e] border-[rgba(117,98,255,0.12)]'
                         }`"
                       >
                         {{ prog }}%
@@ -1861,7 +1733,7 @@ const onOutlineViewClick = (layoutId: string, label: string) => {
                   </div>
 
                 </div>
-                <div v-else class="text-center py-8 text-slate-400 dark:text-slate-500 text-[13.5px] font-medium border border-dashed border-slate-200 dark:border-slate-600 rounded-xl leading-relaxed">
+                <div v-else class="text-center py-8 text-[#8b9bc0] dark:text-[#9aa4d9] text-[13.5px] font-medium border border-dashed border-[#1e1b4b] dark:border-[#282260] rounded-xl leading-relaxed">
                   点击选中画布中的任何考点节点，<br />即可在此设置权重优先级与学习进度。
                 </div>
               </div>
@@ -1870,9 +1742,9 @@ const onOutlineViewClick = (layoutId: string, label: string) => {
 
             <!-- TAB 2: FLAT OUTLINE LIST VIEW -->
             <div v-if="activeTab === '大纲'" class="flex flex-col gap-3">
-              <span class="text-[13.5px] font-bold text-slate-400 dark:text-slate-500 block mb-1 font-sans">考点大纲层级结构列表</span>
+              <span class="text-[13.5px] font-bold text-[#8b9bc0] dark:text-[#9aa4d9] block mb-1 font-sans">考点大纲层级结构列表</span>
 
-              <div class="max-h-[360px] overflow-y-auto border border-slate-150 dark:border-slate-600 bg-slate-50/50 dark:bg-slate-800 rounded-xl p-3 flex flex-col gap-2 select-none">
+              <div class="max-h-[360px] overflow-y-auto border border-[rgba(117,98,255,0.12)] dark:border-[#282260] bg-[#111338]/50 dark:bg-[#0d0f2c] rounded-xl p-3 flex flex-col gap-2 select-none">
                 <div
                   v-for="layout in placedLayoutsComputed"
                   :key="layout.id"
@@ -1880,19 +1752,19 @@ const onOutlineViewClick = (layoutId: string, label: string) => {
                   :style="{ paddingLeft: `${layout.level * 14}px` }"
                   :class="`flex items-center gap-1.5 py-1.5 px-2.5 rounded-lg cursor-pointer transition-colors text-xs font-semibold ${
                     selectedNodeId === layout.id
-                      ? 'bg-[#4a6cf7]/10 text-[#4a6cf7]'
-                      : 'hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300'
+                      ? 'bg-[rgba(109,92,255,0.12)] text-[#c4b5fd]'
+                      : 'hover:bg-[#111438] dark:hover:bg-[#16183c] text-[#b8c4dc] dark:text-[#c4b5fd]'
                   }`"
                 >
                   <span
-                    class="w-1.5 h-1.5 rounded-full bg-slate-400"
+                    class="w-1.5 h-1.5 rounded-full bg-[#4a4680]"
                     :style="{ backgroundColor: currentTheme.branchColors[layout.level % currentTheme.branchColors.length] }"
                   />
                   <span class="truncate">{{ layout.node.label }}</span>
                 </div>
               </div>
 
-              <span class="text-[12px] text-slate-400 dark:text-slate-500 font-medium leading-normal block">
+              <span class="text-[12px] text-[#8b9bc0] dark:text-[#9aa4d9] font-medium leading-normal block">
                 提示: 双击导图内的卡片或者右侧大纲项目可以随时同步聚焦。
               </span>
             </div>
@@ -1900,7 +1772,7 @@ const onOutlineViewClick = (layoutId: string, label: string) => {
             <!-- TAB 3: EXTENDED STUDY NOTES FOR SELECTED NODE -->
             <div v-if="activeTab === '笔记'" class="flex flex-col gap-3 font-sans">
               <div class="flex items-center justify-between">
-                <span class="text-[13.5px] font-bold text-slate-400 dark:text-slate-500 block font-sans">拓展学习与归纳笔记</span>
+                <span class="text-[13.5px] font-bold text-[#8b9bc0] dark:text-[#9aa4d9] block font-sans">拓展学习与归纳笔记</span>
                 <span class="text-[12px] text-emerald-600 font-bold bg-emerald-50 px-2 py-0.5 rounded flex items-center gap-1 animate-pulse">
                   <CheckCircle class="w-3 h-3 text-emerald-500" />
                   已自动保存
@@ -1908,20 +1780,20 @@ const onOutlineViewClick = (layoutId: string, label: string) => {
               </div>
 
               <div v-if="getActiveNode()" class="flex flex-col gap-3">
-                <div class="flex items-center gap-1 bg-slate-50 dark:bg-slate-800 px-3 py-2 rounded-xl text-xs text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-600">
-                  <BookOpen class="w-3.5 h-3.5 text-blue-500 mr-1" />
+                <div class="flex items-center gap-1 bg-[#111338] dark:bg-[#0d0f2c] px-3 py-2 rounded-xl text-xs text-[#6f7a9e] dark:text-[#8b9bc0] border border-[#1e1b4b] dark:border-[#282260]">
+                  <BookOpen class="w-3.5 h-3.5 text-[#c4b5fd] mr-1" />
                   <span class="font-bold">备考总结卡: </span>
-                  <span class="truncate text-[#4a6cf7] font-semibold">{{ getActiveNode()?.label }}</span>
+                  <span class="truncate text-[#c4b5fd] font-semibold">{{ getActiveNode()?.label }}</span>
                 </div>
 
                 <textarea
                   :value="nodeNotes[selectedNodeId] || ''"
                   @input="handleSaveNotes(selectedNodeId, ($event.target as HTMLTextAreaElement).value)"
                   placeholder="在此写入针对本高频考点的手写总结、答题要点、备考警示、或代码示例。支持直接渲染..."
-                  class="w-full h-80 border border-slate-200 dark:border-slate-600 focus:border-[#4a6cf7] focus:ring-1 focus:ring-[#4a6cf7] rounded-xl p-3.5 text-xs font-semibold leading-relaxed text-slate-800 dark:text-white outline-none resize-none placeholder:text-slate-400/80 bg-slate-50/20 dark:bg-slate-800"
+                  class="w-full h-80 border border-[#1e1b4b] dark:border-[#282260] focus:border-[#6d5cff] focus:ring-1 focus:ring-[#6d5cff] rounded-xl p-3.5 text-xs font-semibold leading-relaxed text-[#f0f2ff] dark:text-white outline-none resize-none placeholder:text-[#8b9bc0]/80 bg-[#111338]/20 dark:bg-[#0d0f2c]"
                 />
               </div>
-              <div v-else class="text-center py-10 text-slate-400 dark:text-slate-500 text-[13.5px] font-medium border border-dashed border-slate-200 dark:border-slate-600 rounded-xl">
+              <div v-else class="text-center py-10 text-[#8b9bc0] dark:text-[#9aa4d9] text-[13.5px] font-medium border border-dashed border-[#1e1b4b] dark:border-[#282260] rounded-xl">
                 请先在思维导图中点选一个考点分支，即可归纳相关延伸学习笔记卡。
               </div>
             </div>
@@ -1929,19 +1801,19 @@ const onOutlineViewClick = (layoutId: string, label: string) => {
           </div>
 
           <!-- LOWER PORTION: EXPORT AND FORMAT FILES BUTTONS -->
-          <div class="flex flex-col gap-2 mt-5 border-t border-slate-100 dark:border-slate-700 pt-4.5">
-            <span class="text-[13px] text-slate-400 dark:text-slate-500 block mb-1">多维学习成果生成 (Export Data)</span>
+          <div class="flex flex-col gap-2 mt-5 border-t border-[#1e1b4b] dark:border-[#252060] pt-4.5">
+            <span class="text-[13px] text-[#8b9bc0] dark:text-[#9aa4d9] block mb-1">多维学习成果生成 (Export Data)</span>
             <div class="grid grid-cols-2 gap-2">
               <button
                 @click="handleExportMarkdown"
-                class="flex items-center justify-center gap-1.5 py-2 hover:bg-orange-50 dark:hover:bg-orange-900/20 text-[#ea580c] hover:border-[#ea580c] font-bold text-xs bg-white dark:bg-slate-800 rounded-xl border border-orange-200 dark:border-orange-800 cursor-pointer transition-colors"
+                class="flex items-center justify-center gap-1.5 py-2 hover:bg-orange-50 dark:hover:bg-orange-900/20 text-[#ea580c] hover:border-[#ea580c] font-bold text-xs bg-white dark:bg-[#0d0f2c] rounded-xl border border-orange-200 dark:border-orange-800 cursor-pointer transition-colors"
               >
                 <FileText class="w-3.5 h-3.5" />
                 <span>导出MD笔记</span>
               </button>
               <button
                 @click="handleExportJSON"
-                class="flex items-center justify-center gap-1.5 py-2 hover:bg-blue-50 dark:hover:bg-blue-900/20 text-[#4a6cf7] hover:border-blue-400 font-bold text-xs bg-white dark:bg-slate-800 rounded-xl border border-blue-200 dark:border-blue-800 cursor-pointer transition-colors"
+                class="flex items-center justify-center gap-1.5 py-2 hover:bg-blue-50 dark:hover:bg-blue-900/20 text-[#c4b5fd] hover:border-blue-400 font-bold text-xs bg-white dark:bg-[#0d0f2c] rounded-xl border border-blue-200 dark:border-blue-800 cursor-pointer transition-colors"
               >
                 <Download class="w-3.5 h-3.5" />
                 <span>导出纯数据</span>
@@ -1956,18 +1828,18 @@ const onOutlineViewClick = (layoutId: string, label: string) => {
 
     <!-- FALLBACK BIG OUTLINE EXPLORATION STRUCTURE VIEW -->
     <template v-else>
-      <div class="bg-white dark:bg-[#1e293b] border border-slate-200/90 dark:border-slate-700 rounded-2xl p-6 md:p-10 shadow-3xs min-h-[500px]" id="mindmap-fullscreen-outline-panel">
+      <div class="bg-white dark:bg-[#111438] border border-[#1e1b4b]/90 dark:border-[#252060] rounded-2xl p-6 md:p-10 shadow-3xs min-h-[500px]" id="mindmap-fullscreen-outline-panel">
         <div class="max-w-3xl mx-auto flex flex-col gap-6 font-sans">
           <div>
             <h3 class="text-xl font-extrabold text-[#111827] dark:text-white flex items-center gap-2">
               <span>{{ mindmapRoot.label }} 结构存贮纲要</span>
             </h3>
-            <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">
+            <p class="text-xs text-[#9aa4d9] dark:text-[#8b9bc0] mt-1">
               采用树级可交互索引形式展现，直接点击纲要条目，不仅可以大纲中直接打字段，还能瞬间跳回思维导图内聚焦！
             </p>
           </div>
 
-          <div class="border border-slate-100 dark:border-slate-700 bg-[#f8fafc]/60 dark:bg-slate-800/60 rounded-2xl p-5 flex flex-col gap-3 shadow-3xs">
+          <div class="border border-[#1e1b4b] dark:border-[#252060] bg-[#f8fafc]/60 dark:bg-[#0d0f2c]/60 rounded-2xl p-5 flex flex-col gap-3 shadow-3xs">
             <div
               v-for="layout in placedLayoutsComputed"
               :key="layout.id"
@@ -1976,7 +1848,7 @@ const onOutlineViewClick = (layoutId: string, label: string) => {
               :class="`flex flex-col md:flex-row md:items-center justify-between gap-3 p-3 rounded-xl border cursor-pointer transition-all ${
                 selectedNodeId === layout.id
                   ? 'bg-amber-50/50 border-amber-300 ring-2 ring-amber-400/20 scale-101'
-                  : 'bg-white dark:bg-slate-800 border-slate-100 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-500 hover:shadow-3xs'
+                  : 'bg-white dark:bg-[#0d0f2c] border-[#1e1b4b] dark:border-[#252060] hover:border-[#282260] dark:hover:border-[#6d5cff] hover:shadow-3xs'
               }`"
             >
               <div class="flex items-center gap-2">
@@ -1984,7 +1856,7 @@ const onOutlineViewClick = (layoutId: string, label: string) => {
                   class="w-2.5 h-2.5 rounded-full shrink-0"
                   :style="{ backgroundColor: currentTheme.branchColors[layout.level % currentTheme.branchColors.length] }"
                 />
-                <span class="text-xs font-bold text-slate-800 dark:text-slate-200 leading-none">{{ layout.node.label }}</span>
+                <span class="text-xs font-bold text-[#f0f2ff] dark:text-[#d8def0] leading-none">{{ layout.node.label }}</span>
 
                 <span
                   v-if="layout.node.priority && layout.node.priority !== 'None'"
@@ -1997,13 +1869,13 @@ const onOutlineViewClick = (layoutId: string, label: string) => {
                 >{{ layout.node.progress }}% 进度</span>
               </div>
 
-              <span class="text-[13px] text-slate-400 dark:text-slate-500 font-medium truncate max-w-sm">
+              <span class="text-[13px] text-[#8b9bc0] dark:text-[#9aa4d9] font-medium truncate max-w-sm">
                 {{ nodeNotes[layout.id] ? nodeNotes[layout.id].replace(/[#`*_\-]/g, '').slice(0, 48) + '...' : '暂无附加笔记笔记记录' }}
               </span>
             </div>
           </div>
 
-          <div class="flex items-center justify-end gap-3 self-stretch border-t border-slate-100 dark:border-slate-700 pt-5 mt-3">
+          <div class="flex items-center justify-end gap-3 self-stretch border-t border-[#1e1b4b] dark:border-[#252060] pt-5 mt-3">
             <button
               @click="handleExportMarkdown"
               class="flex items-center gap-1.5 px-4 py-2 bg-[#ea580c] hover:bg-orange-600 font-semibold text-white text-xs rounded-xl border-none cursor-pointer transition-colors"
@@ -2013,7 +1885,7 @@ const onOutlineViewClick = (layoutId: string, label: string) => {
             </button>
             <button
               @click="viewMode = 'map'"
-              class="flex items-center gap-1.5 px-4 py-2 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 font-semibold text-slate-700 dark:text-slate-300 text-xs rounded-xl border-none cursor-pointer transition-colors"
+              class="flex items-center gap-1.5 px-4 py-2 bg-[#0d0f2c] dark:bg-[#16183c] hover:bg-[#1a1640] dark:hover:bg-[#16183c] font-semibold text-[#b8c4dc] dark:text-[#c4b5fd] text-xs rounded-xl border-none cursor-pointer transition-colors"
             >
               <ArrowLeft class="w-3.5 h-3.5" />
               <span>返回 Xmind 二维思维导图</span>

@@ -20,7 +20,7 @@
           :disabled="!canUnlockReport"
           class="p-2.5 rounded-xl transition-all cursor-pointer flex items-center justify-center shrink-0"
           :class="canUnlockReport ? 'bg-blue-600 hover:bg-blue-500 text-white shadow-md shadow-blue-900/50 animate-pulse' : 'bg-transparent text-slate-500 cursor-not-allowed border border-slate-900'"
-          title="可以生成星图测绘报告了！"
+          title="可以生成学习画像报告了！"
         >
           <Sparkles class="w-4 h-4" />
         </button>
@@ -98,7 +98,7 @@
           :class="canUnlockReport ? 'bg-blue-600 hover:bg-blue-500 text-white shadow-md shadow-blue-900/50' : 'bg-[#030611]/80 text-slate-500 border border-slate-900 cursor-not-allowed'"
         >
           <Sparkles class="w-4 h-4" />
-          <span>开始星图测绘</span>
+          <span>开始学习画像</span>
         </button>
 
         <button @click="resetConversation" class="w-full py-2.5 bg-slate-950/40 hover:bg-rose-950/25 border border-rose-900/50 hover:border-rose-850/50 text-rose-400 rounded-xl text-sm font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer">
@@ -130,7 +130,7 @@
           :disabled="!canUnlockReport"
           class="w-full py-2 mt-1 rounded-lg text-sm font-bold text-center transition-all cursor-pointer"
           :class="canUnlockReport ? 'bg-cyan-950/40 text-cyan-400 border border-cyan-900/50 hover:bg-cyan-950/60' : 'bg-slate-950 text-slate-600 cursor-not-allowed border border-slate-900'"
-        >查看完整星图</button>
+        >查看完整画像</button>
       </div>
     </template>
   </div>

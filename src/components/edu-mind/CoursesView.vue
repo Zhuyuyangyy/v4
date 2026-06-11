@@ -744,7 +744,7 @@ const directions = ['全部', '编程与算法基础', '计算机系统', '软�
 </script>
 
 <template>
-  <div class="flex-1 flex flex-col gap-6 dark:bg-[#0f172a]" id="courses-view-wrapper">
+  <div class="edu-courses flex-1 flex flex-col gap-6" id="courses-view-wrapper">
     <div v-if="selectedCourse" class="flex flex-col gap-5 animate-fade-in" id="course-workspace-pane">
       <div class="flex items-center justify-between border-b border-slate-200/60 dark:border-slate-700 pb-3">
         <button
@@ -1536,78 +1536,53 @@ const directions = ['全部', '编程与算法基础', '计算机系统', '软�
 
     <template v-else>
       <div class="flex flex-col gap-4">
-        <div class="flex flex-wrap items-center gap-1 p-1.5 bg-slate-100 dark:bg-slate-800/60 rounded-xl" id="course-directions-tab">
+        <div class="edu-course-tabs flex flex-wrap items-center gap-2 p-2 rounded-xl" id="course-directions-tab">
           <button
             v-for="(dir, idx) in directions"
             :key="idx"
             @click="activeDirection = dir"
             :class="[
-              'flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-[14px] cursor-pointer transition-all duration-200',
+              'edu-course-tabs__button flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-[14px] cursor-pointer transition-all duration-200',
               activeDirection === dir
-                ? 'bg-white dark:bg-slate-600 text-slate-800 dark:text-white font-semibold shadow-sm'
-                : 'text-slate-800 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
+                ? 'is-active text-white font-semibold'
+                : 'text-[#a3abdd] hover:text-white'
             ]"
           >
             <span>{{ dir }}</span>
             <span :class="[
               'text-[12px] px-1.5 py-0.5 rounded-full font-mono transition-colors',
               activeDirection === dir
-                ? 'bg-[#4a6cf7]/10 dark:bg-white/15 text-accent dark:text-white font-medium'
-                : 'bg-white/70 dark:bg-slate-700/50 text-slate-600 dark:text-slate-500'
+                ? 'bg-white/15 text-white font-medium'
+                : 'bg-white/5 text-[#9ba4d8]'
             ]">
               {{ getDirectionCount(dir) }}
             </span>
           </button>
         </div>
-
-        <div class="flex flex-col sm:flex-row gap-3 bg-white dark:bg-[#1e293b] p-3.5 rounded-xl border border-[#e8e8e8] dark:border-slate-700/60 shadow-sm">
-          <div class="flex items-center gap-2 flex-1 relative bg-slate-50 dark:bg-slate-800/60 border border-slate-200/60 dark:border-slate-700/60 rounded-lg px-3 py-1.5 focus-within:border-[#4a6cf7] focus-within:ring-2 focus-within:ring-[#4a6cf7]/10 transition-all">
-            <Search class="w-4 h-4 text-slate-500 shrink-0" />
-            <input
-              type="text"
-              placeholder="搜索感兴趣的精品核心课程名称..."
-              v-model="searchQuery"
-              class="bg-transparent border-none outline-none text-[15px] text-slate-700 dark:text-slate-200 w-full placeholder-slate-500 font-sans"
-            />
-          </div>
-
-          <div class="flex items-center gap-2 px-3 py-1.5 bg-slate-50 dark:bg-slate-800/60 border border-slate-200/60 dark:border-slate-700/60 rounded-lg shrink-0">
-            <span class="text-[13px] text-slate-500 dark:text-slate-400 font-bold uppercase select-none">难度</span>
-            <select
-              v-model="difficultyFilter"
-              class="bg-transparent border-none outline-none text-[14px] text-slate-700 dark:text-slate-200 font-medium cursor-pointer"
-            >
-              <option value="全部">全部</option>
-              <option value="入门">🌱 入门</option>
-              <option value="进阶">🍂 进阶</option>
-              <option value="高级">🔥 高级</option>
-            </select>
-          </div>
-        </div>
       </div>
 
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4" id="courses-grid-list">
+      <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4" id="courses-grid-list">
         <div
           v-for="course in filteredCourses"
           :key="course.id"
           @click="handleSelectCourse(course)"
           :class="[
-            'border rounded-xl p-4 cursor-pointer hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300 relative flex flex-col justify-between h-[245px] group',
+            'edu-course-card border rounded-xl p-4 cursor-pointer transition-all duration-300 relative flex flex-col justify-between h-[245px] group',
             course.progress > 0
-              ? 'border-[#4a6cf7] bg-gradient-to-b from-[#fafbff] to-white dark:from-slate-800 dark:to-[#1e293b] shadow-3xs'
-              : 'border-[#e8e8e8] dark:border-slate-700 hover:border-[#bfbfbf] bg-white dark:bg-[#1e293b]'
+              ? 'is-started'
+              : ''
           ]"
         >
           <div>
             <div class="flex justify-between items-center mb-2.5">
-              <div :class="['inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[13px] font-semibold', getCategoryBadgeClass(course.category)]">
+              <div :class="['edu-course-card__category inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[13px] font-semibold', getCategoryBadgeClass(course.category)]">
                 <component :is="IconMap[course.iconName] || BookOpen" class="w-3.5 h-3.5 shrink-0" />
                 <span>{{ course.category }}</span>
               </div>
 
               <div class="flex gap-1.5 items-center select-none">
                 <span :class="[
-                  'text-[11.5px] font-semibold px-2 py-0.5 rounded',
+                  'edu-course-card__level text-[11.5px] font-semibold px-2 py-0.5 rounded',
                   course.difficulty === '高级'
                     ? 'bg-red-50 text-red-600 border border-red-100'
                     : course.difficulty === '进阶'
@@ -1616,46 +1591,46 @@ const directions = ['全部', '编程与算法基础', '计算机系统', '软�
                 ]">
                   {{ course.difficulty }}
                 </span>
-                <span class="text-[11.5px] px-2 py-0.5 rounded border border-slate-150 bg-slate-50 text-slate-500 font-mono font-medium">
+                <span class="edu-course-card__hours text-[11.5px] px-2 py-0.5 rounded font-mono font-medium">
                   {{ course.studyHours }}h
                 </span>
               </div>
             </div>
 
             <div class="mb-2.5 pl-0.5">
-              <h4 class="text-[16.5px] font-semibold text-[#1a1a2e] dark:text-white mb-1 line-clamp-1 group-hover:text-accent duration-150 transition-colors leading-snug" :title="course.name">
+              <h4 class="text-[17px] font-bold text-white mb-1 line-clamp-1 duration-150 transition-colors leading-snug" :title="course.name">
                 {{ course.name }}
               </h4>
-              <p class="text-[14px] text-slate-400 dark:text-slate-500 line-clamp-2 leading-relaxed h-[36px]" :title="course.description">
+              <p class="text-[13.5px] text-[#98a0cf] line-clamp-2 leading-relaxed h-[40px]" :title="course.description">
                 {{ course.description }}
               </p>
             </div>
 
             <div class="mb-3.5 px-0.5">
-              <div class="flex justify-between text-[12px] text-slate-400 mb-1 font-mono">
+              <div class="flex justify-between text-[12px] text-[#8f98d3] mb-1 font-mono">
                 <span>已学进度</span>
-                <span class="font-bold text-slate-600 dark:text-slate-300">{{ course.progress }}%</span>
+                <span class="font-bold text-[#b9d7ff]">{{ course.progress }}%</span>
               </div>
-              <div class="h-1 bg-slate-100 dark:bg-slate-700 rounded-full overflow-hidden">
+              <div class="edu-course-card__progress h-1 rounded-full overflow-hidden">
                 <div
                   class="h-full rounded-full transition-all duration-300"
                   :style="{
                     width: `${course.progress}%`,
-                    backgroundColor: course.themeColor
+                    background: `linear-gradient(90deg, #8d4dff, ${course.themeColor || '#5aa7ff'})`
                   }"
                 />
               </div>
             </div>
           </div>
 
-          <div class="border-t border-[#f0f0f0] dark:border-slate-700 pt-2.5 flex justify-between items-center mt-auto pl-0.5">
-            <div class="text-[12px] text-[#8c8c8c] dark:text-slate-500 flex items-center gap-1 bg-slate-50 dark:bg-slate-700 border border-slate-150/60 dark:border-slate-600 px-1.5 py-0.5 rounded font-bold uppercase tracking-wide">
-              <span>点拨辅导课</span>
+          <div class="pt-2.5 flex justify-between items-center mt-auto pl-0.5">
+            <div class="text-[12px] text-[#8b92cc] flex items-center gap-1 font-bold uppercase tracking-wide">
+              <span>{{ course.progress === 100 ? '复习本课' : '继续学习' }}</span>
             </div>
 
-            <span class="flex items-center gap-0.5 text-accent text-[13.5px] font-bold group-hover:translate-x-0.5 transition-transform duration-200">
-              {{ course.progress === 100 ? '温习本课' : '开始学习' }}
-              <ChevronRight class="w-3.5 h-3.5" />
+            <span class="edu-course-card__cta flex items-center justify-center gap-1 text-[14px] font-bold transition-transform duration-200">
+              <Play class="w-3.5 h-3.5 fill-current" />
+              {{ course.progress === 100 ? '复习本课' : '继续学习' }}
             </span>
           </div>
         </div>
@@ -1677,3 +1652,105 @@ const directions = ['全部', '编程与算法基础', '计算机系统', '软�
     </template>
   </div>
 </template>
+
+<style scoped>
+.edu-courses {
+  color: #f4f2ff;
+}
+
+.edu-course-tabs {
+  background: rgba(16, 18, 56, 0.74);
+  border: 1px solid rgba(115, 96, 255, 0.14);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04), 0 12px 34px rgba(5, 7, 28, 0.18);
+}
+
+.edu-course-tabs__button {
+  min-height: 38px;
+}
+
+.edu-course-tabs__button.is-active {
+  background: linear-gradient(135deg, rgba(117, 61, 255, 0.9), rgba(77, 48, 179, 0.72));
+  border: 1px solid rgba(185, 146, 255, 0.38);
+  box-shadow: 0 0 18px rgba(132, 84, 255, 0.38), inset 0 1px 0 rgba(255, 255, 255, 0.12);
+}
+
+.edu-course-card {
+  border-color: rgba(117, 98, 255, 0.2);
+  background:
+    linear-gradient(180deg, rgba(29, 27, 83, 0.82), rgba(11, 13, 46, 0.96)),
+    radial-gradient(circle at 26% 0%, rgba(117, 71, 255, 0.22), transparent 36%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.05),
+    0 14px 42px rgba(3, 5, 22, 0.28);
+  overflow: hidden;
+}
+
+.edu-course-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(90deg, transparent, rgba(149, 118, 255, 0.08), transparent),
+    radial-gradient(circle at 100% 100%, rgba(79, 56, 214, 0.2), transparent 34%);
+  opacity: 0;
+  transition: opacity 0.25s ease;
+  pointer-events: none;
+}
+
+.edu-course-card:hover {
+  transform: translateY(-4px);
+  border-color: rgba(145, 111, 255, 0.56);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    0 18px 52px rgba(17, 10, 64, 0.5),
+    0 0 28px rgba(116, 79, 255, 0.22);
+}
+
+.edu-course-card:hover::before {
+  opacity: 1;
+}
+
+.edu-course-card.is-started {
+  border-color: rgba(126, 90, 255, 0.38);
+}
+
+.edu-course-card__category {
+  background: rgba(92, 75, 226, 0.26) !important;
+  color: #c7d7ff !important;
+  border: 1px solid rgba(134, 116, 255, 0.3) !important;
+  box-shadow: inset 0 0 16px rgba(118, 88, 255, 0.12);
+}
+
+.edu-course-card__level {
+  border-color: rgba(255, 172, 83, 0.22) !important;
+  background: rgba(255, 143, 58, 0.14) !important;
+  color: #ffae4a !important;
+}
+
+.edu-course-card__hours {
+  color: #82d0ff;
+  background: rgba(37, 211, 255, 0.1);
+  border: 1px solid rgba(76, 199, 255, 0.16);
+}
+
+.edu-course-card__progress {
+  background: rgba(58, 48, 122, 0.72);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.025);
+}
+
+.edu-course-card__cta {
+  min-width: 0;
+  flex: 1;
+  max-width: 170px;
+  height: 38px;
+  color: #fff;
+  border-radius: 7px;
+  background: linear-gradient(135deg, #7e3cff, #4e33b6);
+  box-shadow: 0 10px 24px rgba(76, 48, 180, 0.3);
+}
+
+.edu-course-card:hover .edu-course-card__cta {
+  transform: translateY(-1px);
+  box-shadow: 0 12px 30px rgba(126, 78, 255, 0.44);
+}
+</style>

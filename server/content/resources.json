@@ -7,7 +7,11 @@
     "tags": ["Python", "ML"],
     "date": "2026-05-10",
     "color": "#00d4ff",
-    "reads": 234
+    "reads": 234,
+    "author": "AI 教研组",
+    "difficulty": "初级",
+    "estTime": "45分钟",
+    "reason": "## 📖 简介\n\n本指南以 Python 为主语言，系统讲解机器学习的核心概念与实战方法。无论你是零基础的编程新手，还是有一定开发经验想要转型 AI 方向的工程师，都能从中快速建立全局认知。\n\n## 🎯 核心要点\n\n### 监督学习\n- **线性回归**：用最小二乘法拟合数据趋势，理解损失函数与梯度下降的关系\n- **逻辑回归**：二分类问题的基石，掌握 sigmoid 函数与交叉熵损失\n- **决策树与随机森林**：从单棵树到集成学习，理解 bagging 的核心思想\n- **支持向量机（SVM）**：最大间隔分类器，核函数的直觉理解\n\n### 无监督学习\n- **K-Means 聚类**：无标签数据的分组方法，肘部法则确定 K 值\n- **PCA 降维**：主成分分析，高维数据可视化与特征压缩\n- **DBSCAN**：基于密度的聚类，自动发现任意形状的簇\n\n### 模型评估\n- **交叉验证**：K-Fold CV 的原理与实现，避免过拟合的关键手段\n- **混淆矩阵**：TP/TN/FP/FN 的含义，精确率与召回率的权衡\n- **ROC 曲线与 AUC**：模型性能的综合评价指标\n\n## 👥 适用人群\n\n- 对 AI/ML 感兴趣的软件开发工程师\n- 数据分析师想要拓展建模能力\n- 计算机相关专业学生\n- 任何想要入门机器学习的技术人员\n\n## 💡 学习建议\n\n1. 先跑通每个算法的 demo，再深入理解数学原理\n2. 用 scikit-learn 的内置数据集（iris、digits）练手\n3. 每学完一个算法，尝试在 Kaggle 竞赛中应用\n4. 重点理解 bias-variance tradeoff，这是 ML 的核心矛盾"
   },
   {
     "id": 1,
@@ -17,7 +21,11 @@
     "tags": ["DL", "架构"],
     "date": "2026-05-09",
     "color": "#7c3aed",
-    "reads": 189
+    "reads": 189,
+    "author": "深度学习实验室",
+    "difficulty": "中级",
+    "estTime": "30分钟",
+    "reason": "## 📖 简介\n\n从感知机到现代 Transformer，用思维导图梳理深度学习的演化脉络。本图谱帮助你建立从基础神经网络到前沿架构的完整知识框架，适合面试复习和快速回顾。\n\n## 🗺️ 知识脉络\n\n### 基础层\n- **感知机 → 多层感知机（MLP）**：最简单的神经网络，理解前向传播与反向传播\n- **激活函数演进**：Sigmoid → ReLU → GELU → Swish，每一步解决了什么问题\n- **优化器家族**：SGD → Momentum → Adam → AdamW，学习率调度策略\n\n### 计算机视觉（CV）\n- **CNN 核心组件**：卷积层、池化层、BatchNorm 的作用与直觉\n- **经典架构演进**：LeNet → AlexNet → VGG → ResNet → EfficientNet\n- **ResNet 的革命性贡献**：残差连接如何解决梯度消失，让百层网络成为可能\n- **Vision Transformer（ViT）**：将 Transformer 引入 CV 的里程碑\n\n### 自然语言处理（NLP）\n- **RNN → LSTM → GRU**：序列建模的演进，门控机制的作用\n- **Attention 机制**：自注意力的数学本质 — Query/Key/Value 的直觉理解\n- **Transformer 架构**：Encoder-Decoder 结构，Multi-Head Attention，位置编码\n- **预训练范式**：BERT（双向编码）vs GPT（自回归生成）的根本区别\n\n### 生成模型\n- **GAN**：生成对抗网络的博弈论视角\n- **VAE**：变分自编码器的概率生成框架\n- **Diffusion Model**：扩散模型的基本原理（DALL-E、Stable Diffusion 的核心技术）\n\n## 🎯 学习路径建议\n\n入门路线：MLP → CNN → RNN → Transformer → 预训练模型\n进阶路线：ResNet → ViT → GPT → Diffusion → 多模态"
   },
   {
     "id": 2,
@@ -27,7 +35,11 @@
     "tags": ["数学", "练习"],
     "date": "2026-05-08",
     "color": "#06d6a0",
-    "reads": 156
+    "reads": 156,
+    "author": "数学教研组",
+    "difficulty": "中级",
+    "estTime": "60分钟",
+    "reason": "## 📖 简介\n\n精选 20 道线性代数核心习题，覆盖矩阵运算、特征值分解、SVD 分解与向量空间正交性检验。每题配详细解题过程与 AI 领域应用场景说明。\n\n## 📝 习题模块\n\n### 模块一：矩阵运算（5 题）\n1. **矩阵乘法与转置**：验证 (AB)^T = B^T A^T，手算 + NumPy 双重验证\n2. **逆矩阵求解**：用高斯消元法求 3x3 矩阵的逆，理解不可逆矩阵的几何意义\n3. **矩阵的秩**：行列式为零意味着什么？秩与线性无关的关系\n4. **分块矩阵运算**：大矩阵的高效计算策略\n5. **矩阵范数**：L1/L2/Frobenius 范数在正则化中的应用\n\n### 模块二：特征值与特征向量（5 题）\n6. **特征值求解**：手算 2x2 矩阵的特征多项式\n7. **特征值的几何意义**：特征向量方向上矩阵只做缩放\n8. **对角化**：P^-1 AP = D 的条件与意义\n9. **实对称矩阵**：特征值一定为实数，特征向量一定正交\n10. **幂迭代法**：用迭代求最大特征值（PageRank 的核心思想）\n\n### 模块三：SVD 与应用（5 题）\n11. **SVD 分解**：A = UΣV^T 的几何直觉 — 旋转 + 缩放 + 旋转\n12. **低秩近似**：用前 k 个奇异值近似原矩阵（图像压缩的应用）\n13. **SVD 与 PCA**：PCA 本质上是对协方差矩阵做 SVD\n14. **推荐系统中的 SVD**：矩阵分解如何实现协同过滤\n15. **SVD 的数值稳定性**：为什么实际计算中更偏好 SVD 而非特征值分解\n\n### 模块四：向量空间（5 题）\n16. **线性无关判定**：用行列式和秩两种方法\n17. **基与坐标变换**：不同基下的同一向量表示\n18. **正交投影**：最小二乘法的几何本质\n19. **Gram-Schmidt 正交化**：从一组基构造标准正交基\n20. **四大子空间**：列空间、零空间、行空间、左零空间的关系\n\n## 💡 解题提示\n\n- 每道题先独立思考 10 分钟再看答案\n- 重点理解「为什么」而不是「怎么算」\n- 用 Python/NumPy 验证手算结果"
   },
   {
     "id": 3,
@@ -37,7 +49,11 @@
     "tags": ["NLP", "进阶"],
     "date": "2026-05-07",
     "color": "#f59e0b",
-    "reads": 312
+    "reads": 312,
+    "author": "NLP 研究组",
+    "difficulty": "高级",
+    "estTime": "90分钟",
+    "reason": "## 📖 简介\n\n深入拆解 Transformer 架构 —— 这是 GPT、BERT、LLaMA 等所有现代大语言模型的底层基础。90 分钟视频从论文推导到 PyTorch 代码实现，帮你彻底理解 Attention is All You Need。\n\n## 🎬 视频大纲\n\n### Part 1：为什么需要 Transformer（15 分钟）\n- RNN 的致命缺陷：无法并行 + 长距离依赖衰减\n- Seq2Seq 的信息瓶颈：一个固定长度的向量如何编码整句话？\n- Attention 的直觉：让模型自己决定「看哪里」\n\n### Part 2：自注意力机制（25 分钟）\n- **Scaled Dot-Product Attention**：Q·K^T / √d_k 的每一步在做什么\n- **为什么除以 √d_k**：不除会怎样？softmax 梯度消失问题\n- **Multi-Head Attention**：多个注意力头各自学什么？拼接后如何融合\n- **注意力权重的可视化**：不同头关注的语法/语义模式\n\n### Part 3：Transformer 架构全解（25 分钟）\n- **Encoder 结构**：Self-Attention → Add&Norm → FFN → Add&Norm\n- **Decoder 结构**：Masked Self-Attention + Cross-Attention 的区别\n- **位置编码**：为什么需要？正弦编码 vs 可学习编码\n- **残差连接 + LayerNorm**：训练深层网络的关键技巧\n\n### Part 4：代码实现（25 分钟）\n- 用 PyTorch 从零实现 Multi-Head Attention\n- 完整 Transformer Encoder 的构建\n- 用一个简单的序列到序列任务验证\n\n## 🎯 适用人群\n\n- 了解基础深度学习，想要深入 NLP 的工程师\n- 准备 AI 方向面试的候选人\n- 想要复现/改进 Transformer 论文的研究者"
   },
   {
     "id": 4,
@@ -47,7 +63,11 @@
     "tags": ["算法", "实现"],
     "date": "2026-05-06",
     "color": "#f43f5e",
-    "reads": 98
+    "reads": 98,
+    "author": "算法工程组",
+    "difficulty": "初级",
+    "estTime": "40分钟",
+    "reason": "## 📖 简介\n\n用 NumPy 从零实现 K 近邻（KNN）分类器。KNN 是最直观的机器学习算法之一，通过「物以类聚」的思想实现分类。本代码包含完整实现、单元测试与性能优化。\n\n## 🔧 代码结构\n\n### 核心实现\n```python\nclass KNNClassifier:\n    def __init__(self, k=5, metric='euclidean'):\n        self.k = k\n        self.metric = metric\n    \n    def fit(self, X_train, y_train):\n        self.X_train = np.array(X_train)\n        self.y_train = np.array(y_train)\n    \n    def predict(self, X_test):\n        # 对每个测试样本，找最近的 k 个训练样本\n        # 投票决定分类\n        pass\n```\n\n### 距离度量\n- **欧氏距离**：最常用，适合连续特征\n- **曼哈顿距离**：适合稀疏数据\n- **余弦相似度**：适合文本分类场景\n- **闵可夫斯基距离**：统一框架，p=1 为曼哈顿，p=2 为欧氏\n\n### KD-Tree 加速\n- 暴力搜索复杂度 O(n·d)，KD-Tree 降到 O(d·log n)\n- 适用于特征维度不太高（< 20）的场景\n- 高维时退化为暴力搜索（维度灾难）\n\n## 📊 性能分析\n\n| 方法 | 时间复杂度 | 空间复杂度 | 适用场景 |\n|------|-----------|-----------|----------|\n| 暴力搜索 | O(n·d) | O(1) | 小数据集 |\n| KD-Tree | O(d·log n) | O(n) | 低维数据 |\n| Ball-Tree | O(d·log n) | O(n) | 高维数据 |\n\n## 🧪 测试用例\n\n包含 5 个标准测试场景：基本分类、边界条件、空数据集、单样本预测、多类别分类。"
   },
   {
     "id": 5,
@@ -57,6 +77,52 @@
     "tags": ["数学", "统计"],
     "date": "2026-05-05",
     "color": "#00d4ff",
-    "reads": 201
+    "reads": 201,
+    "author": "统计学教研组",
+    "difficulty": "中级",
+    "estTime": "35分钟",
+    "reason": "## 📖 简介\n\n高频统计知识点速查手册，覆盖概率论基础、常见分布族、假设检验流程与贝叶斯推断。特别适合面试前快速回顾，或在做数据分析时作为参考卡片。\n\n## 📊 常见概率分布\n\n### 离散分布\n- **伯努利分布 Bernoulli(p)**：单次试验成功/失败，p=0.5 为公平硬币\n- **二项分布 Binomial(n,p)**：n 次独立试验中成功的次数\n- **泊松分布 Poisson(λ)**：单位时间内事件发生次数，λ 为平均速率\n- **几何分布 Geometric(p)**：首次成功所需的试验次数\n\n### 连续分布\n- **正态分布 N(μ,σ²)**：中心极限定理的主角，68-95-99.7 法则\n- **均匀分布 U(a,b)**：最简单的连续分布，常用于随机数生成\n- **指数分布 Exp(λ)**：无记忆性，泊松过程中事件间隔时间\n- **Beta 分布 Beta(α,β)**：概率的概率，贝叶斯推断中的先验分布\n- **Gamma 分布 Gamma(α,β)**：指数分布的推广，等待时间的推广\n\n## 🔬 假设检验流程\n\n1. **建立假设**：H₀（零假设）vs H₁（备择假设）\n2. **选择检验统计量**：Z 检验 / T 检验 / 卡方检验 / F 检验\n3. **确定显著性水平**：通常 α = 0.05\n4. **计算 p 值**：在 H₀ 成立下，观察到当前或更极端结果的概率\n5. **决策**：p < α → 拒绝 H₀；p ≥ α → 无法拒绝 H₀\n\n### 常见检验选择\n| 场景 | 检验方法 | 条件 |\n|------|---------|------|\n| 单样本均值 | Z/T 检验 | σ 已知用 Z，未知用 T |\n| 两样本均值 | 独立 T 检验 | 正态性 + 方差齐性 |\n| 配对样本 | 配对 T 检验 | 差值正态 |\n| 分类数据 | 卡方检验 | 期望频数 ≥ 5 |\n\n## 🧠 贝叶斯定理\n\n**P(A|B) = P(B|A) · P(A) / P(B)**\n\n- **后验概率** = 似然 × 先验 / 证据\n- 直觉：看到新证据后，更新你对假设的信念\n- 应用：朴素贝叶斯分类器、贝叶斯优化、A/B 测试的贝叶斯方法"
+  },
+  {
+    "id": 6,
+    "type": "doc",
+    "title": "Linux 命令行实战手册",
+    "desc": "日常开发、部署与排障中最高频的 Linux 命令精选，配合真实场景示例。",
+    "tags": ["Linux", "DevOps"],
+    "date": "2026-05-04",
+    "color": "#7c3aed",
+    "reads": 178,
+    "author": "运维工程组",
+    "difficulty": "初级",
+    "estTime": "30分钟",
+    "reason": "## 📖 简介\n\n精选 50 个开发场景高频命令，按使用场景分类组织。不堆砌所有命令，而是直接切入研发团队工作中用得最多、救命频率最高的核心集合。\n\n## 🗂️ 场景分类\n\n### 文件操作\n```bash\n# 递归查找所有 .log 文件，按大小排序\nfind /var/log -name '*.log' -size +100M -exec ls -lh {} \\; | sort -k5 -h\n\n# 批量替换文件中的字符串\nsed -i 's/old/new/g' *.conf\n\n# 统计代码行数（排除 node_modules）\nfind . -name '*.py' -not -path '*/node_modules/*' | xargs wc -l | tail -1\n```\n\n### 进程管理\n```bash\n# 查找占用端口的进程\nlsof -i :8080\n\n# 按内存排序显示前 10 个进程\nps aux --sort=-%mem | head -10\n\n# 杀掉所有 python 进程\nkillall python3\n\n# 后台运行并输出日志\nnohup python server.py > server.log 2>&1 &\n```\n\n### 网络调试\n```bash\n# 测试端口连通性\nnc -zv 192.168.1.100 8080\n\n# 抓取 HTTP 请求头\ncurl -I https://api.example.com/health\n\n# 实时查看网络连接状态\nss -tunlp\n\n# DNS 解析诊断\ndig example.com +trace\n```\n\n### 磁盘与性能\n```bash\n# 查看磁盘使用率\ndf -h\n\n# 查找大文件\ndu -sh /* | sort -rh | head -10\n\n# 实时 IO 监控\niostat -x 1 5\n\n# 内存使用详情\nfree -m\n```\n\n### 日志分析\n```bash\n# 实时跟踪日志\ntail -f /var/log/nginx/access.log\n\n# 统计访问量 TOP 10 IP\nawk '{print $1}' access.log | sort | uniq -c | sort -rn | head -10\n\n# 搜索错误日志\ngrep -rn 'ERROR\\|Exception' ./logs/ --include='*.log'\n```\n\n## 💡 进阶技巧\n\n- **tmux**：终端复用，断线不丢会话\n- **alias**：给常用命令起别名，如 `alias ll='ls -la'`\n- **管道 + 重定向**：`|`、`>`、`>>`、`2>&1` 的组合使用"
+  },
+  {
+    "id": 7,
+    "type": "mindmap",
+    "title": "微服务架构知识图谱",
+    "desc": "梳理服务注册、网关、熔断、链路追踪等核心组件的关系。",
+    "tags": ["架构", "微服务"],
+    "date": "2026-05-03",
+    "color": "#06d6a0",
+    "reads": 142,
+    "author": "架构专家组",
+    "difficulty": "高级",
+    "estTime": "50分钟",
+    "reason": "## 📖 简介\n\n微服务全景图：从服务注册发现到链路追踪，梳理微服务架构中每个核心组件的作用、选型与协作关系。适合有单体应用经验、准备向微服务转型的团队。\n\n## 🏗️ 核心组件\n\n### 服务注册与发现\n- **Consul**：HashiCorp 出品，支持健康检查、KV 存储、服务网格\n- **Nacos**：阿里开源，同时支持配置中心和服务发现\n- **Eureka**：Netflix 开源（已停止维护），Spring Cloud 经典选择\n- **核心问题**：服务实例动态变化时，调用方如何知道目标地址？\n\n### API 网关\n- **Kong**：基于 Nginx + Lua，高性能、插件丰富\n- **Spring Cloud Gateway**：Spring 生态原生，响应式编程\n- **APISIX**：Apache 项目，云原生网关\n- **职责**：路由转发、认证鉴权、限流熔断、协议转换、请求聚合\n\n### 熔断降级\n- **Hystrix**（已停更）：Netflix 的经典实现，线程池隔离\n- **Sentinel**：阿里开源，流量控制 + 熔断降级 + 系统自适应保护\n- **Resilience4j**：轻量级替代方案，函数式编程风格\n- **核心模式**：关闭 → 开启 → 半开，状态机驱动\n\n### 链路追踪\n- **Jaeger**：Uber 开源，OpenTracing 标准实现\n- **Zipkin**：Twitter 开源，Spring Cloud Sleuth 集成\n- **SkyWalking**：Apache 项目，Java Agent 无侵入接入\n- **核心概念**：Trace ID、Span ID、Annotation、采样策略\n\n### 配置中心\n- **Apollo**：携程开源，多环境、灰度发布、权限管理\n- **Spring Cloud Config**：Git 存储，Webhook 热更新\n- **Nacos Config**：与服务发现统一部署\n\n## 🔄 调用链路\n\n```\n客户端 → API 网关(鉴权/限流) → 服务A → 服务注册中心(查找B) → 服务B → 数据库\n         ↑                                              ↓\n      链路追踪 ←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←\n```\n\n## ⚠️ 常见陷阱\n\n1. 分布式事务难以保证（Saga/TCC 模式）\n2. 服务间调用延迟累积\n3. 数据一致性最终一致性 vs 强一致性取舍\n4. 运维复杂度指数级上升"
+  },
+  {
+    "id": 8,
+    "type": "exercise",
+    "title": "数据结构与算法高频题",
+    "desc": "覆盖链表、树、动态规划与图论等大厂常考题型，配解题模板。",
+    "tags": ["算法", "面试"],
+    "date": "2026-05-02",
+    "color": "#f59e0b",
+    "reads": 267,
+    "author": "刷题特训营",
+    "difficulty": "高级",
+    "estTime": "120分钟",
+    "reason": "## 📖 简介\n\n大厂面试高频 30 题精选，按数据结构分类组织。每题包含：题目描述、思路分析、代码模板、复杂度分析与变体扩展。目标不是刷题数量，而是掌握每类问题的通用解题框架。\n\n## 📋 题目清单\n\n### 链表（5 题）\n1. **反转链表**：迭代法 + 递归法，理解指针操作的核心\n2. **合并两个有序链表**：归并排序的子问题，双指针模板\n3. **环形链表检测**：快慢指针（Floyd 判圈），O(1) 空间\n4. **删除倒数第 N 个节点**：一次遍历，快指针先走 N 步\n5. **LRU 缓存**：哈希表 + 双向链表的组合设计\n\n### 二叉树（5 题）\n6. **层序遍历**：BFS 模板，队列的使用\n7. **最大深度**：递归 DFS，一行代码的优雅\n8. **验证二叉搜索树**：中序遍历递增性质\n9. **最近公共祖先（LCA）**：递归分治的经典应用\n10. **序列化与反序列化**：树的持久化，前序/层序遍历\n\n### 动态规划（10 题）\n11. **爬楼梯**：DP 入门，状态转移方程的建立\n12. **最长递增子序列（LIS）**：O(n²) DP → O(n log n) 贪心+二分\n13. **背包问题**：0-1 背包、完全背包、多重背包的模板\n14. **最长公共子序列（LCS）**：二维 DP 表的填法\n15. **编辑距离**：经典的字符串 DP 问题\n16. **零钱兑换**：完全背包变体，求最小硬币数\n17. **打家劫舍**：线性 DP，不相邻约束\n18. **股票买卖**：状态机 DP 的经典应用\n19. **正则表达式匹配**：二维 DP，处理 . 和 * 两种通配\n20. **接雨水**：双指针 / 单调栈 / DP 三种解法对比\n\n### 图论（5 题）\n21. **岛屿数量**：DFS/BFS 模板题\n22. **课程表（拓扑排序）**：有向无环图的线性排序\n23. **最短路径（Dijkstra）**：优先队列 + 松弛操作\n24. **克隆图**：DFS + 哈希表的记忆化\n25. **并查集**：连通分量问题的通用解法\n\n### 设计题（5 题）\n26. **实现 Trie**：前缀树的插入、搜索、前缀匹配\n27. **最小栈**：O(1) 获取最小值的数据结构设计\n28. **数据流中位数**：对顶堆（大根堆 + 小根堆）\n29. **LFU 缓存**：最不频繁使用淘汰策略\n30. **序列化二叉树**：设计紧凑的编解码方案\n\n## 🧠 通用解题模板\n\n### BFS 模板\n```python\nfrom collections import deque\ndef bfs(start):\n    queue = deque([start])\n    visited = {start}\n    while queue:\n        node = queue.popleft()\n        for neighbor in get_neighbors(node):\n            if neighbor not in visited:\n                visited.add(neighbor)\n                queue.append(neighbor)\n```\n\n### DP 模板\n```python\ndef dp(items):\n    n = len(items)\n    dp = [0] * (n + 1)\n    for i in range(1, n + 1):\n        dp[i] = max(dp[j] + value(i, j) for j in range(i))\n    return dp[n]\n```"
   }
 ]

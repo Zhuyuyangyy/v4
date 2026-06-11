@@ -10,7 +10,7 @@
           </div>
           <div>
             <h1 class="font-bold text-xl leading-tight" style="font-family: var(--font-display); color: var(--text-primary)">AI 学习导师</h1>
-            <p class="text-sm" style="color: var(--text-muted)">像朋友一样聊天，AI 帮你绘制专属学习星图</p>
+            <p class="text-sm" style="color: var(--text-muted)">像朋友一样聊天，AI 帮你绘制专属学习画像</p>
           </div>
         </div>
         <div class="flex items-center gap-2">

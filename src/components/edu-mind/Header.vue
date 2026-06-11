@@ -1,5 +1,5 @@
 <template>
-  <header class="bg-white dark:bg-[#080b16] px-4 sm:px-6 py-4 flex items-center justify-between border-b border-[#e8e8e8] dark:border-[rgba(59,130,246,0.08)] sticky top-0 z-30" id="main-header">
+  <header class="edu-header px-4 sm:px-6 py-4 flex items-center justify-between sticky top-0 z-30" id="main-header">
     <button
       @click="emit('toggleSidebar')"
       class="lg:hidden mr-3 p-1.5 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg text-slate-500 dark:text-slate-400 cursor-pointer shrink-0 transition-all border-none"
@@ -8,12 +8,12 @@
       <Menu class="w-5 h-5" />
     </button>
 
-    <div class="leading-tight shrink-0 hidden xs:block">
+    <div class="leading-tight shrink-0 hidden">
       <h2 class="text-[15px] sm:text-[18px] font-semibold text-slate-800 dark:text-white">资源中心</h2>
       <p class="text-[13px] sm:text-[14px] text-slate-400 dark:text-slate-400 mt-0.5 hidden md:block">汇集平台所有学习材料，助力你的学习之旅</p>
     </div>
 
-    <div class="flex items-center bg-[#f5f7fa] dark:bg-[rgba(14,18,34,0.6)] border border-[#e8e8e8] dark:border-[rgba(59,130,246,0.1)] rounded-lg px-2 sm:px-3 py-1.5 flex-1 max-w-[160px] xs:max-w-[240px] sm:max-w-[280px] md:max-w-[360px] ml-2 sm:ml-4 focus-within:border-[#3b82f6] focus-within:bg-white focus-within:dark:bg-[rgba(14,18,34,0.8)] focus-within:ring-2 focus-within:ring-[#3b82f6]/10 transition-all duration-200" id="header-search-box">
+    <div class="edu-header__search flex items-center rounded-lg px-3 py-2 flex-1 max-w-[320px] sm:max-w-[420px] md:max-w-[520px] ml-2 focus-within:ring-2 transition-all duration-200" id="header-search-box">
       <Search class="w-4 h-4 text-slate-400 dark:text-slate-400 mr-1.5 sm:mr-2 shrink-0" />
       <input
         ref="searchInputRef"
@@ -21,9 +21,9 @@
         :value="props.searchValue"
         @input="emit('searchChange', ($event.target as HTMLInputElement).value)"
         placeholder="搜索资源..."
-        class="border-none bg-transparent outline-none flex-1 text-[14px] sm:text-[15px] text-slate-700 dark:text-white placeholder-[#bfbfbf] dark:placeholder-slate-400 min-w-0"
+        class="border-none bg-transparent outline-none flex-1 text-[14px] sm:text-[15px] text-[#dce3ff] placeholder-[#586096] min-w-0"
       />
-      <span class="bg-white dark:bg-slate-700 px-1.5 py-0.5 rounded text-[12px] text-slate-400 dark:text-slate-400 border border-[#e8e8e8] dark:border-slate-600 font-mono select-none hidden md:inline-block" title="按下 ⌘K 或 Ctrl+K 聚焦搜索">
+      <span class="bg-white/5 px-1.5 py-0.5 rounded text-[12px] text-[#b9c0ec] border border-white/10 font-mono select-none hidden md:inline-block" title="按下 ⌘K 或 Ctrl+K 聚焦搜索">
         ⌘ K
       </span>
     </div>
@@ -31,17 +31,17 @@
     <div class="flex items-center gap-4 ml-auto shrink-0">
       <button
         @click="emit('addNewResourceClick')"
-        class="flex items-center gap-1 bg-[#3b82f6] hover:bg-[#2563eb] text-white font-medium text-[14px] px-2.5 sm:px-3 py-1.5 rounded-lg border border-[#3b82f6] hover:border-[#2563eb] cursor-pointer shadow-sm active:transform active:scale-95 transition-all"
+        class="edu-icon-btn edu-icon-btn--primary flex items-center justify-center font-medium text-[14px] w-9 h-9 rounded-lg cursor-pointer active:transform active:scale-95 transition-all"
         id="add-resource-btn"
+        title="新增资源"
       >
-        <span>+</span>
-        <span class="hidden xs:inline ml-0.5">新增资源</span>
+        <Plus class="w-4 h-4" />
       </button>
 
       <div class="relative">
         <button
           @click="showNotifications = !showNotifications"
-          class="p-2 rounded-lg text-slate-500 dark:text-slate-400 hover:bg-[#f0f2f5] dark:hover:bg-slate-800 hover:text-slate-800 dark:hover:text-white transition-colors relative cursor-pointer"
+          class="edu-icon-btn p-2 rounded-lg text-[#b8c1f2] hover:text-white transition-colors relative cursor-pointer"
           id="notification-trigger"
         >
           <Bell class="w-5 h-5" />
@@ -98,7 +98,7 @@
       <div class="relative">
         <div
           @click="showProfileMenu = !showProfileMenu"
-          class="flex items-center gap-1.5 p-1 hover:bg-[#f0f2f5] dark:hover:bg-slate-800 rounded-lg cursor-pointer transition-colors shrink-0"
+          class="edu-profile-trigger flex items-center gap-1.5 p-1 rounded-lg cursor-pointer transition-colors shrink-0"
           id="user-profile-trigger"
         >
           <div class="w-[28px] h-[28px] rounded-full bg-slate-200 dark:bg-slate-600 overflow-hidden border border-slate-300 dark:border-slate-500">
@@ -134,13 +134,17 @@
           </button>
         </div>
       </div>
+
+      <button class="edu-icon-btn hidden sm:grid place-items-center w-9 h-9 rounded-lg text-[#b8c1f2]" title="应用菜单">
+        <LayoutGrid class="w-4 h-4" />
+      </button>
     </div>
   </header>
 </template>
 
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted } from 'vue'
-import { Search, Bell, ChevronDown, Check, Info, Menu } from 'lucide-vue-next'
+import { Search, Bell, ChevronDown, Check, Info, Menu, Plus, LayoutGrid } from 'lucide-vue-next'
 import { useTheme } from '../../composables/useEduMindTheme'
 
 const { isDark } = useTheme()
@@ -202,3 +206,52 @@ function handleLogout() {
   window.alert('此复刻页面仅为展示模式，当前用户保持登录。')
 }
 </script>
+
+<style scoped>
+.edu-header {
+  background: rgba(7, 9, 31, 0.58);
+  border-bottom: 1px solid rgba(112, 96, 255, 0.12);
+  backdrop-filter: blur(22px);
+  -webkit-backdrop-filter: blur(22px);
+}
+
+.edu-header__search {
+  background: rgba(13, 15, 50, 0.78);
+  border: 1px solid rgba(118, 103, 255, 0.16);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04), 0 0 24px rgba(80, 61, 255, 0.08);
+}
+
+.edu-header__search:focus-within {
+  border-color: rgba(150, 113, 255, 0.72);
+  box-shadow: 0 0 0 3px rgba(119, 82, 255, 0.14), 0 0 24px rgba(119, 82, 255, 0.18);
+}
+
+.edu-icon-btn {
+  background: rgba(16, 18, 54, 0.72);
+  border: 1px solid rgba(122, 104, 255, 0.18);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+
+.edu-icon-btn:hover {
+  background: rgba(88, 63, 201, 0.36);
+  border-color: rgba(159, 126, 255, 0.45);
+  box-shadow: 0 0 24px rgba(112, 84, 255, 0.24);
+}
+
+.edu-icon-btn--primary {
+  color: #fff;
+  background: linear-gradient(135deg, #7c3cff, #4e31be);
+  border-color: rgba(177, 139, 255, 0.5);
+  box-shadow: 0 0 22px rgba(118, 74, 255, 0.38);
+}
+
+.edu-profile-trigger {
+  background: rgba(15, 17, 52, 0.52);
+  border: 1px solid transparent;
+}
+
+.edu-profile-trigger:hover {
+  border-color: rgba(128, 111, 255, 0.22);
+  background: rgba(86, 65, 190, 0.22);
+}
+</style>

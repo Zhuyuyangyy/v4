@@ -15,7 +15,12 @@ import {
   BookOpen,
   ChevronRight,
   ChevronLeft,
-  Sparkles
+  Sparkles,
+  Star,
+  User,
+  Clock,
+  Eye,
+  CheckCircle
 } from 'lucide-vue-next'
 
 import type { Resource, ResourceCategory, Difficulty, CollectionItem, Recommendation } from '../types/edu-mind'
@@ -31,7 +36,6 @@ import Sidebar from '../components/edu-mind/Sidebar.vue'
 import Header from '../components/edu-mind/Header.vue'
 import RightSidebar from '../components/edu-mind/RightSidebar.vue'
 import ResourceCard from '../components/edu-mind/ResourceCard.vue'
-import DetailModal from '../components/edu-mind/DetailModal.vue'
 import AddResourceModal from '../components/edu-mind/AddResourceModal.vue'
 
 import HomeView from '../components/edu-mind/HomeView.vue'
@@ -47,7 +51,7 @@ import ResourceGeneratePanel from '../components/resource/ResourceGeneratePanel.
 const { isDark } = useTheme()
 const route = useRoute()
 
-const ITEMS_PER_PAGE = 6
+const ITEMS_PER_PAGE = 9
 
 const currentTab = ref<string>((() => {
   const saved = localStorage.getItem('edumind_active_tab')
@@ -110,7 +114,7 @@ const searchValue = ref<string>('')
 const currentPage = ref<number>(1)
 const recommendCycleIndex = ref<number>(0)
 
-const selectedResource = ref<Resource | null>(null)
+const selectedResourceDetail = ref<Resource | null>(null)
 const showAddModal = ref<boolean>(false)
 const toastMessage = ref<string | null>(null)
 const mobileSidebarOpen = ref<boolean>(false)
@@ -221,9 +225,10 @@ const handleMarkAsCompleted = (hours: number, title: string) => {
 }
 
 const handleCollectionItemClick = (id: string, category: ResourceCategory) => {
+  currentTab.value = '资源中心'
   const foundRes = resources.value.find(r => r.id === id)
   if (foundRes) {
-    selectedResource.value = foundRes
+    selectedResourceDetail.value = foundRes
   } else {
     const mockDetail: Resource = {
       id,
@@ -239,7 +244,7 @@ const handleCollectionItemClick = (id: string, category: ResourceCategory) => {
       estimatedTime: '35分钟',
       contentMarkdown: `## 💡 精选推荐学习模块\n\n感谢您的学习热忱！本文章是精选推荐重点，正在云端进行进一步知识树和互动图谱编排。\n\n### 为什么选择学这个？\n1. **行业普适性强**: 该技术点在全行业具备主流大厂的使用占有率优势。\n2. **底层原理讲得通**: 自底向上深入解密内部执行逻辑，拒绝单纯堆砌代码。\n3. **支持互动与实战**: 搭配有精心整理的实操模拟环境和测试训练营配套真题。\n\n*快来添加一堂备忘笔记，或直接在控制台标记学完来获取进度学时吧！*`
     }
-    selectedResource.value = mockDetail
+    selectedResourceDetail.value = mockDetail
   }
 }
 
@@ -311,7 +316,7 @@ const categoriesList: { name: ResourceCategory; icon: any }[] = [
 
 const handleCardClick = (id: string) => {
   const resObj = resources.value.find(r => r.id === id)
-  if (resObj) selectedResource.value = resObj
+  if (resObj) selectedResourceDetail.value = resObj
 }
 
 const isUnimplementedTab = computed(() => {
@@ -335,8 +340,8 @@ onMounted(async () => {
         date: item.date,
         views: item.reads,
         starred: false,
-        difficulty: '中级' as Difficulty,
-        author: '系统推荐',
+        difficulty: (item.difficulty || '中级') as Difficulty,
+        author: item.author || '系统推荐',
         estimatedTime: item.estTime || '30分钟',
         contentMarkdown: item.reason || item.desc,
       }))
@@ -364,7 +369,7 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <div id="edu-mind-app" class="w-full max-w-full min-h-screen bg-white font-sans flex antialiased select-none" style="background-color: var(--edu-bg-page); color: var(--edu-text-main);">
+  <div id="edu-mind-app" class="w-full max-w-full h-screen font-sans flex antialiased select-none" style="background-color: var(--edu-bg-page); color: var(--edu-text-main);">
     <Sidebar
       :weeklyHours="weeklyHours"
       :goalHours="goalHours"
@@ -374,15 +379,10 @@ onBeforeUnmount(() => {
       @close="mobileSidebarOpen = false"
     />
 
-    <div class="flex-1 flex flex-col lg:ml-[280px] ml-0 min-w-0 min-h-screen">
-      <Header
-        :searchValue="searchValue"
-        @searchChange="(val: string) => searchValue = val"
-        @addNewResourceClick="showAddModal = true"
-        @toggleSidebar="mobileSidebarOpen = !mobileSidebarOpen"
-      />
+    <div class="flex-1 flex flex-col ml-0 min-w-0 h-screen overflow-y-auto">
 
-      <div class="flex-1 p-6 flex flex-col dark:bg-[#0f172a]">
+
+      <div class="edu-main-stage flex-1 p-5 sm:p-6 flex flex-col">
         <div v-if="currentTab === '首页'" class="flex flex-col lg:flex-row gap-6">
           <div class="flex-1 min-w-0">
             <HomeView :weeklyHours="weeklyHours" :goalHours="goalHours" @navigateToTab="(tab: string) => currentTab = tab" />
@@ -401,6 +401,21 @@ onBeforeUnmount(() => {
         </div>
 
         <div v-if="currentTab === '课程'" class="w-full">
+          <section class="edu-course-hero" aria-label="学习概览">
+            <div class="edu-course-hero__copy">
+              <span class="edu-hero-kicker">SYSTEM ONLINE</span>
+              <h1>晚上好,小明同学 <span aria-hidden="true">👋</span></h1>
+              <p>坚持学习的第 <strong>35</strong> 天，继续加油!</p>
+              <div class="edu-hero-progress">
+                <span>本周学习</span>
+                <strong>{{ weeklyHours }}h / {{ goalHours }}h · {{ Math.min(Math.round((weeklyHours / goalHours) * 100), 100) }}%</strong>
+                <div class="edu-hero-progress__bar">
+                  <span :style="{ width: `${Math.min(Math.round((weeklyHours / goalHours) * 100), 100)}%` }" />
+                </div>
+              </div>
+            </div>
+
+          </section>
           <CoursesView @addWeeklyHours="handleMarkAsCompleted" @navigateToTab="(tab: string) => currentTab = tab" />
         </div>
 
@@ -426,6 +441,9 @@ onBeforeUnmount(() => {
 
         <div v-if="currentTab === '资源中心'" class="flex flex-col lg:flex-row gap-6">
           <div class="flex-1 min-w-0 flex flex-col gap-5">
+
+            <!-- ====== 列表视图 ====== -->
+            <template v-if="!selectedResourceDetail">
             <ResourceGeneratePanel />
             <div class="flex flex-wrap gap-2" id="filter-tabs-container">
               <button
@@ -576,6 +594,75 @@ onBeforeUnmount(() => {
                 共 {{ totalItemsCount }} 条
               </div>
             </div>
+            </template>
+
+            <!-- ====== 详情子页面 ====== -->
+            <template v-else>
+              <div class="resource-detail-page">
+                <button class="resource-detail-back" @click="selectedResourceDetail = null">
+                  <ChevronLeft :size="18" /> 返回资源列表
+                </button>
+
+                <div class="resource-detail-header">
+                  <div class="resource-detail-badges">
+                    <span class="resource-detail-category">{{ selectedResourceDetail.category }}</span>
+                    <span class="resource-detail-difficulty">{{ selectedResourceDetail.difficulty }}</span>
+                  </div>
+                  <div class="resource-detail-actions">
+                    <button
+                      @click="handleToggleStar(selectedResourceDetail!.id)"
+                      class="resource-detail-star"
+                    >
+                      <Star :size="18" :class="selectedResourceDetail.starred ? 'fill-[#fadb14] text-[#fadb14]' : ''" />
+                      <span>{{ selectedResourceDetail.starred ? '已收藏' : '收藏' }}</span>
+                    </button>
+                  </div>
+                </div>
+
+                <h1 class="resource-detail-title">{{ selectedResourceDetail.title }}</h1>
+
+                <div class="resource-detail-meta">
+                  <span><User :size="14" /> 作者: {{ selectedResourceDetail.author }}</span>
+                  <span><Clock :size="14" /> 预计学时: {{ selectedResourceDetail.estimatedTime || '30分钟' }}</span>
+                  <span><Eye :size="14" /> 阅读次数: {{ selectedResourceDetail.views }}</span>
+                </div>
+
+                <div class="resource-detail-body">
+                  <div v-if="selectedResourceDetail.contentMarkdown" class="whitespace-pre-line leading-relaxed">
+                    {{ selectedResourceDetail.contentMarkdown }}
+                  </div>
+                  <div v-else class="text-[#8b9bc0] italic py-4 text-center">
+                    该资源正待进一步教研排版上线。
+                  </div>
+                </div>
+
+                <div class="resource-detail-tags">
+                  <span v-for="(tag, idx) in selectedResourceDetail.tags" :key="idx" class="resource-detail-tag">
+                    {{ tag }}
+                  </span>
+                </div>
+
+                <div class="resource-detail-bottom">
+                  <div class="resource-detail-rating">
+                    <p class="resource-detail-rating-title">您对本节学习资料的内容评价</p>
+                    <p class="resource-detail-rating-sub">评分将作为系统向其他同学推荐模型的打分标准</p>
+                  </div>
+                  <div class="resource-detail-learn">
+                    <p>读完这些重点内容并理解后，可以将其标记为"已学完"。</p>
+                    <button
+                      @click="handleMarkAsCompleted(
+                        parseFloat(((parseInt(selectedResourceDetail.estimatedTime || '30') / 60)).toFixed(1)),
+                        selectedResourceDetail.title
+                      )"
+                      class="resource-detail-cta"
+                    >
+                      <CheckCircle :size="16" /> 标记学完
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </template>
+
           </div>
 
           <RightSidebar
@@ -613,17 +700,6 @@ onBeforeUnmount(() => {
     </div>
 
     <Transition name="modal-fade">
-      <DetailModal
-        v-if="selectedResource"
-        :resource="selectedResource"
-        :weeklyHours="weeklyHours"
-        @close="selectedResource = null"
-        @toggleStar="handleToggleStar"
-        @markAsCompleted="handleMarkAsCompleted"
-      />
-    </Transition>
-
-    <Transition name="modal-fade">
       <AddResourceModal
         v-if="showAddModal"
         @close="showAddModal = false"
@@ -649,6 +725,31 @@ onBeforeUnmount(() => {
 #edu-mind-app {
   font-family: "Inter", system-ui, -apple-system, sans-serif;
   font-size: 18px;
+  position: relative;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 77% 10%, rgba(124, 58, 237, 0.32), transparent 30%),
+    radial-gradient(circle at 10% 34%, rgba(45, 212, 191, 0.12), transparent 28%),
+    linear-gradient(180deg, #090b24 0%, #07091c 52%, #060718 100%);
+}
+
+#edu-mind-app::before {
+  content: "";
+  position: fixed;
+  inset: var(--header-height) 0 0 0;
+  pointer-events: none;
+  background-image:
+    radial-gradient(circle, rgba(122, 114, 255, 0.45) 0 1px, transparent 1.5px),
+    linear-gradient(rgba(116, 87, 255, 0.045) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(116, 87, 255, 0.035) 1px, transparent 1px);
+  background-size: 140px 140px, 64px 64px, 64px 64px;
+  opacity: 0.55;
+  z-index: 0;
+}
+
+#edu-mind-app > * {
+  position: relative;
+  z-index: 1;
 }
 
 /* Subtle transition for all interactive elements */
@@ -821,34 +922,20 @@ html.dark #edu-mind-app .dark\:hover\:border-slate-600:hover {
   animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
 
-/* ===== CSS Variables for dark theme ===== */
+/* ===== CSS Variables — 仅深色主题 ===== */
 #edu-mind-app {
-  --edu-bg-page: #ffffff;
-  --edu-bg-card: #ffffff;
-  --edu-bg-inset: #f9fafb;
-  --edu-bg-elevated: #f5f7fa;
-  --edu-bg-deep: #f0f4ff;
-  --edu-border: #e8e8e8;
-  --edu-border-subtle: #f0f0f0;
-  --edu-text-main: #1a1a2e;
-  --edu-text-muted: #8c8c8c;
-  --edu-text-dim: #bfbfbf;
-  --edu-accent: #4a6cf7;
-  --edu-accent-soft: rgba(74, 108, 247, 0.15);
-}
-html.dark #edu-mind-app {
-  --edu-bg-page: #080b16;
-  --edu-bg-card: #111630;
-  --edu-bg-inset: #141a32;
-  --edu-bg-elevated: #161d3a;
-  --edu-bg-deep: rgba(59, 130, 246, 0.12);
-  --edu-border: rgba(59, 130, 246, 0.1);
-  --edu-border-subtle: rgba(59, 130, 246, 0.06);
-  --edu-text-main: #e0e7ff;
-  --edu-text-muted: #6880a8;
-  --edu-text-dim: #4d6590;
-  --edu-accent: #60a5fa;
-  --edu-accent-soft: rgba(96, 165, 250, 0.12);
+  --edu-bg-page: #080a21;
+  --edu-bg-card: rgba(18, 20, 58, 0.78);
+  --edu-bg-inset: rgba(13, 15, 44, 0.82);
+  --edu-bg-elevated: rgba(33, 28, 78, 0.86);
+  --edu-bg-deep: rgba(96, 72, 255, 0.18);
+  --edu-border: rgba(123, 100, 255, 0.22);
+  --edu-border-subtle: rgba(119, 98, 255, 0.12);
+  --edu-text-main: #f4f2ff;
+  --edu-text-muted: #9aa4d9;
+  --edu-text-dim: #6670a7;
+  --edu-accent: #8d5cff;
+  --edu-accent-soft: rgba(140, 92, 255, 0.18);
   background: var(--edu-bg-page);
   color: var(--edu-text-main);
 }
@@ -1020,6 +1107,254 @@ html.dark #edu-mind-app textarea:focus {
 
 /* ===== 模态遮罩在深色下更深、更模糊 ===== */
 html.dark #edu-mind-app .bg-slate-900\/60 { background-color: rgba(0, 0, 0, 0.75) !important; backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); }
+
+.edu-main-stage {
+  background:
+    radial-gradient(circle at 72% 0%, rgba(101, 61, 255, 0.22), transparent 36%),
+    radial-gradient(circle at 20% 68%, rgba(22, 211, 238, 0.08), transparent 30%);
+}
+
+.edu-course-hero {
+  min-height: 190px;
+  margin-bottom: 24px;
+  border: 1px solid rgba(126, 106, 255, 0.28);
+  border-radius: 14px;
+  position: relative;
+  overflow: hidden;
+  padding: 34px 38px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 420px;
+  align-items: center;
+  background:
+    linear-gradient(90deg, rgba(9, 11, 38, 0.5) 0%, rgba(13, 13, 48, 0.4) 42%, rgba(44, 18, 102, 0.3) 100%),
+    url('/background-ziyuanzhongxing.png') center/cover;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    0 24px 70px rgba(6, 8, 35, 0.56),
+    0 0 40px rgba(94, 70, 255, 0.1);
+}
+
+
+
+.edu-course-hero__copy {
+  position: relative;
+  z-index: 2;
+}
+
+.edu-hero-kicker {
+  color: #5aa7ff;
+  display: inline-block;
+  font-family: "JetBrains Mono", ui-monospace, monospace;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.36em;
+  margin-bottom: 14px;
+}
+
+.edu-course-hero h1 {
+  color: #ffffff;
+  font-size: clamp(26px, 2.1vw, 34px);
+  line-height: 1.1;
+  font-weight: 900;
+  margin: 0 0 14px;
+  letter-spacing: 0;
+  text-shadow: 0 0 28px rgba(189, 174, 255, 0.42);
+}
+
+.edu-course-hero p {
+  color: #c6ccff;
+  font-size: 16px;
+  margin: 0;
+}
+
+.edu-course-hero p strong {
+  color: #76a8ff;
+}
+
+.edu-hero-progress {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: #47b8ff;
+  font-family: "JetBrains Mono", ui-monospace, monospace;
+  font-size: 13px;
+  font-weight: 800;
+  margin-top: 22px;
+}
+
+.edu-hero-progress__bar {
+  width: min(230px, 24vw);
+  height: 5px;
+  border-radius: 999px;
+  background: rgba(72, 71, 148, 0.8);
+  overflow: hidden;
+  box-shadow: 0 0 18px rgba(108, 91, 255, 0.35);
+}
+
+.edu-hero-progress__bar span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #934dff, #4ba8ff);
+}
+
+.edu-course-hero__visual {
+  position: relative;
+  z-index: 1;
+  min-height: 168px;
+}
+
+.edu-planet {
+  position: absolute;
+  right: 92px;
+  top: 12px;
+  width: 190px;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at 32% 24%, rgba(255, 255, 255, 0.72), transparent 4%),
+    radial-gradient(circle at 36% 32%, #a591ff 0 8%, #6636e4 28%, #251069 58%, #070824 72%);
+  box-shadow:
+    -28px 0 40px rgba(151, 112, 255, 0.26) inset,
+    0 0 46px rgba(109, 80, 255, 0.72),
+    0 0 120px rgba(85, 45, 214, 0.38);
+}
+
+.edu-planet::after {
+  content: "";
+  position: absolute;
+  inset: 32% -24%;
+  border: 2px solid rgba(216, 177, 112, 0.56);
+  border-radius: 50%;
+  transform: rotate(-18deg);
+  filter: blur(0.5px);
+}
+
+.edu-orbit-card {
+  position: absolute;
+  width: 86px;
+  height: 86px;
+  border-radius: 16px;
+  display: grid;
+  place-items: center;
+  color: #f4f2ff;
+  background: linear-gradient(145deg, rgba(45, 30, 112, 0.82), rgba(18, 18, 58, 0.92));
+  border: 1px solid rgba(135, 111, 255, 0.5);
+  box-shadow: 0 0 28px rgba(116, 91, 255, 0.42), inset 0 0 24px rgba(132, 91, 255, 0.16);
+}
+
+.edu-orbit-card--one {
+  right: 42px;
+  top: 18px;
+}
+
+.edu-orbit-card--two {
+  right: 0;
+  bottom: 18px;
+  border-radius: 50%;
+}
+
+@media (max-width: 1100px) {
+  .edu-course-hero {
+    grid-template-columns: 1fr;
+  }
+  .edu-course-hero__visual {
+    display: none;
+  }
+}
+
+@media (max-width: 640px) {
+  .edu-course-hero {
+    padding: 24px;
+    min-height: auto;
+  }
+  .edu-hero-progress {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+  .edu-hero-progress__bar {
+    width: 100%;
+  }
+}
+
+/* ===== 资源详情子页面 ===== */
+.resource-detail-page {
+  background: rgba(18, 20, 50, 0.6);
+  border: 1px solid rgba(117, 98, 255, 0.14);
+  border-radius: 16px;
+  padding: 28px 32px;
+}
+.resource-detail-back {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: 14px; font-weight: 600; color: #c4b5fd;
+  background: rgba(109, 92, 255, 0.12); border: 1px solid rgba(109, 92, 255, 0.22);
+  padding: 6px 14px; border-radius: 8px; cursor: pointer;
+  transition: all 0.15s; margin-bottom: 20px;
+}
+.resource-detail-back:hover { background: rgba(109, 92, 255, 0.24); color: #fff; }
+
+.resource-detail-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+.resource-detail-badges { display: flex; gap: 8px; }
+.resource-detail-category {
+  font-size: 13px; font-weight: 700; padding: 4px 12px; border-radius: 6px;
+  background: rgba(109, 92, 255, 0.16); color: #c4b5fd;
+  border: 1px solid rgba(109, 92, 255, 0.28);
+}
+.resource-detail-difficulty {
+  font-size: 12px; font-weight: 600; padding: 4px 10px; border-radius: 6px;
+  background: rgba(255, 180, 108, 0.14); color: #ffb46c;
+}
+.resource-detail-actions { display: flex; gap: 8px; }
+.resource-detail-star {
+  display: flex; align-items: center; gap: 6px;
+  font-size: 13px; font-weight: 600; color: #9aa4d9;
+  padding: 6px 14px; border-radius: 8px; border: 1px solid rgba(117, 98, 255, 0.14);
+  background: transparent; cursor: pointer; transition: all 0.15s;
+}
+.resource-detail-star:hover { border-color: rgba(145, 111, 255, 0.4); color: #fadb14; }
+
+.resource-detail-title {
+  font-size: 24px; font-weight: 800; color: #f0f2ff;
+  line-height: 1.3; margin-bottom: 14px;
+}
+.resource-detail-meta {
+  display: flex; flex-wrap: wrap; gap: 20px; font-size: 14px; color: #9aa4d9;
+  padding-bottom: 16px; margin-bottom: 20px;
+  border-bottom: 1px dashed rgba(117, 98, 255, 0.14);
+}
+.resource-detail-meta span { display: flex; align-items: center; gap: 6px; }
+.resource-detail-meta strong { color: #d8def0; }
+
+.resource-detail-body {
+  font-size: 15px; color: #b8c4dc; line-height: 1.8;
+  margin-bottom: 20px; min-height: 80px;
+}
+.resource-detail-tags { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 24px; }
+.resource-detail-tag {
+  font-size: 12px; padding: 3px 10px; border-radius: 5px;
+  background: rgba(109, 92, 255, 0.1); color: #c4b5fd;
+  border: 1px solid rgba(109, 92, 255, 0.16);
+}
+
+.resource-detail-bottom {
+  display: flex; gap: 20px; padding-top: 20px;
+  border-top: 1px solid rgba(117, 98, 255, 0.12);
+}
+.resource-detail-rating { flex: 1; }
+.resource-detail-rating-title { font-size: 15px; font-weight: 600; color: #f0f2ff; }
+.resource-detail-rating-sub { font-size: 13px; color: #8b9bc0; margin-top: 4px; }
+
+.resource-detail-learn { flex: 1; text-align: right; }
+.resource-detail-learn p { font-size: 13px; color: #9aa4d9; margin-bottom: 10px; }
+.resource-detail-cta {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 10px 24px; border-radius: 8px; border: none;
+  font-size: 14px; font-weight: 700; color: #fff; cursor: pointer;
+  background: linear-gradient(135deg, #7e3cff, #4e33b6);
+  box-shadow: 0 8px 20px rgba(76, 48, 180, 0.3);
+  transition: all 0.15s;
+}
+.resource-detail-cta:hover { transform: translateY(-1px); box-shadow: 0 12px 28px rgba(76, 48, 180, 0.4); }
 </style>
 
 <style scoped>
