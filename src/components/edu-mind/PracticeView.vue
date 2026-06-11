@@ -783,12 +783,12 @@ const lineNumbers = Array.from({ length: 14 }, (_, i) => i + 1)
       <!-- PANEL 2: MIDDLE PROBLEM DESCRIPTION (TABS) -->
       <div
         :class="[
-          'lg:col-span-2 border-b lg:border-b-0 lg:border-r p-3.5 flex flex-col justify-between min-w-0 overflow-hidden',
+          'lg:col-span-2 border-b lg:border-b-0 lg:border-r p-3.5 flex flex-col min-w-0 overflow-hidden',
           isDarkTheme ? 'bg-[#111338] border-[#1e1b4b]' : 'bg-white border-[#e4ebf3] dark:border-slate-700'
         ]"
         id="ide-column-problem-tabs-panel"
       >
-        <div class="flex items-center border-b border-[#252060]/20 pb-1.5 mb-3.5 select-none font-sans font-medium text-[14.5px]">
+        <div class="flex items-center border-b border-[#252060]/20 pb-1.5 mb-2 select-none font-sans font-medium text-[14.5px]">
           <button
             @click="activeTab = '题目描述'"
             :class="[
@@ -831,7 +831,7 @@ const lineNumbers = Array.from({ length: 14 }, (_, i) => i + 1)
 
         <!-- TAB 1: 题目描述 -->
         <div v-if="activeTab === '题目描述'" class="flex-1 flex flex-col justify-between overflow-y-auto max-h-[520px] pr-1 scrollbar-thin select-text min-w-0" id="problem-desc-scroller">
-          <div class="space-y-4 min-w-0">
+          <div class="space-y-3 min-w-0">
             <div class="space-y-2">
               <h3 :class="['text-[15.5px] font-bold', isDarkTheme ? 'text-[#f0f2ff]' : 'text-slate-800']">
                 题目描述
