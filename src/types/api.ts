@@ -9,6 +9,8 @@ export interface ApiResource {
   date: string
   color: string
   reads: number
+  author?: string
+  difficulty?: string
   reason?: string
   profileTag?: string
   pathStage?: string
