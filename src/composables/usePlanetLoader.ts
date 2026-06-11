@@ -29,6 +29,7 @@ export function usePlanetLoader(
 ) {
   const gltfLoader = new GLTFLoader()
   const planetMeshes = new Map<number, THREE.Object3D>()
+  const planetAssetVersion = '20260611'
 
   async function loadAllPlanets(
     galaxies: Galaxy[],
@@ -64,7 +65,7 @@ export function usePlanetLoader(
 
     for (let i = 1; i <= total; i++) {
       const promise = gltfLoader
-        .loadAsync(`/models/planet_${i}.glb`)
+        .loadAsync(`/models/planet_${i}.glb?v=${planetAssetVersion}`)
         .then((gltf) => {
           const model = gltf.scene
 
