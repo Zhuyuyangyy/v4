@@ -49,6 +49,12 @@ onBeforeUnmount(() => {
 
 <template>
   <div class="welcome">
+    <div class="home-image-layer" aria-hidden="true">
+      <img class="home-art home-art-hero" src="/homepage/agent-constellation-hero.png" alt="">
+      <img class="home-art home-art-path" src="/homepage/learning-path-repair.png" alt="">
+      <img class="home-art home-art-profile" src="/homepage/profile-evidence-orb.png" alt="">
+    </div>
+
     <HeroConstellation />
 
     <section class="hub-workbench">
@@ -71,6 +77,14 @@ onBeforeUnmount(() => {
             <small>{{ stage.note }}</small>
           </button>
         </div>
+
+        <div class="hub-role-visual" aria-hidden="true">
+          <img src="/homepage/agent-role-orbit-panel.png" alt="">
+          <div class="hub-role-visual-copy">
+            <span>ROLE ORBIT</span>
+            <strong>{{ currentHubStage.role }}</strong>
+          </div>
+        </div>
       </aside>
 
       <div class="hub-workbench-main">
@@ -87,9 +101,7 @@ onBeforeUnmount(() => {
     <SectionSkyline />
     <SectionMissions />
 
-    <footer class="footer">
-      <p>多智能体学习闭环 - 科大讯飞 AI 教育系统</p>
-    </footer>
+    <footer class="footer" aria-hidden="true" />
   </div>
 </template>
 
@@ -99,6 +111,51 @@ onBeforeUnmount(() => {
   min-height: 100vh;
   background: transparent;
   isolation: isolate;
+  overflow: hidden;
+}
+
+.home-image-layer {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.home-art {
+  position: absolute;
+  display: block;
+  object-fit: cover;
+  user-select: none;
+  mix-blend-mode: screen;
+  filter: saturate(0.88) contrast(1.03);
+}
+
+.home-art-hero {
+  top: 72px;
+  right: -12vw;
+  width: min(1120px, 64vw);
+  opacity: 0.68;
+  transform: rotate(-1.5deg);
+  mask-image: radial-gradient(ellipse at 62% 48%, #000 0%, rgba(0, 0, 0, 0.9) 58%, transparent 92%);
+}
+
+.home-art-path {
+  top: 1320px;
+  left: -10vw;
+  width: min(760px, 50vw);
+  opacity: 0.52;
+  transform: rotate(3deg);
+  mask-image: radial-gradient(ellipse at 48% 50%, #000 0%, rgba(0, 0, 0, 0.84) 58%, transparent 90%);
+}
+
+.home-art-profile {
+  top: 2320px;
+  right: -8vw;
+  width: min(680px, 46vw);
+  opacity: 0.48;
+  transform: rotate(-4deg);
+  mask-image: radial-gradient(ellipse at 50% 50%, #000 0%, rgba(0, 0, 0, 0.82) 58%, transparent 88%);
 }
 
 /* Home section transparency */
@@ -310,6 +367,64 @@ onBeforeUnmount(() => {
     0 10px 28px color-mix(in srgb, var(--stage-color) 12%, transparent);
 }
 
+.hub-role-visual {
+  position: relative;
+  min-height: 156px;
+  margin-top: auto;
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--stage-color) 18%, rgba(120, 160, 220, 0.12));
+  border-radius: 16px;
+  background:
+    radial-gradient(circle at 18% 18%, color-mix(in srgb, var(--stage-color) 12%, transparent), transparent 48%),
+    rgba(8, 12, 30, 0.10);
+}
+
+.hub-role-visual img {
+  position: absolute;
+  inset: -18% -18% -18% -12%;
+  width: 130%;
+  height: 136%;
+  object-fit: cover;
+  opacity: 0.48;
+  mix-blend-mode: screen;
+  filter: saturate(0.96) contrast(1.04);
+  mask-image: radial-gradient(ellipse at 58% 52%, #000 0%, rgba(0, 0, 0, 0.82) 52%, transparent 90%);
+}
+
+.hub-role-visual::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(180deg, transparent 0%, rgba(4, 7, 18, 0.34) 100%);
+}
+
+.hub-role-visual-copy {
+  position: absolute;
+  left: 16px;
+  right: 16px;
+  bottom: 14px;
+  z-index: 1;
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.hub-role-visual-copy span {
+  color: #7f93ba;
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 0.16em;
+}
+
+.hub-role-visual-copy strong {
+  color: var(--stage-color);
+  font-family: var(--font-mono);
+  font-size: 13px;
+  letter-spacing: 0.12em;
+}
+
 .hub-workbench-main {
   min-width: 0;
 }
@@ -442,6 +557,19 @@ onBeforeUnmount(() => {
 
 /* ── Responsive ── */
 @media (max-width: 900px) {
+  .home-art-hero {
+    top: 96px;
+    right: -44vw;
+    width: 118vw;
+    opacity: 0.36;
+  }
+
+  .home-art-path,
+  .home-art-profile {
+    width: 92vw;
+    opacity: 0.22;
+  }
+
   .hub-workbench {
     grid-template-columns: 1fr;
     padding: 48px 16px 36px;
@@ -450,6 +578,10 @@ onBeforeUnmount(() => {
   .hub-context-card,
   .hub-workbench-main :deep(.agent-stage) {
     min-height: auto;
+  }
+
+  .hub-role-visual {
+    min-height: 132px;
   }
 
   .agent-collab-section {
