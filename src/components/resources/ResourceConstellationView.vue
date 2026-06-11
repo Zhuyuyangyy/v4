@@ -33,7 +33,7 @@ function nodeRadius(m: number) { return 4 + m * 7 }
 function nodeOpacity(m: number) { return 0.35 + m * 0.65 }
 
 const byId = computed(() => Object.fromEntries(nodes.value.map(n => [n.id, n])))
-const focused = computed(() => nodes.value.find(n => n.mastery < 0.2 && n.importance > 0.8))
+const focused = computed(() => nodes.value.find(n => n.id === 'n4') || nodes.value.find(n => n.mastery < 0.2 && n.importance > 0.8))
 
 // Cluster halos
 const clusterHalos = computed(() => {
@@ -66,7 +66,7 @@ onUnmounted(() => { styleEl?.remove() })
   <div class="constellation-view">
     <div class="constellation-banner">
       <span class="banner-dot" style="background:#00d4ff;box-shadow:0 0 10px #00d4ff66"></span>
-      <span>每颗星是一个知识点，亮度即掌握度。同域知识点连成一组星座；跨域的知识桥用更细的光路点连。</span>
+      <span>星座图看的是知识之间的依赖与跨域连接：哪些是先修、哪些会互相影响，而不是把同一个知识点换一种样式重复展示。</span>
     </div>
 
     <div class="constellation-canvas">
@@ -149,18 +149,18 @@ onUnmounted(() => { styleEl?.remove() })
       <div class="detail-card" v-if="focused">
         <div class="detail-header">
           <span class="detail-chip" style="background:rgba(124,58,237,0.18);border-color:#7c3aed66;color:#7c3aed">当前聚焦</span>
-          <span class="detail-domain">DL · TRANSFORMER</span>
+          <span class="detail-domain">NLP · RAG</span>
         </div>
-        <div class="detail-title">Transformer</div>
-        <div class="detail-sub">这颗星几乎还没亮起来 — 你只接触了 10%</div>
+        <div class="detail-title">检索增强 RAG</div>
+        <div class="detail-sub">这颗星连接 LLM、向量检索和工程部署，目前只接触了 12%</div>
         <div class="mastery-bar-header">
           <span>掌握度</span>
-          <span class="mastery-pct" style="color:#7c3aed">10%</span>
+          <span class="mastery-pct" style="color:#7c3aed">12%</span>
         </div>
-        <div class="mastery-track"><div class="mastery-fill" style="width:10%"></div></div>
+        <div class="mastery-track"><div class="mastery-fill" style="width:12%"></div></div>
         <div class="detail-stats">
-          <div class="stat-row"><span>前置知识</span><span class="stat-val">3 颗 · 已掌握 2</span></div>
-          <div class="stat-row"><span>推荐资源</span><span class="stat-val">4 个 · 含视频 1</span></div>
+          <div class="stat-row"><span>跨域连接</span><span class="stat-val">4 条 · NLP / 工程 / 数学</span></div>
+          <div class="stat-row"><span>推荐资源</span><span class="stat-val">3 个 · 含检索实验 1</span></div>
           <div class="stat-row"><span>预计学习时长</span><span class="stat-val mono">~ 45 min</span></div>
         </div>
         <button class="detail-btn">点亮这颗星 →</button>
@@ -200,7 +200,7 @@ onUnmounted(() => { styleEl?.remove() })
         </div>
         <div class="stat-card">
           <div class="stat-label">薄弱星座</div>
-          <div class="stat-value-row"><span class="stat-big" style="color:#f43f5e">深度学习</span><span class="stat-unit">20%</span></div>
+          <div class="stat-value-row"><span class="stat-big" style="color:#f43f5e">NLP 应用</span><span class="stat-unit">12%</span></div>
         </div>
       </div>
     </div>

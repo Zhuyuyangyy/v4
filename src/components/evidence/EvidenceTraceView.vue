@@ -2,7 +2,7 @@
 import { ref, onMounted, computed } from 'vue'
 import { Activity, CheckCircle2, ArrowRight, Clock, AlertTriangle, Sparkles } from 'lucide-vue-next'
 import { fetchEvidenceTraces, fetchEvidenceSummary } from '@/lib/api'
-import type { EvidenceTrace, EvidenceSummary } from '@/types/api'
+import type { EvidenceTrace, EvidenceSummary, EvidenceSummaryResponse, TraceAgentResult, TraceRecord } from '@/types/api'
 
 const summary = ref<EvidenceSummary | null>(null)
 const traces = ref<EvidenceTrace[]>([])
@@ -95,6 +95,133 @@ function confidenceLevel(c: number) {
   return 'low'
 }
 
+function toArray<T>(value: unknown): T[] {
+  return Array.isArray(value) ? value : []
+}
+
+function toNumber(value: unknown, fallback = 0) {
+  return typeof value === 'number' && Number.isFinite(value) ? value : fallback
+}
+
+function toStringValue(value: unknown, fallback = '') {
+  return typeof value === 'string' && value.trim() ? value : fallback
+}
+
+function agentIdFromName(name: string) {
+  return name
+    .replace(/Agent$/i, '')
+    .replace(/[^a-z0-9]+/gi, '-')
+    .replace(/^-|-$/g, '')
+    .toLowerCase() || 'agent'
+}
+
+function normalizeSummary(raw: unknown): EvidenceSummary {
+  const data = (raw ?? {}) as Partial<EvidenceSummary & EvidenceSummaryResponse>
+  const agentCounts = data.agentCounts && typeof data.agentCounts === 'object' ? data.agentCounts : {}
+  const totalAgents = toNumber(data.totalAgents, Object.keys(agentCounts).length)
+  const completedAgents = toNumber(data.completedAgents, totalAgents)
+  const traceCount = toNumber(data.traceCount, toNumber(data.totalTraces, 0))
+  const fallbackRate = toNumber(data.fallbackRate, 0)
+  const riskFlagCount = toNumber(data.riskFlagCount, 0)
+  const riskRate = toNumber(data.riskRate, 0)
+  const llmAvailable = data.llmAvailable ?? fallbackRate < 100
+  const keyFindings = toArray<string>(data.keyFindings)
+
+  return {
+    workflowId: toStringValue(data.workflowId, data.lastTraceAt ? 'wf-live-summary' : FALLBACK_SUMMARY.workflowId),
+    totalAgents,
+    completedAgents,
+    totalDuration: toNumber(data.totalDuration, toNumber(data.avgDurationMs, 0)),
+    traceCount,
+    keyFindings: keyFindings.length
+      ? keyFindings
+      : [
+          `累计追踪 ${traceCount} 条证据链，覆盖 ${totalAgents} 类智能体。`,
+          `当前 Fallback 率 ${fallbackRate}%，LLM ${llmAvailable ? '已连接' : '暂不可用'}。`,
+          riskFlagCount > 0
+            ? `发现 ${riskFlagCount} 个风险标记，风险率 ${riskRate}%。`
+            : '暂无风险标记，证据链运行稳定。',
+        ],
+    profileUpdates: toArray<EvidenceSummary['profileUpdates'][number]>(data.profileUpdates),
+    pathAdjustments: toArray<EvidenceSummary['pathAdjustments'][number]>(data.pathAdjustments).map((item) => ({
+      reason: toStringValue(item.reason, '路径根据最新证据保持当前规划'),
+      addedNodes: toArray<string>(item.addedNodes),
+      removedNodes: toArray<string>(item.removedNodes),
+    })),
+  }
+}
+
+function normalizeEvidenceTrace(raw: Partial<EvidenceTrace>, index = 0, workflowId = 'wf-live-summary'): EvidenceTrace {
+  const agentName = toStringValue(raw.agentName, 'EvidenceAgent')
+  return {
+    traceId: toStringValue(raw.traceId, `${workflowId}-${index}`),
+    workflowId: toStringValue(raw.workflowId, workflowId),
+    agentId: toStringValue(raw.agentId, agentIdFromName(agentName)),
+    agentName,
+    input: toStringValue(raw.input, '暂无输入摘要'),
+    output: toStringValue(raw.output, '暂无输出摘要'),
+    confidence: toNumber(raw.confidence, 0.6),
+    evidenceTags: toArray<string>(raw.evidenceTags),
+    timestamp: toStringValue(raw.timestamp, new Date().toISOString()),
+    duration: toNumber(raw.duration, 0),
+  }
+}
+
+function normalizeTraceRecord(record: TraceRecord, recordIndex: number): EvidenceTrace[] {
+  const requestId = toStringValue(record.requestId, `trace-${recordIndex}`)
+  const agentResults = toArray<TraceAgentResult>(record.agentResults)
+
+  if (!agentResults.length) {
+    return [
+      normalizeEvidenceTrace(
+        {
+          traceId: requestId,
+          workflowId: requestId,
+          agentId: agentIdFromName(toArray<string>(record.agents)[0] || 'EvidenceAgent'),
+          agentName: toArray<string>(record.agents).join(' / ') || 'EvidenceAgent',
+          input: record.inputsSummary,
+          output: record.outputsSummary,
+          confidence: record.fallbackUsed ? 0.6 : 0.82,
+          evidenceTags: toArray<string>(record.evidence),
+          timestamp: record.timestamp,
+          duration: record.durationMs,
+        },
+        recordIndex,
+        requestId,
+      ),
+    ]
+  }
+
+  return agentResults.map((result, index) =>
+    normalizeEvidenceTrace(
+      {
+        traceId: `${requestId}-${index}`,
+        workflowId: requestId,
+        agentId: agentIdFromName(result.agentName),
+        agentName: result.agentName,
+        input: result.inputSummary || record.inputsSummary,
+        output: result.outputSummary || record.outputsSummary,
+        confidence: result.confidence,
+        evidenceTags: result.evidence || record.evidence,
+        timestamp: record.timestamp,
+        duration: result.durationMs || record.durationMs,
+      },
+      index,
+      requestId,
+    ),
+  )
+}
+
+function normalizeTraces(raw: unknown): EvidenceTrace[] {
+  const data = raw as { traces?: Partial<EvidenceTrace>[]; items?: TraceRecord[] }
+  const directTraces = toArray<Partial<EvidenceTrace>>(data?.traces)
+  if (directTraces.length) {
+    return directTraces.map((trace, index) => normalizeEvidenceTrace(trace, index))
+  }
+
+  return toArray<TraceRecord>(data?.items).flatMap((record, index) => normalizeTraceRecord(record, index))
+}
+
 const totalDurationDisplay = computed(() => {
   const dur = summary.value?.totalDuration ?? 0
   return formatDuration(dur)
@@ -106,8 +233,8 @@ onMounted(async () => {
       fetchEvidenceSummary(),
       fetchEvidenceTraces(),
     ])
-    summary.value = summaryRes as any
-    traces.value = (tracesRes as any).traces || (tracesRes as any).items || []
+    summary.value = normalizeSummary(summaryRes)
+    traces.value = normalizeTraces(tracesRes)
   } catch {
     summary.value = FALLBACK_SUMMARY
     traces.value = FALLBACK_TRACES

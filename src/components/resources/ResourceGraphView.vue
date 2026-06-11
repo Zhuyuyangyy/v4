@@ -76,7 +76,7 @@ const typeLabels: Record<GraphNode['type'], string> = {
   <div class="graph-view">
     <div class="graph-banner">
       <span class="graph-banner-dot"></span>
-      <span>资源不是静态列表，而是由画像、路径和评估结果共同驱动生成的资源网络。</span>
+      <span>资源关系图看的是画像、薄弱点、资源、任务和反馈之间的生成链路，用来说明资源为什么被推荐。</span>
     </div>
 
     <div class="graph-canvas">

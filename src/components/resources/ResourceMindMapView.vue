@@ -10,53 +10,53 @@ interface MindNode {
 
 const tree = ref<MindNode>({
   id: 'root',
-  label: '深度学习',
+  label: '递归与动态规划',
   color: '#00d4ff',
   children: [
     {
-      id: 'nn',
-      label: '神经网络基础',
+      id: 'state',
+      label: '状态定义',
       color: '#7c3aed',
       children: [
-        { id: 'nn-1', label: '感知机', color: '#7c3aed' },
-        { id: 'nn-2', label: '激活函数', color: '#7c3aed' },
-        { id: 'nn-3', label: '反向传播', color: '#7c3aed' },
+        { id: 'state-1', label: '子问题边界', color: '#7c3aed' },
+        { id: 'state-2', label: '状态变量选择', color: '#7c3aed' },
+        { id: 'state-3', label: '数组含义写法', color: '#7c3aed' },
       ],
     },
     {
-      id: 'cnn',
-      label: 'CNN',
+      id: 'transition',
+      label: '转移方程',
       color: '#06d6a0',
       children: [
-        { id: 'cnn-1', label: '卷积层', color: '#06d6a0' },
-        { id: 'cnn-2', label: '池化层', color: '#06d6a0' },
-        { id: 'cnn-3', label: '特征提取', color: '#06d6a0' },
+        { id: 'transition-1', label: '从递推到代码', color: '#06d6a0' },
+        { id: 'transition-2', label: '最优子结构', color: '#06d6a0' },
+        { id: 'transition-3', label: '重复子问题', color: '#06d6a0' },
       ],
     },
     {
-      id: 'rnn',
-      label: 'RNN',
+      id: 'order',
+      label: '遍历顺序',
       color: '#f59e0b',
       children: [
-        { id: 'rnn-1', label: '序列建模', color: '#f59e0b' },
-        { id: 'rnn-2', label: 'LSTM', color: '#f59e0b' },
-        { id: 'rnn-3', label: 'GRU', color: '#f59e0b' },
+        { id: 'order-1', label: '自顶向下记忆化', color: '#f59e0b' },
+        { id: 'order-2', label: '自底向上填表', color: '#f59e0b' },
+        { id: 'order-3', label: '滚动数组压缩', color: '#f59e0b' },
       ],
     },
     {
-      id: 'app',
-      label: '应用场景',
+      id: 'classic',
+      label: '经典题型',
       color: '#f43f5e',
       children: [
-        { id: 'app-1', label: '图像识别', color: '#f43f5e' },
-        { id: 'app-2', label: '文本处理', color: '#f43f5e' },
-        { id: 'app-3', label: '医学图像', color: '#f43f5e' },
+        { id: 'classic-1', label: '爬楼梯', color: '#f43f5e' },
+        { id: 'classic-2', label: '背包问题', color: '#f43f5e' },
+        { id: 'classic-3', label: '最长公共子序列', color: '#f43f5e' },
       ],
     },
   ],
 })
 
-const expanded = ref<Set<string>>(new Set(['root', 'nn', 'cnn', 'rnn', 'app']))
+const expanded = ref<Set<string>>(new Set(['root', 'state', 'transition', 'order', 'classic']))
 
 function toggleExpand(id: string) {
   if (expanded.value.has(id)) {
@@ -71,7 +71,7 @@ function toggleExpand(id: string) {
   <div class="mindmap-view">
     <div class="mindmap-banner">
       <span class="mindmap-banner-dot"></span>
-      <span>当前资源知识结构展开，点击分支节点可折叠/展开子节点。</span>
+      <span>思维导图专门展开递归到动态规划的概念结构，关注“如何把递归关系写成状态转移”，点击分支可折叠/展开。</span>
     </div>
 
     <div class="mindmap-tree">

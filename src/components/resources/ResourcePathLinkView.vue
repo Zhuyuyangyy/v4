@@ -23,8 +23,8 @@ const stages = ref<PathStage[]>([
     icon: BookOpen,
     color: '#7c3aed',
     resources: [
-      { title: '概率论与数理统计速查', type: 'doc' },
-      { title: '深度学习知识图谱', type: 'mindmap' },
+      { title: '指针与地址速查卡', type: 'doc' },
+      { title: '内存格子图入门', type: 'mindmap' },
     ],
   },
   {
@@ -33,8 +33,8 @@ const stages = ref<PathStage[]>([
     icon: MessageCircle,
     color: '#00d4ff',
     resources: [
-      { title: 'Transformer 原理解析', type: 'video' },
-      { title: 'PyTorch 快速上手', type: 'video' },
+      { title: '*p 与 p 的读写区别', type: 'video' },
+      { title: '函数参数地址传递演示', type: 'video' },
     ],
   },
   {
@@ -43,8 +43,8 @@ const stages = ref<PathStage[]>([
     icon: RefreshCw,
     color: '#06d6a0',
     resources: [
-      { title: '图结构思维导图', type: 'mindmap' },
-      { title: '错题专项训练 3 题', type: 'exercise', isRemedial: true },
+      { title: '二级指针调用栈图解', type: 'mindmap' },
+      { title: 'swap / createNode 改写 5 题', type: 'exercise', isRemedial: true },
     ],
   },
   {
@@ -53,8 +53,8 @@ const stages = ref<PathStage[]>([
     icon: ClipboardCheck,
     color: '#f59e0b',
     resources: [
-      { title: '线性代数基础习题', type: 'exercise' },
-      { title: 'KNN 算法实现', type: 'code' },
+      { title: '指针别名判断小测', type: 'exercise' },
+      { title: '链表插入函数补全', type: 'code' },
     ],
   },
   {
@@ -63,13 +63,13 @@ const stages = ref<PathStage[]>([
     icon: GraduationCap,
     color: '#f43f5e',
     resources: [
-      { title: '数据结构思维导图', type: 'mindmap' },
-      { title: '机器学习数学基础', type: 'video' },
+      { title: '野指针与空指针排查清单', type: 'mindmap' },
+      { title: '逐行 Trace 复盘讲解', type: 'video' },
     ],
   },
 ])
 
-const activeStage = ref<string | null>(null)
+const activeStage = ref<string | null>('post')
 
 function toggleStage(id: string) {
   activeStage.value = activeStage.value === id ? null : id
@@ -80,7 +80,7 @@ function toggleStage(id: string) {
   <div class="path-view">
     <div class="path-banner">
       <span class="path-banner-dot"></span>
-      <span>资源与学习路径阶段的关系，高亮标记为评估后新增的补救资源。</span>
+      <span>路径链展示 C 指针补救资源如何被安排到课前、课中、课后、测评和辅导阶段，高亮项是评估后新增的补弱资源。</span>
     </div>
 
     <div class="path-timeline">

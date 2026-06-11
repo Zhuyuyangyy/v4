@@ -1,25 +1,58 @@
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted } from 'vue'
-import { BASE_KNOWLEDGE_ITEMS, buildMatrixView, getDomainMeta } from './mapTransforms'
 
 const emit = defineEmits<{ 'select-node': [nodeId: string] }>()
 
-const matrixCells = buildMatrixView(BASE_KNOWLEDGE_ITEMS)
+const DOMAIN_META: Record<string, { name: string; color: string; short: string }> = {
+  pointer: { name: '指针基础', color: '#00d4ff', short: 'PTR' },
+  memory: { name: '内存模型', color: '#7c3aed', short: 'MEM' },
+  array: { name: '数组与字符串', color: '#06d6a0', short: 'ARR' },
+  function: { name: '函数传参', color: '#f59e0b', short: 'FUNC' },
+  struct: { name: '结构体链表', color: '#3b82f6', short: 'LIST' },
+  debug: { name: '调试与追踪', color: '#f43f5e', short: 'DBG' },
+}
 
 const LEVELS = [
-  { key: 'remember', name: '了解', en: 'Remember', icon: '◐' },
-  { key: 'understand', name: '掌握', en: 'Understand', icon: '◓' },
-  { key: 'apply', name: '应用', en: 'Apply', icon: '◑' },
+  { key: 'remember', name: '识别', en: 'Recognize', icon: '◐' },
+  { key: 'understand', name: '解释', en: 'Explain', icon: '◓' },
+  { key: 'apply', name: '改写', en: 'Apply', icon: '◑' },
   { key: 'transfer', name: '迁移', en: 'Transfer', icon: '◒' },
-  { key: 'create', name: '创新', en: 'Create', icon: '●' },
+  { key: 'create', name: '排错', en: 'Debug', icon: '●' },
 ]
 
-const DOMAIN_ORDER = ['math', 'algo', 'ml', 'dl', 'eng', 'nlp']
+const DOMAIN_ORDER = ['pointer', 'memory', 'array', 'function', 'struct', 'debug']
+
+const MATRIX_VALUES: Record<string, number[]> = {
+  pointer: [0.86, 0.74, 0.58, 0.42, 0.28],
+  memory: [0.78, 0.63, 0.45, 0.34, 0.22],
+  array: [0.82, 0.70, 0.56, 0.38, 0.30],
+  function: [0.74, 0.52, 0.36, 0.24, 0.18],
+  struct: [0.68, 0.50, 0.33, 0.20, 0.12],
+  debug: [0.72, 0.48, 0.30, 0.18, 0.10],
+}
+
+const matrixCells = DOMAIN_ORDER.flatMap(domain =>
+  LEVELS.map((level, index) => {
+    const value = MATRIX_VALUES[domain][index]
+    const isWeak = value > 0 && value < 0.4
+    return {
+      domain,
+      domainLabel: DOMAIN_META[domain].name,
+      level: level.key,
+      levelLabel: level.name,
+      value,
+      evidenceCount: Math.max(1, Math.round(value * 10)),
+      lastScore: Math.round(value * 100),
+      isWeak,
+      isRecommended: domain === 'function' && level.key === 'apply',
+    }
+  }),
+)
 
 const cellsByDomain = computed(() =>
   DOMAIN_ORDER.map(domain => ({
     domain,
-    meta: getDomainMeta(domain),
+    meta: DOMAIN_META[domain],
     cells: LEVELS.map(lv => matrixCells.find(c => c.domain === domain && c.level === lv.key)!),
   }))
 )
@@ -39,10 +72,10 @@ const colAvgs = computed(() =>
 
 function statusLabel(m: number): string {
   if (m === 0) return '未触及'
-  if (m < 0.3) return '入门期'
-  if (m < 0.6) return '巩固期'
-  if (m < 0.85) return '熟练'
-  return '精通 ✓'
+  if (m < 0.3) return '易断层'
+  if (m < 0.6) return '需巩固'
+  if (m < 0.85) return '较稳定'
+  return '熟练'
 }
 
 // Inject keyframes
@@ -62,7 +95,7 @@ onUnmounted(() => { styleEl?.remove() })
   <div class="matrix-view">
     <div class="matrix-banner">
       <span class="banner-dot" style="background:#f59e0b;box-shadow:0 0 10px #f59e0b66"></span>
-      <span>行是知识域，列是认知层级 — 从「记得住」到「能创造」。同一个知识域在不同认知深度上的差距，一张矩阵就能说清。</span>
+      <span>认知矩阵看的是 C 指针学习的能力断层：指针、内存、数组、传参、链表和调试分别落在识别、解释、改写、迁移、排错哪一层。</span>
     </div>
 
     <div class="matrix-canvas">
@@ -154,11 +187,11 @@ onUnmounted(() => { styleEl?.remove() })
           <span class="detail-chip" style="background:rgba(244,63,94,0.12);border-color:#f43f5e33;color:#f43f5e">跳跃式提升点</span>
         </div>
         <div class="detail-title">
-          <span style="color:#06d6a0">深度学习</span>
+          <span style="color:#06d6a0">函数传参</span>
           <span style="color:#8892b0; margin: 0 12px">×</span>
-          <span style="color:#f59e0b">应用</span>
+          <span style="color:#f59e0b">改写</span>
         </div>
-        <div class="detail-desc">你已经"理解"了 35%，但"应用"层只有 22% — 知识停在头脑里，没落到代码里。建议加入实战练习与项目。</div>
+        <div class="detail-desc">这里看的不是图谱关系，而是“能说清指针”到“能改写带二级指针的函数”之间的断层：概念知道，但参数修改是否影响调用方还不稳定。</div>
         <div class="detail-metrics">
           <div class="metric-card">
             <div class="metric-label">当前差距</div>
@@ -166,7 +199,7 @@ onUnmounted(() => { styleEl?.remove() })
           </div>
           <div class="metric-card">
             <div class="metric-label">推荐资源</div>
-            <div class="metric-value" style="color:#06d6a0">5 个 · 含代码 2</div>
+            <div class="metric-value" style="color:#06d6a0">4 个 · 含逐行 Trace 2</div>
           </div>
         </div>
         <button class="detail-btn" style="background:linear-gradient(135deg,#f59e0b,#f43f5e);box-shadow:0 4px 20px #f59e0b55">看看具体怎么补 →</button>
@@ -182,7 +215,7 @@ onUnmounted(() => { styleEl?.remove() })
             <span class="diag-sub">/ L 6</span>
             <span class="diag-trend">↑ 上月 +0.3</span>
           </div>
-          <div class="diag-note">主要停在「理解→应用」之间</div>
+        <div class="diag-note">主要停在「解释→改写」之间</div>
         </div>
         <div class="diag-divider"></div>
         <div class="diag-section">
