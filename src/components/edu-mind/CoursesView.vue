@@ -500,20 +500,12 @@ const hasBilibiliVideo = (lect: any): boolean => {
 }
 
 const getCategoryBadgeClass = (category: string) => {
-  switch (category) {
-    case '编程与算法基础':
-      return 'bg-[#e6f4ff] text-[#1677ff] border border-[#bae0ff]'
-    case '计算机系统':
-      return 'bg-[#fff7e6] text-[#fa8c16] border border-[#ffd591]'
-    case '软件工程':
-      return 'bg-[#f6ffed] text-[#52c41a] border border-[#d9f7be]'
-    case '人工智能方向':
-      return 'bg-[#f9f0ff] text-[#722ed1] border border-[#efdbff]'
-    case '前沿与应用':
-      return 'bg-[#e6fffb] text-[#13c2c2] border border-[#b5f5ec]'
-    default:
-      return 'bg-slate-100 text-slate-700 border border-slate-200'
-  }
+  if (category.includes('编程')) return 'edu-course-card__badge--blue'
+  if (category.includes('计算机')) return 'edu-course-card__badge--amber'
+  if (category.includes('软件')) return 'edu-course-card__badge--green'
+  if (category.includes('人工')) return 'edu-course-card__badge--purple'
+  if (category.includes('前沿')) return 'edu-course-card__badge--cyan'
+  return ''
 }
 
 const workspaceTabs = computed(() => [
@@ -1561,91 +1553,63 @@ const directions = ['全部', '编程与算法基础', '计算机系统', '软�
         </div>
       </div>
 
-      <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4" id="courses-grid-list">
+      <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6" id="courses-grid-list">
         <div
           v-for="course in filteredCourses"
           :key="course.id"
           @click="handleSelectCourse(course)"
           :class="[
-            'edu-course-card border rounded-xl p-4 cursor-pointer transition-all duration-300 relative flex flex-col justify-between h-[245px] group',
-            course.progress > 0
-              ? 'is-started'
-              : ''
+            'edu-course-card group',
+            course.progress > 0 ? 'is-started' : ''
           ]"
         >
-          <div>
-            <div class="flex justify-between items-center mb-2.5">
-              <div :class="['edu-course-card__category inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[13px] font-semibold', getCategoryBadgeClass(course.category)]">
-                <component :is="IconMap[course.iconName] || BookOpen" class="w-3.5 h-3.5 shrink-0" />
-                <span>{{ course.category }}</span>
-              </div>
-
-              <div class="flex gap-1.5 items-center select-none">
-                <span :class="[
-                  'edu-course-card__level text-[11.5px] font-semibold px-2 py-0.5 rounded',
-                  course.difficulty === '高级'
-                    ? 'bg-red-50 text-red-600 border border-red-100'
-                    : course.difficulty === '进阶'
-                      ? 'bg-orange-50 text-orange-600 border border-orange-100'
-                      : 'bg-green-50 text-green-600 border border-green-100'
-                ]">
-                  {{ course.difficulty }}
-                </span>
-                <span class="edu-course-card__hours text-[11.5px] px-2 py-0.5 rounded font-mono font-medium">
-                  {{ course.studyHours }}h
-                </span>
-              </div>
+          <div class="edu-course-card__header">
+            <div class="flex items-center gap-2">
+              <span :class="['edu-course-card__badge', getCategoryBadgeClass(course.category)]">
+                {{ course.category }}
+              </span>
+              <span class="edu-course-card__dot">·</span>
+              <span class="edu-course-card__meta">{{ course.difficulty }}</span>
             </div>
-
-            <div class="mb-2.5 pl-0.5">
-              <h4 class="text-[17px] font-bold text-white mb-1 line-clamp-1 duration-150 transition-colors leading-snug" :title="course.name">
-                {{ course.name }}
-              </h4>
-              <p class="text-[13.5px] text-[#98a0cf] line-clamp-2 leading-relaxed h-[40px]" :title="course.description">
-                {{ course.description }}
-              </p>
-            </div>
-
-            <div class="mb-3.5 px-0.5">
-              <div class="flex justify-between text-[12px] text-[#8f98d3] mb-1 font-mono">
-                <span>已学进度</span>
-                <span class="font-bold text-[#b9d7ff]">{{ course.progress }}%</span>
-              </div>
-              <div class="edu-course-card__progress h-1 rounded-full overflow-hidden">
-                <div
-                  class="h-full rounded-full transition-all duration-300"
-                  :style="{
-                    width: `${course.progress}%`,
-                    background: `linear-gradient(90deg, #0097a7, ${course.themeColor || '#00d4ff'})`
-                  }"
-                />
-              </div>
-            </div>
+            <span class="edu-course-card__hours">{{ course.studyHours }}h</span>
           </div>
 
-          <div class="pt-2.5 flex justify-between items-center mt-auto pl-0.5">
-            <div class="text-[12px] text-[#8b92cc] flex items-center gap-1 font-bold uppercase tracking-wide">
-              <span>{{ course.progress === 100 ? '复习本课' : '继续学习' }}</span>
-            </div>
+          <h4 class="edu-course-card__title" :title="course.name">
+            {{ course.name }}
+          </h4>
+          <p class="edu-course-card__desc" :title="course.description">
+            {{ course.description }}
+          </p>
 
-            <span class="edu-course-card__cta flex items-center justify-center gap-1 text-[14px] font-bold transition-transform duration-200">
-              <Play class="w-3.5 h-3.5 fill-current" />
-              {{ course.progress === 100 ? '复习本课' : '继续学习' }}
-            </span>
+          <div class="edu-course-card__footer">
+            <div class="edu-course-card__progress-wrap">
+              <div class="edu-course-card__progress-bar">
+                <div
+                  class="edu-course-card__progress-fill"
+                  :style="{ width: `${course.progress}%` }"
+                />
+              </div>
+              <span class="edu-course-card__progress-text">{{ course.progress }}%</span>
+            </div>
+            <button class="edu-course-card__cta">
+              {{ course.progress === 100 ? '复习' : '学习' }}
+              <ChevronRight class="w-3.5 h-3.5" />
+            </button>
           </div>
         </div>
 
-        <div v-if="filteredCourses.length === 0" class="col-span-full bg-white dark:bg-[#1e293b] rounded-xl p-12 text-center border border-[#e8e8e8] dark:border-slate-700 w-full max-w-lg mx-auto my-6 animate-fade-in">
-          <AlertCircle class="w-10 h-10 text-slate-300 mx-auto mb-3" />
-          <h4 class="text-[16px] font-semibold text-slate-700 dark:text-white">未发现对应的专业核心课程</h4>
-          <p class="text-[13.5px] text-slate-400 mt-1 max-w-xs mx-auto mb-3">
-            没有找到符合当前难度等级或搜索关键字《{{ searchQuery }}》的课程，请修改搜索或一键清除关联。
+        <div v-if="filteredCourses.length === 0" class="col-span-full rounded-2xl p-16 text-center border border-white/6 w-full max-w-lg mx-auto my-8 animate-fade-in" style="background: rgba(255,255,255,0.02); backdrop-filter: blur(20px);">
+          <AlertCircle class="w-10 h-10 text-white/20 mx-auto mb-4" />
+          <h4 class="text-[16px] font-semibold text-white/70 mb-2">未找到相关课程</h4>
+          <p class="text-[13px] text-white/30 max-w-xs mx-auto mb-5 leading-relaxed">
+            没有符合当前筛选条件的课程，试试调整搜索关键字或清除过滤器。
           </p>
           <button
             @click="handleClearFilters"
-            class="px-3.5 py-1.5 bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg text-slate-600 dark:text-slate-300 text-[13px] border border-slate-200 dark:border-slate-600 cursor-pointer"
+            class="px-4 py-2 rounded-lg text-[13px] font-medium cursor-pointer transition-all"
+            style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); color: rgba(255,255,255,0.6);"
           >
-            清除所有过滤条件
+            清除筛选条件
           </button>
         </div>
       </div>
@@ -1658,99 +1622,233 @@ const directions = ['全部', '编程与算法基础', '计算机系统', '软�
   color: #e0e7ff;
 }
 
+/* ── 筛选标签栏 ── */
 .edu-course-tabs {
-  background: rgba(14, 12, 21, 0.7);
-  border: 1px solid rgba(59, 130, 246, 0.1);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04), 0 12px 34px rgba(5, 7, 28, 0.18);
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  backdrop-filter: blur(20px);
 }
 
 .edu-course-tabs__button {
-  min-height: 38px;
+  min-height: 36px;
+  border: 1px solid transparent;
 }
 
 .edu-course-tabs__button.is-active {
-  background: linear-gradient(135deg, rgba(59, 130, 246, 0.18), rgba(37, 99, 235, 0.1));
-  border: 1px solid rgba(59, 130, 246, 0.25);
-  box-shadow: 0 0 12px rgba(59, 130, 246, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.1);
+  color: #fff;
 }
 
+/* ── 卡片：苹果简约玻璃风 ── */
 .edu-course-card {
-  border: 1px solid rgba(59, 130, 246, 0.1);
-  background:
-    linear-gradient(135deg, rgba(22, 18, 32, 0.7), rgba(17, 14, 26, 0.5));
-  backdrop-filter: blur(16px);
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.05),
-    0 14px 42px rgba(3, 5, 22, 0.28);
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 24px;
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  background: rgba(255, 255, 255, 0.03);
+  backdrop-filter: blur(40px) saturate(1.2);
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
   overflow: hidden;
 }
 
-.edu-course-card::before {
+.edu-course-card::after {
   content: "";
   position: absolute;
-  inset: 0;
-  background:
-    linear-gradient(90deg, transparent, rgba(59, 130, 246, 0.05), transparent),
-    radial-gradient(circle at 100% 100%, rgba(59, 130, 246, 0.06), transparent 34%);
-  opacity: 0;
-  transition: opacity 0.25s ease;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.08), transparent);
   pointer-events: none;
 }
 
 .edu-course-card:hover {
-  transform: translateY(-4px);
-  border-color: rgba(59, 130, 246, 0.2);
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.08),
-    0 18px 52px rgba(3, 5, 22, 0.4),
-    0 0 20px rgba(59, 130, 246, 0.1);
-}
-
-.edu-course-card:hover::before {
-  opacity: 1;
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.1);
+  transform: translateY(-2px);
 }
 
 .edu-course-card.is-started {
-  border-color: rgba(59, 130, 246, 0.2);
+  border-color: rgba(59, 130, 246, 0.15);
 }
 
-.edu-course-card__category {
-  background: rgba(59, 130, 246, 0.1) !important;
-  color: #60a5fa !important;
-  border: 1px solid rgba(59, 130, 246, 0.2) !important;
-  box-shadow: inset 0 0 10px rgba(59, 130, 246, 0.06);
+/* ── 卡片头部 ── */
+.edu-course-card__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
 }
 
-.edu-course-card__level {
-  border-color: rgba(255, 172, 83, 0.22) !important;
-  background: rgba(255, 143, 58, 0.14) !important;
-  color: #ffae4a !important;
+.edu-course-card__badge {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 10px;
+  border-radius: 6px;
+  letter-spacing: 0.02em;
+}
+
+.edu-course-card__dot {
+  color: rgba(255, 255, 255, 0.2);
+  font-size: 12px;
+}
+
+.edu-course-card__meta {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.4);
 }
 
 .edu-course-card__hours {
-  color: #60a5fa;
-  background: rgba(59, 130, 246, 0.08);
-  border: 1px solid rgba(59, 130, 246, 0.12);
+  font-size: 11px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.35);
+  font-family: "JetBrains Mono", ui-monospace, monospace;
+  letter-spacing: 0.03em;
 }
 
-.edu-course-card__progress {
-  background: rgba(59, 130, 246, 0.08);
-  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.025);
+/* ── 卡片内容 ── */
+.edu-course-card__title {
+  font-size: 18px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.9);
+  line-height: 1.35;
+  margin: 0;
+  letter-spacing: -0.01em;
+}
+
+.edu-course-card__desc {
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.4);
+  line-height: 1.5;
+  margin: 0;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  flex: 1;
+}
+
+/* ── 卡片底部 ── */
+.edu-course-card__footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding-top: 16px;
+  border-top: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.edu-course-card__progress-wrap {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1;
+}
+
+.edu-course-card__progress-bar {
+  flex: 1;
+  height: 3px;
+  border-radius: 2px;
+  background: rgba(255, 255, 255, 0.06);
+  overflow: hidden;
+}
+
+.edu-course-card__progress-fill {
+  height: 100%;
+  border-radius: 2px;
+  background: linear-gradient(90deg, #3b82f6, #60a5fa);
+  transition: width 0.6s ease;
+}
+
+.edu-course-card__progress-text {
+  font-size: 11px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.35);
+  font-family: "JetBrains Mono", ui-monospace, monospace;
+  min-width: 32px;
+  text-align: right;
 }
 
 .edu-course-card__cta {
-  min-width: 0;
-  flex: 1;
-  max-width: 170px;
-  height: 38px;
-  color: #fff;
-  border-radius: 7px;
-  background: linear-gradient(135deg, #3b82f6, #2563eb);
-  box-shadow: 0 10px 24px rgba(59, 130, 246, 0.25);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 14px;
+  border-radius: 8px;
+  border: 1px solid rgba(59, 130, 246, 0.25);
+  background: rgba(59, 130, 246, 0.1);
+  color: #60a5fa;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
 }
 
-.edu-course-card:hover .edu-course-card__cta {
-  transform: translateY(-1px);
-  box-shadow: 0 12px 30px rgba(59, 130, 246, 0.3);
+.edu-course-card__cta:hover {
+  background: rgba(59, 130, 246, 0.18);
+  border-color: rgba(59, 130, 246, 0.35);
+}
+
+/* ── 分类标签颜色 ── */
+.edu-course-card__badge[class*="编程"] {
+  background: rgba(59, 130, 246, 0.12);
+  color: #60a5fa;
+}
+
+.edu-course-card__badge[class*="计算机"] {
+  background: rgba(245, 158, 11, 0.12);
+  color: #fbbf24;
+}
+
+.edu-course-card__badge[class*="软件"] {
+  background: rgba(16, 185, 129, 0.12);
+  color: #34d399;
+}
+
+.edu-course-card__badge[class*="人工"] {
+  background: rgba(139, 92, 246, 0.12);
+  color: #a78bfa;
+}
+
+.edu-course-card__badge[class*="前沿"] {
+  background: rgba(6, 182, 212, 0.12);
+  color: #22d3ee;
+}
+
+/* ── 默认标签样式 ── */
+.edu-course-card__badge {
+  background: rgba(255, 255, 255, 0.06);
+  color: rgba(255, 255, 255, 0.5);
+}
+
+/* ── 分类标签颜色变体 ── */
+.edu-course-card__badge--blue {
+  background: rgba(59, 130, 246, 0.12);
+  color: #60a5fa;
+}
+
+.edu-course-card__badge--amber {
+  background: rgba(245, 158, 11, 0.12);
+  color: #fbbf24;
+}
+
+.edu-course-card__badge--green {
+  background: rgba(16, 185, 129, 0.12);
+  color: #34d399;
+}
+
+.edu-course-card__badge--purple {
+  background: rgba(139, 92, 246, 0.12);
+  color: #a78bfa;
+}
+
+.edu-course-card__badge--cyan {
+  background: rgba(6, 182, 212, 0.12);
+  color: #22d3ee;
 }
 </style>
