@@ -34,10 +34,3 @@ export interface CollectionItem {
   category: ResourceCategory
   date: string
 }
-
-export interface UserStats {
-  weeklyHours: number
-  goalHours: number
-  level: number
-  name: string
-}

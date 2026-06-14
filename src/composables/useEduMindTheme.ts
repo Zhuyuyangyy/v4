@@ -1,6 +1,6 @@
 import { ref } from 'vue'
 
-export type ThemeMode = 'light' | 'dark' | 'auto'
+type ThemeMode = 'light' | 'dark' | 'auto'
 
 // edu-mind 页面仅保留深色模式，isDark 始终为 true
 const themeMode = ref<ThemeMode>('dark')

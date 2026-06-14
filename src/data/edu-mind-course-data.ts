@@ -31,15 +31,6 @@ export interface CourseItem {
   presetQA: PresetQA[];
 }
 
-export const COURSE_DIRECTIONS = [
-  '全部',
-  '编程与算法基础',
-  '计算机系统',
-  '软件工程',
-  '人工智能方向',
-  '前沿与应用'
-] as const;
-
 export const COURSES_DATA: CourseItem[] = [
   // --- 编程与算法基础 ---
   {

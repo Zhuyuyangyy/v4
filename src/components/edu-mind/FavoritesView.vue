@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { ref, reactive, computed } from 'vue'
-import { useTheme } from '../../composables/useEduMindTheme'
 import {
   Search,
   Star,
@@ -11,7 +10,6 @@ import {
   Code,
   BookOpen,
   Clock,
-  Tag,
   Trash2,
   FolderInput,
   CheckSquare,
@@ -19,11 +17,8 @@ import {
   ChevronDown,
   ArrowUpDown,
   Bookmark,
-  Folder,
   X
 } from 'lucide-vue-next'
-
-const { isDark } = useTheme()
 
 interface CollectionFolder {
   id: string

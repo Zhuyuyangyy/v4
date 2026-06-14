@@ -57,7 +57,7 @@ export async function runResourceAgent({ profile, weaknesses, topic, resourceTyp
 }
 
 function fallbackResourcePackage({ profile, weaknesses, topic }) {
-  const weakest = weaknesses?.[0]?.tag || topic || '基础知识'
+  const weakest = weaknesses?.[0] || topic || '基础知识'
   const level = profile?.totalScore > 70 ? '进阶' : profile?.totalScore > 40 ? '中级' : '入门'
 
   return {

@@ -53,7 +53,7 @@ export async function runTutorAgent({ question, mode, profile, resources }) {
 
 function fallbackTutorReply({ question, modeLabel, profile }) {
   const q = String(question || '').trim() || '未提供问题'
-  const weakest = profile?.weaknesses?.[0]?.tag || ''
+  const weakest = profile?.weaknesses?.[0] || ''
 
   return (
     `当前模式：${modeLabel}\n\n` +

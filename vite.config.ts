@@ -11,6 +11,11 @@ export default defineConfig({
         target: 'http://localhost:8788',
         changeOrigin: true,
       },
+      '/deepseek-api': {
+        target: 'https://api.deepseek.com',
+        changeOrigin: true,
+        rewrite: (path: string) => path.replace(/^\/deepseek-api/, ''),
+      },
     },
   },
   resolve: {

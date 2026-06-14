@@ -51,7 +51,7 @@ export async function runPathAgent({ profile, evaluation, currentPath, replan })
 
 function fallbackPathPlan({ profile, evaluation, replan }) {
   const score = profile?.totalScore || 50
-  const weakTags = (profile?.weaknesses || []).map(w => w.tag)
+  const weakTags = (profile?.weaknesses || [])
 
   const phases = [
     {
