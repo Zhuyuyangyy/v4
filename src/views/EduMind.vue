@@ -631,7 +631,7 @@ onBeforeUnmount(() => {
                   <div v-if="selectedResourceDetail.contentMarkdown" class="whitespace-pre-line leading-relaxed">
                     {{ selectedResourceDetail.contentMarkdown }}
                   </div>
-                  <div v-else class="text-[#8b9bc0] italic py-4 text-center">
+                  <div v-else class="text-[#8892b0] italic py-4 text-center">
                     该资源正待进一步教研排版上线。
                   </div>
                 </div>
@@ -728,9 +728,9 @@ onBeforeUnmount(() => {
   position: relative;
   overflow: hidden;
   background:
-    radial-gradient(circle at 77% 10%, rgba(124, 58, 237, 0.32), transparent 30%),
-    radial-gradient(circle at 10% 34%, rgba(45, 212, 191, 0.12), transparent 28%),
-    linear-gradient(180deg, #090b24 0%, #07091c 52%, #060718 100%);
+    radial-gradient(circle at 77% 10%, rgba(59, 130, 246, 0.06), transparent 30%),
+    radial-gradient(circle at 10% 34%, rgba(59, 130, 246, 0.04), transparent 28%),
+    linear-gradient(180deg, #07060a 0%, #0e0c15 52%, #161220 100%);
 }
 
 #edu-mind-app::before {
@@ -739,11 +739,11 @@ onBeforeUnmount(() => {
   inset: var(--header-height) 0 0 0;
   pointer-events: none;
   background-image:
-    radial-gradient(circle, rgba(122, 114, 255, 0.45) 0 1px, transparent 1.5px),
-    linear-gradient(rgba(116, 87, 255, 0.045) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(116, 87, 255, 0.035) 1px, transparent 1px);
+    radial-gradient(circle, rgba(59, 130, 246, 0.2) 0 1px, transparent 1.5px),
+    linear-gradient(rgba(59, 130, 246, 0.02) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(59, 130, 246, 0.015) 1px, transparent 1px);
   background-size: 140px 140px, 64px 64px, 64px 64px;
-  opacity: 0.55;
+  opacity: 0.5;
   z-index: 0;
 }
 
@@ -773,15 +773,15 @@ html.dark #edu-mind-app {
   text-align: inherit;
 }
 
-/* Text accent color (Tailwind CLI doesn't generate text-accent) */
+/* Text accent color */
 #edu-mind-app .text-accent {
-  color: #4a6cf7;
+  color: #3b82f6;
 }
 #edu-mind-app .hover\:text-accent:hover {
-  color: #4a6cf7;
+  color: #3b82f6;
 }
 #edu-mind-app .group:hover .group-hover\:text-accent {
-  color: #4a6cf7;
+  color: #3b82f6;
 }
 
 #edu-mind-app ::-webkit-scrollbar {
@@ -799,7 +799,7 @@ html.dark #edu-mind-app {
 }
 
 html.dark #edu-mind-app ::-webkit-scrollbar-thumb {
-  background: #475569;
+  background: rgba(59, 130, 246, 0.15);
 }
 
 #edu-mind-app ::-webkit-scrollbar-thumb:hover {
@@ -807,7 +807,7 @@ html.dark #edu-mind-app ::-webkit-scrollbar-thumb {
 }
 
 html.dark #edu-mind-app ::-webkit-scrollbar-thumb:hover {
-  background: #64748b;
+  background: rgba(59, 130, 246, 0.25);
 }
 
 /* Account for v4 topbar height */
@@ -825,9 +825,9 @@ html.dark #edu-mind-app ::-webkit-scrollbar-thumb:hover {
   --edu-border-subtle: #f3f4f6;      /* subtle dividers, sidebar */
   --edu-border-default: #e5e7eb;     /* card containers */
   --edu-border-hover: #d1d5db;       /* interactive hover states */
-  --edu-border-dark-subtle: #1e293b;  /* dark subtle */
-  --edu-border-dark: #334155;         /* dark default */
-  --edu-border-dark-hover: #475569;   /* dark hover */
+  --edu-border-dark-subtle: rgba(59, 130, 246, 0.08);  /* dark subtle */
+  --edu-border-dark: rgba(59, 130, 246, 0.12);         /* dark default */
+  --edu-border-dark-hover: rgba(59, 130, 246, 0.2);   /* dark hover */
 }
 
 /* Structural borders (sidebar, header) - more subtle */
@@ -922,20 +922,20 @@ html.dark #edu-mind-app .dark\:hover\:border-slate-600:hover {
   animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
 
-/* ===== CSS Variables — 仅深色主题 ===== */
+/* ===== CSS Variables — 深蓝+蓝色宇宙主题 ===== */
 #edu-mind-app {
-  --edu-bg-page: #080a21;
-  --edu-bg-card: rgba(18, 20, 58, 0.78);
-  --edu-bg-inset: rgba(13, 15, 44, 0.82);
-  --edu-bg-elevated: rgba(33, 28, 78, 0.86);
-  --edu-bg-deep: rgba(96, 72, 255, 0.18);
-  --edu-border: rgba(123, 100, 255, 0.22);
-  --edu-border-subtle: rgba(119, 98, 255, 0.12);
-  --edu-text-main: #f4f2ff;
-  --edu-text-muted: #9aa4d9;
-  --edu-text-dim: #6670a7;
-  --edu-accent: #8d5cff;
-  --edu-accent-soft: rgba(140, 92, 255, 0.18);
+  --edu-bg-page: #07060a;
+  --edu-bg-card: rgba(17, 14, 26, 0.7);
+  --edu-bg-inset: rgba(14, 12, 21, 0.6);
+  --edu-bg-elevated: rgba(22, 18, 32, 0.9);
+  --edu-bg-deep: rgba(59, 130, 246, 0.08);
+  --edu-border: rgba(59, 130, 246, 0.12);
+  --edu-border-subtle: rgba(59, 130, 246, 0.08);
+  --edu-text-main: #e0e7ff;
+  --edu-text-muted: #a5b4d8;
+  --edu-text-dim: #6b7fa8;
+  --edu-accent: #3b82f6;
+  --edu-accent-soft: rgba(59, 130, 246, 0.1);
   background: var(--edu-bg-page);
   color: var(--edu-text-main);
 }
@@ -947,12 +947,12 @@ html.dark #edu-mind-app .dark\:bg-\[#1e293b\],
 html.dark #edu-mind-app .dark\:bg-\[\#1e293b\] { background-color: var(--edu-bg-card) !important; }
 html.dark #edu-mind-app .dark\:bg-slate-800 { background-color: var(--edu-bg-inset) !important; }
 html.dark #edu-mind-app .dark\:bg-slate-700 { background-color: var(--edu-bg-elevated) !important; }
-html.dark #edu-mind-app .dark\:bg-slate-800\/60 { background-color: rgba(20, 26, 50, 0.7) !important; }
-html.dark #edu-mind-app .dark\:bg-slate-900\/60 { background-color: rgba(10, 14, 26, 0.85) !important; }
-html.dark #edu-mind-app .dark\:bg-slate-950 { background-color: #06080f !important; }
-html.dark #edu-mind-app .dark\:bg-slate-950\/40 { background-color: rgba(6, 8, 18, 0.6) !important; }
-html.dark #edu-mind-app .dark\:bg-slate-950\/80 { background-color: rgba(6, 8, 18, 0.9) !important; }
-html.dark #edu-mind-app .dark\:bg-slate-900\/40 { background-color: rgba(10, 14, 26, 0.6) !important; }
+html.dark #edu-mind-app .dark\:bg-slate-800\/60 { background-color: rgba(14, 12, 21, 0.7) !important; }
+html.dark #edu-mind-app .dark\:bg-slate-900\/60 { background-color: rgba(7, 6, 10, 0.85) !important; }
+html.dark #edu-mind-app .dark\:bg-slate-950 { background-color: #050408 !important; }
+html.dark #edu-mind-app .dark\:bg-slate-950\/40 { background-color: rgba(5, 4, 8, 0.6) !important; }
+html.dark #edu-mind-app .dark\:bg-slate-950\/80 { background-color: rgba(5, 4, 8, 0.9) !important; }
+html.dark #edu-mind-app .dark\:bg-slate-900\/40 { background-color: rgba(7, 6, 10, 0.6) !important; }
 html.dark #edu-mind-app .dark\:bg-slate-600 { background-color: var(--edu-bg-elevated) !important; }
 html.dark #edu-mind-app .dark\:bg-blue-900\/30 { background-color: rgba(30, 58, 138, 0.25) !important; }
 html.dark #edu-mind-app .bg-white { background-color: var(--edu-bg-card) !important; }
@@ -967,9 +967,9 @@ html.dark #edu-mind-app .bg-\[#fafbff\] { background-color: var(--edu-bg-card) !
 html.dark #edu-mind-app .bg-red-50 { background-color: rgba(120, 28, 28, 0.15) !important; }
 html.dark #edu-mind-app .bg-green-50 { background-color: rgba(6, 78, 59, 0.15) !important; }
 html.dark #edu-mind-app .bg-orange-50 { background-color: rgba(120, 53, 15, 0.15) !important; }
-html.dark #edu-mind-app .bg-slate-50\/50 { background-color: rgba(20, 26, 50, 0.5) !important; }
-html.dark #edu-mind-app .bg-slate-50\/70 { background-color: rgba(20, 26, 50, 0.7) !important; }
-html.dark #edu-mind-app .bg-slate-50\/90 { background-color: rgba(20, 26, 50, 0.9) !important; }
+html.dark #edu-mind-app .bg-slate-50\/50 { background-color: rgba(14, 12, 21, 0.5) !important; }
+html.dark #edu-mind-app .bg-slate-50\/70 { background-color: rgba(14, 12, 21, 0.7) !important; }
+html.dark #edu-mind-app .bg-slate-50\/90 { background-color: rgba(14, 12, 21, 0.9) !important; }
 html.dark #edu-mind-app [class*="bg-white/"] { background-color: var(--edu-bg-card) !important; }
 
 /* Accent */
@@ -981,114 +981,200 @@ html.dark #edu-mind-app .dark\:bg-\[#4a6cf7\]\/10 { background-color: rgba(59, 1
 html.dark #edu-mind-app .from-\[#4a6cf7\] { --tw-gradient-from: #3b82f6 !important; }
 html.dark #edu-mind-app .to-\[#6a8cff\] { --tw-gradient-to: #60a5fa !important; }
 html.dark #edu-mind-app .hover\:bg-\[#4a6cf7\]:hover { background-color: rgba(59, 130, 246, 0.15) !important; }
-html.dark #edu-mind-app .hover\:bg-\[#3555db\]:hover { background-color: #2563eb !important; }
+html.dark #edu-mind-app .hover\:bg-\[#3555db\]:hover { background-color: #1d4ed8 !important; }
 
 /* Text */
 html.dark #edu-mind-app .text-accent { color: var(--edu-accent) !important; }
 html.dark #edu-mind-app .text-\[#4a6cf7\] { color: var(--edu-accent) !important; }
-html.dark #edu-mind-app .dark\:text-\[#6a8cff\] { color: #93c5fd !important; }
+html.dark #edu-mind-app .dark\:text-\[#6a8cff\] { color: #60a5fa !important; }
 html.dark #edu-mind-app .dark\:text-white { color: var(--edu-text-main) !important; }
-html.dark #edu-mind-app .dark\:text-slate-200 { color: #b8c4dc !important; }
-html.dark #edu-mind-app .dark\:text-slate-300 { color: #8b9bc0 !important; }
+html.dark #edu-mind-app .dark\:text-slate-200 { color: #a5b4d8 !important; }
+html.dark #edu-mind-app .dark\:text-slate-300 { color: #a5b4d8 !important; }
 html.dark #edu-mind-app .dark\:text-slate-400 { color: var(--edu-text-muted) !important; }
 html.dark #edu-mind-app .dark\:text-slate-500 { color: var(--edu-text-dim) !important; }
 html.dark #edu-mind-app .hover\:text-\[#4a6cf7\]:hover { color: var(--edu-accent) !important; }
 html.dark #edu-mind-app .hover\:text-accent:hover { color: var(--edu-accent) !important; }
 html.dark #edu-mind-app .group:hover .group-hover\:text-accent { color: var(--edu-accent) !important; }
-html.dark #edu-mind-app .dark\:hover\:text-\[#6a8cff\]:hover { color: #93c5fd !important; }
-html.dark #edu-mind-app .dark\:group-hover\:text-\[#6a8cff\] { color: #93c5fd !important; }
+html.dark #edu-mind-app .dark\:hover\:text-\[#6a8cff\]:hover { color: #60a5fa !important; }
+html.dark #edu-mind-app .dark\:group-hover\:text-\[#6a8cff\] { color: #60a5fa !important; }
 
 /* Border */
 html.dark #edu-mind-app .dark\:border-slate-700 { border-color: var(--edu-border) !important; }
 html.dark #edu-mind-app .dark\:border-slate-700\/60 { border-color: var(--edu-border-subtle) !important; }
-html.dark #edu-mind-app .dark\:border-slate-600 { border-color: rgba(59, 130, 246, 0.14) !important; }
+html.dark #edu-mind-app .dark\:border-slate-600 { border-color: rgba(59, 130, 246, 0.12) !important; }
 html.dark #edu-mind-app .dark\:border-slate-800 { border-color: var(--edu-border-subtle) !important; }
-html.dark #edu-mind-app .dark\:border-\[#6a8cff\]\/20 { border-color: rgba(96, 165, 250, 0.15) !important; }
-html.dark #edu-mind-app .dark\:border-\[#6a8cff\]\/40 { border-color: rgba(96, 165, 250, 0.25) !important; }
+html.dark #edu-mind-app .dark\:border-\[#6a8cff\]\/20 { border-color: rgba(59, 130, 246, 0.15) !important; }
+html.dark #edu-mind-app .dark\:border-\[#6a8cff\]\/40 { border-color: rgba(59, 130, 246, 0.25) !important; }
 html.dark #edu-mind-app .dark\:border-\[#4a6cf7\]\/30 { border-color: rgba(59, 130, 246, 0.2) !important; }
 html.dark #edu-mind-app .hover\:border-\[\#4a6cf7\]\/30:hover { border-color: rgba(59, 130, 246, 0.22) !important; }
 
 /* Hover */
-html.dark #edu-mind-app .dark\:hover\:bg-slate-700:hover { background-color: rgba(22, 28, 50, 0.5) !important; }
-html.dark #edu-mind-app .dark\:hover\:bg-slate-800\/80:hover { background-color: rgba(20, 26, 50, 0.8) !important; }
+html.dark #edu-mind-app .dark\:hover\:bg-slate-700:hover { background-color: rgba(22, 18, 32, 0.5) !important; }
+html.dark #edu-mind-app .dark\:hover\:bg-slate-800\/80:hover { background-color: rgba(17, 14, 26, 0.8) !important; }
 html.dark #edu-mind-app .dark\:hover\:border-slate-600:hover { border-color: rgba(59, 130, 246, 0.2) !important; }
-html.dark #edu-mind-app .dark\:focus\:border-\[#6a8cff\]:focus { border-color: #60a5fa !important; }
+html.dark #edu-mind-app .dark\:focus\:border-\[#6a8cff\]:focus { border-color: #3b82f6 !important; }
 html.dark #edu-mind-app .focus\:border-\[#4a6cf7\]:focus { border-color: #3b82f6 !important; }
 html.dark #edu-mind-app .focus\:ring-\[#4a6cf7\]\/10 { --tw-ring-color: rgba(59, 130, 246, 0.1) !important; }
 
 /* Sidebar & header */
 html.dark #edu-mind-app #app-sidebar { background-color: var(--edu-bg-page) !important; border-right-color: var(--edu-border-subtle) !important; }
 html.dark #edu-mind-app #main-header { border-bottom-color: var(--edu-border-subtle) !important; }
-html.dark #edu-mind-app ::-webkit-scrollbar-thumb { background: rgba(59, 130, 246, 0.15) !important; }
-html.dark #edu-mind-app ::-webkit-scrollbar-thumb:hover { background: rgba(59, 130, 246, 0.25) !important; }
-html.dark #edu-mind-app ::selection { background: rgba(59, 130, 246, 0.25); color: #fff; }
-html.dark #edu-mind-app input::placeholder { color: rgba(104, 128, 168, 0.7) !important; }
+html.dark #edu-mind-app ::-webkit-scrollbar-thumb { background: rgba(59, 130, 246, 0.12) !important; }
+html.dark #edu-mind-app ::-webkit-scrollbar-thumb:hover { background: rgba(59, 130, 246, 0.22) !important; }
+html.dark #edu-mind-app ::selection { background: rgba(59, 130, 246, 0.2); color: #fff; }
+html.dark #edu-mind-app input::placeholder { color: rgba(165, 180, 216, 0.7) !important; }
 
 /* Smooth transition */
-html.dark #edu-mind-app * { transition-property: background-color, border-color, color; transition-duration: 0.15s; transition-timing-function: ease-out; }
+html.dark #edu-mind-app * { transition-property: background-color, border-color, color, box-shadow; transition-duration: 0.15s; transition-timing-function: ease-out; }
 
-/* ===== PracticeView 硬编码颜色对齐(三元运算符产生的非 dark: class) ===== */
-/* 背景层 — 收敛到主色板 */
-html.dark #edu-mind-app .bg-\[\#141625\],
-html.dark #edu-mind-app .bg-\[\#10121d\],
-html.dark #edu-mind-app .bg-\[\#11131c\],
-html.dark #edu-mind-app .bg-\[\#12131f\],
-html.dark #edu-mind-app .bg-\[\#121421\],
-html.dark #edu-mind-app .bg-\[\#131522\],
-html.dark #edu-mind-app .bg-\[\#151722\]\/60,
-html.dark #edu-mind-app .bg-\[\#171a29\]\/90 { background-color: var(--edu-bg-card) !important; }
+/* ===== 所有硬编码暗色值统一覆盖（isDarkTheme 三元 + dark: 类） ===== */
+/* 最深背景 → #07060a */
+html.dark #edu-mind-app .bg-\[\#090a24\],
+html.dark #edu-mind-app .bg-\[\#0a0c24\],
+html.dark #edu-mind-app .bg-\[\#0a0c12\] { background-color: #07060a !important; }
+html.dark #edu-mind-app .dark\:bg-\[\#090a24\],
+html.dark #edu-mind-app .dark\:bg-\[\#0a0c24\] { background-color: #07060a !important; }
 
-/* 更深的代码块/测试输入背景 — 用 inset 层 */
-html.dark #edu-mind-app .bg-\[\#0a0c12\] { background-color: var(--edu-bg-page) !important; }
-html.dark #edu-mind-app .bg-\[\#151926\] { background-color: rgba(96, 165, 250, 0.08) !important; }
+/* 深背景 → #0e0c15 */
+html.dark #edu-mind-app .bg-\[\#0d0f2c\],
+html.dark #edu-mind-app .bg-\[\#111438\],
+html.dark #edu-mind-app .bg-\[\#151835\],
+html.dark #edu-mind-app .bg-\[\#111338\],
+html.dark #edu-mind-app .bg-\[\#0d0f2a\],
+html.dark #edu-mind-app .bg-\[\#0d1130\],
+html.dark #edu-mind-app .bg-\[\#1a1640\] { background-color: #0e0c15 !important; }
+html.dark #edu-mind-app .dark\:bg-\[\#0d0f2c\],
+html.dark #edu-mind-app .dark\:bg-\[\#111438\],
+html.dark #edu-mind-app .dark\:bg-\[\#16183c\],
+html.dark #edu-mind-app .dark\:hover\:bg-\[\#0d0f2c\]:hover,
+html.dark #edu-mind-app .dark\:hover\:bg-\[\#16183c\]:hover,
+html.dark #edu-mind-app .hover\:bg-\[\#111438\]:hover,
+html.dark #edu-mind-app .hover\:bg-\[\#111338\]:hover,
+html.dark #edu-mind-app .hover\:bg-\[\#1a1640\]:hover { background-color: #0e0c15 !important; }
 
-/* 边框 — 收敛到统一的蓝紫边框 */
-html.dark #edu-mind-app .border-\[\#1d2136\],
-html.dark #edu-mind-app .border-\[\#1a1c27\],
-html.dark #edu-mind-app .border-\[\#202538\],
-html.dark #edu-mind-app .border-\[\#22253c\],
-html.dark #edu-mind-app .border-\[\#222638\],
-html.dark #edu-mind-app .border-\[\#222736\],
-html.dark #edu-mind-app .border-\[\#2d324d\],
-html.dark #edu-mind-app .border-\[\#2d3350\] { border-color: var(--edu-border) !important; }
+/* 中间层背景 → #161220 */
+html.dark #edu-mind-app .bg-\[\#101235\],
+html.dark #edu-mind-app .bg-\[\#161840\],
+html.dark #edu-mind-app .bg-\[\#1b1d45\] { background-color: #161220 !important; }
+
+/* 带透明度的深背景 */
+html.dark #edu-mind-app .bg-\[\#111338\]\/70,
+html.dark #edu-mind-app .bg-\[\#111338\]\/50,
+html.dark #edu-mind-app .bg-\[\#151835\]\/60,
+html.dark #edu-mind-app .bg-\[\#0d0f2c\]\/80,
+html.dark #edu-mind-app .bg-\[\#0d0f2c\]\/60,
+html.dark #edu-mind-app .bg-\[\#0d0f2c\]\/90,
+html.dark #edu-mind-app .hover\:bg-\[\#111438\]\/90:hover,
+html.dark #edu-mind-app .hover\:bg-\[\#0d0f2c\]\/90:hover,
+html.dark #edu-mind-app .dark\:hover\:bg-\[\#0d0f2c\]\/90:hover { background-color: rgba(14, 12, 21, 0.7) !important; }
+html.dark #edu-mind-app .bg-\[\#1a1640\]\/35 { background-color: rgba(14, 12, 21, 0.35) !important; }
+
+/* 边框 → 蓝色边框 */
+html.dark #edu-mind-app .border-\[\#252060\],
+html.dark #edu-mind-app .border-\[\#1e1b4b\],
+html.dark #edu-mind-app .border-\[\#262058\],
+html.dark #edu-mind-app .border-\[\#26205a\],
+html.dark #edu-mind-app .border-\[\#201c50\],
+html.dark #edu-mind-app .border-\[\#252055\],
+html.dark #edu-mind-app .border-\[\#2d2660\],
+html.dark #edu-mind-app .border-\[\#282260\],
+html.dark #edu-mind-app .border-\[\#282265\] { border-color: rgba(59, 130, 246, 0.1) !important; }
+html.dark #edu-mind-app .dark\:border-\[\#252060\],
+html.dark #edu-mind-app .dark\:border-\[\#282260\],
+html.dark #edu-mind-app .dark\:border-\[\#1e1b4b\] { border-color: rgba(59, 130, 246, 0.1) !important; }
+html.dark #edu-mind-app .dark\:hover\:border-\[\#282260\]:hover,
+html.dark #edu-mind-app .dark\:hover\:border-\[\#6d5cff\]:hover,
+html.dark #edu-mind-app .hover\:border-\[\#282260\]:hover,
+html.dark #edu-mind-app .hover\:border-\[\#00d4ff\]:hover { border-color: rgba(59, 130, 246, 0.2) !important; }
+
+/* 边框带透明度 */
+html.dark #edu-mind-app .border-\[\#252060\]\/20,
+html.dark #edu-mind-app .border-\[\#252060\]\/30,
+html.dark #edu-mind-app .border-\[\#1e1b4b\]\/90 { border-color: rgba(59, 130, 246, 0.08) !important; }
 
 /* 分割线 */
-html.dark #edu-mind-app .bg-\[\#252940\] { background-color: var(--edu-border) !important; }
+html.dark #edu-mind-app .bg-\[\#252060\],
+html.dark #edu-mind-app .bg-\[\#252940\] { background-color: rgba(59, 130, 246, 0.08) !important; }
 
-/* 文字 */
-html.dark #edu-mind-app .text-\[\#f0f6fc\],
-html.dark #edu-mind-app .text-\[\#f0f3f6\] { color: var(--edu-text-main) !important; }
-html.dark #edu-mind-app .text-\[\#8c9ba5\] { color: var(--edu-text-muted) !important; }
+/* 深色文字 → 使用对话页面文字色 */
+html.dark #edu-mind-app .text-\[\#b8c4dc\] { color: #a5b4d8 !important; }
+html.dark #edu-mind-app .text-\[\#9aa4d9\],
+html.dark #edu-mind-app .text-\[\#8b9bc0\],
+html.dark #edu-mind-app .dark\:text-\[\#8b9bc0\] { color: #a5b4d8 !important; }
+html.dark #edu-mind-app .text-\[\#6f7a9e\] { color: #6b7fa8 !important; }
+html.dark #edu-mind-app .text-\[\#f0f2ff\],
+html.dark #edu-mind-app .text-\[\#f0f6fc\] { color: #e0e7ff !important; }
+html.dark #edu-mind-app .dark\:text-\[\#00d4ff\],
+html.dark #edu-mind-app .text-\[\#00d4ff\] { color: #3b82f6 !important; }
+html.dark #edu-mind-app .hover\:text-\[\#00d4ff\]:hover,
+html.dark #edu-mind-app .hover\:text-\[\#f0f2ff\]:hover,
+html.dark #edu-mind-app .dark\:hover\:text-white:hover { color: #e0e7ff !important; }
+html.dark #edu-mind-app .hover\:text-\[\#fff\]:hover { color: #e0e7ff !important; }
+
+/* text-indigo-200 → 浅蓝 */
+html.dark #edu-mind-app .text-indigo-200 { color: #a5b4d8 !important; }
+
+/* 焦点边框 */
+html.dark #edu-mind-app .focus\:border-\[\#00d4ff\],
+html.dark #edu-mind-app .focus\:ring-\[\#00d4ff\] { border-color: #3b82f6 !important; --tw-ring-color: rgba(59, 130, 246, 0.15) !important; }
+
+/* rgba(59,130,246,0.12) 边框 → 蓝色 */
+html.dark #edu-mind-app [class*="border-[rgba(59"] { border-color: rgba(59, 130, 246, 0.1) !important; }
 
 /* ===== 主色统一收敛 — 所有蓝色在 dark 下指向同一套 ===== */
-/* 残留的浅色主色 #4a6cf7 在深色下应该 → --edu-accent (#60a5fa) */
+/* 残留的浅色主色 #4a6cf7 在深色下应该 → --edu-accent (#3b82f6) */
 html.dark #edu-mind-app .text-\[\#4a6cf7\],
 html.dark #edu-mind-app .text-accent { color: var(--edu-accent) !important; }
 html.dark #edu-mind-app .border-\[\#4a6cf7\] { border-color: var(--edu-accent) !important; }
 html.dark #edu-mind-app .bg-\[\#4a6cf7\] { background-color: var(--edu-accent) !important; }
 html.dark #edu-mind-app .bg-\[\#3b82f6\] { background-color: var(--edu-accent) !important; }
-/* 过深的偏紫蓝 #6a8cff → 统一到亮蓝 #93c5fd 用于 hover/亮态 */
-html.dark #edu-mind-app .text-\[\#6a8cff\] { color: #93c5fd !important; }
+/* 过深的偏紫蓝 #6a8cff → 统一到蓝色 #3b82f6 用于 hover/亮态 */
+html.dark #edu-mind-app .text-\[\#6a8cff\] { color: #60a5fa !important; }
 /* 主按钮悬停 */
 html.dark #edu-mind-app .hover\:bg-\[\#3555db\]:hover,
-html.dark #edu-mind-app .hover\:bg-\[\#2563eb\]:hover { background-color: #3b82f6 !important; }
+html.dark #edu-mind-app .hover\:bg-\[\#2563eb\]:hover { background-color: #2563eb !important; }
+
+/* 蓝色调带透明度的覆盖 */
+html.dark #edu-mind-app .bg-\[\#4a6cf7\]\/10 { background-color: rgba(59, 130, 246, 0.1) !important; }
+html.dark #edu-mind-app .bg-\[\#4a6cf7\]\/15 { background-color: rgba(59, 130, 246, 0.12) !important; }
+html.dark #edu-mind-app .bg-\[\#4a6cf7\]\/20 { background-color: rgba(59, 130, 246, 0.15) !important; }
+html.dark #edu-mind-app .bg-\[\#4a6cf7\]\/5 { background-color: rgba(59, 130, 246, 0.04) !important; }
+html.dark #edu-mind-app .border-\[\#4a6cf7\]\/10 { border-color: rgba(59, 130, 246, 0.1) !important; }
+html.dark #edu-mind-app .border-\[\#4a6cf7\]\/20 { border-color: rgba(59, 130, 246, 0.15) !important; }
+html.dark #edu-mind-app .border-\[\#4a6cf7\]\/30 { border-color: rgba(59, 130, 246, 0.2) !important; }
+html.dark #edu-mind-app .border-\[\#4a6cf7\]\/40 { border-color: rgba(59, 130, 246, 0.25) !important; }
+html.dark #edu-mind-app .hover\:bg-\[\#4a6cf7\]:hover { background-color: rgba(59, 130, 246, 0.15) !important; }
+html.dark #edu-mind-app .hover\:border-\[\#4a6cf7\]:hover { border-color: rgba(59, 130, 246, 0.25) !important; }
+html.dark #edu-mind-app .focus\:border-\[\#4a6cf7\]:focus { border-color: #3b82f6 !important; }
+html.dark #edu-mind-app .focus\:ring-\[\#4a6cf7\] { --tw-ring-color: rgba(59, 130, 246, 0.15) !important; }
+html.dark #edu-mind-app .focus\:ring-\[\#4a6cf7\]\/10 { --tw-ring-color: rgba(59, 130, 246, 0.1) !important; }
+html.dark #edu-mind-app .ring-\[\#4a6cf7\] { --tw-ring-color: rgba(59, 130, 246, 0.15) !important; }
+
+/* 浅色主题的蓝色按钮也统一为蓝色 */
+html.dark #edu-mind-app .bg-\[\#f0f4ff\] { background-color: rgba(59, 130, 246, 0.08) !important; }
+html.dark #edu-mind-app .text-\[\#6a8cff\] { color: #60a5fa !important; }
+html.dark #edu-mind-app .hover\:bg-\[\#4a6cf7\]:hover { background-color: rgba(59, 130, 246, 0.18) !important; }
+html.dark #edu-mind-app .hover\:bg-\[\#3b5bdb\]:hover { background-color: #1d4ed8 !important; }
+
+/* toggle 背景色 */
+html.dark #edu-mind-app .bg-\[\#4a6cf7\] { background-color: #3b82f6 !important; }
 
 /* ===== 卡片在深色下加强分层(发光感) ===== */
 html.dark #edu-mind-app .shadow-xs,
 html.dark #edu-mind-app .shadow-sm {
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(96, 165, 250, 0.03) !important;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(59, 130, 246, 0.03) !important;
 }
 html.dark #edu-mind-app .shadow-md {
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(96, 165, 250, 0.05) !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(59, 130, 246, 0.05) !important;
 }
 html.dark #edu-mind-app .shadow-xl,
 html.dark #edu-mind-app .shadow-2xl {
-  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.55), 0 0 0 1px rgba(96, 165, 250, 0.08) !important;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.55), 0 0 0 1px rgba(59, 130, 246, 0.08) !important;
 }
 
 /* 卡片 hover 加微微极光感 */
 html.dark #edu-mind-app .hover\:shadow-md:hover {
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.45), 0 0 24px rgba(96, 165, 250, 0.06) !important;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.45), 0 0 20px rgba(59, 130, 246, 0.05) !important;
 }
 
 /* ===== Input / Select / Textarea 在深色下的可读性 ===== */
@@ -1102,7 +1188,7 @@ html.dark #edu-mind-app select:focus,
 html.dark #edu-mind-app textarea:focus {
   outline: none;
   border-color: var(--edu-accent) !important;
-  box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.12) !important;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1) !important;
 }
 
 /* ===== 模态遮罩在深色下更深、更模糊 ===== */
@@ -1110,14 +1196,14 @@ html.dark #edu-mind-app .bg-slate-900\/60 { background-color: rgba(0, 0, 0, 0.75
 
 .edu-main-stage {
   background:
-    radial-gradient(circle at 72% 0%, rgba(101, 61, 255, 0.22), transparent 36%),
-    radial-gradient(circle at 20% 68%, rgba(22, 211, 238, 0.08), transparent 30%);
+    radial-gradient(circle at 72% 0%, rgba(59, 130, 246, 0.05), transparent 36%),
+    radial-gradient(circle at 20% 68%, rgba(59, 130, 246, 0.03), transparent 30%);
 }
 
 .edu-course-hero {
   min-height: 190px;
   margin-bottom: 24px;
-  border: 1px solid rgba(126, 106, 255, 0.28);
+  border: 1px solid rgba(59, 130, 246, 0.12);
   border-radius: 14px;
   position: relative;
   overflow: hidden;
@@ -1126,12 +1212,12 @@ html.dark #edu-mind-app .bg-slate-900\/60 { background-color: rgba(0, 0, 0, 0.75
   grid-template-columns: minmax(0, 1fr) 420px;
   align-items: center;
   background:
-    linear-gradient(90deg, rgba(9, 11, 38, 0.5) 0%, rgba(13, 13, 48, 0.4) 42%, rgba(44, 18, 102, 0.3) 100%),
+    linear-gradient(90deg, rgba(7, 6, 10, 0.5) 0%, rgba(14, 12, 21, 0.4) 42%, rgba(22, 18, 32, 0.25) 100%),
     url('/background-ziyuanzhongxing.png') center/cover;
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.08),
-    0 24px 70px rgba(6, 8, 35, 0.56),
-    0 0 40px rgba(94, 70, 255, 0.1);
+    inset 0 1px 0 rgba(255, 255, 255, 0.05),
+    0 24px 70px rgba(2, 2, 8, 0.6),
+    0 0 35px rgba(59, 130, 246, 0.05);
 }
 
 
@@ -1142,7 +1228,7 @@ html.dark #edu-mind-app .bg-slate-900\/60 { background-color: rgba(0, 0, 0, 0.75
 }
 
 .edu-hero-kicker {
-  color: #5aa7ff;
+  color: #60a5fa;
   display: inline-block;
   font-family: "JetBrains Mono", ui-monospace, monospace;
   font-size: 12px;
@@ -1152,30 +1238,30 @@ html.dark #edu-mind-app .bg-slate-900\/60 { background-color: rgba(0, 0, 0, 0.75
 }
 
 .edu-course-hero h1 {
-  color: #ffffff;
+  color: #e0e7ff;
   font-size: clamp(26px, 2.1vw, 34px);
   line-height: 1.1;
   font-weight: 900;
   margin: 0 0 14px;
   letter-spacing: 0;
-  text-shadow: 0 0 28px rgba(189, 174, 255, 0.42);
+  text-shadow: 0 0 28px rgba(59, 130, 246, 0.2);
 }
 
 .edu-course-hero p {
-  color: #c6ccff;
+  color: #a5b4d8;
   font-size: 16px;
   margin: 0;
 }
 
 .edu-course-hero p strong {
-  color: #76a8ff;
+  color: #60a5fa;
 }
 
 .edu-hero-progress {
   display: flex;
   align-items: center;
   gap: 12px;
-  color: #47b8ff;
+  color: #60a5fa;
   font-family: "JetBrains Mono", ui-monospace, monospace;
   font-size: 13px;
   font-weight: 800;
@@ -1186,16 +1272,16 @@ html.dark #edu-mind-app .bg-slate-900\/60 { background-color: rgba(0, 0, 0, 0.75
   width: min(230px, 24vw);
   height: 5px;
   border-radius: 999px;
-  background: rgba(72, 71, 148, 0.8);
+  background: rgba(14, 12, 21, 0.8);
   overflow: hidden;
-  box-shadow: 0 0 18px rgba(108, 91, 255, 0.35);
+  box-shadow: 0 0 14px rgba(59, 130, 246, 0.2);
 }
 
 .edu-hero-progress__bar span {
   display: block;
   height: 100%;
   border-radius: inherit;
-  background: linear-gradient(90deg, #934dff, #4ba8ff);
+  background: linear-gradient(90deg, #3b82f6, #2563eb);
 }
 
 .edu-course-hero__visual {
@@ -1213,18 +1299,18 @@ html.dark #edu-mind-app .bg-slate-900\/60 { background-color: rgba(0, 0, 0, 0.75
   border-radius: 50%;
   background:
     radial-gradient(circle at 32% 24%, rgba(255, 255, 255, 0.72), transparent 4%),
-    radial-gradient(circle at 36% 32%, #a591ff 0 8%, #6636e4 28%, #251069 58%, #070824 72%);
+    radial-gradient(circle at 36% 32%, #3b82f6 0 8%, #2563eb 28%, #07060a 72%);
   box-shadow:
-    -28px 0 40px rgba(151, 112, 255, 0.26) inset,
-    0 0 46px rgba(109, 80, 255, 0.72),
-    0 0 120px rgba(85, 45, 214, 0.38);
+    -28px 0 40px rgba(59, 130, 246, 0.1) inset,
+    0 0 40px rgba(59, 130, 246, 0.25),
+    0 0 100px rgba(59, 130, 246, 0.1);
 }
 
 .edu-planet::after {
   content: "";
   position: absolute;
   inset: 32% -24%;
-  border: 2px solid rgba(216, 177, 112, 0.56);
+  border: 2px solid rgba(59, 130, 246, 0.25);
   border-radius: 50%;
   transform: rotate(-18deg);
   filter: blur(0.5px);
@@ -1237,10 +1323,10 @@ html.dark #edu-mind-app .bg-slate-900\/60 { background-color: rgba(0, 0, 0, 0.75
   border-radius: 16px;
   display: grid;
   place-items: center;
-  color: #f4f2ff;
-  background: linear-gradient(145deg, rgba(45, 30, 112, 0.82), rgba(18, 18, 58, 0.92));
-  border: 1px solid rgba(135, 111, 255, 0.5);
-  box-shadow: 0 0 28px rgba(116, 91, 255, 0.42), inset 0 0 24px rgba(132, 91, 255, 0.16);
+  color: #e0e7ff;
+  background: linear-gradient(145deg, rgba(14, 12, 21, 0.82), rgba(7, 6, 10, 0.92));
+  border: 1px solid rgba(59, 130, 246, 0.2);
+  box-shadow: 0 0 22px rgba(59, 130, 246, 0.1), inset 0 0 18px rgba(59, 130, 246, 0.05);
 }
 
 .edu-orbit-card--one {
@@ -1279,26 +1365,26 @@ html.dark #edu-mind-app .bg-slate-900\/60 { background-color: rgba(0, 0, 0, 0.75
 
 /* ===== 资源详情子页面 ===== */
 .resource-detail-page {
-  background: rgba(18, 20, 50, 0.6);
-  border: 1px solid rgba(117, 98, 255, 0.14);
+  background: rgba(14, 12, 21, 0.6);
+  border: 1px solid rgba(59, 130, 246, 0.1);
   border-radius: 16px;
   padding: 28px 32px;
 }
 .resource-detail-back {
   display: inline-flex; align-items: center; gap: 6px;
-  font-size: 14px; font-weight: 600; color: #c4b5fd;
-  background: rgba(109, 92, 255, 0.12); border: 1px solid rgba(109, 92, 255, 0.22);
+  font-size: 14px; font-weight: 600; color: #60a5fa;
+  background: rgba(59, 130, 246, 0.1); border: 1px solid rgba(59, 130, 246, 0.18);
   padding: 6px 14px; border-radius: 8px; cursor: pointer;
   transition: all 0.15s; margin-bottom: 20px;
 }
-.resource-detail-back:hover { background: rgba(109, 92, 255, 0.24); color: #fff; }
+.resource-detail-back:hover { background: rgba(59, 130, 246, 0.18); color: #93c5fd; }
 
 .resource-detail-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
 .resource-detail-badges { display: flex; gap: 8px; }
 .resource-detail-category {
   font-size: 13px; font-weight: 700; padding: 4px 12px; border-radius: 6px;
-  background: rgba(109, 92, 255, 0.16); color: #c4b5fd;
-  border: 1px solid rgba(109, 92, 255, 0.28);
+  background: rgba(59, 130, 246, 0.12); color: #60a5fa;
+  border: 1px solid rgba(59, 130, 246, 0.2);
 }
 .resource-detail-difficulty {
   font-size: 12px; font-weight: 600; padding: 4px 10px; border-radius: 6px;
@@ -1307,54 +1393,54 @@ html.dark #edu-mind-app .bg-slate-900\/60 { background-color: rgba(0, 0, 0, 0.75
 .resource-detail-actions { display: flex; gap: 8px; }
 .resource-detail-star {
   display: flex; align-items: center; gap: 6px;
-  font-size: 13px; font-weight: 600; color: #9aa4d9;
-  padding: 6px 14px; border-radius: 8px; border: 1px solid rgba(117, 98, 255, 0.14);
+  font-size: 13px; font-weight: 600; color: #a5b4d8;
+  padding: 6px 14px; border-radius: 8px; border: 1px solid rgba(59, 130, 246, 0.1);
   background: transparent; cursor: pointer; transition: all 0.15s;
 }
-.resource-detail-star:hover { border-color: rgba(145, 111, 255, 0.4); color: #fadb14; }
+.resource-detail-star:hover { border-color: rgba(59, 130, 246, 0.25); color: #fadb14; }
 
 .resource-detail-title {
-  font-size: 24px; font-weight: 800; color: #f0f2ff;
+  font-size: 24px; font-weight: 800; color: #e0e7ff;
   line-height: 1.3; margin-bottom: 14px;
 }
 .resource-detail-meta {
-  display: flex; flex-wrap: wrap; gap: 20px; font-size: 14px; color: #9aa4d9;
+  display: flex; flex-wrap: wrap; gap: 20px; font-size: 14px; color: #a5b4d8;
   padding-bottom: 16px; margin-bottom: 20px;
-  border-bottom: 1px dashed rgba(117, 98, 255, 0.14);
+  border-bottom: 1px dashed rgba(59, 130, 246, 0.1);
 }
 .resource-detail-meta span { display: flex; align-items: center; gap: 6px; }
-.resource-detail-meta strong { color: #d8def0; }
+.resource-detail-meta strong { color: #a5b4d8; }
 
 .resource-detail-body {
-  font-size: 15px; color: #b8c4dc; line-height: 1.8;
+  font-size: 15px; color: #a5b4d8; line-height: 1.8;
   margin-bottom: 20px; min-height: 80px;
 }
 .resource-detail-tags { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 24px; }
 .resource-detail-tag {
   font-size: 12px; padding: 3px 10px; border-radius: 5px;
-  background: rgba(109, 92, 255, 0.1); color: #c4b5fd;
-  border: 1px solid rgba(109, 92, 255, 0.16);
+  background: rgba(59, 130, 246, 0.08); color: #60a5fa;
+  border: 1px solid rgba(59, 130, 246, 0.15);
 }
 
 .resource-detail-bottom {
   display: flex; gap: 20px; padding-top: 20px;
-  border-top: 1px solid rgba(117, 98, 255, 0.12);
+  border-top: 1px solid rgba(59, 130, 246, 0.08);
 }
 .resource-detail-rating { flex: 1; }
-.resource-detail-rating-title { font-size: 15px; font-weight: 600; color: #f0f2ff; }
-.resource-detail-rating-sub { font-size: 13px; color: #8b9bc0; margin-top: 4px; }
+.resource-detail-rating-title { font-size: 15px; font-weight: 600; color: #e0e7ff; }
+.resource-detail-rating-sub { font-size: 13px; color: #a5b4d8; margin-top: 4px; }
 
 .resource-detail-learn { flex: 1; text-align: right; }
-.resource-detail-learn p { font-size: 13px; color: #9aa4d9; margin-bottom: 10px; }
+.resource-detail-learn p { font-size: 13px; color: #a5b4d8; margin-bottom: 10px; }
 .resource-detail-cta {
   display: inline-flex; align-items: center; gap: 6px;
   padding: 10px 24px; border-radius: 8px; border: none;
   font-size: 14px; font-weight: 700; color: #fff; cursor: pointer;
-  background: linear-gradient(135deg, #7e3cff, #4e33b6);
-  box-shadow: 0 8px 20px rgba(76, 48, 180, 0.3);
+  background: linear-gradient(135deg, #3b82f6, #2563eb);
+  box-shadow: 0 8px 20px rgba(59, 130, 246, 0.25);
   transition: all 0.15s;
 }
-.resource-detail-cta:hover { transform: translateY(-1px); box-shadow: 0 12px 28px rgba(76, 48, 180, 0.4); }
+.resource-detail-cta:hover { transform: translateY(-1px); box-shadow: 0 12px 28px rgba(59, 130, 246, 0.35); }
 </style>
 
 <style scoped>

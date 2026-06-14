@@ -23,7 +23,7 @@
         placeholder="搜索资源..."
         class="border-none bg-transparent outline-none flex-1 text-[14px] sm:text-[15px] text-[#dce3ff] placeholder-[#586096] min-w-0"
       />
-      <span class="bg-white/5 px-1.5 py-0.5 rounded text-[12px] text-[#b9c0ec] border border-white/10 font-mono select-none hidden md:inline-block" title="按下 ⌘K 或 Ctrl+K 聚焦搜索">
+        <span class="bg-white/5 px-1.5 py-0.5 rounded text-[12px] text-[#a5b4d8] border border-white/10 font-mono select-none hidden md:inline-block" title="按下 ⌘K 或 Ctrl+K 聚焦搜索">
         ⌘ K
       </span>
     </div>
@@ -41,7 +41,7 @@
       <div class="relative">
         <button
           @click="showNotifications = !showNotifications"
-          class="edu-icon-btn p-2 rounded-lg text-[#b8c1f2] hover:text-white transition-colors relative cursor-pointer"
+          class="edu-icon-btn p-2 rounded-lg text-[#a5b4d8] hover:text-white transition-colors relative cursor-pointer"
           id="notification-trigger"
         >
           <Bell class="w-5 h-5" />
@@ -89,7 +89,7 @@
                 </p>
                 <span class="text-[11px] text-slate-400 dark:text-slate-500 mt-1 block">{{ item.time }}</span>
               </div>
-              <span v-if="!item.read" class="w-1.5 h-1.5 rounded-full bg-[#3b82f6] mt-1.5"></span>
+              <span v-if="!item.read" class="w-1.5 h-1.5 rounded-full bg-[#00d4ff] mt-1.5"></span>
             </div>
           </div>
         </div>
@@ -135,7 +135,7 @@
         </div>
       </div>
 
-      <button class="edu-icon-btn hidden sm:grid place-items-center w-9 h-9 rounded-lg text-[#b8c1f2]" title="应用菜单">
+      <button class="edu-icon-btn hidden sm:grid place-items-center w-9 h-9 rounded-lg text-[#a5b4d8]" title="应用菜单">
         <LayoutGrid class="w-4 h-4" />
       </button>
     </div>
@@ -209,49 +209,49 @@ function handleLogout() {
 
 <style scoped>
 .edu-header {
-  background: rgba(7, 9, 31, 0.58);
-  border-bottom: 1px solid rgba(112, 96, 255, 0.12);
+  background: rgba(7, 6, 10, 0.85);
+  border-bottom: 1px solid rgba(59, 130, 246, 0.1);
   backdrop-filter: blur(22px);
   -webkit-backdrop-filter: blur(22px);
 }
 
 .edu-header__search {
-  background: rgba(13, 15, 50, 0.78);
-  border: 1px solid rgba(118, 103, 255, 0.16);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04), 0 0 24px rgba(80, 61, 255, 0.08);
+  background: rgba(14, 12, 21, 0.7);
+  border: 1px solid rgba(59, 130, 246, 0.12);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04), 0 0 18px rgba(59, 130, 246, 0.05);
 }
 
 .edu-header__search:focus-within {
-  border-color: rgba(150, 113, 255, 0.72);
-  box-shadow: 0 0 0 3px rgba(119, 82, 255, 0.14), 0 0 24px rgba(119, 82, 255, 0.18);
+  border-color: rgba(59, 130, 246, 0.4);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1), 0 0 18px rgba(59, 130, 246, 0.1);
 }
 
 .edu-icon-btn {
-  background: rgba(16, 18, 54, 0.72);
-  border: 1px solid rgba(122, 104, 255, 0.18);
+  background: rgba(14, 12, 21, 0.7);
+  border: 1px solid rgba(59, 130, 246, 0.12);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
 }
 
 .edu-icon-btn:hover {
-  background: rgba(88, 63, 201, 0.36);
-  border-color: rgba(159, 126, 255, 0.45);
-  box-shadow: 0 0 24px rgba(112, 84, 255, 0.24);
+  background: rgba(59, 130, 246, 0.1);
+  border-color: rgba(59, 130, 246, 0.25);
+  box-shadow: 0 0 18px rgba(59, 130, 246, 0.12);
 }
 
 .edu-icon-btn--primary {
   color: #fff;
-  background: linear-gradient(135deg, #7c3cff, #4e31be);
-  border-color: rgba(177, 139, 255, 0.5);
-  box-shadow: 0 0 22px rgba(118, 74, 255, 0.38);
+  background: linear-gradient(135deg, #3b82f6, #2563eb);
+  border-color: rgba(59, 130, 246, 0.35);
+  box-shadow: 0 0 16px rgba(59, 130, 246, 0.2);
 }
 
 .edu-profile-trigger {
-  background: rgba(15, 17, 52, 0.52);
+  background: rgba(14, 12, 21, 0.5);
   border: 1px solid transparent;
 }
 
 .edu-profile-trigger:hover {
-  border-color: rgba(128, 111, 255, 0.22);
-  background: rgba(86, 65, 190, 0.22);
+  border-color: rgba(59, 130, 246, 0.18);
+  background: rgba(59, 130, 246, 0.06);
 }
 </style>

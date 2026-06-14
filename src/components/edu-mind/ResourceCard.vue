@@ -58,7 +58,7 @@
 
         <div
           v-if="showOptions"
-          class="absolute right-0 mt-1.5 w-36 bg-[#1e1b4b] rounded-lg shadow-xl border border-[rgba(117,98,255,0.25)] py-1 z-20 animate-fade-in text-left"
+          class="absolute right-0 mt-1.5 w-36 bg-[#0a0a1e] rounded-lg shadow-xl border border-[rgba(0,212,255,0.1)] py-1 z-20 animate-fade-in text-left"
         >
           <button
             @click="handleMarkCompleted"
@@ -169,7 +169,7 @@
 
         <div
           v-if="showOptions"
-          class="absolute right-0 mt-1 w-36 bg-[#1e1b4b] rounded-lg shadow-xl border border-[rgba(117,98,255,0.25)] py-1 z-20 animate-fade-in text-left"
+          class="absolute right-0 mt-1 w-36 bg-[#0a0a1e] rounded-lg shadow-xl border border-[rgba(0,212,255,0.1)] py-1 z-20 animate-fade-in text-left"
         >
           <button
             @click="handleMarkCompleted"
@@ -281,10 +281,10 @@ function handleCardClickFromMenu() {
 
 <style scoped>
 .edu-resource-card {
-  border: none;
+  border: 1px solid rgba(59, 130, 246, 0.1);
   background:
-    linear-gradient(180deg, rgba(29, 27, 83, 0.82), rgba(11, 13, 46, 0.96)),
-    radial-gradient(circle at 26% 0%, rgba(117, 71, 255, 0.22), transparent 36%);
+    linear-gradient(135deg, rgba(22, 18, 32, 0.7), rgba(17, 14, 26, 0.5));
+  backdrop-filter: blur(16px);
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.05),
     0 14px 42px rgba(3, 5, 22, 0.28);
@@ -296,8 +296,8 @@ function handleCardClickFromMenu() {
   position: absolute;
   inset: 0;
   background:
-    linear-gradient(90deg, transparent, rgba(149, 118, 255, 0.08), transparent),
-    radial-gradient(circle at 100% 100%, rgba(79, 56, 214, 0.2), transparent 34%);
+    linear-gradient(90deg, transparent, rgba(59, 130, 246, 0.05), transparent),
+    radial-gradient(circle at 100% 100%, rgba(59, 130, 246, 0.06), transparent 34%);
   opacity: 0;
   transition: opacity 0.25s ease;
   pointer-events: none;
@@ -306,10 +306,11 @@ function handleCardClickFromMenu() {
 
 .edu-resource-card:hover {
   transform: translateY(-4px);
+  border-color: rgba(59, 130, 246, 0.2);
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.08),
-    0 18px 52px rgba(17, 10, 64, 0.5),
-    0 0 28px rgba(116, 79, 255, 0.22);
+    0 18px 52px rgba(3, 5, 22, 0.4),
+    0 0 20px rgba(59, 130, 246, 0.1);
 }
 
 .edu-resource-card:hover::before {
@@ -321,10 +322,10 @@ function handleCardClickFromMenu() {
 }
 
 .edu-resource-card__category {
-  background: rgba(92, 75, 226, 0.26);
-  color: #c7d7ff;
-  border: 1px solid rgba(134, 116, 255, 0.3);
-  box-shadow: inset 0 0 16px rgba(118, 88, 255, 0.12);
+  background: rgba(59, 130, 246, 0.1);
+  color: #60a5fa;
+  border: 1px solid rgba(59, 130, 246, 0.2);
+  box-shadow: inset 0 0 10px rgba(59, 130, 246, 0.06);
 }
 
 .edu-resource-card__level {
@@ -340,12 +341,12 @@ function handleCardClickFromMenu() {
   padding: 0 14px;
   color: #fff;
   border-radius: 7px;
-  background: linear-gradient(135deg, #7e3cff, #4e33b6);
-  box-shadow: 0 10px 24px rgba(76, 48, 180, 0.3);
+  background: linear-gradient(135deg, #3b82f6, #2563eb);
+  box-shadow: 0 10px 24px rgba(59, 130, 246, 0.25);
 }
 
 .edu-resource-card:hover .edu-resource-card__cta {
   transform: translateY(-1px);
-  box-shadow: 0 12px 30px rgba(126, 78, 255, 0.44);
+  box-shadow: 0 12px 30px rgba(59, 130, 246, 0.3);
 }
 </style>

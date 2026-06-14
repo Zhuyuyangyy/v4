@@ -1616,7 +1616,7 @@ const directions = ['全部', '编程与算法基础', '计算机系统', '软�
                   class="h-full rounded-full transition-all duration-300"
                   :style="{
                     width: `${course.progress}%`,
-                    background: `linear-gradient(90deg, #8d4dff, ${course.themeColor || '#5aa7ff'})`
+                    background: `linear-gradient(90deg, #0097a7, ${course.themeColor || '#00d4ff'})`
                   }"
                 />
               </div>
@@ -1655,12 +1655,12 @@ const directions = ['全部', '编程与算法基础', '计算机系统', '软�
 
 <style scoped>
 .edu-courses {
-  color: #f4f2ff;
+  color: #e0e7ff;
 }
 
 .edu-course-tabs {
-  background: rgba(16, 18, 56, 0.74);
-  border: 1px solid rgba(115, 96, 255, 0.14);
+  background: rgba(14, 12, 21, 0.7);
+  border: 1px solid rgba(59, 130, 246, 0.1);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04), 0 12px 34px rgba(5, 7, 28, 0.18);
 }
 
@@ -1669,16 +1669,16 @@ const directions = ['全部', '编程与算法基础', '计算机系统', '软�
 }
 
 .edu-course-tabs__button.is-active {
-  background: linear-gradient(135deg, rgba(117, 61, 255, 0.9), rgba(77, 48, 179, 0.72));
-  border: 1px solid rgba(185, 146, 255, 0.38);
-  box-shadow: 0 0 18px rgba(132, 84, 255, 0.38), inset 0 1px 0 rgba(255, 255, 255, 0.12);
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.18), rgba(37, 99, 235, 0.1));
+  border: 1px solid rgba(59, 130, 246, 0.25);
+  box-shadow: 0 0 12px rgba(59, 130, 246, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.08);
 }
 
 .edu-course-card {
-  border-color: rgba(117, 98, 255, 0.2);
+  border: 1px solid rgba(59, 130, 246, 0.1);
   background:
-    linear-gradient(180deg, rgba(29, 27, 83, 0.82), rgba(11, 13, 46, 0.96)),
-    radial-gradient(circle at 26% 0%, rgba(117, 71, 255, 0.22), transparent 36%);
+    linear-gradient(135deg, rgba(22, 18, 32, 0.7), rgba(17, 14, 26, 0.5));
+  backdrop-filter: blur(16px);
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.05),
     0 14px 42px rgba(3, 5, 22, 0.28);
@@ -1690,8 +1690,8 @@ const directions = ['全部', '编程与算法基础', '计算机系统', '软�
   position: absolute;
   inset: 0;
   background:
-    linear-gradient(90deg, transparent, rgba(149, 118, 255, 0.08), transparent),
-    radial-gradient(circle at 100% 100%, rgba(79, 56, 214, 0.2), transparent 34%);
+    linear-gradient(90deg, transparent, rgba(59, 130, 246, 0.05), transparent),
+    radial-gradient(circle at 100% 100%, rgba(59, 130, 246, 0.06), transparent 34%);
   opacity: 0;
   transition: opacity 0.25s ease;
   pointer-events: none;
@@ -1699,11 +1699,11 @@ const directions = ['全部', '编程与算法基础', '计算机系统', '软�
 
 .edu-course-card:hover {
   transform: translateY(-4px);
-  border-color: rgba(145, 111, 255, 0.56);
+  border-color: rgba(59, 130, 246, 0.2);
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.08),
-    0 18px 52px rgba(17, 10, 64, 0.5),
-    0 0 28px rgba(116, 79, 255, 0.22);
+    0 18px 52px rgba(3, 5, 22, 0.4),
+    0 0 20px rgba(59, 130, 246, 0.1);
 }
 
 .edu-course-card:hover::before {
@@ -1711,14 +1711,14 @@ const directions = ['全部', '编程与算法基础', '计算机系统', '软�
 }
 
 .edu-course-card.is-started {
-  border-color: rgba(126, 90, 255, 0.38);
+  border-color: rgba(59, 130, 246, 0.2);
 }
 
 .edu-course-card__category {
-  background: rgba(92, 75, 226, 0.26) !important;
-  color: #c7d7ff !important;
-  border: 1px solid rgba(134, 116, 255, 0.3) !important;
-  box-shadow: inset 0 0 16px rgba(118, 88, 255, 0.12);
+  background: rgba(59, 130, 246, 0.1) !important;
+  color: #60a5fa !important;
+  border: 1px solid rgba(59, 130, 246, 0.2) !important;
+  box-shadow: inset 0 0 10px rgba(59, 130, 246, 0.06);
 }
 
 .edu-course-card__level {
@@ -1728,13 +1728,13 @@ const directions = ['全部', '编程与算法基础', '计算机系统', '软�
 }
 
 .edu-course-card__hours {
-  color: #82d0ff;
-  background: rgba(37, 211, 255, 0.1);
-  border: 1px solid rgba(76, 199, 255, 0.16);
+  color: #60a5fa;
+  background: rgba(59, 130, 246, 0.08);
+  border: 1px solid rgba(59, 130, 246, 0.12);
 }
 
 .edu-course-card__progress {
-  background: rgba(58, 48, 122, 0.72);
+  background: rgba(59, 130, 246, 0.08);
   box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.025);
 }
 
@@ -1745,12 +1745,12 @@ const directions = ['全部', '编程与算法基础', '计算机系统', '软�
   height: 38px;
   color: #fff;
   border-radius: 7px;
-  background: linear-gradient(135deg, #7e3cff, #4e33b6);
-  box-shadow: 0 10px 24px rgba(76, 48, 180, 0.3);
+  background: linear-gradient(135deg, #3b82f6, #2563eb);
+  box-shadow: 0 10px 24px rgba(59, 130, 246, 0.25);
 }
 
 .edu-course-card:hover .edu-course-card__cta {
   transform: translateY(-1px);
-  box-shadow: 0 12px 30px rgba(126, 78, 255, 0.44);
+  box-shadow: 0 12px 30px rgba(59, 130, 246, 0.3);
 }
 </style>

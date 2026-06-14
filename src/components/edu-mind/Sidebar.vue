@@ -96,7 +96,7 @@ function handleNavClick(itemName: string) {
           'edu-sidebar__item flex items-center gap-3 px-4 py-3 rounded-lg cursor-pointer transition-all duration-200 text-[15px]',
           item.name === currentTab
             ? 'is-active text-white font-bold'
-            : 'text-[#9ba4d8] hover:text-white'
+            : 'text-[#a5b4d8] hover:text-white'
         ]"
       >
         <component
@@ -104,13 +104,13 @@ function handleNavClick(itemName: string) {
           :size="16"
           :class="[
             'shrink-0',
-            item.name === currentTab ? 'text-[#d9cdff]' : 'text-[#818ac4]'
+            item.name === currentTab ? 'text-blue-400' : 'text-[#6b7fa8]'
           ]"
         />
         <span>{{ item.name }}</span>
         <span
           v-if="item.name === currentTab"
-          class="ml-auto w-1.5 h-1.5 bg-[#b48cff] rounded-full shadow-[0_0_14px_rgba(180,140,255,0.95)]"
+          class="ml-auto w-1.5 h-1.5 bg-blue-400 rounded-full shadow-[0_0_12px_rgba(96,165,250,0.8)]"
         />
       </div>
     </nav>
@@ -128,7 +128,7 @@ function handleNavClick(itemName: string) {
         </div>
         <div class="leading-tight">
           <h4 class="text-[15px] font-medium text-slate-800 dark:text-[#e0e7ff]">小明同学</h4>
-          <div class="flex items-center gap-1 text-[13px] text-slate-400 dark:text-[#6880a8] mt-0.5">
+          <div class="flex items-center gap-1 text-[13px] text-slate-400 dark:text-[#a5b4d8] mt-0.5">
             <span>Lv.12</span>
             <span class="bg-[#fff2e8] text-[#fa8c16] px-1 rounded-sm text-[12px] font-semibold">V</span>
           </div>
@@ -140,17 +140,17 @@ function handleNavClick(itemName: string) {
         <h5 class="text-[13px] text-slate-400 font-medium mb-1.5">学习进度</h5>
         <div class="flex justify-between text-[14px] mb-1.5">
           <span class="text-slate-500 dark:text-slate-400">本周学习</span>
-          <span class="text-accent dark:text-[#93c5fd] font-semibold">{{ weeklyHours }} 小时</span>
+          <span class="text-accent dark:text-[#00d4ff] font-semibold">{{ weeklyHours }} 小时</span>
         </div>
 
-        <div class="h-1.5 bg-[#e8e8e8] dark:bg-[rgba(59,130,246,0.08)] rounded-full overflow-hidden mb-1.5">
+        <div class="h-1.5 bg-[#e8e8e8] dark:bg-[rgba(0,212,255,0.08)] rounded-full overflow-hidden mb-1.5">
           <div
-            class="h-full bg-gradient-to-r from-[#3b82f6] to-[#60a5fa] rounded-full transition-[width] duration-500 ease-out"
+            class="h-full bg-gradient-to-r from-[#00d4ff] to-[#00d4ff] rounded-full transition-[width] duration-500 ease-out"
             :style="{ width: `${progressWidth}%` }"
           />
         </div>
 
-        <div class="text-[12px] text-slate-400 dark:text-[#4d6590] flex justify-between">
+        <div class="text-[12px] text-slate-400 dark:text-[#6b7fa8] flex justify-between">
           <span>目标 {{ goalHours }} 小时</span>
           <span>{{ percentage }}%</span>
         </div>
@@ -162,9 +162,9 @@ function handleNavClick(itemName: string) {
 <style scoped>
 .edu-sidebar {
   background:
-    radial-gradient(circle at 42% 24%, rgba(122, 79, 255, 0.18), transparent 32%),
-    linear-gradient(180deg, rgba(14, 16, 48, 0.96), rgba(7, 9, 29, 0.98));
-  border-right: 1px solid rgba(104, 91, 234, 0.26);
+    radial-gradient(circle at 42% 24%, rgba(59, 130, 246, 0.12), transparent 32%),
+    linear-gradient(180deg, #07060a 0%, #0e0c15 52%, #161220 100%);
+  border-right: 1px solid rgba(59, 130, 246, 0.15);
   box-shadow: inset -1px 0 0 rgba(255, 255, 255, 0.03), 18px 0 54px rgba(4, 5, 22, 0.34);
 }
 
@@ -174,15 +174,15 @@ function handleNavClick(itemName: string) {
 }
 
 .edu-sidebar__item:hover {
-  background: rgba(104, 88, 255, 0.12);
-  box-shadow: inset 0 0 0 1px rgba(142, 116, 255, 0.16);
+  background: rgba(59, 130, 246, 0.08);
+  box-shadow: inset 0 0 0 1px rgba(59, 130, 246, 0.12);
 }
 
 .edu-sidebar__item.is-active {
-  background: linear-gradient(90deg, rgba(111, 68, 255, 0.78), rgba(72, 47, 173, 0.42));
+  background: linear-gradient(90deg, rgba(59, 130, 246, 0.18), rgba(37, 99, 235, 0.1));
   box-shadow:
-    inset 0 0 0 1px rgba(176, 143, 255, 0.32),
-    0 0 28px rgba(104, 74, 255, 0.42);
+    inset 0 0 0 1px rgba(59, 130, 246, 0.25),
+    0 0 18px rgba(59, 130, 246, 0.12);
 }
 
 .edu-sidebar__mascot {
@@ -201,7 +201,7 @@ function handleNavClick(itemName: string) {
   background-repeat: no-repeat;
   background-size: 980px auto;
   background-position: -48px -14px;
-  filter: drop-shadow(0 18px 28px rgba(91, 72, 255, 0.42));
+  filter: drop-shadow(0 18px 28px rgba(59, 130, 246, 0.25));
   z-index: 2;
 }
 
@@ -211,14 +211,14 @@ function handleNavClick(itemName: string) {
   width: 138px;
   height: 22px;
   border-radius: 50%;
-  border: 1px solid rgba(123, 92, 255, 0.8);
-  background: radial-gradient(ellipse, rgba(91, 70, 255, 0.44), transparent 68%);
-  box-shadow: 0 0 26px rgba(111, 92, 255, 0.72);
+  border: 1px solid rgba(59, 130, 246, 0.4);
+  background: radial-gradient(ellipse, rgba(59, 130, 246, 0.15), transparent 68%);
+  box-shadow: 0 0 18px rgba(59, 130, 246, 0.35);
 }
 
 .edu-sidebar__profile {
-  background: rgba(11, 13, 42, 0.78);
-  border: 1px solid rgba(109, 91, 238, 0.16);
+  background: rgba(14, 12, 21, 0.7);
+  border: 1px solid rgba(59, 130, 246, 0.12);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
 }
 </style>

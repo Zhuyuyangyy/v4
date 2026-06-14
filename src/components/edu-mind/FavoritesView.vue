@@ -43,7 +43,7 @@ const collectionFolders = reactive<CollectionFolder[]>([
   { id: 'f1', name: '前端开发', count: 8, color: '#4a6cf7', updatedAt: '2小时前' },
   { id: 'f2', name: '算法与数据结构', count: 5, color: '#f59e0b', updatedAt: '1天前' },
   { id: 'f3', name: '人工智能', count: 6, color: '#10b981', updatedAt: '3天前' },
-  { id: 'f4', name: '数据库', count: 3, color: '#8b5cf6', updatedAt: '1周前' }
+  { id: 'f4', name: '数据库', count: 3, color: '#00d4ff', updatedAt: '1周前' }
 ])
 
 const favoriteItems = reactive<FavoriteItem[]>([
