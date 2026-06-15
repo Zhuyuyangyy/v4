@@ -48,6 +48,7 @@ import FavoritesView from '../components/edu-mind/FavoritesView.vue'
 import NotesView from '../components/edu-mind/NotesView.vue'
 import ResourceGeneratePanel from '../components/resource/ResourceGeneratePanel.vue'
 import CosmicParticles from '../components/edu-mind/CosmicParticles.vue'
+import PPTViewer from '../components/edu-mind/PPTViewer.vue'
 
 const { isDark } = useTheme()
 const route = useRoute()
@@ -317,7 +318,9 @@ const categoriesList: { name: ResourceCategory; icon: any }[] = [
 
 const handleCardClick = (id: string) => {
   const resObj = resources.value.find(r => r.id === id)
-  if (resObj) selectedResourceDetail.value = resObj
+  if (resObj) {
+    selectedResourceDetail.value = resObj
+  }
 }
 
 const isUnimplementedTab = computed(() => {
@@ -345,6 +348,8 @@ onMounted(async () => {
         author: item.author || '系统推荐',
         estimatedTime: item.estTime || '30分钟',
         contentMarkdown: item.reason || item.desc,
+        slides: item.slides,
+        color: item.color,
       }))
     }
   } catch { /* keep local data */ }
@@ -614,7 +619,16 @@ onBeforeUnmount(() => {
                   <span><Eye :size="14" /> 阅读次数: {{ selectedResourceDetail.views }}</span>
                 </div>
 
-                <div class="resource-detail-body">
+                <!-- PPT展示（有slides数据的资源） -->
+                <div v-if="selectedResourceDetail.slides && selectedResourceDetail.slides.length > 0" class="resource-detail-ppt">
+                  <PPTViewer 
+                    :slides="selectedResourceDetail.slides" 
+                    :color="selectedResourceDetail.color"
+                  />
+                </div>
+
+                <!-- 普通文本内容 -->
+                <div v-else class="resource-detail-body">
                   <div v-if="selectedResourceDetail.contentMarkdown" class="whitespace-pre-line leading-relaxed">
                     {{ selectedResourceDetail.contentMarkdown }}
                   </div>
@@ -1269,6 +1283,11 @@ html.dark #edu-mind-app .bg-slate-900\/60 { background-color: rgba(0, 0, 0, 0.35
   font-size: 12px; padding: 3px 10px; border-radius: 5px;
   background: rgba(59, 130, 246, 0.08); color: #60a5fa;
   border: 1px solid rgba(59, 130, 246, 0.15);
+}
+
+.resource-detail-ppt {
+  margin: 20px 0;
+  height: 800px;
 }
 
 .resource-detail-bottom {

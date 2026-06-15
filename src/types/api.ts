@@ -14,6 +14,15 @@ export interface ApiResource {
   pathStage?: string
   format?: string
   estTime?: string
+  author?: string
+  difficulty?: string
+  slides?: Array<{
+    title: string
+    subtitle?: string
+    content: string
+    icon?: string
+    image?: string
+  }>
   recommendEvidence?: {
     profileSource: string
     evaluationReason: string

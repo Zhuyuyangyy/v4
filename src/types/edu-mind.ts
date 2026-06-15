@@ -2,6 +2,14 @@ export type ResourceCategory = '全部' | '文档' | '思维导图' | '流程图
 
 export type Difficulty = '全部难度' | '初级' | '中级' | '高级'
 
+export interface Slide {
+  title: string
+  subtitle?: string
+  content: string
+  icon?: string
+  image?: string
+}
+
 export interface Resource {
   id: string
   title: string
@@ -17,6 +25,8 @@ export interface Resource {
   rating?: number
   estimatedTime?: string
   contentMarkdown?: string
+  slides?: Slide[]
+  color?: string
 }
 
 export interface Recommendation {
