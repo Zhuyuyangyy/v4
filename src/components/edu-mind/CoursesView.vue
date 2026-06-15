@@ -510,11 +510,6 @@ const getCategoryBadgeClass = (category: string) => {
 
 const workspaceTabs = computed(() => [
   { id: '课程内容', label: '课程内容', badge: null as string | null },
-  { id: '课程介绍', label: '课程介绍', badge: null as string | null },
-  { id: '学习资源', label: '学习资源', badge: '精选' as string | null },
-  { id: '笔记', label: `笔记 (${Object.keys(lectureNotes).reduce((acc, k) => acc + (lectureNotes[k]?.length || 0), 0)})`, badge: null as string | null },
-  { id: '讨论区', label: '讨论区 (36)', badge: null as string | null },
-  { id: '学习记录', label: '学习记录', badge: null as string | null },
 ])
 
 const currentLectureDetail = computed(() => {
@@ -923,7 +918,7 @@ const directions = ['全部', '编程与算法基础', '计算机系统', '软�
       </div>
 
       <div v-if="courseWorkspaceTab === '课程内容'" class="grid grid-cols-1 lg:grid-cols-12 gap-5" id="syllabus-learning-terminal">
-        <div class="lg:col-span-5 flex flex-col gap-3.5 bg-white dark:bg-[#1e293b] rounded-2xl border border-slate-200 dark:border-slate-700 p-4 shadow-2xs h-full max-h-[750px] overflow-y-auto">
+        <div class="lg:col-span-3 flex flex-col gap-3.5 bg-white dark:bg-[#1e293b] rounded-2xl border border-slate-200 dark:border-slate-700 p-4 shadow-2xs h-full max-h-[750px] overflow-y-auto">
           <div class="flex justify-between items-center border-b border-slate-100 dark:border-slate-700 pb-2">
             <h3 class="text-[15.5px] font-bold text-slate-800 dark:text-white flex items-center gap-1.5 select-none">
               <Layers class="w-4 h-4 text-indigo-500" />
@@ -1015,7 +1010,7 @@ const directions = ['全部', '编程与算法基础', '计算机系统', '软�
           </div>
         </div>
 
-        <div class="lg:col-span-4 flex flex-col gap-4">
+        <div class="lg:col-span-6 flex flex-col gap-4">
           <template v-if="activeLectureId && currentLectureDetail">
             <div class="bg-white dark:bg-[#1e293b] rounded-2xl border border-slate-200 dark:border-slate-700 p-4 shadow-2xs h-full flex flex-col justify-between">
               <div>
