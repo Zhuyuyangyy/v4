@@ -33,7 +33,13 @@ function nodeRadius(m: number) { return 4 + m * 7 }
 function nodeOpacity(m: number) { return 0.35 + m * 0.65 }
 
 const byId = computed(() => Object.fromEntries(nodes.value.map(n => [n.id, n])))
-const focused = computed(() => nodes.value.find(n => n.mastery < 0.2 && n.importance > 0.8))
+const selectedNode = ref<ConstellationNode | null>(null)
+const focused = computed(() => selectedNode.value || nodes.value.find(n => n.mastery < 0.2 && n.importance > 0.8))
+
+function handleNodeClick(node: ConstellationNode) {
+  selectedNode.value = selectedNode.value?.id === node.id ? null : node
+  emit('select-node', node.id)
+}
 
 // Cluster halos
 const clusterHalos = computed(() => {
@@ -106,7 +112,11 @@ onUnmounted(() => { styleEl?.remove() })
           :stroke-dasharray="byId[e.from]?.domain !== byId[e.to]?.domain ? '3 4' : 'none'" />
 
         <!-- Nodes -->
-        <g v-for="n in nodes" :key="n.id" class="graph-node" @click="emit('select-node', n.id)">
+        <g v-for="n in nodes" :key="n.id" class="graph-node" :class="{ selected: selectedNode?.id === n.id }" @click="handleNodeClick(n)">
+          <!-- Selected ring -->
+          <circle v-if="selectedNode?.id === n.id" :cx="n.x" :cy="n.y" :r="nodeRadius(n.mastery) + 10"
+            fill="none" :stroke="getDomainMeta(n.domain).color" stroke-width="2" stroke-dasharray="4 3" opacity="0.6"
+            :style="{ transformOrigin: `${n.x}px ${n.y}px`, animation: 'constellation-pulse 3s ease-out infinite' }" />
           <circle :cx="n.x" :cy="n.y" :r="nodeRadius(n.mastery) * 3.2"
             fill="url(#c-star-bright)" :opacity="n.mastery * 0.4" />
           <circle :cx="n.x" :cy="n.y" :r="nodeRadius(n.mastery) * 1.9"
@@ -148,22 +158,22 @@ onUnmounted(() => { styleEl?.remove() })
       <!-- Detail card -->
       <div class="detail-card" v-if="focused">
         <div class="detail-header">
-          <span class="detail-chip" style="background:rgba(124,58,237,0.18);border-color:#7c3aed66;color:#7c3aed">当前聚焦</span>
-          <span class="detail-domain">DL · TRANSFORMER</span>
+          <span class="detail-chip" :style="{ background: getDomainMeta(focused.domain).color + '28', borderColor: getDomainMeta(focused.domain).color + '66', color: getDomainMeta(focused.domain).color }">当前聚焦</span>
+          <span class="detail-domain">{{ getDomainMeta(focused.domain).short }} · {{ focused.label.toUpperCase() }}</span>
         </div>
-        <div class="detail-title">Transformer</div>
-        <div class="detail-sub">这颗星几乎还没亮起来 — 你只接触了 10%</div>
+        <div class="detail-title">{{ focused.label }}</div>
+        <div class="detail-sub">{{ focused.mastery < 0.3 ? '这颗星几乎还没亮起来' : focused.mastery < 0.7 ? '正在逐渐点亮中' : '这颗星已经很亮了' }} — 你掌握了 {{ Math.round(focused.mastery * 100) }}%</div>
         <div class="mastery-bar-header">
           <span>掌握度</span>
-          <span class="mastery-pct" style="color:#7c3aed">10%</span>
+          <span class="mastery-pct" :style="{ color: getDomainMeta(focused.domain).color }">{{ Math.round(focused.mastery * 100) }}%</span>
         </div>
-        <div class="mastery-track"><div class="mastery-fill" style="width:10%"></div></div>
+        <div class="mastery-track"><div class="mastery-fill" :style="{ width: (focused.mastery * 100) + '%', background: `linear-gradient(90deg, ${getDomainMeta(focused.domain).color}, #00d4ff)` }"></div></div>
         <div class="detail-stats">
-          <div class="stat-row"><span>前置知识</span><span class="stat-val">3 颗 · 已掌握 2</span></div>
-          <div class="stat-row"><span>推荐资源</span><span class="stat-val">4 个 · 含视频 1</span></div>
-          <div class="stat-row"><span>预计学习时长</span><span class="stat-val mono">~ 45 min</span></div>
+          <div class="stat-row"><span>关联知识点</span><span class="stat-val">{{ focused.relations.length }} 个</span></div>
+          <div class="stat-row"><span>所属领域</span><span class="stat-val">{{ getDomainMeta(focused.domain).name }}</span></div>
+          <div class="stat-row"><span>重要程度</span><span class="stat-val">{{ focused.importance > 0.8 ? '⭐ 核心' : '普通' }}</span></div>
         </div>
-        <button class="detail-btn">点亮这颗星 →</button>
+        <button class="detail-btn" @click="emit('select-node', focused.id)">点亮这颗星 →</button>
       </div>
 
       <!-- Legend -->
@@ -226,7 +236,8 @@ onUnmounted(() => { styleEl?.remove() })
   border: 1px solid rgba(255, 255, 255, 0.06); overflow: hidden;
 }
 .constellation-svg { position: absolute; inset: 0; width: 100%; height: 100%; }
-.graph-node { cursor: pointer; }
+.graph-node { cursor: pointer; transition: transform 0.2s ease, filter 0.2s ease; }
+.graph-node:hover { filter: brightness(1.4) drop-shadow(0 0 12px currentColor); transform-origin: center; }
 
 .domain-label {
   position: absolute; pointer-events: none;

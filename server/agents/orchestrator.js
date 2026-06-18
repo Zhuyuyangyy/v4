@@ -4,6 +4,7 @@ import { runPathAgent } from './path-agent.js'
 import { runTutorAgent } from './tutor-agent.js'
 import { runEvaluationAgent } from './evaluation-agent.js'
 import { runReflectionAgent } from './reflection-agent.js'
+import { runKnowledgePathAgent } from './knowledge-path-agent.js'
 import { buildTrace, recordTrace } from '../evidence/recorder.js'
 import { AGENT_NAMES } from '../schemas.js'
 
@@ -185,6 +186,31 @@ export async function orchestrateFullRun({ answers, topic, resourceType, questio
     path: pathResult.output,
     reflection: reflectResult.output,
     profile,
+    trace,
+  }
+}
+
+export async function orchestrateKnowledgePath({ profile }) {
+  const start = Date.now()
+  const knowledgePathResult = await runKnowledgePathAgent(profile)
+  const durationMs = Date.now() - start
+
+  const trace = buildTrace({
+    requestId: `knowledge-path-${Date.now()}`,
+    agents: [AGENT_NAMES.KNOWLEDGE_PATH],
+    inputsSummary: `画像维度: ${Object.keys(profile?.dimensions || {}).length} 个`,
+    outputsSummary: `生成领域: ${knowledgePathResult.output?.phases?.length || 0} 个`,
+    evidence: knowledgePathResult.evidence,
+    riskFlags: knowledgePathResult.confidence < 0.7 ? ['低置信度'] : [],
+    fallbackUsed: knowledgePathResult.fallbackUsed,
+    durationMs,
+    agentResults: [knowledgePathResult],
+  })
+  recordTrace(trace)
+
+  return {
+    knowledgePath: knowledgePathResult.output,
+    agentResults: [knowledgePathResult],
     trace,
   }
 }

@@ -9,7 +9,7 @@ import type { ChatMessage, StudyReport, DimensionMap } from '@/types/dialogue'
 
 /* ───────── DeepSeek API 配置 ───────── */
 const DEEPSEEK_API_URL = '/deepseek-api/chat/completions'
-const DEEPSEEK_API_KEY = 'sk-489c36c2fe7e4873a53d2e0a174f872c'
+const DEEPSEEK_API_KEY = import.meta.env.VITE_DEEPSEEK_API_KEY || ''
 const DEEPSEEK_MODEL = 'deepseek-chat'
 
 const SYSTEM_PROMPT = `你是 EduMind 智能学习助手，专注于帮助学生进行学习规划和课程咨询。你必须通过对话主动收集以下 9 个画像维度。
@@ -27,19 +27,19 @@ const SYSTEM_PROMPT = `你是 EduMind 智能学习助手，专注于帮助学生
 
 ## 关键规则
 1. 用中文回复，语气亲切专业
-2. **每次回复必须从用户消息中提取能识别的维度，即使只有一个也要提取**
-3. 用户说的每句话都可能包含维度信息，请仔细分析：例如"我是大三学生"= identity:大学生 + level:有一定基础；"想学AI"= domain:人工智能；"每天学2小时"= weeklyHours:2小时
-4. 在回复末尾必须用标签标注所有能识别到的维度，格式：[维度:key=值]
-5. 如果本轮没有识别到任何新维度，也要主动追问来收集缺失的维度
-6. 每次回复末尾给出 2-3 个建议追问短句（每条 10 字以内）
+2. **每次回复末尾必须输出维度标签，格式严格为 [维度:xxx=值]**
+   - 例如：[维度:identity=大学生] [维度:domain=人工智能]
+3. 用户说的每句话都可能包含维度信息，仔细分析
+4. 如果本轮没有新维度，也要追问缺失的维度
+5. 每次回复末尾给出 2-3 个建议追问短句（每条 10 字以内）
 
 ## 你当前已知的画像信息
 {currentDimensions}
 
-## 注意
-- 你必须分析用户的每一句话，提取其中的维度信息
-- 多个维度可以同时提取，用多个标签分别标注
-- 不确定的维度值可以合理推断，但不要凭空编造`
+## 维度标签输出要求（非常重要！）
+**必须在回复的最后一行输出所有识别到的维度标签**，格式：
+[维度:identity=值] [维度:domain=值] [维度:level=值] ...
+即使只有一个新维度也要输出标签！这是系统自动采集数据的关键！`
 
 interface DeepSeekChoice {
   message: { content: string; role: string }
@@ -83,7 +83,8 @@ async function callDeepSeek(messages: { role: string; content: string }[]): Prom
 /** 从 AI 回复中解析维度标签 [维度:xxx=值] */
 function parseDimensions(text: string): Partial<DimensionMap> {
   const extracted: Partial<DimensionMap> = {}
-  const regex = /\[维度:(\w+)=(.+?)\]/g
+  // 支持多种格式: [维度:key=value], [维度: key=value], 【维度:key=值】
+  const regex = /[【\[]维度[：:]\s*(\w+)\s*[=＝]\s*(.+?)[】\]]/g
   let match
   while ((match = regex.exec(text)) !== null) {
     const key = match[1] as keyof DimensionMap
@@ -91,6 +92,87 @@ function parseDimensions(text: string): Partial<DimensionMap> {
       extracted[key] = match[2].trim()
     }
   }
+  return extracted
+}
+
+/** 关键词自动提取：从文本中识别维度信息（作为标签提取的补充） */
+function extractByKeywords(text: string): Partial<DimensionMap> {
+  const extracted: Partial<DimensionMap> = {}
+  const t = text.toLowerCase()
+
+  // identity
+  if (!dimensions.value.identity) {
+    if (t.includes('学生') || t.includes('在校') || t.includes('大学')) extracted.identity = '在校学生'
+    else if (t.includes('程序员') || t.includes('开发') || t.includes('工程师') || t.includes('工作')) extracted.identity = '职场人'
+    else if (t.includes('研究生') || t.includes('硕士') || t.includes('博士')) extracted.identity = '研究生'
+    else if (t.includes('自学者') || t.includes('自学')) extracted.identity = '自学者'
+    else if (t.includes('老师') || t.includes('教师') || t.includes('教授')) extracted.identity = '教育工作者'
+  }
+
+  // domain
+  if (!dimensions.value.domain) {
+    if (t.includes('人工智能') || t.includes(' ai ') || t.includes('ai')) extracted.domain = '人工智能'
+    else if (t.includes('计算机') || t.includes('cs') || t.includes('编程')) extracted.domain = '计算机科学'
+    else if (t.includes('软件') || t.includes('开发') || t.includes('前端') || t.includes('后端')) extracted.domain = '软件工程'
+    else if (t.includes('数据') || t.includes('分析') || t.includes('统计')) extracted.domain = '数据科学'
+    else if (t.includes('数学')) extracted.domain = '数学'
+  }
+
+  // level
+  if (!dimensions.value.level) {
+    if (t.includes('零基础') || t.includes('初学') || t.includes('刚开始') || t.includes('不会')) extracted.level = '零基础'
+    else if (t.includes('初级') || t.includes('入门')) extracted.level = '初级'
+    else if (t.includes('中级') || t.includes('有一些') || t.includes('了解')) extracted.level = '中级'
+    else if (t.includes('高级') || t.includes('精通') || t.includes('深入')) extracted.level = '高级'
+  }
+
+  // experience
+  if (!dimensions.value.experience) {
+    if (t.includes('没经验') || t.includes('无经验') || t.includes('没做过')) extracted.experience = '无经验'
+    else if (t.includes('小项目') || t.includes('练手') || t.includes('课程项目')) extracted.experience = '有小项目'
+    else if (t.includes('工作经验') || t.includes('工作了') || t.includes('年经验')) extracted.experience = '有工作经验'
+  }
+
+  // goal
+  if (!dimensions.value.goal) {
+    if (t.includes('就业') || t.includes('找工作') || t.includes('求职')) extracted.goal = '就业'
+    else if (t.includes('考研') || t.includes('考博') || t.includes('升学')) extracted.goal = '考研'
+    else if (t.includes('做项目') || t.includes('项目') || t.includes('作品')) extracted.goal = '做项目'
+    else if (t.includes('转行') || t.includes('转型')) extracted.goal = '转行'
+    else if (t.includes('兴趣') || t.includes('爱好')) extracted.goal = '兴趣学习'
+  }
+
+  // motivation
+  if (!dimensions.value.motivation) {
+    if (t.includes('兴趣') || t.includes('好奇') || t.includes('喜欢')) extracted.motivation = '兴趣驱动'
+    else if (t.includes('学业') || t.includes('课程') || t.includes('考试')) extracted.motivation = '学业要求'
+    else if (t.includes('职业') || t.includes('工作需要') || t.includes('升职')) extracted.motivation = '职业需要'
+  }
+
+  // period
+  if (!dimensions.value.period) {
+    if (t.includes('1个月') || t.includes('一个月') || t.includes('很快')) extracted.period = '1个月'
+    else if (t.includes('3个月') || t.includes('三个月') || t.includes('一个季度')) extracted.period = '3个月'
+    else if (t.includes('半年') || t.includes('6个月')) extracted.period = '半年'
+    else if (t.includes('1年') || t.includes('一年') || t.includes('长期')) extracted.period = '1年'
+  }
+
+  // weeklyHours
+  if (!dimensions.value.weeklyHours) {
+    if (t.includes('5小时以下') || t.includes('很少') || t.includes('每天半小时')) extracted.weeklyHours = '5小时以下'
+    else if (t.includes('5-10') || t.includes('每天1小时') || t.includes('一小时')) extracted.weeklyHours = '5-10小时'
+    else if (t.includes('10-20') || t.includes('每天2小时') || t.includes('两小时')) extracted.weeklyHours = '10-20小时'
+    else if (t.includes('20小时') || t.includes('很多时间') || t.includes('全职')) extracted.weeklyHours = '20小时以上'
+  }
+
+  // method
+  if (!dimensions.value.method) {
+    if (t.includes('看视频') || t.includes('视频课') || t.includes('网课')) extracted.method = '看视频'
+    else if (t.includes('读文档') || t.includes('看书') || t.includes('阅读')) extracted.method = '读文档'
+    else if (t.includes('做项目') || t.includes('实战') || t.includes('动手')) extracted.method = '做项目'
+    else if (t.includes('刷题') || t.includes('做题') || t.includes('练习')) extracted.method = '刷题'
+  }
+
   return extracted
 }
 
@@ -208,8 +290,10 @@ export async function sendMessage() {
     const apiMessages = buildApiMessages()
     const replyText = await callDeepSeek(apiMessages)
 
-    // 解析维度
-    const extracted = parseDimensions(replyText)
+    // 解析维度：标签提取（AI回复）+ 关键词提取（仅用户消息）
+    const extractedFromTags = parseDimensions(replyText)
+    const extractedFromKeywords = extractByKeywords(userMsgText)
+    const extracted = { ...extractedFromKeywords, ...extractedFromTags }
     if (Object.keys(extracted).length > 0) {
       dimensions.value = { ...dimensions.value, ...extracted }
     }
@@ -269,6 +353,21 @@ export async function triggerReport() {
       report.value = parsed
       showReport.value = true
       activeMenu.value = 'portrait-report'
+
+      // 将画像数据保存到后端，并触发AI生成个性化知识路径
+      try {
+        const { saveProfile, triggerKnowledgePath } = await import('@/lib/api')
+        await saveProfile({
+          score: parsed.score,
+          radarPoints: parsed.radarPoints,
+          weaknesses: parsed.weaknesses,
+          suggestions: parsed.suggestions,
+        })
+        // 异步触发AI生成知识路径（不阻塞UI）
+        triggerKnowledgePath().catch(() => {})
+      } catch (e) {
+        console.warn('Failed to save profile to backend:', e)
+      }
     } else {
       throw new Error('无法解析报告 JSON')
     }
@@ -293,6 +392,18 @@ export async function triggerReport() {
     report.value = fallback
     showReport.value = true
     activeMenu.value = 'portrait-report'
+
+    // fallback 也保存到后端并触发AI生成
+    try {
+      const { saveProfile, triggerKnowledgePath } = await import('@/lib/api')
+      await saveProfile({
+        score: fallback.score,
+        radarPoints: fallback.radarPoints,
+        weaknesses: fallback.weaknesses,
+        suggestions: fallback.suggestions,
+      })
+      triggerKnowledgePath().catch(() => {})
+    } catch { /* ignore */ }
   }
 }
 

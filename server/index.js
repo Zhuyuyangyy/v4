@@ -21,6 +21,8 @@ import {
   generateResourcesPayload,
   getEvidenceTraces,
   getEvidenceSummary,
+  saveKnowledgePathResult,
+  getLatestKnowledgePath,
 } from './data.js'
 import {
   orchestrateProfileAnalysis,
@@ -29,6 +31,7 @@ import {
   orchestrateTutoring,
   orchestrateFullEvaluation,
   orchestrateFullRun,
+  orchestrateKnowledgePath,
 } from './agents/orchestrator.js'
 import { getTraces, getTraceSummary, buildTrace, recordTrace } from './evidence/recorder.js'
 import { validateResourceGenerateInput } from './schemas.js'
@@ -150,6 +153,44 @@ const server = http.createServer(async (req, res) => {
 
     if (req.method === 'GET' && pathname === '/api/profile/latest') {
       sendJson(res, 200, { result: getLatestProfileResult() })
+      return
+    }
+
+    // 对话页直接保存画像数据（跳过 agent 分析）
+    if (req.method === 'POST' && pathname === '/api/profile/save') {
+      const body = await readJson(req)
+      // 将对话页的 radarPoints 转为统一格式
+      const profile = {
+        dimensions: (body.radarPoints || []).map((p: any) => ({
+          label: p.dimension,
+          value: p.score,
+          color: '#3b82f6',
+        })),
+        totalScore: body.score || 50,
+        weaknesses: (body.weaknesses || []).map((w: string) => ({ tag: w, count: 1 })),
+        recommendations: body.suggestions || [],
+        source: 'dialogue',
+        savedAt: new Date().toISOString(),
+      }
+      saveProfileResult(profile)
+      sendJson(res, 200, profile)
+      return
+    }
+
+    // AI 智能体生成个性化知识路径
+    if (req.method === 'POST' && pathname === '/api/knowledge-path/generate') {
+      const body = await readJson(req)
+      const profile = body.profile || getLatestProfileResult() || {}
+      const result = await orchestrateKnowledgePath({ profile })
+      saveKnowledgePathResult(result.knowledgePath)
+      sendJson(res, 200, result.knowledgePath)
+      return
+    }
+
+    // 获取已生成的知识路径
+    if (req.method === 'GET' && pathname === '/api/knowledge-path/latest') {
+      const kp = getLatestKnowledgePath()
+      sendJson(res, 200, { result: kp })
       return
     }
 

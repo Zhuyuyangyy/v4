@@ -91,6 +91,24 @@ export async function fetchLatestProfile() {
   return data.result
 }
 
+export function saveProfile(report: { score: number; radarPoints: { dimension: string; score: number }[]; weaknesses: string[]; suggestions: string[] }) {
+  return requestJson<any>('/api/profile/save', {
+    method: 'POST',
+    body: JSON.stringify(report),
+  })
+}
+
+export function triggerKnowledgePath(profile?: unknown) {
+  return requestJson<any>('/api/knowledge-path/generate', {
+    method: 'POST',
+    body: JSON.stringify({ profile }),
+  })
+}
+
+export function fetchKnowledgePath() {
+  return requestJson<{ result: any }>('/api/knowledge-path/latest')
+}
+
 export function sendChatMessage(message: string, multimodalContents?: MultimodalContent[]) {
   return requestJson<ChatReply>('/api/chat', {
     method: 'POST',
