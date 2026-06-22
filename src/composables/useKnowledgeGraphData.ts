@@ -1,5 +1,5 @@
 import { ref } from 'vue'
-import { fetchLearningPath, fetchEvaluation, fetchLatestProfile, fetchTutoringTopics } from '@/lib/api'
+import { fetchLearningPath, fetchEvaluation, fetchLatestProfile, fetchTutoringTopics, fetchKnowledgePath } from '@/lib/api'
 
 // --- 通用类型 ---
 export interface KnowledgeDomain {
@@ -116,13 +116,20 @@ export function useKnowledgeGraphData() {
   const loading = ref(false)
   const loaded = ref(false)
 
-  async function loadFromBackend() {
-    if (loaded.value) return
+  async function loadFromBackend(force = false) {
+    if (loaded.value && !force) return
     loading.value = true
 
     try {
+      // 优先获取AI生成的知识路径
+      let aiKnowledgePath: any = null
+      try {
+        const aiResult = await fetchKnowledgePath()
+        aiKnowledgePath = aiResult?.result
+      } catch { /* AI数据不可用 */ }
+
       const [pathData, evalData, profileData, topicsData] = await Promise.allSettled([
-        fetchLearningPath(),
+        aiKnowledgePath ? Promise.resolve(aiKnowledgePath) : fetchLearningPath(),
         fetchEvaluation().catch(() => null),
         fetchLatestProfile().catch(() => null),
         fetchTutoringTopics().catch(() => null),
@@ -134,23 +141,24 @@ export function useKnowledgeGraphData() {
         if (lp.phases && Array.isArray(lp.phases)) {
           const newDomains: KnowledgeDomain[] = []
           const newEdges: KnowledgeEdge[] = []
-          let topicIndex = 0
 
           lp.phases.forEach((phase: any, pi: number) => {
-            const domainId = `phase-${pi}`
-            const colorInfo = Object.values(DOMAIN_COLORS)[pi % Object.keys(DOMAIN_COLORS).length]
+            // 使用 JSON 中的 id/name/color/short，没有则 fallback
+            const domainId = phase.id || `phase-${pi}`
+            const colorInfo = DOMAIN_COLORS[domainId] || Object.values(DOMAIN_COLORS)[pi % Object.keys(DOMAIN_COLORS).length]
             const domain: KnowledgeDomain = {
               id: domainId,
               name: phase.name || `阶段 ${pi + 1}`,
-              color: colorInfo.color,
-              short: colorInfo.short,
+              color: phase.color || colorInfo.color,
+              short: phase.short || colorInfo.short,
               mastery: 0,
               topics: [],
             }
 
             if (phase.topics && Array.isArray(phase.topics)) {
               phase.topics.forEach((topic: any, ti: number) => {
-                const topicId = `t-${topicIndex++}`
+                // 使用 JSON 中的 id，没有则生成
+                const topicId = topic.id || `t-${domainId}-${ti}`
                 const mastery = typeof topic.mastery === 'number' ? topic.mastery :
                   typeof topic.progress === 'number' ? topic.progress / 100 :
                   Math.random() * 0.6 + 0.1
@@ -166,7 +174,8 @@ export function useKnowledgeGraphData() {
 
                 // 同领域内的前后关系
                 if (ti > 0) {
-                  newEdges.push({ from: `t-${topicIndex - 2}`, to: topicId })
+                  const prevId = phase.topics[ti - 1]?.id || `t-${domainId}-${ti - 1}`
+                  newEdges.push({ from: prevId, to: topicId })
                 }
               })
             }
@@ -231,6 +240,80 @@ export function useKnowledgeGraphData() {
             if (domain && typeof val === 'number') {
               domain.mastery = val
             }
+          })
+        }
+      }
+
+      // 从学习画像(profile)数据动态调整掌握度
+      if (profileData.status === 'fulfilled' && profileData.value) {
+        const profile = profileData.value as any
+        const dims = profile.dimensions || []
+        if (dims.length > 0 && domains.value.length > 0) {
+          // 维度名 → 值映射 (0-100 → 0-1)
+          const dimMap: Record<string, number> = {}
+          dims.forEach((d: any) => {
+            dimMap[d.label] = (d.value || 0) / 100
+          })
+
+          // 每个领域与维度的关联权重
+          const domainDimWeights: Record<string, { dim: string; weight: number }[]> = {
+            math: [{ dim: '知识基础', weight: 0.5 }, { dim: '逻辑思维', weight: 0.3 }, { dim: '学习速度', weight: 0.2 }],
+            ml: [{ dim: '逻辑思维', weight: 0.4 }, { dim: '知识基础', weight: 0.3 }, { dim: '创造力', weight: 0.3 }],
+            dl: [{ dim: '创造力', weight: 0.4 }, { dim: '逻辑思维', weight: 0.3 }, { dim: '专注力', weight: 0.3 }],
+            algo: [{ dim: '逻辑思维', weight: 0.5 }, { dim: '知识基础', weight: 0.3 }, { dim: '专注力', weight: 0.2 }],
+            eng: [{ dim: '专注力', weight: 0.3 }, { dim: '自律性', weight: 0.3 }, { dim: '学习速度', weight: 0.4 }],
+            nlp: [{ dim: '创造力', weight: 0.4 }, { dim: '学习速度', weight: 0.3 }, { dim: '知识基础', weight: 0.3 }],
+          }
+
+          // 根据 profile 调整每个领域的掌握度
+          domains.value.forEach(d => {
+            const weights = domainDimWeights[d.id]
+            if (weights) {
+              let profileMastery = 0
+              let totalWeight = 0
+              weights.forEach(w => {
+                const dimVal = dimMap[w.dim]
+                if (dimVal !== undefined) {
+                  profileMastery += dimVal * w.weight
+                  totalWeight += w.weight
+                }
+              })
+              if (totalWeight > 0) {
+                profileMastery /= totalWeight
+                // 混合：70% 原有数据 + 30% profile 推断
+                d.mastery = d.mastery * 0.7 + profileMastery * 0.3
+              }
+            }
+
+            // 根据 profile 调整各 topic 的掌握度
+            d.topics.forEach(t => {
+              const weights = domainDimWeights[d.id]
+              if (weights) {
+                let topicBoost = 0
+                weights.forEach(w => {
+                  const dimVal = dimMap[w.dim]
+                  if (dimVal !== undefined) topicBoost += dimVal * w.weight
+                })
+                if (weights.length > 0) topicBoost /= weights.length
+                // 低掌握度的知识点提升更多（profile 推断你可能已经掌握了基础）
+                const boost = t.mastery < 0.3 ? topicBoost * 0.15 : topicBoost * 0.05
+                t.mastery = Math.min(1, t.mastery + boost)
+              }
+            })
+
+            // 重新计算领域掌握度 = topic 平均
+            if (d.topics.length > 0) {
+              d.mastery = d.topics.reduce((s, t) => s + t.mastery, 0) / d.topics.length
+            }
+          })
+
+          // 标记推荐学习的知识点（掌握度低但重要度高的）
+          domains.value.forEach(d => {
+            d.topics.forEach(t => {
+              if (t.mastery < 0.25 && !t.recommended) {
+                t.recommended = true
+              }
+            })
           })
         }
       }

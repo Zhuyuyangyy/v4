@@ -1,59 +1,78 @@
 {
   "phases": [
     {
-      "title": "基础夯实",
-      "period": "第 1-4 周",
-      "progress": 100,
-      "status": "completed",
+      "id": "math",
+      "name": "数学基础",
+      "short": "MATH",
       "color": "#00d4ff",
-      "nodes": [
-        { "name": "Python 语言基础", "progress": 100, "duration": "1 周", "resources": 6 },
-        { "name": "数据结构入门", "progress": 100, "duration": "1.5 周", "resources": 4 },
-        { "name": "数学基础：线性代数", "progress": 100, "duration": "1.5 周", "resources": 5 }
+      "topics": [
+        { "id": "m1", "name": "矩阵运算", "mastery": 0.95, "importance": 0.9 },
+        { "id": "m2", "name": "特征值与分解", "mastery": 0.82, "importance": 0.7 },
+        { "id": "m3", "name": "概率论", "mastery": 0.78, "importance": 0.85 },
+        { "id": "m4", "name": "微积分", "mastery": 0.66, "importance": 0.8 },
+        { "id": "m5", "name": "凸优化", "mastery": 0.32, "importance": 0.6, "recommended": true }
       ]
     },
     {
-      "title": "核心进阶",
-      "period": "第 5-10 周",
-      "progress": 65,
-      "status": "active",
+      "id": "ml",
+      "name": "机器学习",
+      "short": "ML",
       "color": "#7c3aed",
-      "nodes": [
-        { "name": "机器学习概论", "progress": 80, "duration": "2 周", "resources": 8 },
-        { "name": "监督学习算法", "progress": 60, "duration": "2 周", "resources": 6 },
-        { "name": "无监督学习算法", "progress": 40, "duration": "1.5 周", "resources": 4 },
-        { "name": "模型评估与调优", "progress": 20, "duration": "1 周", "resources": 3 }
+      "topics": [
+        { "id": "ml1", "name": "监督学习", "mastery": 0.88, "importance": 0.95 },
+        { "id": "ml2", "name": "无监督学习", "mastery": 0.62, "importance": 0.7 },
+        { "id": "ml3", "name": "决策树/RF", "mastery": 0.78, "importance": 0.65 },
+        { "id": "ml4", "name": "SVM", "mastery": 0.55, "importance": 0.5 },
+        { "id": "ml5", "name": "集成学习", "mastery": 0.48, "importance": 0.55 }
       ]
     },
     {
-      "title": "专题深入",
-      "period": "第 11-16 周",
-      "progress": 25,
-      "status": "active",
+      "id": "dl",
+      "name": "深度学习",
+      "short": "DL",
       "color": "#06d6a0",
-      "nodes": [
-        { "name": "深度学习基础", "progress": 30, "duration": "2 周", "resources": 7 },
-        { "name": "自然语言处理", "progress": 20, "duration": "2 周", "resources": 5 },
-        { "name": "计算机视觉", "progress": 0, "duration": "2 周", "resources": 5 }
+      "topics": [
+        { "id": "dl1", "name": "神经网络", "mastery": 0.58, "importance": 0.9 },
+        { "id": "dl2", "name": "CNN", "mastery": 0.32, "importance": 0.75 },
+        { "id": "dl3", "name": "RNN/LSTM", "mastery": 0.22, "importance": 0.6 },
+        { "id": "dl4", "name": "Transformer", "mastery": 0.12, "importance": 0.95, "recommended": true },
+        { "id": "dl5", "name": "Attention", "mastery": 0.18, "importance": 0.85 }
       ]
     },
     {
-      "title": "实战项目",
-      "period": "第 17-20 周",
-      "progress": 0,
-      "status": "locked",
+      "id": "algo",
+      "name": "算法与数据结构",
+      "short": "ALGO",
       "color": "#f59e0b",
-      "nodes": [
-        { "name": "综合项目实战", "progress": 0, "duration": "2 周", "resources": 3 },
-        { "name": "作品集构建", "progress": 0, "duration": "1 周", "resources": 2 },
-        { "name": "面试准备", "progress": 0, "duration": "1 周", "resources": 4 }
+      "topics": [
+        { "id": "a1", "name": "排序与查找", "mastery": 0.92, "importance": 0.8 },
+        { "id": "a2", "name": "数据结构", "mastery": 0.78, "importance": 0.9 },
+        { "id": "a3", "name": "图算法", "mastery": 0.42, "importance": 0.75 },
+        { "id": "a4", "name": "动态规划", "mastery": 0.30, "importance": 0.7, "recommended": true }
+      ]
+    },
+    {
+      "id": "eng",
+      "name": "工程实践",
+      "short": "ENG",
+      "color": "#3b82f6",
+      "topics": [
+        { "id": "e1", "name": "Python工程", "mastery": 0.72, "importance": 0.6 },
+        { "id": "e2", "name": "版本控制", "mastery": 0.65, "importance": 0.4 },
+        { "id": "e3", "name": "模型部署", "mastery": 0.30, "importance": 0.5 }
+      ]
+    },
+    {
+      "id": "nlp",
+      "name": "NLP与应用",
+      "short": "NLP",
+      "color": "#f43f5e",
+      "topics": [
+        { "id": "n1", "name": "词向量", "mastery": 0.40, "importance": 0.6 },
+        { "id": "n2", "name": "LLM", "mastery": 0.18, "importance": 0.9 },
+        { "id": "n3", "name": "微调与对齐", "mastery": 0.08, "importance": 0.7 },
+        { "id": "n4", "name": "检索增强", "mastery": 0.12, "importance": 0.8, "recommended": true }
       ]
     }
-  ],
-  "weeklyGoals": [
-    { "label": "完成 Python 基础", "progress": 100, "target": "1 章" },
-    { "label": "数据结构练习", "progress": 60, "target": "20 题" },
-    { "label": "阅读论文", "progress": 30, "target": "2 篇" },
-    { "label": "编程项目实战", "progress": 0, "target": "1 个" }
   ]
 }

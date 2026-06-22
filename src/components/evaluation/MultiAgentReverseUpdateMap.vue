@@ -32,6 +32,21 @@ interface LoopLink {
   hero?: boolean
 }
 
+interface AgentUpdateAction {
+  label: string
+  before: string
+  after: string
+  impact: string
+}
+
+interface AgentUpdateDetail {
+  summary: string
+  current: string
+  tips: string[]
+  actions: AgentUpdateAction[]
+  history: string[]
+}
+
 const stage = { w: 1600, h: 980 }
 
 const palette = {
@@ -176,6 +191,75 @@ const phases = [
   { id: 4, k: 'FAN-OUT', cn: '扇出重排', desc: '画像驱动路径重排、资源重配与辅导策略调整，闭环完成。' },
 ]
 
+const agentUpdateDetails: Record<NodeId, AgentUpdateDetail> = {
+  eval: {
+    summary: '把本轮智能对话、测评作答和资源完成情况合并成可回写的证据包。',
+    current: '正在校准错因、掌握度和薄弱知识点，等待反思智能体判断是否写回画像。',
+    tips: ['错题证据命中 BFS visited 标记时机', '对话追问被归入“图结构理解不稳”', '资源完成率低的节点被标记为待复测'],
+    actions: [
+      { label: '错因聚类', before: '普通图遍历错误', after: 'BFS visited 标记时机错误', impact: '让画像更新指向更小的知识颗粒' },
+      { label: '掌握度校准', before: '图结构 68%', after: '图结构 42%', impact: '触发路径重排和补弱资源' },
+      { label: '证据绑定', before: '零散学习日志', after: '测评 2/3 错题 + 对话追问 3 次', impact: '给后续回写提供可追溯依据' },
+    ],
+    history: ['写入评估快照 #EVAL-0512-R2', '生成 4 条证据标签', '输出置信度 0.88'],
+  },
+  reflect: {
+    summary: '把评估结论反向翻译成“哪些画像字段要改、改多少、为什么改”。',
+    current: '正在对比历史画像和新证据，决定本轮是否进入画像回写。',
+    tips: ['短期薄弱点优先写入', '长期学习偏好保留但加上新证据', '置信度超过阈值后自动触发回写'],
+    actions: [
+      { label: '回写判定', before: '只有评估报告', after: '画像更新指令', impact: '从报告展示变成真正影响后续学习' },
+      { label: '冲突处理', before: '偏好：文字讲解', after: '偏好：思维导图 + 例题拆解', impact: '让辅导方式随本轮表现调整' },
+      { label: '范围收敛', before: '泛化补弱', after: '锁定指针传参与 BFS 标记', impact: '避免把路径改得过散' },
+    ],
+    history: ['追加反思记录 #REFLECT-0512-R2', '确认 6 个画像字段可更新', '输出置信度 0.83'],
+  },
+  profile: {
+    summary: '把反思智能体给出的更新指令写入智能对话画像历史，形成新的学生画像版本。',
+    current: '正在保存本轮画像版本，并把变化同步给路径、资源和辅导智能体。',
+    tips: ['知识深度 +24', '应用能力 +26', '知识迁移仍为弱项', '新增“图示 + 例题拆解”学习偏好'],
+    actions: [
+      { label: '历史版本', before: '画像版本 #0512-R1', after: '画像版本 #0512-R2', impact: '保留可回放的画像演变历史' },
+      { label: '弱项字段', before: '图结构理解薄弱', after: 'BFS visited 标记薄弱', impact: '把薄弱点细化到可练习任务' },
+      { label: '偏好字段', before: '文字讲解', after: '思维导图 + 例题拆解', impact: '驱动资源与辅导风格一起调整' },
+    ],
+    history: ['写入画像历史 #PROFILE-0512-R2', '更新 6 个维度', '同步下游智能体 3 个'],
+  },
+  path: {
+    summary: '读取新画像后，把下一轮学习路径从“继续推进”改成“先补弱再推进”。',
+    current: '正在重排路径，把补弱节点插入下一轮学习流。',
+    tips: ['插入 BFS visited 标记专项', '二级指针传参前置复习', '已掌握节点从主路径降权'],
+    actions: [
+      { label: '路径插入', before: '图基础复习', after: 'BFS visited 标记专项', impact: '把时间花在真正失分点上' },
+      { label: '顺序调整', before: '先上新知识', after: '先完成 20 分钟补弱', impact: '降低下一轮学习断点' },
+      { label: '复测节点', before: '无复测', after: '无提示复测', impact: '验证画像更新是否有效' },
+    ],
+    history: ['生成路径版本 #PATH-0512-R2', '插入 1 个补救节点', '延后 2 个低优先级节点'],
+  },
+  resource: {
+    summary: '根据画像变化替换学习材料，把泛化资源换成可直接修复薄弱点的资源。',
+    current: '正在重配推荐资源，并把推荐理由绑定到画像证据。',
+    tips: ['新增 BFS 队列快照动画', '新增二级指针调用栈图', '下架泛化图论长文'],
+    actions: [
+      { label: '资源重配', before: '图论概念长文', after: 'BFS 队列快照动画', impact: '让学生看到标记时机变化' },
+      { label: '练习替换', before: '综合题 3 道', after: 'visited 专项 6 题', impact: '提高补弱命中率' },
+      { label: '推荐解释', before: '按课程推荐', after: '按画像证据推荐', impact: '让推荐原因可追溯' },
+    ],
+    history: ['生成资源包 #RESOURCE-0512-R2', '替换 3 个资源', '新增 2 条推荐理由'],
+  },
+  tutor: {
+    summary: '读取新画像后，调整下一次智能对话的讲解方式、追问顺序和练习提示。',
+    current: '正在生成新的辅导策略，下一次对话会先验证薄弱点再讲新内容。',
+    tips: ['先问 visited 标记时机', '减少纯文字讲解', '增加图示推演和例题拆解'],
+    actions: [
+      { label: '讲解风格', before: '文字说明', after: '图示推演 + 例题拆解', impact: '贴合本轮新偏好' },
+      { label: '追问顺序', before: '开放式追问', after: '先问标记时机再问边界', impact: '快速定位是否真正掌握' },
+      { label: '提示策略', before: '直接给思路', after: '分步提示 + 无提示复测', impact: '减少对提示的依赖' },
+    ],
+    history: ['更新辅导策略 #TUTOR-0512-R2', '调整 2 处讲解策略', '新增 1 个复测入口'],
+  },
+}
+
 const stars = Array.from({ length: 130 }, (_, index) => {
   const seed = (index + 9) * 9301 + 49297
   const x = (seed % 1600)
@@ -193,9 +277,13 @@ let resizeObserver: ResizeObserver | null = null
 const phase = ref(0)
 const playing = ref(true)
 const timers: number[] = []
+const selectedAgentId = ref<NodeId>('profile')
 
 const currentPhase = computed(() => phases[phase.value] ?? phases[0])
 const profileDelta = computed(() => dimensions.reduce((sum, dim) => sum + dim.after - dim.before, 0))
+const selectedNode = computed(() => nodes[selectedAgentId.value])
+const selectedAgentDetail = computed(() => agentUpdateDetails[selectedAgentId.value])
+const selectedAgentStatus = computed(() => agentRuntimeStatus(selectedAgentId.value))
 
 function color(name: ToneName) {
   return palette[name]
@@ -240,6 +328,22 @@ function jump(nextPhase: number) {
   playing.value = false
   clearTimers()
   phase.value = nextPhase
+}
+
+function selectAgent(id: NodeId) {
+  selectedAgentId.value = id
+  jump(nodes[id].phase)
+}
+
+function agentRuntimeStatus(id: NodeId) {
+  const agentPhase = nodes[id].phase
+  if (phase.value < agentPhase) {
+    return { label: '待触发', tone: 'pending', text: '等待上游证据进入当前节点。' }
+  }
+  if (phase.value === agentPhase) {
+    return { label: '当前执行', tone: 'running', text: '正在处理本节点的画像更新任务。' }
+  }
+  return { label: '已完成', tone: 'done', text: '本节点更新已写入闭环结果。' }
 }
 
 function posX(x: number) {
@@ -493,8 +597,14 @@ onBeforeUnmount(() => {
       <div
         v-for="(id, index) in nodeOrder"
         :key="id"
-        :class="['agent-core', id, { active: phase >= nodes[id].phase, hub: nodes[id].hub, engine: nodes[id].engine }]"
+        :class="['agent-core', id, { active: phase >= nodes[id].phase, selected: selectedAgentId === id, hub: nodes[id].hub, engine: nodes[id].engine }]"
         :style="{ ...nodeStyle(nodes[id]), '--delay': `${index * 0.24}s` }"
+        role="button"
+        tabindex="0"
+        :aria-label="`查看${nodes[id].cn}的画像更新详情`"
+        @click="selectAgent(id)"
+        @keydown.enter.prevent="selectAgent(id)"
+        @keydown.space.prevent="selectAgent(id)"
       >
         <div class="core-halo" />
         <svg class="identity-rings" viewBox="0 0 200 200" aria-hidden="true">
@@ -563,7 +673,7 @@ onBeforeUnmount(() => {
       <div
         v-for="id in nodeOrder"
         :key="`${id}-tag`"
-        :class="['agent-tag', id, { active: phase >= nodes[id].phase }]"
+        :class="['agent-tag', id, { active: phase >= nodes[id].phase, selected: selectedAgentId === id }]"
         :style="tagStyle(nodes[id])"
       >
         <strong>
@@ -599,6 +709,57 @@ onBeforeUnmount(() => {
           <span>{{ dim.name }}<i v-if="dim.weak">弱</i></span>
           <b><em /></b>
           <strong>{{ phase >= 3 ? dim.after : dim.before }}</strong>
+        </div>
+      </aside>
+
+      <aside
+        class="agent-inspector"
+        :class="selectedAgentStatus.tone"
+        :style="{ '--tone': color(selectedNode.color) }"
+        aria-live="polite"
+      >
+        <div class="inspector-head">
+          <div>
+            <span>智能对话画像历史更新</span>
+            <strong>{{ selectedNode.cn }}</strong>
+          </div>
+          <b>{{ selectedAgentStatus.label }}</b>
+        </div>
+        <p class="inspector-summary">{{ selectedAgentDetail.summary }}</p>
+        <div class="inspector-status">
+          <i />
+          <span>
+            <strong>{{ selectedAgentStatus.text }}</strong>
+            {{ selectedAgentDetail.current }}
+          </span>
+        </div>
+
+        <div class="inspector-section">
+          <span class="section-label">具体更新</span>
+          <div
+            v-for="action in selectedAgentDetail.actions"
+            :key="action.label"
+            class="update-row"
+          >
+            <strong>{{ action.label }}</strong>
+            <p><em>{{ action.before }}</em><b />{{ action.after }}</p>
+            <small>{{ action.impact }}</small>
+          </div>
+        </div>
+
+        <div class="inspector-grid">
+          <div>
+            <span class="section-label">Tips</span>
+            <ul class="tip-list">
+              <li v-for="tip in selectedAgentDetail.tips" :key="tip">{{ tip }}</li>
+            </ul>
+          </div>
+          <div>
+            <span class="section-label">历史写入</span>
+            <ul class="history-list">
+              <li v-for="item in selectedAgentDetail.history" :key="item">{{ item }}</li>
+            </ul>
+          </div>
         </div>
       </aside>
 
@@ -661,6 +822,7 @@ onBeforeUnmount(() => {
 .agent-tag,
 .link-chip,
 .profile-panel,
+.agent-inspector,
 .loop-narration,
 .loop-legend {
   position: absolute;
@@ -837,7 +999,30 @@ onBeforeUnmount(() => {
 
 .agent-core {
   z-index: 5;
+  cursor: pointer;
   transform: translate(-50%, -50%);
+  transition: filter 0.28s ease, transform 0.28s ease;
+}
+
+.agent-core:hover,
+.agent-core:focus-visible {
+  filter: brightness(1.12) saturate(1.12);
+  outline: none;
+}
+
+.agent-core:active {
+  transform: translate(-50%, -50%) scale(0.98);
+}
+
+.agent-core.selected .core-halo {
+  background: radial-gradient(circle, color-mix(in srgb, var(--tone), transparent 52%), rgba(255, 255, 255, 0.04) 38%, transparent 68%);
+  filter: blur(12px);
+}
+
+.agent-core.selected .identity-rings circle:first-child {
+  stroke: var(--tone);
+  stroke-width: 2.4;
+  stroke-dasharray: 8 5;
 }
 
 .agent-core.hub {
@@ -972,6 +1157,15 @@ onBeforeUnmount(() => {
 .agent-tag.active strong {
   border-color: color-mix(in srgb, var(--tone), transparent 20%);
   box-shadow: 0 0 24px color-mix(in srgb, var(--tone), transparent 58%);
+}
+
+.agent-tag.selected strong {
+  border-color: var(--tone);
+  background: color-mix(in srgb, var(--tone), #060a16 82%);
+}
+
+.agent-tag.selected small {
+  color: #fff;
 }
 
 .agent-tag em {
@@ -1164,6 +1358,199 @@ onBeforeUnmount(() => {
   font-family: "JetBrains Mono", monospace;
   font-size: 11px;
   text-align: right;
+}
+
+.agent-inspector {
+  top: 42.8%;
+  left: 2.5%;
+  z-index: 10;
+  width: 405px;
+  max-height: 368px;
+  padding: 15px;
+  overflow: auto;
+  border: 1px solid color-mix(in srgb, var(--tone), transparent 64%);
+  border-radius: 14px;
+  background:
+    linear-gradient(135deg, color-mix(in srgb, var(--tone), transparent 92%), rgba(8, 15, 32, 0.92)),
+    rgba(8, 15, 32, 0.86);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08), 0 18px 44px rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(10px);
+}
+
+.agent-inspector::before {
+  position: absolute;
+  top: 0;
+  right: 18px;
+  left: 18px;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--tone), transparent);
+  content: "";
+}
+
+.inspector-head,
+.inspector-status,
+.inspector-grid {
+  display: grid;
+}
+
+.inspector-head {
+  grid-template-columns: 1fr auto;
+  gap: 14px;
+  align-items: start;
+}
+
+.inspector-head span,
+.section-label {
+  display: block;
+  color: var(--tone);
+  font-family: "JetBrains Mono", monospace;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.inspector-head strong {
+  display: block;
+  margin-top: 5px;
+  color: #fff;
+  font-family: "Noto Serif SC", serif;
+  font-size: 20px;
+  font-weight: 600;
+}
+
+.inspector-head b {
+  padding: 4px 8px;
+  border: 1px solid color-mix(in srgb, var(--tone), transparent 44%);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--tone), transparent 88%);
+  color: #fff;
+  font-family: "JetBrains Mono", monospace;
+  font-size: 10px;
+  white-space: nowrap;
+}
+
+.agent-inspector.pending .inspector-head b {
+  border-color: rgba(155, 180, 212, 0.32);
+  background: rgba(155, 180, 212, 0.08);
+  color: #9bb4d4;
+}
+
+.agent-inspector.done .inspector-head b {
+  border-color: rgba(52, 211, 153, 0.42);
+  background: rgba(52, 211, 153, 0.1);
+  color: #34d399;
+}
+
+.inspector-summary {
+  margin: 10px 0 9px;
+  color: #bfd1ea;
+  font-size: 12px;
+  line-height: 1.58;
+}
+
+.inspector-status {
+  grid-template-columns: 8px 1fr;
+  gap: 8px;
+  align-items: center;
+  margin-bottom: 12px;
+  padding: 8px 10px;
+  border: 1px solid color-mix(in srgb, var(--tone), transparent 78%);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.035);
+  color: #9bb4d4;
+  font-size: 11px;
+}
+
+.inspector-status i {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--tone);
+  box-shadow: 0 0 10px var(--tone);
+}
+
+.inspector-section {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.update-row {
+  padding: 8px 9px;
+  border: 1px solid rgba(255, 255, 255, 0.075);
+  border-radius: 10px;
+  background: rgba(5, 7, 15, 0.42);
+}
+
+.update-row strong {
+  display: block;
+  color: #fff;
+  font-size: 12px;
+}
+
+.update-row p {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin: 4px 0;
+  color: color-mix(in srgb, var(--tone), #fff 18%);
+  font-size: 11px;
+}
+
+.update-row p b {
+  width: 18px;
+  height: 1px;
+  background: color-mix(in srgb, var(--tone), transparent 40%);
+}
+
+.update-row em {
+  color: #8fa5c4;
+  font-style: normal;
+}
+
+.update-row small {
+  display: block;
+  color: #6f84a6;
+  font-size: 10px;
+  line-height: 1.45;
+}
+
+.inspector-grid {
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.tip-list,
+.history-list {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  padding: 0;
+  margin: 7px 0 0;
+  list-style: none;
+}
+
+.tip-list li,
+.history-list li {
+  position: relative;
+  padding-left: 12px;
+  color: #9bb4d4;
+  font-size: 10px;
+  line-height: 1.42;
+}
+
+.tip-list li::before,
+.history-list li::before {
+  position: absolute;
+  top: 0.58em;
+  left: 0;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--tone);
+  content: "";
 }
 
 .loop-narration {

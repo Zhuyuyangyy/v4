@@ -5,6 +5,7 @@ export const AGENT_NAMES = {
   TUTOR: 'TutorAgent',
   EVALUATION: 'EvaluationAgent',
   REFLECTION: 'ReflectionAgent',
+  KNOWLEDGE_PATH: 'KnowledgePathAgent',
 }
 
 export const RESOURCE_TYPES = ['concept', 'example', 'exercise', 'errorTip', 'recommendReason', 'profileEvidence']

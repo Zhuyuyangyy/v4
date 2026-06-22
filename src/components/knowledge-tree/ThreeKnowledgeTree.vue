@@ -1,28 +1,25 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import * as THREE from 'three'
-import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
-import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js'
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js'
+import {
+  BarkType,
+  Billboard,
+  Tree,
+  TreePreset,
+  TreeType,
+} from '@dgreenheck/ez-tree'
+import { applyEzTreeAtmosphere, preloadEzTreeAssets } from './EzTreeEnvironment'
 
 interface KnowledgePoint {
   name: string
-  status?: 'mastered' | 'learning' | 'weak' | 'next'
+  status?: 'none' | 'weak' | 'beginner' | 'basic' | 'proficient' | 'mastered'
   progress?: number
+  course?: string
 }
 
 type MarkerType = 'course' | 'branch' | 'knowledge'
-
-const PRIMARY_TREE_MODEL_URL = '/knowledge-tree/dashu.glb'
-const FALLBACK_TREE_MODEL_URL = '/knowledge-tree/knowledge-tree-real.glb'
-const BACKGROUND_STAGE_MODEL_URL = '/knowledge-tree/glb/main%20to%20tree.glb'
-const LEFT_STAGE_MODEL_URL = '/knowledge-tree/glb/leftglb.glb'
-const RIGHT_STAGE_MODEL_URL = '/knowledge-tree/glb/rightglb.glb'
-
-interface GeometryBucket {
-  geometries: THREE.BufferGeometry[]
-  material?: THREE.Material | THREE.Material[]
-}
 
 interface GraphMarker {
   id: string
@@ -37,6 +34,8 @@ interface GraphMarker {
 const props = withDefaults(
   defineProps<{
     modelUrl?: string
+    treeConfigUrl?: string
+    preferModel?: boolean
     height?: number | string
     fill?: boolean
     knowledgePoints?: KnowledgePoint[]
@@ -46,22 +45,26 @@ const props = withDefaults(
     hideExposedRoots?: boolean
     horizontalOnlyControls?: boolean
     showBackgroundStage?: boolean
+    backgroundStageVariant?: 'default' | 'diagnostic'
     sceneDepthOffset?: number
     sceneOffsetX?: number
+    highlightNames?: string[]
   }>(),
   {
-    modelUrl: PRIMARY_TREE_MODEL_URL,
+    treeConfigUrl: '/knowledge-tree/tree.json',
+    preferModel: false,
     height: 480,
     fill: false,
     knowledgePoints: () => [],
-    sceneScale: 11.4,
-    sceneOffsetY: 4.35,
+    sceneScale: 14.8,
+    sceneOffsetY: 0.2,
     sceneStretchY: 1,
-    hideExposedRoots: false,
     horizontalOnlyControls: false,
     showBackgroundStage: true,
-    sceneDepthOffset: -0.25,
-    sceneOffsetX: 0.5,
+    backgroundStageVariant: 'default',
+    sceneDepthOffset: 0,
+    sceneOffsetX: 0,
+    highlightNames: () => [],
   },
 )
 
@@ -72,52 +75,31 @@ const emit = defineEmits<{
 const canvasRef = ref<HTMLCanvasElement | null>(null)
 const loading = ref(true)
 const loadError = ref(false)
-const activeMarker = ref<GraphMarker | null | any>(null)
 const selectedMarkerId = ref<string | null>(null)
-const activeMarkerView = computed<GraphMarker>(() => activeMarker.value ?? {
-  id: 'empty',
-  type: 'knowledge',
-  label: '',
-  progress: 0,
-  description: '',
-})
+
+const fallbackPoints: KnowledgePoint[] = [
+  { name: '编程基础', status: 'mastered', progress: 90, course: '课程主干' },
+  { name: '数据结构', status: 'basic', progress: 68, course: '能力分支' },
+  { name: '图结构与搜索', status: 'weak', progress: 38, course: '薄弱补救' },
+  { name: '算法迁移', status: 'none', progress: 22, course: '下一步' },
+]
+
+const displayPoints = computed(() => (props.knowledgePoints.length ? props.knowledgePoints : fallbackPoints))
 
 const courseProgress = computed(() => {
-  if (!props.knowledgePoints.length) return 0
-  const total = props.knowledgePoints.reduce((sum, point) => sum + (point.progress ?? 0), 0)
-  return Math.round(total / props.knowledgePoints.length)
+  if (!displayPoints.value.length) return 0
+  const total = displayPoints.value.reduce((sum, point) => sum + (point.progress ?? 0), 0)
+  return Math.round(total / displayPoints.value.length)
 })
 
 const branchGroups = computed(() => {
-  const points = props.knowledgePoints.length
-    ? props.knowledgePoints
-    : [
-        { name: '编程基础', status: 'mastered' as const, progress: 90 },
-        { name: '数据结构', status: 'learning' as const, progress: 68 },
-        { name: '图结构与搜索', status: 'weak' as const, progress: 38 },
-      ]
-
-  // 按 course 字段分组
-  const courseMap = new Map<string, KnowledgePoint[]>()
-  points.forEach(p => {
-    const course = (p as any).course ?? '未分类'
-    if (!courseMap.has(course)) courseMap.set(course, [])
-    courseMap.get(course)!.push(p)
+  const map = new Map<string, KnowledgePoint[]>()
+  displayPoints.value.forEach(point => {
+    const course = point.course ?? '知识模块'
+    if (!map.has(course)) map.set(course, [])
+    map.get(course)!.push(point)
   })
-
-  if (courseMap.size > 0) {
-    return Array.from(courseMap.entries()).map(([label, pts]) => ({
-      label,
-      points: pts,
-    }))
-  }
-
-  // fallback: 如果没有 course 字段，按3等分
-  return [
-    { label: '课程主干', points: points.slice(0, 2) },
-    { label: '能力分支', points: points.slice(2, 4) },
-    { label: '进阶应用', points: points.slice(4) },
-  ].filter(group => group.points.length)
+  return Array.from(map.entries()).map(([label, points]) => ({ label, points }))
 })
 
 let renderer: THREE.WebGLRenderer | null = null
@@ -125,1041 +107,133 @@ let scene: THREE.Scene | null = null
 let camera: THREE.PerspectiveCamera | null = null
 let controls: OrbitControls | null = null
 let animationId = 0
-let rootGroup: THREE.Group | null = null
-let worldRotationGroup: THREE.Group | null = null
-let backgroundStageGroup: THREE.Group | null = null
-let starGroup: THREE.Group | null = null
-let markerGroup: THREE.Group | null = null
-let auraGroup: THREE.Group | null = null
+let worldGroup: THREE.Group | null = null
+let treeRoot: THREE.Group | null = null
+let generatedTree: (THREE.Object3D & { update: (elapsedTime: number) => void; loadFromJson: (options: any) => void }) | null = null
+let stageGroup: THREE.Group | null = null
+let leafGeometry: THREE.ShapeGeometry | null = null
+let leafMaterial: THREE.MeshStandardMaterial | null = null
+let denseLeafGeometry: THREE.PlaneGeometry | null = null
+let denseLeafMaterial: THREE.MeshStandardMaterial | null = null
+let gltfLoader: GLTFLoader | null = null
 let raycaster: THREE.Raycaster | null = null
-const pointer = new THREE.Vector2()
-let interactiveObjects: THREE.Object3D[] = []
-let fluidSurfaceTexture: THREE.CanvasTexture | null = null
-let fluidGlowTexture: THREE.CanvasTexture | null = null
-let fluidBumpTexture: THREE.CanvasTexture | null = null
-const fluidMaterials: THREE.MeshStandardMaterial[] = []
-const streamMaterials: THREE.MeshBasicMaterial[] = []
+let resizeObserver: ResizeObserver | null = null
 let isTreeDragging = false
 let treeDragStartX = 0
 let treeDragLastX = 0
 let treeDragMoved = false
+let ezEnvironment: ReturnType<typeof applyEzTreeAtmosphere> | null = null
+
+const pointer = new THREE.Vector2()
+const interactiveObjects: THREE.Object3D[] = []
+const markerObjects: THREE.Object3D[] = []
 
 type DisposableObject = THREE.Object3D & {
   geometry?: THREE.BufferGeometry
   material?: THREE.Material | THREE.Material[]
 }
 
-function createScene() {
-  scene = new THREE.Scene()
-  scene.background = null
-  scene.fog = new THREE.Fog(0x080914, 18, 48)
-
-  worldRotationGroup = new THREE.Group()
-  worldRotationGroup.name = 'KnowledgeTreeWorldRotationGroup'
-  scene.add(worldRotationGroup)
-
-  camera = new THREE.PerspectiveCamera(38, 1, 0.1, 100)
-  camera.position.set(5.8, 7.9, 13.2)
-  camera.lookAt(0, 5.9, 0)
-
-  scene.add(new THREE.AmbientLight(0xffeedd, 0.48))
-
-  const key = new THREE.DirectionalLight(0xffedf3, 1.8)
-  key.position.set(3, 10, 6)
-  scene.add(key)
-
-  const rim = new THREE.DirectionalLight(0xff8090, 0.9)
-  rim.position.set(-5, 6, -3)
-  scene.add(rim)
-
-  const fill = new THREE.PointLight(0x8ad7ff, 0.55, 24)
-  fill.position.set(-4, 3, 5)
-  scene.add(fill)
-
-  const stageBlue = new THREE.PointLight(0x2c9dff, 1.25, 30)
-  stageBlue.position.set(0, 4.2, -6.5)
-  scene.add(stageBlue)
-
-  const rootGlow = new THREE.PointLight(0xffccd8, 1.35, 9)
-  rootGlow.position.set(0, 0.5, 0)
-  scene.add(rootGlow)
+function statusColor(status?: KnowledgePoint['status']) {
+  // Binary mastery palette: green = mastered/solid, red = needs work
+  if (status === 'mastered' || status === 'proficient') return 0x22c55e
+  return 0xef4444
 }
 
 function markerStatusLabel(status?: KnowledgePoint['status']) {
   if (status === 'mastered') return '已完成'
-  if (status === 'learning') return '学习中'
+  if (status === 'proficient') return '熟练掌握'
+  if (status === 'basic') return '基本掌握'
+  if (status === 'beginner') return '初步掌握'
   if (status === 'weak') return '薄弱点'
+  if (status === 'none') return '未开始'
   return '未完成'
 }
 
-function setMarkerData(object: THREE.Object3D, marker: GraphMarker) {
-  object.userData.marker = marker
-  object.traverse(child => {
-    child.userData.marker = marker
-  })
-  interactiveObjects.push(object)
+function masteryTint() {
+  const weak = displayPoints.value.filter(point => point.status === 'weak').length
+  const mastered = displayPoints.value.filter(point => point.status === 'mastered').length
+  const learning = displayPoints.value.filter(point => point.status && ['beginner', 'basic', 'proficient'].includes(point.status)).length
+  if (weak > mastered && weak >= learning) return 0xb2ae65
+  if (mastered >= weak && mastered >= learning) return 0x93bd66
+  return 0x8caf66
 }
 
-function pointIsComplete(point?: KnowledgePoint) {
-  return point?.status === 'mastered' || (point?.progress ?? 0) >= 80
+function tintAsColor() {
+  return new THREE.Color(masteryTint())
 }
 
-function pointIsWeak(point?: KnowledgePoint) {
-  return point?.status === 'weak'
-}
-
-function starColorForPoint(point?: KnowledgePoint) {
-  if (pointIsComplete(point)) return 0xdb3f36
-  return 0x65dca2
-}
-
-function createAppleMesh(size: number, color: number, complete: boolean) {
-  const group = new THREE.Group()
-  const body = new THREE.Mesh(
-    new THREE.SphereGeometry(size, 28, 22),
-    new THREE.MeshStandardMaterial({
-      color,
-      emissive: color,
-      emissiveIntensity: complete ? 0.28 : 0.22,
-      roughness: 0.48,
-      metalness: 0.03,
-      depthTest: false,
-    }),
-  )
-  body.scale.set(1, 0.96, 0.9)
-  body.renderOrder = 20
-  group.add(body)
-
-  const cheek = new THREE.Mesh(
-    new THREE.SphereGeometry(size * 0.62, 20, 14),
-    new THREE.MeshStandardMaterial({
-      color: complete ? 0xff6a52 : 0x9ff0bd,
-      emissive: complete ? 0x7a130b : 0x155b37,
-      emissiveIntensity: 0.15,
-      roughness: 0.56,
-      transparent: true,
-      opacity: 0.82,
-      depthTest: false,
-    }),
-  )
-  cheek.position.set(-size * 0.22, size * 0.04, size * 0.42)
-  cheek.scale.set(0.86, 1, 0.28)
-  cheek.renderOrder = 21
-  group.add(cheek)
-
-  const dimple = new THREE.Mesh(
-    new THREE.SphereGeometry(size * 0.3, 18, 10),
-    new THREE.MeshStandardMaterial({
-      color: complete ? 0x6b1c14 : 0x2c6f42,
-      roughness: 0.8,
-      depthTest: false,
-    }),
-  )
-  dimple.position.set(0, size * 0.78, size * 0.06)
-  dimple.scale.set(1.1, 0.24, 0.82)
-  dimple.renderOrder = 22
-  group.add(dimple)
-
-  const stem = new THREE.Mesh(
-    new THREE.CylinderGeometry(size * 0.07, size * 0.1, size * 0.48, 10),
-    new THREE.MeshStandardMaterial({
-      color: 0x6b3b1f,
-      roughness: 0.72,
-      depthTest: false,
-    }),
-  )
-  stem.position.set(size * 0.06, size * 1.05, 0)
-  stem.rotation.z = -0.32
-  stem.renderOrder = 23
-  group.add(stem)
-
-  const leaf = new THREE.Mesh(
-    new THREE.SphereGeometry(size * 0.22, 14, 10),
-    new THREE.MeshStandardMaterial({
-      color: 0x79d34f,
-      emissive: 0x1f5318,
-      emissiveIntensity: 0.12,
-      roughness: 0.5,
-      depthTest: false,
-    }),
-  )
-  leaf.position.set(size * 0.32, size * 1.08, size * 0.02)
-  leaf.scale.set(1.65, 0.52, 0.16)
-  leaf.rotation.z = 0.42
-  leaf.renderOrder = 24
-  group.add(leaf)
-
-  return group
-}
-
-function createAttachedStar(position: THREE.Vector3, size: number, point: KnowledgePoint | undefined, rotationZ = 0) {
-  const complete = pointIsComplete(point)
-  const weak = pointIsWeak(point)
-  const color = starColorForPoint(point)
-  const marker: GraphMarker = {
-    id: `knowledge-${point?.name ?? position.toArray().join('-')}`,
-    type: 'knowledge',
-    label: point?.name ?? '知识点',
-    status: point?.status ?? 'next',
-    progress: point?.progress ?? 0,
-    description: `叶片星点代表具体知识点；${markerStatusLabel(point?.status)}时会呈现对应亮度。`,
-    items: [
-      `来源: ${point?.status === 'weak' ? '测评 / 问答证据' : point?.status === 'mastered' ? '章节练习已通过' : point?.status === 'learning' ? '正在学习路径中' : '下一轮待安排'}`,
-      `建议: ${point?.status === 'weak' ? '加入 15 分钟图解补弱' : point?.status === 'mastered' ? '保持点亮，可进入迁移练习' : point?.status === 'learning' ? '继续完成当前微任务' : '等待先修知识点完成'}`,
-    ],
-  }
-  const group = new THREE.Group()
-  group.position.copy(position)
-  group.rotation.set(-0.18, 0.12, rotationZ)
-  group.userData = { complete, weak, baseScale: 1, name: point?.name ?? '', marker }
-
-  const contact = new THREE.Mesh(
-    new THREE.CircleGeometry(size * 1.05, 28),
-    new THREE.MeshBasicMaterial({
-      color,
-      transparent: true,
-      opacity: complete ? 0.4 : weak ? 0.24 : 0.11,
-      depthWrite: false,
-      depthTest: false,
-      side: THREE.DoubleSide,
-    }),
-  )
-  contact.position.z = -0.035
-  contact.renderOrder = 18
-  group.add(contact)
-
-  const apple = createAppleMesh(size, color, complete)
-  apple.position.z = 0.01
-  apple.scale.setScalar(weak ? 1.06 : 1)
-  group.add(apple)
-
-  const hitTarget = new THREE.Mesh(
-    new THREE.SphereGeometry(size * (complete ? 3.05 : 2.55), 22, 16),
-    new THREE.MeshBasicMaterial({
-      color: 0xffffff,
-      transparent: true,
-      opacity: 0,
-      depthWrite: false,
-      depthTest: false,
-    }),
-  )
-  hitTarget.name = 'AppleClickTarget'
-  hitTarget.renderOrder = 30
-  group.add(hitTarget)
-
-  setMarkerData(group, marker)
-  return group
-}
-
-function createMarkerStar(position: THREE.Vector3, size: number, color: number, marker: GraphMarker, rotationZ = 0) {
-  const group = new THREE.Group()
-  group.position.copy(position)
-  group.rotation.set(-0.18, 0.12, rotationZ)
-  group.userData = {
-    complete: marker.type === 'course' ? (marker.progress ?? 0) >= 75 : (marker.progress ?? 0) >= 70,
-    marker,
-  }
-
-  const halo = new THREE.Mesh(
-    new THREE.RingGeometry(size * 1.45, size * 1.98, 40),
-    new THREE.MeshBasicMaterial({
-      color,
-      transparent: true,
-      opacity: marker.type === 'course' ? 0.42 : 0.28,
-      depthWrite: false,
-      depthTest: false,
-      side: THREE.DoubleSide,
-    }),
-  )
-  halo.position.z = -0.045
-  halo.renderOrder = 18
-  group.add(halo)
-
-  const apple = createAppleMesh(size, color, marker.type === 'course')
-  apple.renderOrder = 20
-  group.add(apple)
-
-  const hitTarget = new THREE.Mesh(
-    new THREE.SphereGeometry(size * (marker.type === 'course' ? 3.1 : 2.35), 22, 16),
-    new THREE.MeshBasicMaterial({
-      color: 0xffffff,
-      transparent: true,
-      opacity: 0,
-      depthWrite: false,
-      depthTest: false,
-    }),
-  )
-  hitTarget.name = 'AppleClickTarget'
-  hitTarget.renderOrder = 30
-  group.add(hitTarget)
-
-  setMarkerData(group, marker)
-  return group
-}
-
-function createBranchHotspot(position: THREE.Vector3, marker: GraphMarker, index: number, progress: number) {
-  const group = new THREE.Group()
-  group.name = `CourseBranchHotspot-${index}`
-  group.position.copy(position)
-  group.rotation.set(-0.34, 0.1, -0.42 + index * 0.42)
-  group.userData = {
-    complete: progress >= 75,
-    marker,
-  }
-
-  const hitTarget = new THREE.Mesh(
-    new THREE.SphereGeometry(1, 24, 14),
-    new THREE.MeshBasicMaterial({
-      color: 0xffffff,
-      transparent: true,
-      opacity: 0,
-      depthWrite: false,
-      depthTest: false,
-    }),
-  )
-  hitTarget.name = 'CourseBranchClickTarget'
-  hitTarget.scale.set(3.1, 0.74, 1.15)
-  group.add(hitTarget)
-
-  const tone = progress >= 80 ? 0xdb3f36 : progress >= 55 ? 0x65dca2 : 0xf5a13d
-  const branchAura = new THREE.Mesh(
-    new THREE.RingGeometry(0.58, 0.62, 72),
-    new THREE.MeshBasicMaterial({
-      color: tone,
-      transparent: true,
-      opacity: 0.24,
-      depthWrite: false,
-      depthTest: false,
-      blending: THREE.AdditiveBlending,
-      side: THREE.DoubleSide,
-    }),
-  )
-  branchAura.name = 'CourseBranchAura'
-  branchAura.scale.set(3.15, 0.42, 1)
-  branchAura.renderOrder = 16
-  group.add(branchAura)
-
-  setMarkerData(group, marker)
-  return group
-}
-
-function createEnergyStream(points: THREE.Vector3[], radius: number, opacity: number) {
-  const curve = new THREE.CatmullRomCurve3(points)
-  const material = new THREE.MeshBasicMaterial({
-    color: 0xfff0b0,
-    transparent: true,
-    opacity,
-    depthTest: false,
-    depthWrite: false,
-    blending: THREE.AdditiveBlending,
-  })
-  streamMaterials.push(material)
-
-  const stream = new THREE.Mesh(new THREE.TubeGeometry(curve, 80, radius, 12, false), material)
-  stream.renderOrder = 8
-  return stream
-}
-
-function createEnergyAura(model: THREE.Group) {
-  if (auraGroup) {
-    model.remove(auraGroup)
-    auraGroup.traverse(child => disposeObject(child as DisposableObject))
-  }
-
-  auraGroup = new THREE.Group()
-  auraGroup.name = 'FluidTreeAura'
-
-  const auraMaterial = new THREE.MeshBasicMaterial({
-    color: 0xffd37a,
-    transparent: true,
-      opacity: 0.045,
-    depthWrite: false,
-    blending: THREE.AdditiveBlending,
-    side: THREE.DoubleSide,
-  })
-
-  const trunkGlow = new THREE.Mesh(new THREE.CylinderGeometry(0.92, 1.48, 6.4, 48, 1, true), auraMaterial.clone())
-  trunkGlow.position.set(0, 3.1, 0)
-  trunkGlow.renderOrder = 4
-  auraGroup.add(trunkGlow)
-
-  const coreGlow = new THREE.Mesh(
-    new THREE.CylinderGeometry(0.32, 0.55, 6.8, 32, 1, true),
-    new THREE.MeshBasicMaterial({
-      color: 0xfff0bd,
-      transparent: true,
-      opacity: 0.06,
-      depthWrite: false,
-      blending: THREE.AdditiveBlending,
-      side: THREE.DoubleSide,
-    }),
-  )
-  coreGlow.position.set(0, 3.25, 0)
-  coreGlow.renderOrder = 5
-  auraGroup.add(coreGlow)
-
-  const rootGlow = new THREE.Mesh(
-    new THREE.RingGeometry(0.8, 3.6, 88),
-    new THREE.MeshBasicMaterial({
-      color: 0xffd06a,
-      transparent: true,
-      opacity: 0.08,
-      depthWrite: false,
-      blending: THREE.AdditiveBlending,
-      side: THREE.DoubleSide,
-    }),
-  )
-  rootGlow.rotation.x = -Math.PI / 2
-  rootGlow.position.y = 0.08
-  rootGlow.renderOrder = 3
-  auraGroup.add(rootGlow)
-
-  const rootPool = new THREE.Mesh(
-    new THREE.CircleGeometry(3.25, 96),
-    new THREE.MeshBasicMaterial({
-      color: 0xffb84d,
-      transparent: true,
-      opacity: 0.035,
-      depthWrite: false,
-      blending: THREE.AdditiveBlending,
-      side: THREE.DoubleSide,
-    }),
-  )
-  rootPool.rotation.x = -Math.PI / 2
-  rootPool.position.y = 0.05
-  rootPool.renderOrder = 2
-  auraGroup.add(rootPool)
-
-  const canopyGlow = new THREE.Mesh(
-    new THREE.SphereGeometry(4.6, 48, 20),
-    new THREE.MeshBasicMaterial({
-      color: 0xffd68a,
-      transparent: true,
-      opacity: 0.024,
-      depthWrite: false,
-      blending: THREE.AdditiveBlending,
-    }),
-  )
-  canopyGlow.scale.set(1.35, 0.3, 0.72)
-  canopyGlow.position.set(0, 7.0, 0)
-  canopyGlow.renderOrder = 2
-  auraGroup.add(canopyGlow)
-
-  model.add(auraGroup)
-}
-
-function addGraphMarkers(model: THREE.Group) {
-  if (markerGroup) {
-    model.remove(markerGroup)
-    markerGroup.traverse(child => disposeObject(child as DisposableObject))
-  }
-
-  markerGroup = new THREE.Group()
-  markerGroup.name = 'KnowledgeGraphMarkers'
-
-  const courseMarker: GraphMarker = {
-    id: 'course-main',
-    type: 'course',
-    label: '课程总览',
-    progress: courseProgress.value,
-    description: '树干代表课程主线，所有树枝和叶片知识点都从这里生长出去。',
-    items: branchGroups.value.map(group => group.label),
-  }
-  markerGroup.add(createMarkerStar(new THREE.Vector3(0.08, 12.15, 3.55), 0.38, 0xdb3f36, courseMarker, -0.08))
-  markerGroup.add(createBranchHotspot(new THREE.Vector3(0.08, 8.7, 3.18), courseMarker, -1, courseProgress.value))
-
-  const branchAnchors = [
-    new THREE.Vector3(-3.65, 10.2, 3.05),
-    new THREE.Vector3(3.2, 10.85, 3.18),
-    new THREE.Vector3(0.2, 12.9, 3.32),
-  ]
-
-  branchGroups.value.forEach((group, index) => {
-    const progress = Math.round(group.points.reduce((sum, point) => sum + (point.progress ?? 0), 0) / group.points.length)
-    const marker: GraphMarker = {
-      id: `branch-${index}`,
-      type: 'branch',
-      label: group.label,
-      progress,
-      description: '树枝节点代表课程模块，点击后查看这一分支下的知识点索引。',
-      items: group.points.map(point => `${point.name} · ${markerStatusLabel(point.status)} · ${point.progress ?? 0}%`),
-    }
-
-    const anchor = branchAnchors[index] ?? branchAnchors[index % branchAnchors.length] ?? branchAnchors[0]
-    markerGroup!.add(createBranchHotspot(anchor, marker, index, progress))
-    markerGroup!.add(createMarkerStar(anchor, 0.3, progress >= 80 ? 0xdb3f36 : 0x65dca2, marker, index * 0.22))
-  })
-
-  model.add(markerGroup)
-}
-
-function addAttachedStars(model: THREE.Group) {
-  if (starGroup) {
-    model.remove(starGroup)
-    starGroup.traverse(child => disposeObject(child as DisposableObject))
-  }
-
-  starGroup = new THREE.Group()
-  starGroup.name = 'AttachedKnowledgeStars'
-
-  const count = Math.max(props.knowledgePoints.length, 18)
-
-  // Collect all leaf mesh vertices in world space
-  const leafVertices: THREE.Vector3[] = []
-  model.updateMatrixWorld(true)
-  model.traverse((child) => {
-    if (!(child instanceof THREE.Mesh)) return
-    const name = child.name.toLowerCase()
-    const matName = (Array.isArray(child.material) ? child.material[0] : child.material)?.name?.toLowerCase() ?? ''
-    if (!name.includes('leaf') && !matName.includes('leaf')) return
-    const geom = child.geometry
-    const pos = geom.attributes.position
-    if (!pos) return
-    const v = new THREE.Vector3()
-    for (let i = 0; i < pos.count; i++) {
-      v.fromBufferAttribute(pos, i).applyMatrix4(child.matrixWorld)
-      leafVertices.push(v.clone())
-    }
-  })
-
-  // If no leaf vertices found, fall back to bounding box sampling
-  if (leafVertices.length === 0) {
-    const box = new THREE.Box3().setFromObject(model)
-    const size = box.getSize(new THREE.Vector3())
-    const center = box.getCenter(new THREE.Vector3())
-    // Generate points in upper 60% of the model (foliage area)
-    for (let i = 0; i < count * 10; i++) {
-      const x = center.x + (Math.random() - 0.5) * size.x * 0.8
-      const y = center.y + size.y * 0.1 + Math.random() * size.y * 0.5
-      const z = center.z + (Math.random() - 0.5) * size.z * 0.8
-      leafVertices.push(new THREE.Vector3(x, y, z))
-    }
-  }
-
-  // Sample 'count' vertices evenly from the collected leaf vertices
-  const step = Math.max(1, Math.floor(leafVertices.length / count))
-  const sampledPositions: THREE.Vector3[] = []
-  for (let i = 0; i < count && i * step < leafVertices.length; i++) {
-    const idx = i * step + Math.floor(Math.random() * Math.min(step, 3))
-    const safeIdx = Math.min(idx, leafVertices.length - 1)
-    sampledPositions.push(leafVertices[safeIdx])
-  }
-  // Fill remaining if needed
-  while (sampledPositions.length < count) {
-    sampledPositions.push(leafVertices[Math.floor(Math.random() * leafVertices.length)])
-  }
-
-  sampledPositions.forEach((position, index) => {
-    const point = props.knowledgePoints[index % Math.max(props.knowledgePoints.length, 1)]
-    const size = 0.2 + (index % 3) * 0.03 + Math.random() * 0.05
-    const rotation = Math.random() * Math.PI * 2
-    // Convert world position to model local space
-    const localPos = position.clone()
-    model.worldToLocal(localPos)
-    starGroup!.add(createAttachedStar(localPos, size, point, rotation))
-  })
-
-  model.add(starGroup)
-}
-
-function materialKeyForMesh(mesh: THREE.Mesh) {
-  const material = Array.isArray(mesh.material) ? mesh.material[0] : mesh.material
-  const materialName = material?.name?.toLowerCase() ?? ''
-  const meshName = mesh.name.toLowerCase()
-  const name = `${meshName} ${materialName}`
-
-  if (
-    name.includes('ground')
-    || name.includes('shadow')
-    || name.includes('temple')
-    || name.includes('shrine')
-    || name.includes('mist')
-    || name.includes('sunshaft')
-    || name.includes('knowledge_link')
-  ) {
-    return 'skip'
-  }
-
-  if (name.includes('leaf') || name.includes('ginkgo')) return 'leaf'
-  if (name.includes('trunk') || name.includes('branch') || name.includes('bark') || name.includes('ancient')) return 'wood'
-  return 'skip'
-}
-
-function createFluidTexture(kind: 'surface' | 'glow' | 'bump') {
-  const size = 512
-  const canvas = document.createElement('canvas')
-  canvas.width = size
-  canvas.height = size
-  const ctx = canvas.getContext('2d')!
-  const image = ctx.createImageData(size, size)
-  const data = image.data
-
-  for (let y = 0; y < size; y++) {
-    for (let x = 0; x < size; x++) {
-      const nx = x / size
-      const ny = y / size
-      const centerVein = Math.exp(-Math.pow(nx - 0.5 - Math.sin(ny * 6.2) * 0.055, 2) * 170)
-      const leftVein = Math.exp(-Math.pow(nx - 0.27 - Math.sin(ny * 8.1 + 1.8) * 0.045, 2) * 240)
-      const rightVein = Math.exp(-Math.pow(nx - 0.73 - Math.sin(ny * 7.4 + 0.4) * 0.042, 2) * 235)
-      const hairline =
-        Math.max(0, Math.sin((ny * 18 + nx * 11) * Math.PI)) ** 6
-        * Math.max(0, Math.sin((nx * 5.5 + ny * 0.6) * Math.PI))
-      const vein = Math.max(centerVein, leftVein * 0.9, rightVein * 0.82, hairline * 0.55)
-      const flow = 0.58 + 0.42 * Math.sin((ny * 10.5 + nx * 2.7) * Math.PI)
-      const glow = Math.max(0, Math.min(1, vein * flow))
-      const shellShade = 0.34 + 0.18 * Math.sin(nx * Math.PI * 2) + 0.08 * Math.sin(ny * Math.PI * 5)
-      const i = (y * size + x) * 4
-
-      if (kind === 'bump') {
-        const v = Math.round(92 + glow * 136 + shellShade * 28)
-        data[i] = v
-        data[i + 1] = v
-        data[i + 2] = v
-        data[i + 3] = 255
-      } else if (kind === 'glow') {
-        const core = Math.max(glow, centerVein * 0.95)
-        data[i] = Math.round(core * 255)
-        data[i + 1] = Math.round(core * 210)
-        data[i + 2] = Math.round(glow * 96)
-        data[i + 3] = Math.round(Math.min(255, core * 255))
-      } else {
-        const base = Math.max(0, Math.min(1, shellShade))
-        data[i] = Math.round(58 + base * 54 + glow * 18)
-        data[i + 1] = Math.round(30 + base * 34 + glow * 14)
-        data[i + 2] = Math.round(15 + base * 18 + glow * 6)
-        data[i + 3] = 255
-      }
-    }
-  }
-
-  ctx.putImageData(image, 0, 0)
-
-  const texture = new THREE.CanvasTexture(canvas)
-  texture.wrapS = THREE.RepeatWrapping
-  texture.wrapT = THREE.RepeatWrapping
-  texture.repeat.set(3.8, kind === 'glow' ? 3.4 : 2.4)
-  texture.colorSpace = kind === 'bump' ? THREE.NoColorSpace : THREE.SRGBColorSpace
-  texture.anisotropy = 4
-  texture.needsUpdate = true
-
-  return texture
-}
-
-function getFluidSurfaceTexture() {
-  fluidSurfaceTexture = fluidSurfaceTexture ?? createFluidTexture('surface')
-  return fluidSurfaceTexture
-}
-
-function getFluidGlowTexture() {
-  fluidGlowTexture = fluidGlowTexture ?? createFluidTexture('glow')
-  return fluidGlowTexture
-}
-
-function getFluidBumpTexture() {
-  fluidBumpTexture = fluidBumpTexture ?? createFluidTexture('bump')
-  return fluidBumpTexture
-}
-
-function cloneEnhancedMaterial(source: THREE.Material | THREE.Material[] | undefined, key: string) {
-  const base = Array.isArray(source) ? source[0] : source
-  const material = base instanceof THREE.MeshStandardMaterial
-    ? base.clone()
-    : new THREE.MeshStandardMaterial({ color: key === 'leaf' ? 0xf4e4bd : 0x6b4a31 })
-
-  if (material instanceof THREE.MeshStandardMaterial) {
-    material.envMapIntensity = 0.72
-    material.roughness = key === 'leaf' ? 0.82 : 0.78
-    material.side = key === 'leaf' ? THREE.DoubleSide : THREE.FrontSide
-    material.color = new THREE.Color(key === 'leaf' ? 0xe7c66a : 0xffffff)
-    material.transparent = false
-    material.opacity = 1
-    material.emissive = new THREE.Color(key === 'leaf' ? 0x5a3a05 : 0xffc46a)
-    material.emissiveIntensity = key === 'leaf' ? 0.18 : 0.34
-
-    if (key === 'wood') {
-      material.color = new THREE.Color(0xffffff)
-      material.map = getFluidSurfaceTexture()
-      material.emissiveMap = null
-      material.bumpMap = getFluidBumpTexture()
-      material.bumpScale = 0.11
-      material.emissive = new THREE.Color(0x1d0b03)
-      material.emissiveIntensity = 0.08
-      material.roughness = 0.9
-      material.metalness = 0.02
-      fluidMaterials.push(material)
-    }
-  }
-
-  return material
-}
-
-function enhanceBackgroundStage(model: THREE.Group) {
-  model.traverse(child => {
-    if (!(child instanceof THREE.Mesh)) return
-
-    child.castShadow = false
-    child.receiveShadow = true
-    child.frustumCulled = false
-    child.matrixAutoUpdate = false
-
-    const materials = Array.isArray(child.material) ? child.material : [child.material]
-    materials.forEach(material => {
-      if (!(material instanceof THREE.MeshStandardMaterial) && !(material instanceof THREE.MeshBasicMaterial)) return
-
-      const name = `${child.name} ${material.name}`.toLowerCase()
-      material.transparent = false
-      material.opacity = 1
-      material.depthWrite = true
-
-      if (material instanceof THREE.MeshStandardMaterial) {
-        material.roughness = 0.56
-        material.metalness = Math.max(material.metalness, 0.16)
-        material.envMapIntensity = 0.72
-        if (name.includes('light') || name.includes('blue') || name.includes('crystal') || name.includes('emissive')) {
-          material.emissive = new THREE.Color(0x139cff)
-          material.emissiveIntensity = 1.18
-        } else {
-          material.color.lerp(new THREE.Color(0xf3d6d9), 0.18)
-          material.emissive = new THREE.Color(0x1b2235)
-          material.emissiveIntensity = 0.24
-        }
-      }
-    })
-  })
-}
-
-type StagePieceRole = 'main' | 'left' | 'right'
-
-function fitBackgroundStageToScene(model: THREE.Group, role: StagePieceRole) {
-  const box = new THREE.Box3().setFromObject(model)
-  const center = box.getCenter(new THREE.Vector3())
-  const size = box.getSize(new THREE.Vector3())
-  const maxDim = Math.max(size.x, size.y, size.z)
-  const config = {
-    main: { scale: 14.1, x: -1.0, y: 5.0, z: -1.0, ry: Math.PI / 6, rz: 0 },
-    left: { scale: 10.5, x: -6.5, y: 4.8, z: 1.5, ry: 0.42 + Math.PI / 4, rz: 0 },
-    right: { scale: 10.08, x: 4.5, y: 5.34, z: -5.0, ry: -0.42 + 15 * Math.PI / 180, rz: 0 },
-  }[role]
-  const scale = config.scale / Math.max(0.001, maxDim)
-
-  model.scale.setScalar(scale)
-  model.position.sub(center.multiplyScalar(scale))
-  model.position.x += config.x
-  model.position.y += config.y - box.min.y * scale
-  model.position.z += config.z
-  model.rotation.y = config.ry
-  model.rotation.z = config.rz
-  model.updateMatrixWorld(true)
-  model.traverse(child => {
-    child.matrixAutoUpdate = false
-  })
-  model.renderOrder = -1
-}
-
-function loadBackgroundStage() {
-  if (!worldRotationGroup) return
-
-  const loader = new GLTFLoader()
-  backgroundStageGroup = new THREE.Group()
-  backgroundStageGroup.name = 'KnowledgeTreeStageSet'
-  worldRotationGroup.add(backgroundStageGroup)
-
-  const pieces: Array<{ url: string; role: StagePieceRole }> = [
-    { url: BACKGROUND_STAGE_MODEL_URL, role: 'main' },
-    { url: LEFT_STAGE_MODEL_URL, role: 'left' },
-    { url: RIGHT_STAGE_MODEL_URL, role: 'right' },
-  ]
-
-  pieces.forEach(piece => {
-    loader.load(
-      piece.url,
-      (gltf) => {
-        if (!backgroundStageGroup) return
-        const stagePiece = gltf.scene
-        stagePiece.name = `KnowledgeTreeStage-${piece.role}`
-        enhanceBackgroundStage(stagePiece)
-        fitBackgroundStageToScene(stagePiece, piece.role)
-        backgroundStageGroup.add(stagePiece)
-      },
-      undefined,
-      (error) => {
-        console.warn(`Failed to load knowledge tree ${piece.role} stage:`, error)
-      },
-    )
-  })
-}
-
-function geometryMergeKey(geometry: THREE.BufferGeometry) {
-  const attributes = Object.entries(geometry.attributes)
-    .map(([name, attribute]) => `${name}:${attribute.itemSize}:${attribute.normalized}`)
-    .sort()
+function stableSeed() {
+  const raw = displayPoints.value
+    .map(point => `${point.name}:${point.progress ?? 0}:${point.status ?? 'none'}`)
     .join('|')
-
-  return `${geometry.index ? 'indexed' : 'non-indexed'}:${attributes}`
-}
-
-function ensureBarkUvs(geometry: THREE.BufferGeometry) {
-  if (geometry.attributes.uv) return
-
-  geometry.computeBoundingBox()
-  const box = geometry.boundingBox
-  const position = geometry.attributes.position
-  if (!box || !position) return
-
-  const centerX = (box.min.x + box.max.x) * 0.5
-  const centerZ = (box.min.z + box.max.z) * 0.5
-  const height = Math.max(0.001, box.max.y - box.min.y)
-  const uv = new Float32Array(position.count * 2)
-
-  for (let i = 0; i < position.count; i++) {
-    const x = position.getX(i) - centerX
-    const y = position.getY(i)
-    const z = position.getZ(i) - centerZ
-    const angle = Math.atan2(z, x)
-    uv[i * 2] = (angle + Math.PI) / (Math.PI * 2)
-    uv[i * 2 + 1] = (y - box.min.y) / height
+  let hash = 2166136261
+  for (let i = 0; i < raw.length; i++) {
+    hash ^= raw.charCodeAt(i)
+    hash = Math.imul(hash, 16777619)
   }
-
-  geometry.setAttribute('uv', new THREE.BufferAttribute(uv, 2))
+  return Math.abs(hash % 90000) + 1000
 }
 
-function optimizeModelForRuntime(model: THREE.Group) {
-  const leafGeometryBuckets = new Map<string, GeometryBucket>()
-  let meshCount = 0
-
-  model.updateMatrixWorld(true)
-
-  const optimized = new THREE.Group()
-  optimized.name = 'OptimizedKnowledgeTree'
-
-  model.traverse((child) => {
-    if (!(child instanceof THREE.Mesh) || !child.geometry) return
-
-    meshCount++
-    const key = materialKeyForMesh(child)
-    const geometry = child.geometry.clone()
-    geometry.applyMatrix4(child.matrixWorld)
-
-    if (key === 'skip') {
-      geometry.dispose()
-      return
-    }
-
-    if (key === 'leaf') {
-      const mergeKey = geometryMergeKey(geometry)
-      const bucket = leafGeometryBuckets.get(mergeKey) ?? { geometries: [] as THREE.BufferGeometry[], material: child.material }
-      bucket.geometries.push(geometry)
-      leafGeometryBuckets.set(mergeKey, bucket)
-      return
-    }
-
-    ensureBarkUvs(geometry)
-
-    const mesh = new THREE.Mesh(geometry, cloneEnhancedMaterial(child.material, key))
-    mesh.name = `${child.name || key}-optimized`
-    mesh.castShadow = true
-    mesh.receiveShadow = true
-    optimized.add(mesh)
-  })
-
-  if (meshCount < 500) {
-    leafGeometryBuckets.forEach(bucket => bucket.geometries.forEach(geometry => geometry.dispose()))
-    return model
-  }
-
-  leafGeometryBuckets.forEach((bucket, index) => {
-    const merged = mergeGeometries(bucket.geometries, false)
-    bucket.geometries.forEach(geometry => geometry.dispose())
-    if (!merged) return
-
-    merged.computeBoundingSphere()
-    merged.computeVertexNormals()
-
-    const mesh = new THREE.Mesh(merged, cloneEnhancedMaterial(bucket.material, 'leaf'))
-    mesh.name = `leaf-merged-${index}`
-    mesh.castShadow = true
-    mesh.receiveShadow = true
-    optimized.add(mesh)
-  })
-
-  model.traverse(child => disposeObject(child as DisposableObject))
-
-  return optimized
+function visualTreeSeed() {
+  // Keep the generated tree attractive and balanced across data refreshes.
+  return 64240
 }
 
-function enhanceOriginalModel(model: THREE.Group) {
-  // 统计知识点状态分布
-  const weakCount = props.knowledgePoints.filter(p => p.status === 'weak').length
-  const masteredCount = props.knowledgePoints.filter(p => p.status === 'mastered').length
-  const learningCount = props.knowledgePoints.filter(p => p.status === 'learning').length
-  const total = Math.max(props.knowledgePoints.length, 1)
+function createScene() {
+  scene = new THREE.Scene()
 
-  // 根据掌握度比例决定树叶整体色调
-  // mastered多→偏绿, weak多→偏红, learning多→偏蓝
-  const weakRatio = weakCount / total
-  const masteredRatio = masteredCount / total
-  const learningRatio = learningCount / total
+  worldGroup = new THREE.Group()
+  worldGroup.name = 'EzKnowledgeTreeWorld'
+  worldGroup.position.set(props.sceneOffsetX, 0, props.sceneDepthOffset)
+  scene.add(worldGroup)
 
-  model.traverse((child) => {
-    if (!(child instanceof THREE.Mesh)) return
-
-    child.castShadow = true
-    child.receiveShadow = true
-
-    const name = child.name.toLowerCase()
-    const materials = Array.isArray(child.material) ? child.material : [child.material]
-
-    materials.forEach((material) => {
-      if (material instanceof THREE.MeshStandardMaterial) {
-        material.envMapIntensity = 0.72
-        material.roughness = Math.min(material.roughness + 0.08, 0.85)
-
-        if (name.includes('leaf') || material.name.toLowerCase().includes('leaf')) {
-          material.side = THREE.DoubleSide
-          material.transparent = true
-          material.opacity = 0.96
-
-          // 根据掌握度分布混合颜色
-          const r = weakRatio * 0.6 + learningRatio * 0.1 + masteredRatio * 0.05
-          const g = masteredRatio * 0.5 + learningRatio * 0.2 + weakRatio * 0.05
-          const b = learningRatio * 0.5 + masteredRatio * 0.1 + weakRatio * 0.1
-          material.emissive = new THREE.Color(r, g, b)
-          material.emissiveIntensity = 0.15 + weakRatio * 0.2
-        }
-
-        if (name.includes('trunk') || name.includes('branch') || material.name.toLowerCase().includes('wood')) {
-          material.emissive = new THREE.Color(0x2a1109)
-          material.emissiveIntensity = 0.12
-        }
-      }
-    })
-  })
-
-}
-
-function fitModelToScene(model: THREE.Group) {
-  function clipRootGeometry(geom: THREE.BufferGeometry) {
-    const pos = geom.attributes.position
-    const norm = geom.attributes.normal
-    const idx = geom.index
-    if (!pos || !norm || !idx) return
-    geom.computeBoundingBox()
-    const box = geom.boundingBox
-    if (!box) return
-    const centerX = (box.min.x + box.max.x) * 0.5
-    const centerZ = (box.min.z + box.max.z) * 0.5
-    const lowRootBandY = box.min.y + 2.55
-    const exposedRootRadius = 1.05
-    const clipThresholdY = -2.5
-    const keepMask = new Uint8Array(pos.count)
-    for (let i = 0; i < pos.count; i++) {
-      const x = pos.getX(i) - centerX
-      const y = pos.getY(i)
-      const z = pos.getZ(i) - centerZ
-      const radial = Math.hypot(x, z)
-      const isExposedRoot = props.hideExposedRoots && y < lowRootBandY && radial > exposedRootRadius
-      keepMask[i] = y >= clipThresholdY && !isExposedRoot ? 1 : 0
-    }
-    const newIdxArr: number[] = []
-    for (let i = 0; i < idx.count; i += 3) {
-      const a = idx.getX(i), b = idx.getX(i + 1), c = idx.getX(i + 2)
-      if (keepMask[a] && keepMask[b] && keepMask[c]) {
-        newIdxArr.push(a, b, c)
-      }
-    }
-    if (newIdxArr.length > 0) {
-      geom.setIndex(newIdxArr)
-      geom.computeBoundingBox()
-      geom.computeBoundingSphere()
-    }
-  }
-  model.traverse(obj => {
-    if (obj instanceof THREE.Mesh && obj.geometry) {
-      clipRootGeometry(obj.geometry)
-    }
-  })
-  const box = new THREE.Box3().setFromObject(model)
-  const center = box.getCenter(new THREE.Vector3())
-  const size = box.getSize(new THREE.Vector3())
-  const maxDim = Math.max(size.x, size.y, size.z)
-  const scale = props.sceneScale / maxDim
-  const scaleY = scale * props.sceneStretchY
-
-  model.scale.set(scale, scaleY, scale)
-  model.position.set(-center.x * scale, -center.y * scaleY, -center.z * scale)
-  model.position.y -= box.min.y * scaleY
-  model.position.y += props.sceneOffsetY - 3.2
-}
-
-function loadModel(modelUrl = props.modelUrl, hasTriedFallback = false) {
-  if (!scene) return
-
-  const loader = new GLTFLoader()
-  loader.load(
-    modelUrl,
-    (gltf) => {
-      try {
-        rootGroup = optimizeModelForRuntime(gltf.scene)
-        interactiveObjects = []
-
-        enhanceOriginalModel(rootGroup)
-        createEnergyAura(rootGroup)
-        fitModelToScene(rootGroup)
-        addGraphMarkers(rootGroup)
-        addAttachedStars(rootGroup)
-
-        rootGroup.position.x += props.sceneOffsetX
-        rootGroup.position.z += props.sceneDepthOffset
-        worldRotationGroup!.add(rootGroup)
-        loadError.value = false
-        loading.value = false
-      } catch (error) {
-        console.error('Failed to render knowledge tree model:', error)
-        removeCurrentModel()
-        if (!hasTriedFallback && modelUrl !== FALLBACK_TREE_MODEL_URL) {
-          loadModel(FALLBACK_TREE_MODEL_URL, true)
-          return
-        }
-        loadError.value = true
-        loading.value = false
-      }
+  ezEnvironment = applyEzTreeAtmosphere(scene, {
+    skybox: {
+      sunAzimuth: 110,
+      sunElevation: 42,
+      sunColor: new THREE.Color(0xfff0d0),
+      skyColorLow: new THREE.Color(0xa8d4ff),
+      skyColorHigh: new THREE.Color(0x5c9dff),
+      sunSize: 1.0,
     },
-    undefined,
-    (error) => {
-      console.error('Failed to load knowledge tree model:', error)
-      if (!hasTriedFallback && modelUrl !== FALLBACK_TREE_MODEL_URL) {
-        loadModel(FALLBACK_TREE_MODEL_URL, true)
-        return
-      }
-      loadError.value = true
-      loading.value = false
+    ground: { radius: 55, scale: 45, patchiness: 0.72 },
+    grass: {
+      instanceCount: 420,
+      maxInstanceCount: 1200,
+      flowerCount: 4,
+      scale: 36,
+      patchiness: 0.74,
+      size: new THREE.Vector3(0.48, 0.38, 0.48),
+      sizeVariation: new THREE.Vector3(0.1, 0.16, 0.1),
     },
-  )
-}
+    rocks: { count: 4, spread: 24, size: new THREE.Vector3(0.28, 0.28, 0.28), sizeVariation: new THREE.Vector3(0.5, 0.5, 0.5) },
+    fogColor: new THREE.Color(0xd9ecff),
+    fogDensity: 0.0045,
+    enableClouds: false,
+  })
 
-function getCanvasSize() {
-  if (!canvasRef.value) return { w: 600, h: 480 }
-  const rect = canvasRef.value.parentElement?.getBoundingClientRect()
-  const w = rect?.width ?? 600
-  const h = props.fill ? (rect?.height ?? 480) : (typeof props.height === 'number' ? props.height : 480)
-  return { w, h }
+  camera = new THREE.PerspectiveCamera(42, 1, 0.1, 300)
+  camera.position.set(8.5, 8.8, 28.5)
+  camera.lookAt(props.sceneOffsetX, 6.6, props.sceneDepthOffset)
 }
 
 function initRenderer() {
   if (!canvasRef.value) return
-
   const { w, h } = getCanvasSize()
 
   renderer = new THREE.WebGLRenderer({
     canvas: canvasRef.value,
     antialias: true,
     alpha: true,
+    powerPreference: 'high-performance',
   })
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5))
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.6))
   renderer.setSize(w, h)
   renderer.outputColorSpace = THREE.SRGBColorSpace
   renderer.toneMapping = THREE.ACESFilmicToneMapping
-  renderer.toneMappingExposure = 1.12
+  renderer.toneMappingExposure = 1.28
+  renderer.shadowMap.enabled = true
+  renderer.shadowMap.type = THREE.PCFSoftShadowMap
 
   if (camera) {
     camera.aspect = w / h
@@ -1168,14 +242,15 @@ function initRenderer() {
 
   controls = new OrbitControls(camera!, canvasRef.value)
   controls.enableDamping = true
-  controls.dampingFactor = 0.06
+  controls.dampingFactor = 0.07
   controls.enabled = !props.horizontalOnlyControls
   controls.enablePan = false
   controls.enableRotate = !props.horizontalOnlyControls
-  controls.minDistance = 3.4
-  controls.maxDistance = 22
-  controls.target.set(0, 5.9, 0)
-  controls.maxPolarAngle = Math.PI * 0.78
+  controls.minDistance = 10
+  controls.maxDistance = 40
+  controls.minPolarAngle = Math.PI * 0.18
+  controls.maxPolarAngle = Math.PI * 0.72
+  controls.target.set(props.sceneOffsetX, 6.8, props.sceneDepthOffset)
   controls.update()
 
   raycaster = new THREE.Raycaster()
@@ -1184,64 +259,1032 @@ function initRenderer() {
   canvasRef.value.addEventListener('pointerup', handlePointerUp)
   canvasRef.value.addEventListener('pointerleave', handlePointerUp)
   canvasRef.value.addEventListener('click', handleCanvasClick)
+
+  resizeObserver = new ResizeObserver(handleResize)
+  resizeObserver.observe(canvasRef.value.parentElement ?? canvasRef.value)
+}
+
+function getCanvasSize() {
+  if (!canvasRef.value) return { w: 600, h: 480 }
+  const rect = canvasRef.value.parentElement?.getBoundingClientRect()
+  const w = Math.max(320, rect?.width ?? 600)
+  const fallbackHeight = typeof props.height === 'number' ? props.height : 480
+  const h = Math.max(320, props.fill ? (rect?.height ?? fallbackHeight) : fallbackHeight)
+  return { w, h }
+}
+
+function createTreeOptions() {
+  const options = structuredClone(TreePreset['Ash Large'] as any)
+  const total = Math.max(displayPoints.value.length, 1)
+  const density = Math.min(1, total / 18)
+
+  options.seed = visualTreeSeed()
+  options.type = TreeType.Deciduous
+  options.bark.type = BarkType.Oak
+  options.bark.tint = 0xc8aa85
+  options.bark.textured = true
+  options.bark.textureScale = { x: 1, y: 9 }
+  options.branch.levels = 3
+  options.branch.children = {
+    0: 10,
+    1: 4,
+    2: 4,
+  }
+  options.branch.length = {
+    0: 43,
+    1: 27,
+    2: 14,
+    3: 5.2,
+  }
+  options.branch.radius = {
+    0: 3.35,
+    1: 0.76,
+    2: 0.6,
+    3: 0.32,
+  }
+  options.branch.angle = { 1: 42, 2: 44, 3: 48 }
+  options.branch.start = { 1: 0.22, 2: 0.18, 3: 0 }
+  options.branch.force = {
+    direction: { x: 0, y: 1, z: 0 },
+    strength: -0.01,
+  }
+  options.branch.gnarliness = { 0: -0.02, 1: 0.12, 2: 0.1, 3: 0.04 }
+  options.branch.twist = { 0: 0.04, 1: -0.04, 2: 0, 3: 0 }
+  options.leaves.type = 'ash'
+  options.leaves.billboard = Billboard.Double
+  options.leaves.angle = 30
+  options.leaves.count = Math.round(72 + density * 24)
+  options.leaves.start = 0
+  options.leaves.size = 5.15
+  options.leaves.sizeVariance = 0.18
+  options.leaves.tint = masteryTint()
+  options.leaves.alphaTest = 0.2
+  options.trellis.enabled = false
+
+  return options
+}
+
+function getLeafGeometry() {
+  if (leafGeometry) return leafGeometry
+  const shape = new THREE.Shape()
+  shape.moveTo(0, 0.24)
+  shape.bezierCurveTo(0.2, 0.18, 0.22, -0.12, 0, -0.26)
+  shape.bezierCurveTo(-0.22, -0.12, -0.2, 0.18, 0, 0.24)
+  leafGeometry = new THREE.ShapeGeometry(shape, 8)
+  return leafGeometry
+}
+
+function getLeafMaterial() {
+  if (leafMaterial) return leafMaterial
+  const color = tintAsColor().lerp(new THREE.Color(0x2f5a2c), 0.62)
+  leafMaterial = new THREE.MeshStandardMaterial({
+    color,
+    roughness: 0.78,
+    metalness: 0,
+    transparent: true,
+    opacity: 0.48,
+    side: THREE.DoubleSide,
+    depthWrite: false,
+  })
+  return leafMaterial
+}
+
+function getDenseLeafMaterial() {
+  if (denseLeafMaterial) return denseLeafMaterial
+  const source = (generatedTree as any)?.leavesMesh?.material as THREE.MeshStandardMaterial | undefined
+  denseLeafMaterial = source?.clone?.() ?? new THREE.MeshStandardMaterial({
+    color: new THREE.Color(0x346b2b),
+    roughness: 0.82,
+    metalness: 0,
+  })
+  denseLeafMaterial.color = new THREE.Color(0x5a963c)
+  denseLeafMaterial.transparent = true
+  denseLeafMaterial.opacity = 0.9
+  denseLeafMaterial.side = THREE.DoubleSide
+  denseLeafMaterial.depthWrite = false
+  denseLeafMaterial.depthTest = false
+  denseLeafMaterial.alphaTest = Math.min(denseLeafMaterial.alphaTest || 0.2, 0.2)
+  return denseLeafMaterial
+}
+
+function getDenseLeafGeometry() {
+  if (denseLeafGeometry) return denseLeafGeometry
+  denseLeafGeometry = new THREE.PlaneGeometry(1, 1, 1, 1)
+  return denseLeafGeometry
+}
+
+function canopySample(seed: number) {
+  const raw = Math.sin(seed * 12.9898 + 78.233) * 43758.5453
+  return raw - Math.floor(raw)
+}
+
+function addLeaf(parent: THREE.Group, position: THREE.Vector3, scale: number, rotation: THREE.Euler) {
+  const leaf = new THREE.Mesh(getLeafGeometry(), getLeafMaterial())
+  leaf.position.copy(position)
+  leaf.rotation.copy(rotation)
+  leaf.scale.set(scale * 0.72, scale, scale * 0.72)
+  leaf.castShadow = false
+  leaf.receiveShadow = false
+  parent.add(leaf)
+}
+
+function addDenseLeaf(parent: THREE.Group, position: THREE.Vector3, scale: number, rotation: THREE.Euler) {
+  const leaf = new THREE.Mesh(getDenseLeafGeometry(), getDenseLeafMaterial())
+  leaf.position.copy(position)
+  leaf.rotation.copy(rotation)
+  leaf.scale.set(scale * 1.35, scale * 1.65, scale * 1.35)
+  leaf.castShadow = false
+  leaf.receiveShadow = false
+  parent.add(leaf)
+}
+
+function addMirroredLeafCluster(
+  parent: THREE.Group,
+  centerX: number,
+  centerY: number,
+  centerZ: number,
+  radiusX: number,
+  radiusY: number,
+  radiusZ: number,
+  count: number,
+  seed: number,
+) {
+  for (let i = 0; i < count; i++) {
+    const u = canopySample(seed + i * 5.17)
+    const v = canopySample(seed + i * 9.31)
+    const w = canopySample(seed + i * 13.73)
+    const angle = u * Math.PI * 2
+    const spread = Math.sqrt(v)
+    const localX = Math.cos(angle) * radiusX * spread
+    const localY = (w - 0.5) * radiusY
+    const localZ = Math.sin(angle) * radiusZ * spread
+    const size = 0.28 + canopySample(seed + i * 17.19) * 0.18
+
+    for (const side of [-1, 1]) {
+      addLeaf(
+        parent,
+        new THREE.Vector3(side * (centerX + localX), centerY + localY, centerZ + localZ),
+        size,
+        new THREE.Euler(
+          -0.22 + canopySample(seed + i * 3.7) * 0.5,
+          side * (0.18 + canopySample(seed + i * 6.3) * 0.38),
+          side * (angle * 0.24 + 0.16),
+        ),
+      )
+    }
+  }
+}
+
+function addCenterLeafCluster(
+  parent: THREE.Group,
+  centerY: number,
+  radiusX: number,
+  radiusY: number,
+  radiusZ: number,
+  count: number,
+  seed: number,
+) {
+  for (let i = 0; i < count; i++) {
+    const u = canopySample(seed + i * 4.21)
+    const v = canopySample(seed + i * 8.61)
+    const w = canopySample(seed + i * 11.29)
+    const angle = u * Math.PI * 2
+    const spread = Math.sqrt(v)
+    addLeaf(
+      parent,
+      new THREE.Vector3(
+        Math.cos(angle) * radiusX * spread,
+        centerY + (w - 0.5) * radiusY,
+        Math.sin(angle) * radiusZ * spread,
+      ),
+      0.28 + canopySample(seed + i * 15.4) * 0.16,
+      new THREE.Euler(-0.12 + w * 0.28, Math.cos(angle) * 0.2, angle * 0.12),
+    )
+  }
+}
+
+function createSymmetricFoliage() {
+  const foliage = new THREE.Group()
+  foliage.name = 'SymmetricKnowledgeTreeFoliage'
+
+  addMirroredLeafCluster(foliage, 1.05, 5.9, 0.1, 0.95, 1.2, 0.5, 20, 101)
+  addMirroredLeafCluster(foliage, 2.05, 7.0, 0.02, 1.05, 1.35, 0.58, 26, 211)
+  addMirroredLeafCluster(foliage, 2.85, 8.3, -0.05, 1.18, 1.35, 0.66, 30, 307)
+  addMirroredLeafCluster(foliage, 2.5, 9.65, 0.02, 1.12, 1.28, 0.62, 28, 419)
+  addMirroredLeafCluster(foliage, 1.55, 10.85, 0.02, 0.98, 1.12, 0.56, 22, 523)
+  addCenterLeafCluster(foliage, 7.7, 1.05, 1.25, 0.58, 28, 617)
+  addCenterLeafCluster(foliage, 11.85, 1.15, 1.35, 0.58, 30, 733)
+
+  return foliage
+}
+
+function branchBetween(start: THREE.Vector3, end: THREE.Vector3, radiusTop: number, radiusBottom: number) {
+  const direction = new THREE.Vector3().subVectors(end, start)
+  const length = direction.length()
+  const branch = new THREE.Mesh(
+    new THREE.CylinderGeometry(radiusTop, radiusBottom, length, 14, 2),
+    new THREE.MeshStandardMaterial({
+      color: 0x725033,
+      roughness: 0.86,
+      metalness: 0,
+    }),
+  )
+  branch.position.copy(start).add(end).multiplyScalar(0.5)
+  branch.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), direction.normalize())
+  branch.castShadow = true
+  branch.receiveShadow = true
+  return branch
+}
+
+function addMirroredBranch(
+  parent: THREE.Group,
+  start: THREE.Vector3,
+  end: THREE.Vector3,
+  radiusTop: number,
+  radiusBottom: number,
+) {
+  for (const side of [-1, 1]) {
+    const mirroredStart = new THREE.Vector3(start.x * side, start.y, start.z)
+    const mirroredEnd = new THREE.Vector3(end.x * side, end.y, end.z)
+    parent.add(branchBetween(mirroredStart, mirroredEnd, radiusTop, radiusBottom))
+  }
+}
+
+function addCanopyCloud(parent: THREE.Group, center: THREE.Vector3, radiusX: number, radiusY: number, radiusZ: number, count: number, seed: number) {
+  for (let i = 0; i < count; i++) {
+    const u = canopySample(seed + i * 4.73)
+    const v = canopySample(seed + i * 8.11)
+    const w = canopySample(seed + i * 13.37)
+    const angle = u * Math.PI * 2
+    const spread = Math.sqrt(v)
+    const position = new THREE.Vector3(
+      center.x + Math.cos(angle) * radiusX * spread,
+      center.y + (w - 0.5) * radiusY,
+      center.z + Math.sin(angle) * radiusZ * spread,
+    )
+    addLeaf(
+      parent,
+      position,
+      0.18 + canopySample(seed + i * 19.9) * 0.1,
+      new THREE.Euler(-0.2 + w * 0.48, Math.cos(angle) * 0.28, angle * 0.18),
+    )
+  }
+}
+
+function addDenseCanopyCloud(parent: THREE.Group, center: THREE.Vector3, radiusX: number, radiusY: number, radiusZ: number, count: number, seed: number) {
+  for (let i = 0; i < count; i++) {
+    const u = canopySample(seed + i * 4.73)
+    const v = canopySample(seed + i * 8.11)
+    const w = canopySample(seed + i * 13.37)
+    const angle = u * Math.PI * 2
+    const spread = Math.sqrt(v)
+    const position = new THREE.Vector3(
+      center.x + Math.cos(angle) * radiusX * spread,
+      center.y + (w - 0.5) * radiusY,
+      center.z + Math.sin(angle) * radiusZ * spread,
+    )
+    addDenseLeaf(
+      parent,
+      position,
+      0.3 + canopySample(seed + i * 19.9) * 0.16,
+      new THREE.Euler(-0.2 + w * 0.48, Math.cos(angle) * 0.28, angle * 0.18),
+    )
+  }
+}
+
+function addLeafRibbon(
+  parent: THREE.Group,
+  start: THREE.Vector3,
+  end: THREE.Vector3,
+  count: number,
+  radius: number,
+  seed: number,
+) {
+  for (let i = 0; i < count; i++) {
+    const t = (i + 0.5) / count
+    const base = new THREE.Vector3().lerpVectors(start, end, t)
+    const angle = canopySample(seed + i * 7.23) * Math.PI * 2
+    const spread = radius * (0.35 + canopySample(seed + i * 9.41) * 0.65)
+    const position = base.add(new THREE.Vector3(
+      Math.cos(angle) * spread,
+      (canopySample(seed + i * 11.13) - 0.5) * radius * 1.35,
+      Math.sin(angle) * spread,
+    ))
+
+    addDenseLeaf(
+      parent,
+      position,
+      0.24 + canopySample(seed + i * 13.91) * 0.14,
+      new THREE.Euler(-0.16 + canopySample(seed + i * 17.1) * 0.42, Math.cos(angle) * 0.28, angle * 0.18),
+    )
+  }
+}
+
+function addMirroredCanopyCloud(
+  parent: THREE.Group,
+  center: THREE.Vector3,
+  radiusX: number,
+  radiusY: number,
+  radiusZ: number,
+  count: number,
+  seed: number,
+) {
+  for (const side of [-1, 1]) {
+    addCanopyCloud(
+      parent,
+      new THREE.Vector3(center.x * side, center.y, center.z),
+      radiusX,
+      radiusY,
+      radiusZ,
+      count,
+      seed + (side > 0 ? 503 : 0),
+    )
+  }
+}
+
+function createDesignedSymmetricTree() {
+  const tree = new THREE.Group() as THREE.Group & { update: (elapsedTime: number) => void }
+  tree.name = 'DesignedSymmetricKnowledgeTree'
+  tree.update = () => {}
+
+  const trunkMaterial = new THREE.MeshStandardMaterial({
+    color: 0x6c4a2d,
+    roughness: 0.9,
+    metalness: 0,
+  })
+  const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.62, 1.1, 8.4, 22, 4), trunkMaterial)
+  trunk.position.y = 4.15
+  trunk.castShadow = true
+  trunk.receiveShadow = true
+  tree.add(trunk)
+
+  const crown = new THREE.Group()
+  crown.name = 'DesignedSymmetricLeafCrown'
+
+  const branchRows = [
+    { y: 2.7, x: 3.25, endY: 5.35, z: 0.06, top: 0.2, bottom: 0.42, leaves: 44, rx: 1.18, ry: 1.25, rz: 0.58 },
+    { y: 3.65, x: 3.75, endY: 6.75, z: -0.08, top: 0.18, bottom: 0.36, leaves: 50, rx: 1.28, ry: 1.36, rz: 0.64 },
+    { y: 4.75, x: 3.55, endY: 8.0, z: 0.08, top: 0.16, bottom: 0.32, leaves: 52, rx: 1.26, ry: 1.34, rz: 0.64 },
+    { y: 5.85, x: 2.95, endY: 9.15, z: -0.05, top: 0.13, bottom: 0.27, leaves: 44, rx: 1.08, ry: 1.2, rz: 0.56 },
+    { y: 6.9, x: 2.15, endY: 10.35, z: 0.04, top: 0.1, bottom: 0.22, leaves: 34, rx: 0.92, ry: 1.06, rz: 0.5 },
+  ]
+
+  branchRows.forEach((row, index) => {
+    const start = new THREE.Vector3(0, row.y, 0)
+    const end = new THREE.Vector3(row.x, row.endY, row.z)
+    addMirroredBranch(tree, start, end, row.top, row.bottom)
+
+    const forkStart = new THREE.Vector3(row.x * 0.48, row.y + (row.endY - row.y) * 0.52, row.z * 0.5)
+    addMirroredBranch(tree, forkStart, new THREE.Vector3(row.x * 0.95, row.endY + 0.58, row.z + 0.48), row.top * 0.62, row.bottom * 0.58)
+    addMirroredBranch(tree, forkStart, new THREE.Vector3(row.x * 0.78, row.endY + 0.26, row.z - 0.5), row.top * 0.58, row.bottom * 0.52)
+
+    addMirroredCanopyCloud(
+      crown,
+      new THREE.Vector3(row.x, row.endY + 0.18, row.z),
+      row.rx,
+      row.ry,
+      row.rz,
+      row.leaves,
+      900 + index * 137,
+    )
+  })
+
+  tree.add(branchBetween(new THREE.Vector3(0, 6.3, 0), new THREE.Vector3(0, 12.0, 0.02), 0.16, 0.36))
+  addCanopyCloud(crown, new THREE.Vector3(0, 11.65, 0), 1.35, 1.55, 0.68, 70, 1717)
+  addCanopyCloud(crown, new THREE.Vector3(0, 8.65, -0.02), 1.6, 1.45, 0.64, 56, 1919)
+  tree.add(crown)
+
+  return tree
+}
+
+function addNaturalCanopyFill() {
+  if (!treeRoot) return
+
+  const fill = new THREE.Group()
+  fill.name = 'NaturalCanopyFill'
+
+  // Only subtle mid-plane branches and foliage to keep the generated tree as the hero
+  fill.add(branchBetween(new THREE.Vector3(0.28, 3.25, 0.02), new THREE.Vector3(-2.15, 5.55, 0.08), 0.06, 0.18))
+  fill.add(branchBetween(new THREE.Vector3(0.48, 4.15, -0.02), new THREE.Vector3(2.25, 7.12, -0.06), 0.05, 0.14))
+
+  addCanopyCloud(fill, new THREE.Vector3(-2.35, 5.95, 0.08), 0.78, 0.95, 0.44, 18, 2401)
+  addCanopyCloud(fill, new THREE.Vector3(2.45, 7.25, -0.04), 0.82, 0.92, 0.48, 20, 2609)
+  addCanopyCloud(fill, new THREE.Vector3(2.0, 8.55, 0.08), 0.68, 0.82, 0.42, 14, 2851)
+  addCanopyCloud(fill, new THREE.Vector3(-0.9, 8.15, -0.06), 0.72, 0.86, 0.42, 14, 3049)
+  addCanopyCloud(fill, new THREE.Vector3(-2.85, 5.1, 0.02), 0.64, 0.78, 0.36, 18, 3313)
+  addCanopyCloud(fill, new THREE.Vector3(2.85, 5.8, -0.04), 0.82, 0.86, 0.44, 24, 4421)
+  addCanopyCloud(fill, new THREE.Vector3(-2.15, 4.75, 0.08), 0.78, 0.78, 0.38, 22, 4019)
+  addCanopyCloud(fill, new THREE.Vector3(-3.15, 5.95, 0.02), 0.62, 0.72, 0.34, 16, 4211)
+
+  treeRoot.add(fill)
+}
+
+function fitObjectToScene(object: THREE.Object3D, targetHeight = props.sceneScale, offsetY = props.sceneOffsetY) {
+  const box = new THREE.Box3()
+  object.updateWorldMatrix(true, true)
+  object.traverseVisible(child => {
+    if (!(child as unknown as THREE.Mesh).isMesh) return
+    box.expandByObject(child)
+  })
+  const size = box.getSize(new THREE.Vector3())
+  const center = box.getCenter(new THREE.Vector3())
+  const scale = targetHeight / Math.max(size.y, 0.001)
+
+  object.scale.set(scale, scale * props.sceneStretchY, scale)
+  object.position.set(-center.x * scale, -box.min.y * scale * props.sceneStretchY, -center.z * scale)
+  object.position.y += offsetY
+}
+
+function decorateTreeObject(object: THREE.Object3D) {
+  object.traverse(child => {
+    if (!(child as unknown as THREE.Mesh).isMesh) return
+    const mesh = child as unknown as THREE.Mesh
+    mesh.castShadow = true
+    mesh.receiveShadow = true
+    const materials = Array.isArray(mesh.material) ? mesh.material : [mesh.material]
+    materials.forEach(material => {
+      material.transparent = material.name === 'leaves'
+      if (material.name === 'leaves') {
+        material.opacity = 0.95
+        material.depthWrite = false
+      }
+    })
+  })
+}
+
+function styleRealTreeModel(object: THREE.Object3D) {
+  const barkMaterial = new THREE.MeshStandardMaterial({
+    color: 0x6b4429,
+    roughness: 0.93,
+    metalness: 0,
+  })
+  const branchMaterial = new THREE.MeshStandardMaterial({
+    color: 0x815735,
+    roughness: 0.9,
+    metalness: 0,
+  })
+  const leafMaterials = [0x4f8f3d, 0x5f9b45, 0x6ca54d, 0x3f7f35, 0x79aa57].map(color => new THREE.MeshStandardMaterial({
+    color,
+    roughness: 0.82,
+    metalness: 0,
+    side: THREE.DoubleSide,
+  }))
+
+  const nameHash = (value: string) => {
+    let hash = 0
+    for (let i = 0; i < value.length; i++) {
+      hash = Math.imul(hash ^ value.charCodeAt(i), 2654435761)
+    }
+    return Math.abs(hash)
+  }
+
+  object.traverse(child => {
+    if (!(child as unknown as THREE.Mesh).isMesh) return
+    const mesh = child as THREE.Mesh
+    const label = `${mesh.name} ${Array.isArray(mesh.material) ? mesh.material.map(m => m.name).join(' ') : mesh.material?.name ?? ''}`.toLowerCase()
+    const isGreenLeaf = label.includes('leaf_ginkgo') || label.includes('ginkgo_leaf')
+    const isTreeWood = label.includes('hero_mainbranch')
+      || label.includes('herotrunkspine')
+      || label.includes('hero_root')
+      || label.includes('hero_ancient_trunk')
+      || label.includes('ancient_bark')
+    const isBulkyGeneratedTrunk = label.includes('hero_ancient_trunk')
+
+    if (!isGreenLeaf && !isTreeWood) {
+      mesh.visible = false
+      return
+    }
+
+    if (isBulkyGeneratedTrunk) {
+      mesh.scale.set(0.32, 1.02, 0.32)
+    }
+
+    if (isGreenLeaf) {
+      mesh.material = leafMaterials[nameHash(mesh.name) % leafMaterials.length]
+      mesh.castShadow = false
+      mesh.receiveShadow = true
+      return
+    }
+
+    mesh.material = label.includes('trunk') || label.includes('root') ? barkMaterial : branchMaterial
+    mesh.castShadow = true
+    mesh.receiveShadow = true
+  })
+}
+
+function createHybridTreeOptions() {
+  const options = structuredClone(TreePreset['Ash Large'] as any)
+  options.seed = 29919
+  options.type = TreeType.Deciduous
+  options.bark.type = BarkType.Pine
+  options.bark.tint = 0xcedabe
+  options.bark.flatShading = false
+  options.bark.textured = true
+  options.bark.textureScale = { x: 0.5, y: 5 }
+  options.branch.levels = 3
+  options.branch.angle = { 1: 39, 2: 39, 3: 51 }
+  options.branch.children = {
+    0: 10,
+    1: 4,
+    2: 3,
+  }
+  options.branch.force = {
+    direction: { x: 0, y: 1, z: 0 },
+    strength: -0.010869565217391311,
+  }
+  options.branch.gnarliness = { 0: -0.05, 1: 0.2, 2: 0.16, 3: 0.05 }
+  options.branch.length = {
+    0: 45,
+    1: 29.42,
+    2: 15.3,
+    3: 4.6,
+  }
+  options.branch.radius = {
+    0: 3.03,
+    1: 0.53,
+    2: 0.79,
+    3: 1.11,
+  }
+  options.branch.sections = { 0: 12, 1: 8, 2: 6, 3: 4 }
+  options.branch.segments = { 0: 8, 1: 6, 2: 4, 3: 3 }
+  options.branch.start = { 1: 0.32, 2: 0.34, 3: 0 }
+  options.branch.taper = { 0: 0.7, 1: 0.62, 2: 0.76, 3: 0 }
+  options.branch.twist = { 0: 0.09, 1: -0.07, 2: 0, 3: 0 }
+  options.leaves.type = 'ash'
+  options.leaves.billboard = Billboard.Double
+  options.leaves.angle = 30
+  options.leaves.count = 10
+  options.leaves.start = 0.01
+  options.leaves.size = 4.62
+  options.leaves.sizeVariance = 0.72
+  options.leaves.tint = 0x6fa44c
+  options.leaves.alphaTest = 0.5
+  options.trellis.enabled = false
+  return options
+}
+
+function styleHybridGeneratorLayer(object: THREE.Object3D) {
+  object.traverse(child => {
+    if (!(child as unknown as THREE.Mesh).isMesh) return
+    const mesh = child as THREE.Mesh
+    const materials = Array.isArray(mesh.material) ? mesh.material : [mesh.material]
+    const meshLabel = mesh.name.toLowerCase()
+    const styled = materials.map(source => {
+      const label = `${meshLabel} ${source.name}`.toLowerCase()
+      const isLeaf = label.includes('leaf') || label.includes('leaves')
+      const material = new THREE.MeshStandardMaterial({
+        map: (source as THREE.MeshStandardMaterial | undefined)?.map ?? null,
+        color: isLeaf ? 0x5e9340 : 0x755036,
+        emissive: isLeaf ? 0x0a1807 : 0x201409,
+        emissiveIntensity: isLeaf ? 0.06 : 0.1,
+        roughness: isLeaf ? 0.82 : 0.9,
+        metalness: 0,
+        side: THREE.DoubleSide,
+      })
+      material.transparent = isLeaf
+      material.opacity = isLeaf ? 0.58 : 0.92
+      material.depthWrite = !isLeaf
+      material.alphaTest = isLeaf ? 0.24 : 0
+      return material
+    })
+    mesh.material = Array.isArray(mesh.material) ? styled : styled[0]
+    mesh.castShadow = !styled.some(material => material.transparent)
+    mesh.receiveShadow = true
+  })
+}
+
+function createHybridGeneratorLayer() {
+  const layer = new Tree() as unknown as THREE.Object3D & { update: (elapsedTime: number) => void; loadFromJson: (options: any) => void }
+  layer.loadFromJson(createHybridTreeOptions())
+  layer.name = 'EzTreeDepthLayer'
+  styleHybridGeneratorLayer(layer)
+  fitObjectToScene(layer, props.sceneScale * 0.62, props.sceneOffsetY + 2.55)
+  layer.scale.x *= 0.54
+  layer.scale.z *= 0.38
+  layer.position.y += 0.22
+  layer.position.z -= 0.72
+  layer.rotation.y = -0.08
+  return layer
+}
+
+function createCanopyDepthScaffold() {
+  const scaffold = new THREE.Group()
+  scaffold.name = 'HybridCanopyDepthScaffold'
+
+  const branchPairs = [
+    [new THREE.Vector3(-0.1, 5.65, 0.18), new THREE.Vector3(3.25, 7.95, 0.18), 0.055, 0.18],
+    [new THREE.Vector3(0.08, 6.45, -0.08), new THREE.Vector3(4.15, 8.85, -0.18), 0.045, 0.15],
+    [new THREE.Vector3(-0.06, 7.2, 0.12), new THREE.Vector3(2.75, 10.05, 0.22), 0.038, 0.12],
+    [new THREE.Vector3(0.04, 7.8, -0.12), new THREE.Vector3(1.75, 11.6, -0.02), 0.03, 0.1],
+  ] as const
+
+  branchPairs.forEach(([start, end, top, bottom], index) => {
+    addMirroredBranch(scaffold, start, end, top, bottom)
+    addMirroredBranch(
+      scaffold,
+      new THREE.Vector3(end.x * 0.58, start.y + (end.y - start.y) * 0.58, end.z),
+      new THREE.Vector3(end.x * 1.08, end.y + 0.38, end.z + (index % 2 ? -0.38 : 0.38)),
+      top * 0.52,
+      bottom * 0.56,
+    )
+  })
+
+  addMirroredCanopyCloud(scaffold, new THREE.Vector3(2.65, 7.65, 0.22), 0.82, 0.58, 0.28, 18, 18211)
+  addMirroredCanopyCloud(scaffold, new THREE.Vector3(2.25, 8.9, -0.16), 0.72, 0.54, 0.26, 16, 18433)
+  addCanopyCloud(scaffold, new THREE.Vector3(0, 10.5, 0.18), 0.9, 0.64, 0.28, 20, 18679)
+
+  scaffold.traverse(child => {
+    if (!(child as unknown as THREE.Mesh).isMesh) return
+    const mesh = child as THREE.Mesh
+    mesh.renderOrder = mesh.material instanceof THREE.MeshStandardMaterial && mesh.material.transparent ? 2 : 1
+  })
+
+  return scaffold
+}
+
+async function loadTreeConfig(): Promise<any> {
+  const response = await fetch(props.treeConfigUrl)
+  if (!response.ok) throw new Error(`Failed to load tree config: ${response.status}`)
+  return response.json()
+}
+
+async function createEzTree(options?: any) {
+  generatedTree = new Tree() as unknown as THREE.Object3D & {
+    update: (elapsedTime: number) => void
+    loadFromJson: (options: any) => void
+  }
+  generatedTree.loadFromJson(options ?? createTreeOptions() as any)
+  generatedTree.name = 'EzTreeKnowledgeModel'
+  decorateTreeObject(generatedTree)
+
+  treeRoot = new THREE.Group()
+  treeRoot.name = 'EzKnowledgeTreeRoot'
+  treeRoot.add(generatedTree)
+  treeRoot.rotation.y = 0.72
+  treeRoot.scale.set(1.2, 0.94, 1.1)
+  fitObjectToScene(generatedTree)
+  addNaturalCanopyFill()
+  worldGroup?.add(treeRoot)
+}
+
+async function createGeneratedTree() {
+  if (props.preferModel && props.modelUrl) {
+    try {
+      gltfLoader ??= new GLTFLoader()
+      const gltf = await gltfLoader.loadAsync(props.modelUrl)
+      generatedTree = gltf.scene as unknown as THREE.Object3D & {
+        update: (elapsedTime: number) => void
+        loadFromJson: (options: any) => void
+      }
+      generatedTree.update = () => {}
+      generatedTree.name = 'RealKnowledgeTreeModel'
+      decorateTreeObject(generatedTree)
+      styleRealTreeModel(generatedTree)
+
+      treeRoot = new THREE.Group()
+      treeRoot.name = 'RealKnowledgeTreeRoot'
+      treeRoot.add(generatedTree)
+      fitObjectToScene(generatedTree)
+      const generatorLayer = createHybridGeneratorLayer()
+      treeRoot.add(generatorLayer)
+      generatedTree.update = (elapsedTime: number) => {
+        generatorLayer.update(elapsedTime)
+      }
+      worldGroup?.add(treeRoot)
+      return
+    } catch (error) {
+      console.warn('Failed to load real knowledge tree model, falling back to ez-tree:', error)
+    }
+  }
+
+  try {
+    const config = await loadTreeConfig()
+    await createEzTree(config)
+  } catch (error) {
+    console.warn('Failed to load tree config, using built-in tree options:', error)
+    await createEzTree()
+  }
+}
+
+function createStage() {
+  if (!worldGroup || !props.showBackgroundStage) return
+  stageGroup = new THREE.Group()
+  stageGroup.name = 'EzKnowledgeTreeStage'
+
+  // Small dark soil pad beneath the tree to blend roots with the ez-tree ground
+  const soilMaterial = new THREE.MeshStandardMaterial({
+    color: 0x3a4a2a,
+    roughness: 0.95,
+    metalness: 0,
+    transparent: true,
+    opacity: 0.4,
+  })
+  const mound = new THREE.Mesh(new THREE.CylinderGeometry(2.6, 3.2, 0.08, 64), soilMaterial)
+  mound.position.y = 0.02
+  mound.scale.z = 0.8
+  mound.receiveShadow = true
+  stageGroup.add(mound)
+
+  const litterMaterial = new THREE.MeshBasicMaterial({
+    color: 0x6f6548,
+    transparent: true,
+    opacity: 0.28,
+    side: THREE.DoubleSide,
+  })
+  for (let i = 0; i < 20; i++) {
+    const angle = i * 2.399
+    const radius = 1.4 + ((i * 37) % 100) / 100 * 2.6
+    const leaf = new THREE.Mesh(new THREE.PlaneGeometry(0.14, 0.05), litterMaterial.clone())
+    leaf.rotation.set(-Math.PI / 2, 0, angle + i * 0.17)
+    leaf.position.set(Math.cos(angle) * radius, 0.035, Math.sin(angle) * radius * 0.62)
+    stageGroup.add(leaf)
+  }
+
+  worldGroup.add(stageGroup)
+}
+
+function createAppleMarker(marker: GraphMarker, position: THREE.Vector3, size: number, color: number) {
+  const appleSize = size * 0.9
+  const group = new THREE.Group()
+  group.position.copy(position)
+  group.name = `KnowledgeMarker-${marker.id}`
+  group.userData.marker = marker
+
+  const isHighlighted = props.highlightNames.length > 0 && props.highlightNames.includes(marker.label)
+  group.userData.isHighlighted = isHighlighted
+
+  // Visible glow for all apples so they stand out against foliage
+  const glowSize = isHighlighted ? appleSize * 1.9 : appleSize * 1.55
+  const glowOpacity = isHighlighted ? 0.42 : 0.28
+  const glow = new THREE.Mesh(
+    new THREE.SphereGeometry(glowSize, 20, 14),
+    new THREE.MeshBasicMaterial({
+      color: isHighlighted ? 0x00d4ff : color,
+      transparent: true,
+      opacity: glowOpacity,
+      depthWrite: false,
+      blending: THREE.AdditiveBlending,
+    }),
+  )
+  glow.userData.marker = marker
+  group.add(glow)
+
+  // Apple body: slightly tapered sphere with dimple on top
+  const appleGeometry = new THREE.SphereGeometry(appleSize, 28, 22)
+  const pos = appleGeometry.attributes.position
+  for (let i = 0; i < pos.count; i++) {
+    const y = pos.getY(i)
+    if (y > appleSize * 0.55) {
+      // narrow toward stem and create top dimple
+      const t = (y - appleSize * 0.55) / (appleSize * 0.45)
+      const pinch = 1 - t * 0.22
+      pos.setX(i, pos.getX(i) * pinch)
+      pos.setZ(i, pos.getZ(i) * pinch)
+      pos.setY(i, y - t * t * appleSize * 0.12)
+    }
+    if (y < -appleSize * 0.3) {
+      // taper bottom slightly
+      const t = Math.abs(y + appleSize * 0.3) / (appleSize * 0.7)
+      const pinch = 1 - t * 0.12
+      pos.setX(i, pos.getX(i) * pinch)
+      pos.setZ(i, pos.getZ(i) * pinch)
+    }
+  }
+  appleGeometry.computeVertexNormals()
+
+  const baseColor = new THREE.Color(color)
+  const body = new THREE.Mesh(
+    appleGeometry,
+    new THREE.MeshPhysicalMaterial({
+      color: baseColor,
+      emissive: isHighlighted ? new THREE.Color(0x00d4ff) : baseColor,
+      emissiveIntensity: isHighlighted ? 0.45 : 0.22,
+      roughness: 0.35,
+      metalness: 0.02,
+      clearcoat: 0.12,
+      clearcoatRoughness: 0.35,
+    }),
+  )
+  body.scale.set(1, 0.92, 0.96)
+  body.castShadow = true
+  body.receiveShadow = true
+  body.userData.marker = marker
+  group.add(body)
+
+  // Subtle highlight spot to make it look rounder
+  const highlight = new THREE.Mesh(
+    new THREE.SphereGeometry(appleSize * 0.28, 16, 12),
+    new THREE.MeshBasicMaterial({
+      color: 0xffffff,
+      transparent: true,
+      opacity: 0.18,
+      depthWrite: false,
+    }),
+  )
+  highlight.position.set(appleSize * 0.32, appleSize * 0.28, appleSize * 0.34)
+  highlight.scale.set(1, 0.6, 1)
+  group.add(highlight)
+
+  // Stem
+  const stem = new THREE.Mesh(
+    new THREE.CylinderGeometry(appleSize * 0.045, appleSize * 0.065, appleSize * 0.38, 8),
+    new THREE.MeshStandardMaterial({ color: 0x4a3220, roughness: 0.85 }),
+  )
+  stem.position.set(0, appleSize * 0.92, 0)
+  stem.rotation.z = -0.18
+  stem.castShadow = true
+  stem.userData.marker = marker
+  group.add(stem)
+
+  // Small leaf near stem
+  const leafShape = new THREE.Shape()
+  leafShape.moveTo(0, 0)
+  leafShape.quadraticCurveTo(appleSize * 0.18, appleSize * 0.06, appleSize * 0.22, appleSize * 0.24)
+  leafShape.quadraticCurveTo(appleSize * 0.06, appleSize * 0.28, 0, appleSize * 0.12)
+  leafShape.quadraticCurveTo(-appleSize * 0.06, appleSize * 0.28, -appleSize * 0.22, appleSize * 0.24)
+  leafShape.quadraticCurveTo(-appleSize * 0.18, appleSize * 0.06, 0, 0)
+  const leafGeometry = new THREE.ShapeGeometry(leafShape)
+  const leaf = new THREE.Mesh(
+    leafGeometry,
+    new THREE.MeshStandardMaterial({
+      color: 0x7cb04a,
+      roughness: 0.7,
+      metalness: 0,
+      side: THREE.DoubleSide,
+      transparent: true,
+      opacity: 0.95,
+    }),
+  )
+  leaf.position.set(appleSize * 0.12, appleSize * 0.86, appleSize * 0.08)
+  leaf.rotation.set(-0.4, 0.25, -0.35)
+  leaf.castShadow = true
+  leaf.userData.marker = marker
+  group.add(leaf)
+
+  const hitTarget = new THREE.Mesh(
+    new THREE.SphereGeometry(size * 2.2, 18, 12),
+    new THREE.MeshBasicMaterial({
+      color: 0xffffff,
+      transparent: true,
+      opacity: 0,
+      depthWrite: false,
+    }),
+  )
+  hitTarget.userData.marker = marker
+  group.add(hitTarget)
+
+  interactiveObjects.push(group)
+  markerObjects.push(group)
+  return group
+}
+
+function leafAnchor(index: number, fallbackAngle: number) {
+  const leavesMesh = (generatedTree as any)?.leavesMesh as THREE.Mesh | undefined
+  const position = leavesMesh?.geometry?.attributes.position
+  const ring = index % 3
+  const balanced = new THREE.Vector3(
+    Math.cos(fallbackAngle) * (2.2 + ring * 0.36),
+    6.65 + (index % 6) * 0.58,
+    Math.sin(fallbackAngle) * (1.05 + ring * 0.18),
+  )
+  if (generatedTree && treeRoot && position?.count) {
+    const vertex = new THREE.Vector3()
+    const sampleIndex = Math.abs((stableSeed() + index * 7919) % position.count)
+    vertex.fromBufferAttribute(position, sampleIndex)
+    generatedTree.localToWorld(vertex)
+    treeRoot.worldToLocal(vertex)
+    vertex.x += Math.sin(index * 1.37) * 0.12
+    vertex.y -= 0.04 + (index % 3) * 0.03
+    vertex.z += Math.cos(index * 1.71) * 0.1
+    return vertex
+  }
+  return balanced
+}
+
+function addGraphMarkers() {
+  if (!treeRoot) return
+  interactiveObjects.length = 0
+  markerObjects.length = 0
+
+  const rootMarker: GraphMarker = {
+    id: 'course-main',
+    type: 'course',
+    label: '课程总览',
+    progress: courseProgress.value,
+    description: '树干代表课程主线，果实代表具体知识点掌握状态。',
+    items: branchGroups.value.map(group => group.label),
+  }
+  const rootColor = courseProgress.value >= 80 ? 0x22c55e : 0xef4444
+  treeRoot.add(createAppleMarker(rootMarker, new THREE.Vector3(-0.18, 5.4, 0.72), 0.20, rootColor))
+
+  branchGroups.value.slice(0, 8).forEach((group, index) => {
+    const progress = Math.round(group.points.reduce((sum, point) => sum + (point.progress ?? 0), 0) / group.points.length)
+    const marker: GraphMarker = {
+      id: `branch-${index}`,
+      type: 'branch',
+      label: group.label,
+      progress,
+      description: '树枝节点代表课程模块。',
+      items: group.points.map(point => `${point.name} · ${markerStatusLabel(point.status)} · ${point.progress ?? 0}%`),
+    }
+    const branchColor = progress >= 80 ? 0x22c55e : 0xef4444
+    treeRoot!.add(createAppleMarker(
+      marker,
+      leafAnchor(index + 11, index * 1.1),
+      0.17,
+      branchColor,
+    ))
+  })
+
+  const maxPoints = 42
+  displayPoints.value.slice(0, maxPoints).forEach((point, index) => {
+    const angle = index * 2.399
+    const marker: GraphMarker = {
+      id: `knowledge-${index}-${point.name}`,
+      type: 'knowledge',
+      label: point.name,
+      status: point.status ?? 'none',
+      progress: point.progress ?? 0,
+      description: `果实状态：${markerStatusLabel(point.status)}。`,
+      items: [
+        `掌握度: ${point.progress ?? 0}%`,
+        `建议: ${point.status === 'weak' ? '安排补弱练习' : point.status === 'mastered' ? '进入迁移应用' : '继续当前路径'}`,
+      ],
+    }
+
+    const isSolid = point.status === 'mastered' || point.status === 'proficient'
+    treeRoot!.add(createAppleMarker(
+      marker,
+      leafAnchor(index + 31, angle),
+      isSolid ? 0.18 : 0.20,
+      statusColor(point.status),
+    ))
+  })
+}
+
+async function rebuildTree() {
+  loading.value = true
+  loadError.value = false
+  selectedMarkerId.value = null
+  removeCurrentTree()
+  try {
+    await createGeneratedTree()
+    addGraphMarkers()
+    loading.value = false
+  } catch (error) {
+    console.error('Failed to create ez-tree knowledge tree:', error)
+    removeCurrentTree()
+    loadError.value = true
+    loading.value = false
+  }
 }
 
 function markerHitFromIntersection(event: PointerEvent) {
   if (!canvasRef.value || !camera || !raycaster || !interactiveObjects.length) return null
-
   const rect = canvasRef.value.getBoundingClientRect()
   pointer.x = ((event.clientX - rect.left) / rect.width) * 2 - 1
   pointer.y = -((event.clientY - rect.top) / rect.height) * 2 + 1
   raycaster.setFromCamera(pointer, camera)
 
   const hits = raycaster.intersectObjects(interactiveObjects, true)
-  const markerHits = hits.filter(item => item.object.userData.marker)
-  const hit = markerHits.find(item => item.object.userData.marker?.type === 'knowledge') ?? markerHits[0]
+  const hit = hits.find(item => item.object.userData.marker)
   if (!hit) return null
-  const marker = hit.object.userData.marker as GraphMarker
+
   let object = hit.object
-  while (object.parent?.userData.marker?.id === marker.id) {
+  while (object.parent?.userData.marker) {
     object = object.parent
   }
-  return { marker, object }
-}
-
-function markerFromIntersection(event: PointerEvent) {
-  return markerHitFromIntersection(event)?.marker ?? null
+  return { marker: hit.object.userData.marker as GraphMarker, object }
 }
 
 function handlePointerDown(event: PointerEvent) {
-  if (!props.horizontalOnlyControls || !canvasRef.value) return
-  isTreeDragging = true
-  treeDragMoved = false
-  treeDragStartX = event.clientX
-  treeDragLastX = event.clientX
-  canvasRef.value.setPointerCapture?.(event.pointerId)
+  if (!canvasRef.value) return
+  if (props.horizontalOnlyControls) {
+    isTreeDragging = true
+    treeDragMoved = false
+    treeDragStartX = event.clientX
+    treeDragLastX = event.clientX
+    canvasRef.value.setPointerCapture?.(event.pointerId)
+  }
   canvasRef.value.style.cursor = 'grabbing'
 }
 
 function handlePointerMove(event: PointerEvent) {
   if (!canvasRef.value) return
-  if (props.horizontalOnlyControls && isTreeDragging && worldRotationGroup) {
+  if (props.horizontalOnlyControls && isTreeDragging && worldGroup) {
     const dx = event.clientX - treeDragLastX
-    if (Math.abs(event.clientX - treeDragStartX) > 4) {
-      treeDragMoved = true
-    }
-    worldRotationGroup.rotation.y += dx * 0.006
+    if (Math.abs(event.clientX - treeDragStartX) > 4) treeDragMoved = true
+    worldGroup.rotation.y += dx * 0.006
     treeDragLastX = event.clientX
     canvasRef.value.style.cursor = 'grabbing'
     return
   }
-  canvasRef.value.style.cursor = markerFromIntersection(event) ? 'pointer' : 'grab'
+  canvasRef.value.style.cursor = markerHitFromIntersection(event) ? 'pointer' : 'grab'
 }
 
 function handlePointerUp(event: PointerEvent) {
   if (!canvasRef.value) return
-  if (
-    props.horizontalOnlyControls
-    && isTreeDragging
-    && canvasRef.value.hasPointerCapture?.(event.pointerId)
-  ) {
+  if (isTreeDragging && canvasRef.value.hasPointerCapture?.(event.pointerId)) {
     canvasRef.value.releasePointerCapture(event.pointerId)
   }
   isTreeDragging = false
@@ -1253,50 +1296,34 @@ function handleCanvasClick(event: PointerEvent) {
     treeDragMoved = false
     return
   }
+
   const hit = markerHitFromIntersection(event)
-  if (hit?.marker) {
-    const { marker, object } = hit
-    object.userData.clickedUntil = performance.now() + 720
-    selectedMarkerId.value = marker.id
-    activeMarker.value = marker
-    emit('markerSelect', marker)
-  }
+  if (!hit?.marker) return
+  selectedMarkerId.value = hit.marker.id
+  hit.object.userData.clickedUntil = performance.now() + 720
+  emit('markerSelect', hit.marker)
 }
 
 function animate() {
   animationId = requestAnimationFrame(animate)
+  const time = performance.now() * 0.001
 
-  if (rootGroup && worldRotationGroup) {
-    const t = performance.now() * 0.004
-    const flow = (performance.now() * 0.00018) % 1
-    if (fluidSurfaceTexture) fluidSurfaceTexture.offset.y = -flow * 0.35
-    if (fluidGlowTexture) fluidGlowTexture.offset.y = -flow
-    if (fluidBumpTexture) fluidBumpTexture.offset.y = -flow * 0.28
-    fluidMaterials.forEach((material, index) => {
-      material.emissiveIntensity = 0.14 + Math.sin(t * 0.9 + index * 0.21) * 0.04
-    })
-    streamMaterials.forEach((material, index) => {
-      material.opacity = 0.38 + Math.max(0, Math.sin(t * 1.1 + index * 1.35)) * 0.34
-    })
-    starGroup?.children.forEach((star, index) => {
-      const pulse = 1 + Math.sin(t + index * 0.7) * (star.userData.complete ? 0.095 : 0.035)
-      const clickedUntil = star.userData.clickedUntil ?? 0
-      const clickBoost = clickedUntil > performance.now() ? 0.22 * ((clickedUntil - performance.now()) / 720) : 0
-      const selectedBoost = star.userData.marker?.id === selectedMarkerId.value ? 0.1 : 0
-      star.scale.setScalar(pulse + clickBoost + selectedBoost)
-    })
-    markerGroup?.children.forEach((star, index) => {
-      const pulse = 1 + Math.sin(t * 0.8 + index * 0.9) * 0.075
-      const clickedUntil = star.userData.clickedUntil ?? 0
-      const clickBoost = clickedUntil > performance.now() ? 0.18 * ((clickedUntil - performance.now()) / 720) : 0
-      const selectedBoost = star.userData.marker?.id === selectedMarkerId.value ? 0.08 : 0
-      star.scale.setScalar(pulse + clickBoost + selectedBoost)
-    })
-    auraGroup?.children.forEach((aura, index) => {
-      const pulse = 1 + Math.sin(t * 0.65 + index * 1.2) * 0.055
-      aura.scale.setScalar(pulse)
-    })
+  generatedTree?.update(time)
+  ezEnvironment?.update(time)
+  if (worldGroup && !props.horizontalOnlyControls) {
+    worldGroup.rotation.y = 0
   }
+
+  markerObjects.forEach((marker, index) => {
+    const clickedUntil = marker.userData.clickedUntil ?? 0
+    const clickedBoost = clickedUntil > performance.now() ? 0.18 * ((clickedUntil - performance.now()) / 720) : 0
+    const selectedBoost = marker.userData.marker?.id === selectedMarkerId.value ? 0.1 : 0
+    const highlightedBoost = marker.userData.isHighlighted ? 0.08 : 0
+    const pulseSpeed = marker.userData.isHighlighted ? 2.5 : 1.2
+    const pulseAmp = marker.userData.isHighlighted ? 0.06 : 0.035
+    const pulse = 1 + Math.sin(time * pulseSpeed + index * 0.65) * pulseAmp
+    marker.scale.setScalar(pulse + clickedBoost + selectedBoost + highlightedBoost)
+  })
 
   controls?.update()
   if (renderer && scene && camera) {
@@ -1306,9 +1333,7 @@ function animate() {
 
 function handleResize() {
   if (!canvasRef.value || !renderer || !camera) return
-
   const { w, h } = getCanvasSize()
-
   renderer.setSize(w, h)
   camera.aspect = w / h
   camera.updateProjectionMatrix()
@@ -1323,90 +1348,77 @@ function disposeObject(object: DisposableObject) {
   }
 }
 
-function removeCurrentModel() {
-  if (rootGroup && worldRotationGroup) {
-    worldRotationGroup.remove(rootGroup)
+function removeCurrentTree() {
+  if (treeRoot && worldGroup) {
+    worldGroup.remove(treeRoot)
   }
-  if (rootGroup) {
-    rootGroup.traverse(child => disposeObject(child as DisposableObject))
-  }
-  rootGroup = null
-  starGroup = null
-  markerGroup = null
-  auraGroup = null
-  interactiveObjects = []
-  fluidMaterials.length = 0
-  streamMaterials.length = 0
+  treeRoot?.traverse(child => disposeObject(child as DisposableObject))
+  treeRoot = null
+  generatedTree = null
+  leafGeometry = null
+  leafMaterial = null
+  denseLeafGeometry = null
+  denseLeafMaterial = null
+  interactiveObjects.length = 0
+  markerObjects.length = 0
 }
 
-function removeBackgroundStage() {
-  if (backgroundStageGroup && worldRotationGroup) {
-    worldRotationGroup.remove(backgroundStageGroup)
-    backgroundStageGroup.traverse(child => disposeObject(child as DisposableObject))
+function removeStage() {
+  if (stageGroup && worldGroup) {
+    worldGroup.remove(stageGroup)
   }
-  backgroundStageGroup = null
+  stageGroup?.traverse(child => disposeObject(child as DisposableObject))
+  stageGroup = null
 }
 
-onMounted(() => {
+onMounted(async () => {
+  loading.value = true
+  await preloadEzTreeAssets()
   createScene()
   initRenderer()
-  if (props.showBackgroundStage) {
-    loadBackgroundStage()
-  }
-  loadModel()
+  createStage()
+  rebuildTree()
   animate()
+  loading.value = false
   window.addEventListener('resize', handleResize)
 })
 
 onBeforeUnmount(() => {
   cancelAnimationFrame(animationId)
   window.removeEventListener('resize', handleResize)
+  resizeObserver?.disconnect()
   controls?.dispose()
   canvasRef.value?.removeEventListener('pointerdown', handlePointerDown)
   canvasRef.value?.removeEventListener('pointermove', handlePointerMove)
   canvasRef.value?.removeEventListener('pointerup', handlePointerUp)
   canvasRef.value?.removeEventListener('pointerleave', handlePointerUp)
   canvasRef.value?.removeEventListener('click', handleCanvasClick)
-  removeCurrentModel()
-  removeBackgroundStage()
+  removeCurrentTree()
+  removeStage()
   renderer?.dispose()
-  fluidSurfaceTexture?.dispose()
-  fluidGlowTexture?.dispose()
-  fluidBumpTexture?.dispose()
   scene?.clear()
-  worldRotationGroup = null
+  worldGroup = null
 })
 
-watch(() => props.modelUrl, () => {
-  removeCurrentModel()
-  loading.value = true
-  loadError.value = false
-  loadModel()
-})
-
-watch(() => props.knowledgePoints, () => {
-  if (!rootGroup) return
-  interactiveObjects = []
-  addGraphMarkers(rootGroup)
-  addAttachedStars(rootGroup)
-  // 动态更新树叶颜色
-  enhanceOriginalModel(rootGroup)
-}, { deep: true })
+watch(() => props.knowledgePoints, rebuildTree, { deep: true })
+watch(() => props.highlightNames, rebuildTree, { deep: true })
 </script>
 
 <template>
   <div class="three-tree-wrapper" :style="fill ? { height: '100%' } : { height: typeof height === 'number' ? `${height}px` : height }">
     <canvas ref="canvasRef" class="three-tree-canvas" aria-label="3D knowledge tree" />
     <div v-if="loading" class="three-tree-loading">
-      <div class="loading-spinner" />
-      <span>加载 3D 知识树...</span>
+      <div class="loading-tree">
+        <span />
+        <span />
+        <span />
+      </div>
+      <span>生成知识树...</span>
     </div>
     <div v-if="loadError" class="three-tree-error">
-      <span>3D 模型加载失败</span>
+      <span>知识树生成失败</span>
     </div>
-    <div class="three-tree-hint">
-      <span>拖拽旋转 · 滚轮缩放</span>
-    </div>
+    <div class="tree-vignette" />
   </div>
 </template>
 
@@ -1416,65 +1428,86 @@ watch(() => props.knowledgePoints, () => {
   width: 100%;
   border-radius: 0;
   overflow: hidden;
-  background: transparent;
+  background: linear-gradient(180deg, #b8ddff 0%, #e2f0ff 45%, #f0f8e8 100%);
   border: 0;
 }
 
 .three-tree-canvas {
+  position: relative;
+  z-index: 2;
   display: block;
   width: 100%;
   height: 100%;
+  cursor: grab;
+}
+
+.tree-vignette {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at center, transparent 55%, rgba(255, 255, 255, 0.08) 100%),
+    url("data:image/svg+xml,%3Csvg viewBox='0 0 180 180' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.2' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+  opacity: 0.22;
 }
 
 .three-tree-loading,
 .three-tree-error {
   position: absolute;
   inset: 0;
+  z-index: 4;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   gap: 12px;
-  color: var(--color-text-tertiary);
+  color: rgba(242, 246, 250, 0.68);
   font-size: 13px;
-  background: rgba(10, 10, 20, 0.85);
-}
-
-.loading-spinner {
-  width: 28px;
-  height: 28px;
-  border-radius: 50%;
-  border: 2px solid rgba(255, 255, 255, 0.08);
-  border-top-color: var(--color-accent-cyan, #00d4ff);
-  animation: spin 0.8s linear infinite;
-}
-
-@keyframes spin {
-  to { transform: rotate(360deg); }
+  background: rgba(9, 16, 18, 0.78);
+  backdrop-filter: blur(10px);
 }
 
 .three-tree-error {
-  color: var(--color-accent-rose, #f43f5e);
+  color: #c98a45;
 }
 
-.three-tree-hint {
+.loading-tree {
+  position: relative;
+  width: 52px;
+  height: 58px;
+}
+
+.loading-tree span {
   position: absolute;
-  bottom: 10px;
   left: 50%;
-  transform: translateX(-50%);
-  padding: 4px 12px;
-  border-radius: 8px;
-  background: rgba(0, 0, 0, 0.5);
-  backdrop-filter: blur(6px);
-  color: rgba(255, 255, 255, 0.35);
-  font-size: 11px;
-  pointer-events: none;
-  opacity: 0;
-  transition: opacity 0.3s;
-  white-space: nowrap;
+  bottom: 0;
+  display: block;
+  width: 5px;
+  height: 44px;
+  border-radius: 999px;
+  background: linear-gradient(180deg, rgba(127, 154, 99, 0.9), rgba(92, 66, 42, 0.82));
+  transform-origin: bottom center;
+  animation: branch-sway 1.35s ease-in-out infinite;
 }
 
-.three-tree-wrapper:hover .three-tree-hint {
-  opacity: 1;
+.loading-tree span:nth-child(1) {
+  transform: translateX(-50%) rotate(-32deg);
+  height: 36px;
+}
+
+.loading-tree span:nth-child(2) {
+  transform: translateX(-50%);
+}
+
+.loading-tree span:nth-child(3) {
+  transform: translateX(-50%) rotate(32deg);
+  height: 36px;
+}
+
+@keyframes branch-sway {
+  50% {
+    filter: brightness(1.24);
+  }
 }
 </style>

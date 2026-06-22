@@ -75,7 +75,7 @@ export async function runEvaluationAgent({ profile, learningData, exerciseResult
 
 function fallbackEvaluation({ profile, exerciseResults, knowledgeContext }) {
   const score = profile?.totalScore || 50
-  const weakTags = (profile?.weaknesses || []).map(w => w.tag)
+  const weakTags = (profile?.weaknesses || [])
   const correctRate = exerciseResults?.correctRate ?? (score > 60 ? 0.75 : 0.55)
   const knowledgeMatches = knowledgeContext?.matches || []
 

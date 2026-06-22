@@ -1,13 +1,24 @@
 <script setup lang="ts">
-import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { fetchAgentCollaboration, fetchAgentCollaborationDays } from '@/lib/api'
+import type {
+  AgentCollaborationResponse,
+  AgentCollaborationDay,
+} from '@/lib/api'
 
 const T = {
-  profile: '#8F7CFF',
-  path: '#35E0D8',
-  resource: '#45D483',
-  tutor: '#F0B24A',
-  eval: '#F0586E',
-  feedback: '#3B82F6',
+  profileCapture: '#8F7CFF',
+  profileDiagnosis: '#A78BFA',
+  pathPlan: '#35E0D8',
+  pathReplan: '#14B8A6',
+  resourceSearch: '#45D483',
+  resourceGenerate: '#84CC16',
+  tutorExplain: '#F0B24A',
+  tutorDialogue: '#FB923C',
+  evalQuiz: '#F0586E',
+  evalCause: '#EC4899',
+  feedbackWrite: '#3B82F6',
+  reflection: '#6366F1',
   text: '#e8edf5',
   textSub: '#91a3c7',
   textDim: '#52607f',
@@ -15,7 +26,7 @@ const T = {
   sans: "'Outfit', 'PingFang SC', sans-serif",
 }
 
-type AgentId = 'profile' | 'path' | 'resource' | 'tutor' | 'eval' | 'feedback'
+type AgentId = string
 
 interface Agent {
   id: AgentId
@@ -44,83 +55,171 @@ interface Chain {
   eventIds: string[]
 }
 
-const agents: Agent[] = [
-  { id: 'profile', name: '画像', role: 'PROFILE', color: T.profile, artSrc: '/homepage/agent-load-profile.png' },
-  { id: 'path', name: '路径规划', role: 'PATH', color: T.path, artSrc: '/homepage/agent-load-path.png' },
-  { id: 'resource', name: '资源推荐', role: 'RESOURCE', color: T.resource, artSrc: '/homepage/agent-load-resource.png' },
-  { id: 'tutor', name: 'AI 辅导', role: 'TUTOR', color: T.tutor, artSrc: '/homepage/agent-load-tutor.png' },
-  { id: 'eval', name: '评估', role: 'EVAL', color: T.eval, artSrc: '/homepage/agent-load-eval.png' },
-  { id: 'feedback', name: '反馈', role: 'FEEDBACK', color: T.feedback, artSrc: '/homepage/agent-load-feedback.png' },
-]
+function defaultAgents(): Agent[] {
+  return [
+    { id: 'profileCapture', name: '画像采集', role: 'PROFILE-1', color: T.profileCapture, artSrc: '/homepage/agent-load-profile.png' },
+    { id: 'profileDiagnosis', name: '薄弱诊断', role: 'PROFILE-2', color: T.profileDiagnosis, artSrc: '/homepage/agent-load-profile.png' },
+    { id: 'pathPlan', name: '路径规划', role: 'PATH-1', color: T.pathPlan, artSrc: '/homepage/agent-load-path.png' },
+    { id: 'pathReplan', name: '动态重规划', role: 'PATH-2', color: T.pathReplan, artSrc: '/homepage/agent-load-path.png' },
+    { id: 'resourceSearch', name: '资源检索', role: 'RESOURCE-1', color: T.resourceSearch, artSrc: '/homepage/agent-load-resource.png' },
+    { id: 'resourceGenerate', name: '资源生成', role: 'RESOURCE-2', color: T.resourceGenerate, artSrc: '/homepage/agent-load-resource.png' },
+    { id: 'tutorExplain', name: '讲解辅导', role: 'TUTOR-1', color: T.tutorExplain, artSrc: '/homepage/agent-load-tutor.png' },
+    { id: 'tutorDialogue', name: '互动答疑', role: 'TUTOR-2', color: T.tutorDialogue, artSrc: '/homepage/agent-load-tutor.png' },
+    { id: 'evalQuiz', name: '评估出题', role: 'EVAL-1', color: T.evalQuiz, artSrc: '/homepage/agent-load-eval.png' },
+    { id: 'evalCause', name: '错因分析', role: 'EVAL-2', color: T.evalCause, artSrc: '/homepage/agent-load-eval.png' },
+    { id: 'feedbackWrite', name: '反馈回写', role: 'FEEDBACK-1', color: T.feedbackWrite, artSrc: '/homepage/agent-load-feedback.png' },
+    { id: 'reflection', name: '成长复盘', role: 'FEEDBACK-2', color: T.reflection, artSrc: '/homepage/agent-load-feedback.png' },
+  ]
+}
 
-const events: EventNode[] = [
-  { id: 'e1', chain: 'pointer', agent: 'profile', t: 9 * 60 + 14, type: 'ID', label: '识别指针薄弱', detail: '二级指针传参题正确率仅 41%，画像智能体标记薄弱维度。' },
-  { id: 'e2', chain: 'pointer', agent: 'path', t: 9 * 60 + 16, type: 'PL', label: '插入补弱节点', detail: '路径规划在课后巩固阶段插入二级指针专项训练。' },
-  { id: 'e3', chain: 'pointer', agent: 'resource', t: 9 * 60 + 17, type: 'RS', label: '匹配 5 个资源', detail: '资源智能体匹配思维导图、专项练习和图解卡片。' },
-  { id: 'e4', chain: 'pointer', agent: 'tutor', t: 10 * 60 + 2, type: 'QA', label: '回答指针提问', detail: 'AI 辅导解释二级指针与数组指针的区别。' },
-  { id: 'e5', chain: 'pointer', agent: 'eval', t: 10 * 60 + 31, type: 'EV', label: '晨间小测 82 分', detail: '评估智能体验证指针补弱效果，进入画像回写。' },
+function defaultChains(): Chain[] {
+  return [
+    { id: 'profile-module', name: '画像诊断模块', summary: '采集真实学习信号，再识别薄弱知识域。', issue: '学习行为信号分散', outcome: '定位 2 个薄弱域', eventIds: ['e1', 'e2'] },
+    { id: 'path-module', name: '路径编排模块', summary: '规划与重规划协同，把薄弱点落到学习顺序里。', issue: '当前路径无法补弱', outcome: '重排课后巩固路径', eventIds: ['e3', 'e4', 'e5'] },
+    { id: 'resource-module', name: '资源生产模块', summary: '检索候选资源，再生成适配画像的学习材料。', issue: '资源太多且不够贴合', outcome: '生成 5 项个性资源', eventIds: ['e6', 'e7', 'e8'] },
+    { id: 'tutor-module', name: '辅导互动模块', summary: '讲解和追问配合，确认学生是否真正理解。', issue: '概念理解不稳定', outcome: '完成两轮追问确认', eventIds: ['e9', 'e10', 'e11'] },
+    { id: 'eval-module', name: '测评分析模块', summary: '即时测评后归因，产出可回写的证据。', issue: '学习效果需要量化', outcome: '阶段测评提升到 82 分', eventIds: ['e12', 'e13', 'e14'] },
+    { id: 'feedback-module', name: '反馈复盘模块', summary: '回写画像、生成复盘，并触发下一轮路径修正。', issue: '结果需要沉淀为行动', outcome: '生成下一轮学习计划', eventIds: ['e15', 'e16', 'e17', 'e18'] },
+  ]
+}
 
-  { id: 'e6', chain: 'feedback-loop', agent: 'profile', t: 11 * 60 + 5, type: 'ID', label: '画像维度更新', detail: '指针与内存 42%，图结构与搜索 38%，标记为薄弱。' },
-  { id: 'e7', chain: 'feedback-loop', agent: 'feedback', t: 11 * 60 + 6, type: 'FB', label: '反向写入画像', detail: '反馈智能体将测评薄弱点反向传播至画像 24 维向量。' },
-  { id: 'e8', chain: 'feedback-loop', agent: 'path', t: 13 * 60 + 42, type: 'PL', label: '下午路径重排', detail: '基于反馈插入 BFS 专项与释放后悬空引用练习。' },
-  { id: 'e9', chain: 'feedback-loop', agent: 'resource', t: 14 * 60 + 18, type: 'RS', label: '推送视频资源', detail: '推荐图遍历动画视频和 BFS/DFS 对比图解。' },
+function defaultEvents(): EventNode[] {
+  return [
+    { id: 'e1', chain: 'profile-module', agent: 'profileCapture', t: 9 * 60 + 12, type: 'PC', label: '采集学习信号', detail: '采集答题、停留时长、偏好和卡顿行为，更新 24 维画像。' },
+    { id: 'e2', chain: 'profile-module', agent: 'profileDiagnosis', t: 9 * 60 + 14, type: 'DG', label: '识别指针薄弱', detail: '二级指针传参题正确率仅 41%，标记为薄弱知识域。' },
+    { id: 'e3', chain: 'path-module', agent: 'pathPlan', t: 9 * 60 + 16, type: 'PL', label: '插入补弱节点', detail: '路径规划在课后巩固阶段插入二级指针专项训练。' },
+    { id: 'e4', chain: 'path-module', agent: 'pathReplan', t: 9 * 60 + 21, type: 'RP', label: '动态重排路径', detail: '根据卡顿强度推迟进阶节点，前置偏导和梯度复习。' },
+    { id: 'e5', chain: 'path-module', agent: 'resourceSearch', t: 9 * 60 + 27, type: 'RQ', label: '发起资源请求', detail: '向资源模块提交薄弱点、偏好和预期掌握度目标。' },
+    { id: 'e6', chain: 'resource-module', agent: 'resourceSearch', t: 10 * 60 + 5, type: 'RS', label: '检索候选资源', detail: '命中 18 个候选材料，按难度、时长和偏好打分。' },
+    { id: 'e7', chain: 'resource-module', agent: 'resourceGenerate', t: 10 * 60 + 12, type: 'GN', label: '生成个性资源', detail: '生成思维导图、专项练习和图解卡片共 5 项资源。' },
+    { id: 'e8', chain: 'resource-module', agent: 'tutorExplain', t: 10 * 60 + 24, type: 'HF', label: '交给辅导模块', detail: '将资源包转换为可讲解的步骤、例题和追问线索。' },
+    { id: 'e9', chain: 'tutor-module', agent: 'tutorExplain', t: 11 * 60 + 10, type: 'TX', label: '讲解核心概念', detail: '解释二级指针与数组指针的区别，并生成代码示例。' },
+    { id: 'e10', chain: 'tutor-module', agent: 'tutorDialogue', t: 11 * 60 + 18, type: 'QA', label: '连续追问确认', detail: '根据学生回答生成下一轮追问，确认是否真正理解。' },
+    { id: 'e11', chain: 'tutor-module', agent: 'evalQuiz', t: 11 * 60 + 36, type: 'EV', label: '请求即时测评', detail: '辅导结束后触发 2 道针对性诊断题。' },
+    { id: 'e12', chain: 'eval-module', agent: 'evalQuiz', t: 14 * 60 + 20, type: 'QZ', label: '阶段测评 82 分', detail: '评估出题智能体验证指针补弱效果。' },
+    { id: 'e13', chain: 'eval-module', agent: 'evalCause', t: 14 * 60 + 27, type: 'CA', label: '错因归类', detail: '将错题拆成概念遗漏、步骤跳跃和迁移困难三类原因。' },
+    { id: 'e14', chain: 'eval-module', agent: 'feedbackWrite', t: 14 * 60 + 35, type: 'WB', label: '提交回写证据', detail: '把测评结论和错因标签交给反馈模块。' },
+    { id: 'e15', chain: 'feedback-module', agent: 'feedbackWrite', t: 15 * 60 + 10, type: 'FB', label: '反向写入画像', detail: '将测评薄弱点反向传播至画像 24 维向量。' },
+    { id: 'e16', chain: 'feedback-module', agent: 'reflection', t: 15 * 60 + 18, type: 'RF', label: '生成成长复盘', detail: '沉淀今日成就、风险和明日行动建议。' },
+    { id: 'e17', chain: 'feedback-module', agent: 'pathReplan', t: 15 * 60 + 32, type: 'RP', label: '触发路径修正', detail: '明日聚焦 4 个反馈盲点，插入思维导图生成节点。' },
+    { id: 'e18', chain: 'feedback-module', agent: 'profileCapture', t: 16 * 60 + 3, type: 'NU', label: '画像进入新轮次', detail: '连续学习 5 天，今日还差 14 分钟达标，准备下一轮协同。' },
+  ]
+}
 
-  { id: 'e10', chain: 'graph', agent: 'tutor', t: 14 * 60 + 56, type: 'QA', label: '回答图遍历 2 问', detail: '解释 BFS visited 数组作用与 DFS 递归栈溢出。' },
-  { id: 'e11', chain: 'graph', agent: 'eval', t: 15 * 60 + 30, type: 'EV', label: '阶段测评 76 分', detail: '发现二级指针、BFS visited、悬空引用、队列空判 4 个盲点。' },
-  { id: 'e12', chain: 'graph', agent: 'feedback', t: 15 * 60 + 31, type: 'FB', label: '触发路径修正', detail: '将 4 个盲点写入画像，触发 3 天学习序列重排。' },
-  { id: 'e13', chain: 'graph', agent: 'path', t: 15 * 60 + 32, type: 'PL', label: '重排学习序列', detail: '明日聚焦 4 个反馈盲点，插入思维导图生成节点。' },
-  { id: 'e14', chain: 'graph', agent: 'tutor', t: 16 * 60 + 3, type: 'NU', label: '主动提醒', detail: '连续学习 5 天，今日还差 14 分钟达标，推荐图结构思维导图。' },
-]
+interface ModuleCard {
+  id: string
+  chainId: string
+  name: string
+  agentNames: string[]
+  color: string
+  artSrc: string
+  eventCount: number
+}
 
-const chains: Chain[] = [
-  {
-    id: 'pointer',
-    name: '指针补弱链',
-    summary: '画像发现薄弱，路径与资源立刻接力补救。',
-    issue: '二级指针传参卡顿',
-    outcome: '晨间小测提升到 82 分',
-    eventIds: ['e1', 'e2', 'e3', 'e4', 'e5'],
-  },
-  {
-    id: 'feedback-loop',
-    name: '画像回写链',
-    summary: '评估结果回流画像，再触发下午学习路径重排。',
-    issue: '画像维度需要刷新',
-    outcome: '下午补弱路径已重排',
-    eventIds: ['e6', 'e7', 'e8', 'e9'],
-  },
-  {
-    id: 'graph',
-    name: '图结构干预链',
-    summary: '辅导、评估、反馈、路径再次接力，形成下一轮计划。',
-    issue: '图遍历与队列空判盲点',
-    outcome: '生成 3 天补弱序列',
-    eventIds: ['e10', 'e11', 'e12', 'e13', 'e14'],
-  },
-]
+function defaultModuleCards(): ModuleCard[] {
+  return [
+    { id: 'profile-module', chainId: 'profile-module', name: '画像诊断模块', agentNames: ['画像采集', '薄弱诊断'], color: T.profileCapture, artSrc: '/homepage/agent-load-profile.png', eventCount: 2 },
+    { id: 'path-module', chainId: 'path-module', name: '路径编排模块', agentNames: ['路径规划', '动态重规划'], color: T.pathPlan, artSrc: '/homepage/agent-load-path.png', eventCount: 3 },
+    { id: 'resource-module', chainId: 'resource-module', name: '资源生产模块', agentNames: ['资源检索', '资源生成'], color: T.resourceSearch, artSrc: '/homepage/agent-load-resource.png', eventCount: 3 },
+    { id: 'tutor-module', chainId: 'tutor-module', name: '辅导互动模块', agentNames: ['讲解辅导', '互动答疑'], color: T.tutorExplain, artSrc: '/homepage/agent-load-tutor.png', eventCount: 3 },
+    { id: 'eval-module', chainId: 'eval-module', name: '测评分析模块', agentNames: ['评估出题', '错因分析'], color: T.evalQuiz, artSrc: '/homepage/agent-load-eval.png', eventCount: 3 },
+    { id: 'feedback-module', chainId: 'feedback-module', name: '反馈复盘模块', agentNames: ['反馈回写', '成长复盘'], color: T.feedbackWrite, artSrc: '/homepage/agent-load-feedback.png', eventCount: 4 },
+  ]
+}
+
+const agents = ref<Agent[]>(defaultAgents())
+const chains = ref<Chain[]>(defaultChains())
+const events = ref<EventNode[]>(defaultEvents())
+const moduleCards = ref<ModuleCard[]>(defaultModuleCards())
+
+const availableDays = ref<AgentCollaborationDay[]>([])
+const selectedDay = ref<string>('monday')
+const isLoading = ref(false)
+const loadError = ref<string | null>(null)
+
+function getTodayDayName(): string {
+  const jsDay = new Date().getDay()
+  const index = (jsDay + 6) % 7
+  const names = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday']
+  return names[index]
+}
+
+function applyCollaborationPayload(data: AgentCollaborationResponse) {
+  agents.value = data.agents as Agent[]
+  chains.value = data.chains as Chain[]
+  events.value = data.events as EventNode[]
+  moduleCards.value = data.modules as ModuleCard[]
+  selectedChainId.value = chains.value[0]?.id ?? ''
+  selectedEventId.value = chains.value[0]?.eventIds[0] ?? null
+  pulseIndex.value = 0
+}
+
+async function loadDay(day: string) {
+  isLoading.value = true
+  loadError.value = null
+  try {
+    const data = await fetchAgentCollaboration(day)
+    applyCollaborationPayload(data)
+  } catch (error) {
+    console.error('Failed to load agent collaboration:', error)
+    loadError.value = '数据加载失败，使用默认演示数据'
+  } finally {
+    isLoading.value = false
+  }
+}
+
+async function initDays() {
+  try {
+    const days = await fetchAgentCollaborationDays()
+    availableDays.value = days
+  } catch (error) {
+    console.error('Failed to load available days:', error)
+    availableDays.value = [
+      { name: 'monday', label: '周一', index: 0 },
+      { name: 'tuesday', label: '周二', index: 1 },
+      { name: 'wednesday', label: '周三', index: 2 },
+      { name: 'thursday', label: '周四', index: 3 },
+      { name: 'friday', label: '周五', index: 4 },
+      { name: 'saturday', label: '周六', index: 5 },
+      { name: 'sunday', label: '周日', index: 6 },
+    ]
+  }
+}
+
+function selectDay(day: string) {
+  if (day === selectedDay.value || isLoading.value) return
+  selectedDay.value = day
+  loadDay(day)
+}
+
+onMounted(() => {
+  selectedDay.value = getTodayDayName()
+  initDays()
+  loadDay(selectedDay.value)
+})
 
 const W = 1580
-const H = 430
+const H = 690
 const LEFT = 168
 const RIGHT = 64
 const TOP = 52
-const LANE_H = 52
+const LANE_H = 48
 const START = 9 * 60
 const END = 18 * 60
 const NOW = 16 * 60 + 12
 const CHART_W = W - LEFT - RIGHT
 const hours = Array.from({ length: 10 }, (_, i) => 9 + i)
 
-const selectedChainId = ref(chains[0].id)
-const selectedEventId = ref<string | null>(chains[0].eventIds[0])
+const selectedChainId = ref<string>(chains.value[0]?.id ?? '')
+const selectedEventId = ref<string | null>(chains.value[0]?.eventIds[0] ?? null)
 const hoverEventId = ref<string | null>(null)
 const hoverChainId = ref<string | null>(null)
 const pulseIndex = ref(0)
 
 const activeChainId = computed(() => hoverChainId.value ?? selectedChainId.value)
-const activeChain = computed(() => chains.find(chain => chain.id === activeChainId.value) ?? chains[0])
-const activeEvents = computed(() => activeChain.value.eventIds.map(id => eventById(id)).filter(Boolean) as EventNode[])
-const allLinks = computed(() => chains.flatMap(chainLinks))
+const activeChain = computed(() => chains.value.find(chain => chain.id === activeChainId.value) ?? chains.value[0])
+const activeEvents = computed(() => activeChain.value?.eventIds.map(id => eventById(id)).filter(Boolean) as EventNode[] ?? [])
+const allLinks = computed(() => chains.value.flatMap(chainLinks))
 const selectedEvent = computed(() => (
   hoverEventId.value
     ? eventById(hoverEventId.value)
@@ -128,14 +227,18 @@ const selectedEvent = computed(() => (
       ? eventById(selectedEventId.value)
       : activeEvents.value[pulseIndex.value % activeEvents.value.length]
 ))
-const activeEventIds = computed(() => new Set(activeChain.value.eventIds))
+const activeEventIds = computed(() => new Set(activeChain.value?.eventIds ?? []))
 
 function agentById(id: AgentId) {
-  return agents.find(agent => agent.id === id) ?? agents[0]
+  return agents.value.find(agent => agent.id === id) ?? agents.value[0]
+}
+
+function agentIndexLabel(index: number) {
+  return String(index + 1).padStart(2, '0')
 }
 
 function eventById(id: string) {
-  return events.find(event => event.id === id)
+  return events.value.find(event => event.id === id)
 }
 
 function xForTime(t: number) {
@@ -143,7 +246,7 @@ function xForTime(t: number) {
 }
 
 function yForAgent(id: AgentId) {
-  return TOP + agents.findIndex(agent => agent.id === id) * LANE_H + LANE_H / 2
+  return TOP + agents.value.findIndex(agent => agent.id === id) * LANE_H + LANE_H / 2
 }
 
 function eventPoint(event: EventNode) {
@@ -170,13 +273,13 @@ function timeLabel(t: number) {
 }
 
 function nodeOrder(event: EventNode) {
-  const index = activeChain.value.eventIds.indexOf(event.id)
+  const index = activeChain.value?.eventIds.indexOf(event.id) ?? -1
   return index >= 0 ? index : 0
 }
 
 function selectChain(id: string) {
   selectedChainId.value = id
-  const chain = chains.find(item => item.id === id)
+  const chain = chains.value.find(item => item.id === id)
   selectedEventId.value = chain?.eventIds[0] ?? null
   hoverChainId.value = null
   hoverEventId.value = null
@@ -188,7 +291,7 @@ function selectNode(event: EventNode) {
   selectedEventId.value = event.id
   hoverChainId.value = null
   hoverEventId.value = null
-  const chain = chains.find(item => item.id === event.chain)
+  const chain = chains.value.find(item => item.id === event.chain)
   pulseIndex.value = Math.max(0, chain?.eventIds.indexOf(event.id) ?? 0)
 }
 
@@ -210,30 +313,47 @@ onBeforeUnmount(() => {
   <section class="section-telemetry">
     <div class="telemetry-inner">
       <header class="tele-hero">
-        <div>
+        <div class="tele-hero-main">
           <div class="tele-eyebrow">
             <span />
             MULTI-AGENT CAUSAL TELEMETRY
           </div>
           <h2>
-            今天 6 个智能体协同了 <strong>{{ events.length }}</strong> 次干预，串成
-            <strong>{{ chains.length }}</strong> 条干预链
+            12 个智能体在 6 个模块内协同了 <strong>{{ events.length }}</strong> 次干预，串成
+            <strong>{{ chains.length }}</strong> 条模块链
           </h2>
           <p>因果接力是主角：谁先发现，谁立刻行动，谁再评估和回写。</p>
+          <div v-if="loadError" class="day-load-error">{{ loadError }}</div>
         </div>
 
-        <div class="chain-tabs" aria-label="干预链选择">
-          <button
-            v-for="chain in chains"
-            :key="chain.id"
-            type="button"
-            class="chain-tab"
-            :class="{ active: chain.id === activeChainId }"
-            @click="selectChain(chain.id)"
-          >
-            <span>{{ chain.name }}</span>
-            <strong>{{ chain.eventIds.length }}</strong>
-          </button>
+        <div class="tele-hero-controls">
+          <div class="day-switcher" aria-label="星期切换">
+            <button
+              v-for="day in availableDays"
+              :key="day.name"
+              type="button"
+              class="day-tab"
+              :class="{ active: selectedDay === day.name, today: getTodayDayName() === day.name }"
+              :disabled="isLoading"
+              @click="selectDay(day.name)"
+            >
+              {{ day.label }}
+            </button>
+          </div>
+
+          <div class="chain-tabs" aria-label="干预链选择">
+            <button
+              v-for="chain in chains"
+              :key="chain.id"
+              type="button"
+              class="chain-tab"
+              :class="{ active: chain.id === activeChainId }"
+              @click="selectChain(chain.id)"
+            >
+              <span>{{ chain.name }}</span>
+              <strong>{{ chain.eventIds.length }}</strong>
+            </button>
+          </div>
         </div>
       </header>
 
@@ -278,7 +398,7 @@ onBeforeUnmount(() => {
               <g v-for="agent in agents" :key="agent.id">
                 <line :x1="LEFT" :y1="yForAgent(agent.id)" :x2="W - RIGHT" :y2="yForAgent(agent.id)" :stroke="agent.color" />
                 <text class="agent-index" x="24" :y="yForAgent(agent.id) + 4" :fill="agent.color">
-                  0{{ agents.indexOf(agent) + 1 }}
+                  {{ agentIndexLabel(agents.indexOf(agent)) }}
                 </text>
                 <text class="agent-name" x="72" :y="yForAgent(agent.id) - 4">{{ agent.name }}</text>
                 <text class="agent-role" x="72" :y="yForAgent(agent.id) + 15" :fill="agent.color">{{ agent.role }}</text>
@@ -326,33 +446,40 @@ onBeforeUnmount(() => {
             </g>
           </svg>
 
-          <div class="causal-footer" :style="`--footer-color: ${agentById(selectedEvent?.agent || 'profile').color}`">
+          <div class="causal-footer" :style="`--footer-color: ${agentById(selectedEvent?.agent || 'profileCapture').color}`">
             <div class="footer-story">
-              <span>AGENT LOAD MAP</span>
-              <strong>今日接力负载</strong>
-              <p>底部不重复右侧详情，而是显示 6 个智能体在 3 条链里的参与强度。</p>
+              <span>MODULE OVERVIEW</span>
+              <strong>模块协作概览</strong>
+              <p>六大业务模块的接力情况，点击卡片可聚焦到对应干预链。</p>
             </div>
 
-            <div class="footer-steps" aria-label="智能体今日参与强度">
+            <div class="module-grid" aria-label="模块协作概览">
               <button
-                v-for="agent in agents"
-                :key="agent.id"
+                v-for="mod in moduleCards"
+                :key="mod.id"
                 type="button"
-                class="footer-step"
-                :class="{ active: selectedEvent?.agent === agent.id }"
-                :style="`--step-color: ${agent.color}; --load: ${(events.filter(event => event.agent === agent.id).length / events.length) * 100}%`"
-                @click="selectNode(events.find(event => event.agent === agent.id && activeEventIds.has(event.id)) || events.find(event => event.agent === agent.id) || activeEvents[0])"
+                class="module-card"
+                :class="{ active: activeChainId === mod.chainId }"
+                :style="`--module-color: ${mod.color}; --load: ${events.length ? (mod.eventCount / events.length) * 100 : 0}%`"
+                @click="selectChain(mod.chainId)"
               >
-                <img class="footer-step-art" :src="agent.artSrc" alt="" aria-hidden="true">
-                <span>{{ agent.role }}</span>
-                <strong>{{ agent.name }}</strong>
-                <small>{{ events.filter(event => event.agent === agent.id).length }} 次参与</small>
+                <div class="module-card-top">
+                  <span class="module-card-dot" />
+                  <strong>{{ mod.name }}</strong>
+                  <span class="module-card-count">{{ mod.eventCount }}</span>
+                </div>
+                <div class="module-card-agents">
+                  <span v-for="(agentName, idx) in mod.agentNames" :key="idx">{{ agentName }}</span>
+                </div>
+                <div class="module-card-bar">
+                  <i />
+                </div>
               </button>
             </div>
           </div>
         </div>
 
-        <aside class="chain-detail" :style="`--detail-color: ${agentById(selectedEvent?.agent || 'profile').color}`">
+        <aside class="chain-detail" :style="`--detail-color: ${agentById(selectedEvent?.agent || 'profileCapture').color}`">
           <div class="detail-kicker">SELECTED CHAIN</div>
           <h3>{{ activeChain.name }}</h3>
           <p>{{ activeChain.summary }}</p>
@@ -412,10 +539,22 @@ onBeforeUnmount(() => {
 
 .tele-hero {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(380px, 0.42fr);
-  gap: 26px;
-  align-items: end;
+  grid-template-columns: minmax(0, 1fr) minmax(320px, 0.36fr);
+  gap: 28px;
+  align-items: start;
   margin-bottom: 20px;
+}
+
+.tele-hero-main {
+  display: grid;
+  gap: 10px;
+}
+
+.tele-hero-controls {
+  display: grid;
+  gap: 16px;
+  align-content: start;
+  justify-items: end;
 }
 
 .tele-eyebrow {
@@ -461,35 +600,107 @@ onBeforeUnmount(() => {
   line-height: 1.7;
 }
 
+.day-load-error {
+  margin-top: 10px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  background: rgba(240, 88, 110, 0.12);
+  color: #f0586e;
+  font-size: 12px;
+}
+
+.day-switcher {
+  display: inline-flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 6px;
+  padding: 6px;
+  border: 1px solid rgba(150, 175, 220, 0.14);
+  border-radius: 14px;
+  background: rgba(8, 12, 30, 0.42);
+  backdrop-filter: blur(14px) saturate(1.18);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18), inset 0 1px 0 rgba(255,255,255,0.05);
+}
+
+.day-tab {
+  appearance: none;
+  cursor: pointer;
+  min-width: 46px;
+  padding: 7px 12px;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  background: transparent;
+  color: #9badcc;
+  font-size: 13px;
+  font-weight: 600;
+  transition: transform 0.18s ease, border-color 0.18s ease, background 0.18s ease, color 0.18s ease, box-shadow 0.18s ease;
+}
+
+.day-tab:hover {
+  transform: translateY(-1px);
+  border-color: rgba(150, 175, 220, 0.18);
+  background: rgba(255, 255, 255, 0.04);
+  color: #e8edf5;
+}
+
+.day-tab.active {
+  border-color: rgba(53, 224, 216, 0.55);
+  background: linear-gradient(135deg, rgba(53, 224, 216, 0.18), rgba(53, 224, 216, 0.06));
+  color: #f7fbff;
+  box-shadow: 0 4px 12px rgba(53, 224, 216, 0.14);
+}
+
+.day-tab.today {
+  color: #35e0d8;
+}
+
+.day-tab.today::after {
+  content: '·';
+  display: inline-block;
+  margin-left: 3px;
+  color: #35e0d8;
+  font-weight: 800;
+}
+
+.day-tab.today.active::after {
+  color: #f7fbff;
+}
+
+.day-tab:disabled {
+  opacity: 0.5;
+  cursor: wait;
+}
+
 .chain-tabs {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 10px;
+  gap: 8px;
+  width: 100%;
 }
 
 .chain-tab {
   appearance: none;
   cursor: pointer;
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  gap: 10px;
-  align-items: center;
-  min-height: 62px;
-  padding: 12px 13px;
-  border: 1px solid rgba(150, 175, 220, 0.14);
-  border-radius: 12px;
-  background: rgba(8, 12, 30, 0.24);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  align-items: flex-start;
+  min-height: 56px;
+  padding: 10px 12px;
+  border: 1px solid rgba(150, 175, 220, 0.12);
+  border-radius: 10px;
+  background: rgba(8, 12, 30, 0.22);
   color: #e8edf5;
   text-align: left;
-  backdrop-filter: blur(12px) saturate(1.16);
+  backdrop-filter: blur(10px) saturate(1.12);
   transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.22s ease, background 0.22s ease;
 }
 
 .chain-tab:hover,
 .chain-tab.active {
   transform: translateY(-2px);
-  border-color: rgba(53, 224, 216, 0.42);
-  background: linear-gradient(135deg, rgba(53, 224, 216, 0.11), rgba(8, 12, 30, 0.26));
+  border-color: rgba(53, 224, 216, 0.38);
+  background: linear-gradient(135deg, rgba(53, 224, 216, 0.10), rgba(8, 12, 30, 0.24));
 }
 
 .chain-tab:active {
@@ -499,7 +710,7 @@ onBeforeUnmount(() => {
 .chain-tab span {
   overflow: hidden;
   color: #dbe8ff;
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 650;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -508,7 +719,7 @@ onBeforeUnmount(() => {
 .chain-tab strong {
   color: #35e0d8;
   font-family: var(--font-mono, 'JetBrains Mono', monospace);
-  font-size: 26px;
+  font-size: 20px;
   line-height: 1;
 }
 
@@ -604,124 +815,127 @@ onBeforeUnmount(() => {
   line-height: 1.55;
 }
 
-.footer-steps {
+.module-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  grid-auto-rows: minmax(92px, 1fr);
-  gap: 10px;
+  gap: 12px;
+  align-content: start;
 }
 
-.footer-step {
-  --step-color: #35e0d8;
-  --load: 20%;
+.module-card {
+  --module-color: #35e0d8;
+  --load: 0%;
   appearance: none;
   cursor: pointer;
-  min-width: 0;
   display: grid;
-  gap: 4px;
+  gap: 10px;
   position: relative;
   overflow: hidden;
-  align-content: space-between;
-  padding: 13px;
-  border: 1px solid rgba(255,255,255,0.07);
-  border-radius: 11px;
-  background: rgba(255,255,255,0.03);
+  padding: 14px;
+  border: 1px solid rgba(150, 175, 220, 0.12);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.025);
   text-align: left;
   transition:
     transform 0.22s cubic-bezier(0.16, 1, 0.3, 1),
     border-color 0.22s ease,
-    background 0.22s ease;
+    background 0.22s ease,
+    box-shadow 0.22s ease;
 }
 
-.footer-step::before {
+.module-card::before {
   content: '';
   position: absolute;
   left: 0;
-  right: auto;
+  top: 0;
   bottom: 0;
-  width: var(--load);
-  height: 4px;
-  background: var(--step-color);
+  width: 3px;
+  background: var(--module-color);
+  opacity: 0.55;
+  transition: opacity 0.22s ease;
+}
+
+.module-card:hover,
+.module-card.active {
+  transform: translateY(-2px);
+  border-color: color-mix(in srgb, var(--module-color) 36%, rgba(150, 175, 220, 0.14));
+  background: rgba(255, 255, 255, 0.045);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.14);
+}
+
+.module-card:hover::before,
+.module-card.active::before {
+  opacity: 0.9;
+}
+
+.module-card:active {
+  transform: scale(0.985);
+}
+
+.module-card-top {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.module-card-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--module-color);
   opacity: 0.75;
 }
 
-.footer-step::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background:
-    linear-gradient(90deg, color-mix(in srgb, var(--step-color) 12%, transparent), transparent 64%),
-    linear-gradient(180deg, transparent 0%, rgba(4, 8, 18, 0.22) 100%);
-  opacity: 0.28;
-  mix-blend-mode: screen;
-  transition: opacity 0.22s ease;
-  pointer-events: none;
-}
-
-.footer-step:hover,
-.footer-step.active {
-  transform: translateY(-2px);
-  border-color: color-mix(in srgb, var(--step-color) 48%, transparent);
-  background: color-mix(in srgb, var(--step-color) 9%, rgba(255,255,255,0.035));
-}
-
-.footer-step:hover::after,
-.footer-step.active::after {
-  opacity: 0.48;
-}
-
-.footer-step:active {
-  transform: scale(0.98);
-}
-
-.footer-step-art {
-  position: absolute;
-  inset: -14% -18% -16% 18%;
-  width: 102%;
-  height: 132%;
-  object-fit: cover;
-  opacity: 0.34;
-  mix-blend-mode: screen;
-  filter: saturate(0.92) contrast(1.04);
-  mask-image: linear-gradient(90deg, transparent 0%, rgba(0, 0, 0, 0.38) 22%, #000 64%, transparent 100%);
-  pointer-events: none;
-  transition: opacity 0.22s ease, transform 0.22s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-.footer-step:hover .footer-step-art,
-.footer-step.active .footer-step-art {
-  opacity: 0.52;
-  transform: translateX(-3px) scale(1.02);
-}
-
-.footer-step span {
-  position: relative;
-  z-index: 1;
-  color: var(--step-color);
-  font-family: var(--font-mono, 'JetBrains Mono', monospace);
-  font-size: 10px;
-  letter-spacing: 0.12em;
-}
-
-.footer-step strong {
-  position: relative;
-  z-index: 1;
-  overflow: hidden;
-  color: #e8edf5;
-  font-size: 15px;
+.module-card-top strong {
+  flex: 1;
+  min-width: 0;
+  color: #f1f6ff;
+  font-size: 14px;
   font-weight: 700;
   text-overflow: ellipsis;
   white-space: nowrap;
+  overflow: hidden;
 }
 
-.footer-step small {
+.module-card-count {
+  color: var(--module-color);
+  font-family: var(--font-mono, 'JetBrains Mono', monospace);
+  font-size: 18px;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.module-card-agents {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.module-card-agents span {
+  padding: 3px 8px;
+  border-radius: 6px;
+  background: rgba(150, 175, 220, 0.08);
+  color: #9badcc;
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.module-card-bar {
   position: relative;
-  z-index: 1;
+  height: 3px;
+  border-radius: 2px;
+  background: rgba(150, 175, 220, 0.10);
   overflow: hidden;
-  color: #8497bd;
-  font-size: 12px;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+}
+
+.module-card-bar i {
+  display: block;
+  width: var(--load);
+  height: 100%;
+  border-radius: 2px;
+  background: var(--module-color);
+  opacity: 0.7;
+  transition: width 0.45s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .time-grid line {
@@ -1002,7 +1216,19 @@ onBeforeUnmount(() => {
 }
 
 @media (max-width: 1100px) {
-  .tele-hero,
+  .tele-hero {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+
+  .tele-hero-controls {
+    justify-items: stretch;
+  }
+
+  .day-switcher {
+    justify-content: flex-start;
+  }
+
   .telemetry-board {
     grid-template-columns: 1fr;
   }
@@ -1022,7 +1248,7 @@ onBeforeUnmount(() => {
     padding-bottom: 12px;
   }
 
-  .footer-steps {
+  .module-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
@@ -1033,15 +1259,26 @@ onBeforeUnmount(() => {
   }
 
   .chain-tabs {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
-  .footer-steps {
+  .module-grid {
     grid-template-columns: 1fr;
   }
 
   .tele-hero h2 {
     font-size: 28px;
+  }
+
+  .day-switcher {
+    gap: 4px;
+    padding: 4px;
+  }
+
+  .day-tab {
+    min-width: 38px;
+    padding: 6px 9px;
+    font-size: 12px;
   }
 }
 </style>

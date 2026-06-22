@@ -19,14 +19,6 @@ copy "%SRC%\desktop-pet\live2d\models\hiyori_free_zh\hiyori_free_t08_old.cdi3.js
 copy "%SRC%\desktop-pet\live2d\models\hiyori_free_zh\2048\texture_00.png" "%DST%\desktop-pet\live2d\models\hiyori_free_zh\2048\"
 copy "%SRC%\desktop-pet\live2d\models\hiyori_free_zh\motion\*.motion3.json" "%DST%\desktop-pet\live2d\models\hiyori_free_zh\motion\"
 
-REM Copy layered pet fallback images
-mkdir "%DST%\desktop-pet\layered" 2>nul
-copy "%SRC%\desktop-pet\layered\body.png" "%DST%\desktop-pet\layered\"
-copy "%SRC%\desktop-pet\layered\head.png" "%DST%\desktop-pet\layered\"
-copy "%SRC%\desktop-pet\layered\eyes.png" "%DST%\desktop-pet\layered\"
-copy "%SRC%\desktop-pet\layered\frontHair.png" "%DST%\desktop-pet\layered\"
-copy "%SRC%\desktop-pet\layered\shadow.png" "%DST%\desktop-pet\layered\"
-
 REM Copy knowledge-tree assets
 mkdir "%DST%\knowledge-tree" 2>nul
 copy "%SRC%\knowledge-tree\knowledge-tree-red.png" "%DST%\knowledge-tree\"

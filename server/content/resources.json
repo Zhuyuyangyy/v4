@@ -11,7 +11,65 @@
     "author": "AI 教研组",
     "difficulty": "初级",
     "estTime": "45分钟",
-    "reason": "## 📖 简介\n\n本指南以 Python 为主语言，系统讲解机器学习的核心概念与实战方法。无论你是零基础的编程新手，还是有一定开发经验想要转型 AI 方向的工程师，都能从中快速建立全局认知。\n\n## 🎯 核心要点\n\n### 监督学习\n- **线性回归**：用最小二乘法拟合数据趋势，理解损失函数与梯度下降的关系\n- **逻辑回归**：二分类问题的基石，掌握 sigmoid 函数与交叉熵损失\n- **决策树与随机森林**：从单棵树到集成学习，理解 bagging 的核心思想\n- **支持向量机（SVM）**：最大间隔分类器，核函数的直觉理解\n\n### 无监督学习\n- **K-Means 聚类**：无标签数据的分组方法，肘部法则确定 K 值\n- **PCA 降维**：主成分分析，高维数据可视化与特征压缩\n- **DBSCAN**：基于密度的聚类，自动发现任意形状的簇\n\n### 模型评估\n- **交叉验证**：K-Fold CV 的原理与实现，避免过拟合的关键手段\n- **混淆矩阵**：TP/TN/FP/FN 的含义，精确率与召回率的权衡\n- **ROC 曲线与 AUC**：模型性能的综合评价指标\n\n## 👥 适用人群\n\n- 对 AI/ML 感兴趣的软件开发工程师\n- 数据分析师想要拓展建模能力\n- 计算机相关专业学生\n- 任何想要入门机器学习的技术人员\n\n## 💡 学习建议\n\n1. 先跑通每个算法的 demo，再深入理解数学原理\n2. 用 scikit-learn 的内置数据集（iris、digits）练手\n3. 每学完一个算法，尝试在 Kaggle 竞赛中应用\n4. 重点理解 bias-variance tradeoff，这是 ML 的核心矛盾"
+    "reason": "本指南以 Python 为主语言，系统讲解机器学习的核心概念与实战方法。",
+    "slides": [
+      {
+        "title": "机器学习是什么",
+        "subtitle": "理解ML的本质",
+        "content": "机器学习是让计算机从数据中自动学习规律，并利用这些规律对新数据进行预测或决策的方法。\n\n与传统编程的区别：\n• 传统编程：程序员编写规则 → 计算机执行\n• 机器学习：计算机从数据中自己发现规则\n\n举例：垃圾邮件过滤\n• 传统方式：人工编写关键词规则\n• ML方式：用大量已标注邮件训练模型，让模型学会判断",
+        "keyPoints": ["从数据中学习规律", "自动改进性能", "无需显式编程"],
+        "tip": "机器学习不是万能的，它适合处理那些难以用明确规则描述的问题。"
+      },
+      {
+        "title": "监督学习：分类与回归",
+        "subtitle": "有标签数据的训练",
+        "content": "监督学习是最常见的机器学习类型，训练数据包含输入和对应的正确答案。\n\n**分类问题（预测类别）：**\n• 垃圾邮件检测：邮件 → 垃圾/正常\n• 图像识别：图片 → 猫/狗/鸟\n• 疾病诊断：症状 → 患病/健康\n\n**回归问题（预测数值）：**\n• 房价预测：房屋特征 → 价格\n• 销量预测：历史数据 → 未来销量\n• 温度预测：气象数据 → 温度值",
+        "keyPoints": ["需要标注数据", "分类预测类别", "回归预测数值"],
+        "example": "from sklearn.linear_model import LinearRegression\n\n# 准备数据\nX_train = [[1], [2], [3], [4], [5]]  # 特征\ny_train = [2, 4, 5, 4, 5]            # 标签\n\n# 训练模型\nmodel = LinearRegression()\nmodel.fit(X_train, y_train)\n\n# 预测\nprediction = model.predict([[6]])\nprint(f'预测值: {prediction[0]:.2f}')  # 输出: 5.80"
+      },
+      {
+        "title": "常用监督学习算法",
+        "subtitle": "从简单到复杂",
+        "content": "**1. 线性回归**\n• 原理：用一条直线拟合数据\n• 公式：y = wx + b\n• 适用：连续数值预测\n\n**2. 逻辑回归**\n• 原理：用Sigmoid函数输出概率\n• 输出：0到1之间的概率值\n• 适用：二分类问题\n\n**3. 决策树**\n• 原理：通过一系列判断条件分类\n• 优点：易于理解和解释\n• 缺点：容易过拟合\n\n**4. 随机森林**\n• 原理：多棵决策树投票\n• 优点：准确率高，不易过拟合\n• 应用：比赛常用算法",
+        "keyPoints": ["线性回归：最简单", "逻辑回归：二分类", "决策树：易理解", "随机森林：准确率高"],
+        "tip": "初学者建议从线性回归开始理解，再逐步学习更复杂的算法。"
+      },
+      {
+        "title": "无监督学习：聚类与降维",
+        "subtitle": "发现数据中的隐藏模式",
+        "content": "无监督学习不需要标签，目的是发现数据本身的结构和规律。\n\n**聚类（将数据分组）：**\n• K-Means：将数据分成K个簇\n  - 步骤：随机选K个中心 → 分配数据 → 更新中心 → 重复\n  - 应用：客户分群、图像压缩\n\n**降维（减少特征数量）：**\n• PCA主成分分析：保留最重要的信息\n  - 目的：可视化、去噪、加速训练\n  - 原理：找到数据方差最大的方向\n\n**异常检测：**\n• 识别与大多数数据不同的样本\n• 应用：欺诈检测、设备故障预警",
+        "keyPoints": ["不需要标签", "K-Means最常用", "PCA用于降维"],
+        "example": "from sklearn.cluster import KMeans\nimport numpy as np\n\n# 生成示例数据\nX = np.array([[1, 2], [1.5, 1.8], [5, 8],\n              [8, 8], [1, 0.6], [9, 11]])\n\n# K-Means聚类\nkmeans = KMeans(n_clusters=2)\nkmeans.fit(X)\n\n# 查看聚类结果\nprint(f'聚类标签: {kmeans.labels_}')\nprint(f'聚类中心: {kmeans.cluster_centers_}')"
+      },
+      {
+        "title": "模型评估与选择",
+        "subtitle": "如何判断模型好坏",
+        "content": "训练好的模型需要用合适的方法评估其性能。\n\n**分类模型评估：**\n• 准确率Accuracy：正确预测的比例\n  - 公式：(TP+TN) / (TP+TN+FP+FN)\n  - 问题：数据不平衡时会误导\n\n• 精确率Precision：预测为正的样本中真正为正的比例\n  - 公式：TP / (TP+FP)\n  - 关注：减少误报\n\n• 召回率Recall：真正为正的样本中被正确预测的比例\n  - 公式：TP / (TP+FN)\n  - 关注：减少漏报\n\n• F1分数：精确率和召回率的调和平均\n  - 公式：2 * P * R / (P + R)",
+        "keyPoints": ["准确率可能误导", "精确率关注误报", "召回率关注漏报", "F1综合评估"],
+        "tip": "数据不平衡时，不要只看准确率，要综合考虑精确率、召回率和F1分数。"
+      },
+      {
+        "title": "交叉验证与过拟合",
+        "subtitle": "模型泛化能力",
+        "content": "**过拟合问题：**\n• 模型在训练集上表现好，测试集上表现差\n• 原因：模型太复杂，记住了训练数据的噪声\n• 解决：简化模型、增加数据、正则化\n\n**交叉验证：**\n• K折交叉验证：将数据分成K份\n  - 每次用K-1份训练，1份验证\n  - 重复K次，取平均性能\n  - 常用K=5或K=10\n\n**训练集/验证集/测试集：**\n• 训练集：用于训练模型（60-80%）\n• 验证集：用于调参和模型选择（10-20%）\n• 测试集：最终评估（10-20%）",
+        "keyPoints": ["过拟合是常见问题", "交叉验证更可靠", "数据要合理划分"],
+        "example": "from sklearn.model_selection import cross_val_score\nfrom sklearn.ensemble import RandomForestClassifier\nfrom sklearn.datasets import load_iris\n\n# 加载数据\niris = load_iris()\nX, y = iris.data, iris.target\n\n# 5折交叉验证\nmodel = RandomForestClassifier(n_estimators=100)\nscores = cross_val_score(model, X, y, cv=5)\n\nprint(f'每折准确率: {scores}')\nprint(f'平均准确率: {scores.mean():.3f}')\nprint(f'标准差: {scores.std():.3f}')"
+      },
+      {
+        "title": "特征工程实战",
+        "subtitle": "数据预处理的关键步骤",
+        "content": "特征工程是机器学习中最重要的环节之一，好的特征能大幅提升模型性能。\n\n**数据清洗：**\n• 处理缺失值：删除、均值填充、插值\n• 处理异常值：识别并处理极端值\n• 数据类型转换：类别型→数值型\n\n**特征缩放：**\n• 标准化(Standardization)：均值0，标准差1\n  - 公式：z = (x - μ) / σ\n  - 适用：大多数算法\n\n• 归一化(Normalization)：缩放到0-1\n  - 公式：x' = (x - min) / (max - min)\n  - 适用：神经网络、距离算法\n\n**特征选择：**\n• 过滤法：方差、相关系数\n• 包裹法：递归特征消除\n• 嵌入法：L1正则化",
+        "keyPoints": ["缺失值处理", "特征缩放很重要", "选择有用特征"],
+        "example": "from sklearn.preprocessing import StandardScaler\nfrom sklearn.impute import SimpleImputer\n\n# 处理缺失值\nimputer = SimpleImputer(strategy='mean')\nX_filled = imputer.fit_transform(X)\n\n# 特征标准化\nscaler = StandardScaler()\nX_scaled = scaler.fit_transform(X_filled)\n\nprint(f'原始均值: {X_filled.mean(axis=0)}')\nprint(f'标准化后均值: {X_scaled.mean(axis=0)}')"
+      },
+      {
+        "title": "Scikit-learn实战流程",
+        "subtitle": "完整的ML项目流程",
+        "content": "Scikit-learn是Python最流行的机器学习库，提供统一的API接口。\n\n**完整流程：**\n1. 加载数据\n2. 数据预处理\n3. 划分训练/测试集\n4. 选择模型\n5. 训练模型\n6. 预测评估\n7. 模型调优\n\n**常用API：**\n• fit(X, y)：训练模型\n• predict(X)：预测\n• score(X, y)：评估\n• transform(X)：数据转换\n\n**Pipeline管道：**\n• 将多个步骤组合在一起\n• 避免数据泄露\n• 代码更简洁",
+        "keyPoints": ["统一API接口", "Pipeline很实用", "先baseline再优化"],
+        "example": "from sklearn.pipeline import Pipeline\nfrom sklearn.preprocessing import StandardScaler\nfrom sklearn.svm import SVC\nfrom sklearn.model_selection import train_test_split\nfrom sklearn.metrics import classification_report\n\n# 划分数据\nX_train, X_test, y_train, y_test = train_test_split(\n    X, y, test_size=0.2, random_state=42)\n\n# 创建Pipeline\npipe = Pipeline([\n    ('scaler', StandardScaler()),\n    ('svm', SVC(kernel='rbf'))\n])\n\n# 训练和评估\npipe.fit(X_train, y_train)\ny_pred = pipe.predict(X_test)\nprint(classification_report(y_test, y_pred))"
+      }
+    ]
   },
   {
     "id": 1,
@@ -25,7 +83,50 @@
     "author": "深度学习实验室",
     "difficulty": "中级",
     "estTime": "30分钟",
-    "reason": "## 📖 简介\n\n从感知机到现代 Transformer，用思维导图梳理深度学习的演化脉络。本图谱帮助你建立从基础神经网络到前沿架构的完整知识框架，适合面试复习和快速回顾。\n\n## 🗺️ 知识脉络\n\n### 基础层\n- **感知机 → 多层感知机（MLP）**：最简单的神经网络，理解前向传播与反向传播\n- **激活函数演进**：Sigmoid → ReLU → GELU → Swish，每一步解决了什么问题\n- **优化器家族**：SGD → Momentum → Adam → AdamW，学习率调度策略\n\n### 计算机视觉（CV）\n- **CNN 核心组件**：卷积层、池化层、BatchNorm 的作用与直觉\n- **经典架构演进**：LeNet → AlexNet → VGG → ResNet → EfficientNet\n- **ResNet 的革命性贡献**：残差连接如何解决梯度消失，让百层网络成为可能\n- **Vision Transformer（ViT）**：将 Transformer 引入 CV 的里程碑\n\n### 自然语言处理（NLP）\n- **RNN → LSTM → GRU**：序列建模的演进，门控机制的作用\n- **Attention 机制**：自注意力的数学本质 — Query/Key/Value 的直觉理解\n- **Transformer 架构**：Encoder-Decoder 结构，Multi-Head Attention，位置编码\n- **预训练范式**：BERT（双向编码）vs GPT（自回归生成）的根本区别\n\n### 生成模型\n- **GAN**：生成对抗网络的博弈论视角\n- **VAE**：变分自编码器的概率生成框架\n- **Diffusion Model**：扩散模型的基本原理（DALL-E、Stable Diffusion 的核心技术）\n\n## 🎯 学习路径建议\n\n入门路线：MLP → CNN → RNN → Transformer → 预训练模型\n进阶路线：ResNet → ViT → GPT → Diffusion → 多模态"
+    "reason": "从感知机到Transformer，梳理深度学习演化脉络。",
+    "slides": [
+      {
+        "title": "神经网络基础",
+        "subtitle": "从生物神经元到人工神经元",
+        "content": "人工神经网络受生物神经系统启发，由大量相互连接的神经元组成。\n\n**单个神经元：**\n• 输入：接收多个输入信号\n• 权重：每个输入有权重\n• 求和：加权求和\n• 激活：通过激活函数输出\n\n**多层感知机(MLP)：**\n• 输入层：接收原始数据\n• 隐藏层：提取特征\n• 输出层：产生预测\n\n**前向传播：**\n数据从输入层 → 隐藏层 → 输出层\n\n**反向传播：**\n误差从输出层 → 隐藏层 → 输入层\n通过梯度下降更新权重",
+        "keyPoints": ["神经元是基本单位", "多层结构提取特征", "反向传播训练"],
+        "example": "import torch\nimport torch.nn as nn\n\n# 定义简单神经网络\nclass SimpleNet(nn.Module):\n    def __init__(self):\n        super().__init__()\n        self.fc1 = nn.Linear(784, 128)\n        self.fc2 = nn.Linear(128, 10)\n        self.relu = nn.ReLU()\n    \n    def forward(self, x):\n        x = self.relu(self.fc1(x))\n        x = self.fc2(x)\n        return x"
+      },
+      {
+        "title": "激活函数演进",
+        "subtitle": "引入非线性",
+        "content": "激活函数为神经网络引入非线性，使其能够学习复杂的模式。\n\n**Sigmoid函数：**\n• 公式：σ(x) = 1 / (1 + e^(-x))\n• 输出范围：(0, 1)\n• 优点：输出可解释为概率\n• 缺点：梯度消失问题\n\n**ReLU函数：**\n• 公式：f(x) = max(0, x)\n• 优点：计算简单，缓解梯度消失\n• 缺点：Dead ReLU问题\n\n**Leaky ReLU：**\n• 公式：f(x) = max(0.01x, x)\n• 解决Dead ReLU问题\n\n**GELU函数：**\n• Transformer中常用\n• 比ReLU更平滑",
+        "keyPoints": ["Sigmoid：梯度消失", "ReLU：最常用", "GELU：Transformer用"],
+        "tip": "大多数情况下，ReLU是隐藏层的默认选择，输出层根据任务选择。"
+      },
+      {
+        "title": "卷积神经网络(CNN)",
+        "subtitle": "图像处理的利器",
+        "content": "CNN专门用于处理网格结构数据（如图像），通过卷积操作提取局部特征。\n\n**卷积层：**\n• 卷积核(滤波器)在图像上滑动\n• 提取局部特征（边缘、纹理）\n• 参数共享减少参数量\n\n**池化层：**\n• 最大池化：取区域最大值\n• 平均池化：取区域平均值\n• 作用：降低维度，增加平移不变性\n\n**经典架构演进：**\n• LeNet-5：手写数字识别\n• AlexNet：ImageNet冠军\n• VGG：小卷积核堆叠\n• ResNet：残差连接，训练超深网络",
+        "keyPoints": ["卷积提取特征", "池化降低维度", "ResNet解决退化"],
+        "example": "import torch.nn as nn\n\nclass SimpleCNN(nn.Module):\n    def __init__(self):\n        super().__init__()\n        # 卷积层：输入3通道，输出16通道，3x3卷积核\n        self.conv1 = nn.Conv2d(3, 16, 3, padding=1)\n        # 池化层：2x2窗口\n        self.pool = nn.MaxPool2d(2, 2)\n        # 全连接层\n        self.fc = nn.Linear(16 * 16 * 16, 10)\n    \n    def forward(self, x):\n        x = self.pool(torch.relu(self.conv1(x)))\n        x = x.view(-1, 16 * 16 * 16)\n        x = self.fc(x)\n        return x"
+      },
+      {
+        "title": "循环神经网络(RNN)",
+        "subtitle": "序列数据处理",
+        "content": "RNN专门处理序列数据，通过隐藏状态记住历史信息。\n\n**基本RNN：**\n• 隐藏状态：h_t = f(x_t, h_{t-1})\n• 问题：长期依赖困难，梯度消失\n\n**LSTM长短期记忆：**\n• 遗忘门：决定丢弃什么信息\n• 输入门：决定存储什么信息\n• 输出门：决定输出什么信息\n• 细胞状态：长期记忆载体\n\n**GRU门控循环单元：**\n• 简化版LSTM，参数更少\n• 更新门和重置门\n• 性能与LSTM相当\n\n**应用场景：**\n• 自然语言处理\n• 语音识别\n• 时间序列预测",
+        "keyPoints": ["RNN处理序列", "LSTM解决长期依赖", "GRU更简洁"],
+        "example": "import torch.nn as nn\n\nclass SimpleLSTM(nn.Module):\n    def __init__(self, vocab_size, embed_dim, hidden_dim):\n        super().__init__()\n        self.embedding = nn.Embedding(vocab_size, embed_dim)\n        self.lstm = nn.LSTM(embed_dim, hidden_dim, batch_first=True)\n        self.fc = nn.Linear(hidden_dim, 2)\n    \n    def forward(self, x):\n        x = self.embedding(x)\n        lstm_out, (h_n, c_n) = self.lstm(x)\n        # 取最后一个时间步的输出\n        x = h_n[-1]\n        x = self.fc(x)\n        return x"
+      },
+      {
+        "title": "Transformer架构",
+        "subtitle": "Attention is All You Need",
+        "content": "Transformer完全基于注意力机制，抛弃了RNN的循环结构，实现并行计算。\n\n**自注意力机制：**\n• Query、Key、Value三个向量\n• 注意力分数：Q·K^T / √d_k\n• 加权求和：softmax(scores) · V\n• 直觉：让每个位置关注其他位置\n\n**多头注意力：**\n• 多个注意力头并行计算\n• 每个头学习不同的注意力模式\n• 拼接后线性变换\n\n**位置编码：**\n• 注入位置信息\n• 正弦/余弦编码\n• 可学习的位置编码\n\n**优势：**\n• 并行计算效率高\n• 长距离依赖建模能力强\n• 可解释性好",
+        "keyPoints": ["自注意力核心", "多头并行学习", "位置编码必须"],
+        "tip": "理解Transformer是理解GPT、BERT等现代大模型的基础。"
+      },
+      {
+        "title": "预训练模型范式",
+        "subtitle": "BERT与GPT",
+        "content": "预训练+微调成为NLP主流范式，在大规模数据上预训练，下游任务微调。\n\n**BERT（双向编码器）：**\n• 架构：Transformer Encoder\n• 预训练任务：\n  - MLM（掩码语言模型）：随机遮盖词语预测\n  - NSP（下一句预测）\n• 特点：双向上下文理解\n• 应用：分类、问答、NER\n\n**GPT（自回归生成）：**\n• 架构：Transformer Decoder\n• 预训练任务：\n  - 自回归语言模型：预测下一个词\n• 特点：单向生成能力\n• 应用：文本生成、对话、代码生成\n\n**选择建议：**\n• 理解任务用BERT\n• 生成任务用GPT",
+        "keyPoints": ["BERT：双向理解", "GPT：单向生成", "预训练+微调范式"]
+      }
+    ]
   },
   {
     "id": 2,
@@ -39,7 +140,44 @@
     "author": "数学教研组",
     "difficulty": "中级",
     "estTime": "60分钟",
-    "reason": "## 📖 简介\n\n精选 20 道线性代数核心习题，覆盖矩阵运算、特征值分解、SVD 分解与向量空间正交性检验。每题配详细解题过程与 AI 领域应用场景说明。\n\n## 📝 习题模块\n\n### 模块一：矩阵运算（5 题）\n1. **矩阵乘法与转置**：验证 (AB)^T = B^T A^T，手算 + NumPy 双重验证\n2. **逆矩阵求解**：用高斯消元法求 3x3 矩阵的逆，理解不可逆矩阵的几何意义\n3. **矩阵的秩**：行列式为零意味着什么？秩与线性无关的关系\n4. **分块矩阵运算**：大矩阵的高效计算策略\n5. **矩阵范数**：L1/L2/Frobenius 范数在正则化中的应用\n\n### 模块二：特征值与特征向量（5 题）\n6. **特征值求解**：手算 2x2 矩阵的特征多项式\n7. **特征值的几何意义**：特征向量方向上矩阵只做缩放\n8. **对角化**：P^-1 AP = D 的条件与意义\n9. **实对称矩阵**：特征值一定为实数，特征向量一定正交\n10. **幂迭代法**：用迭代求最大特征值（PageRank 的核心思想）\n\n### 模块三：SVD 与应用（5 题）\n11. **SVD 分解**：A = UΣV^T 的几何直觉 — 旋转 + 缩放 + 旋转\n12. **低秩近似**：用前 k 个奇异值近似原矩阵（图像压缩的应用）\n13. **SVD 与 PCA**：PCA 本质上是对协方差矩阵做 SVD\n14. **推荐系统中的 SVD**：矩阵分解如何实现协同过滤\n15. **SVD 的数值稳定性**：为什么实际计算中更偏好 SVD 而非特征值分解\n\n### 模块四：向量空间（5 题）\n16. **线性无关判定**：用行列式和秩两种方法\n17. **基与坐标变换**：不同基下的同一向量表示\n18. **正交投影**：最小二乘法的几何本质\n19. **Gram-Schmidt 正交化**：从一组基构造标准正交基\n20. **四大子空间**：列空间、零空间、行空间、左零空间的关系\n\n## 💡 解题提示\n\n- 每道题先独立思考 10 分钟再看答案\n- 重点理解「为什么」而不是「怎么算」\n- 用 Python/NumPy 验证手算结果"
+    "reason": "精选20道线性代数核心习题，覆盖AI数学基础。",
+    "slides": [
+      {
+        "title": "矩阵基础运算",
+        "subtitle": "线性代数的基石",
+        "content": "矩阵是线性代数的核心数据结构，理解矩阵运算是学习AI数学的基础。\n\n**矩阵加法：**\n• 对应位置元素相加\n• 要求：同型矩阵\n• 示例：[1,2] + [5,6] = [6,8]\n\n**矩阵乘法：**\n• 行乘以列，求和\n• 要求：A的列数 = B的行数\n• 性质：不满足交换律 AB ≠ BA\n• 复杂度：O(n³)\n\n**矩阵转置：**\n• 行变列，列变行\n• 性质：(AB)^T = B^T A^T\n• 对称矩阵：A = A^T",
+        "keyPoints": ["加法对应位置", "乘法行列求和", "转置行列互换"],
+        "example": "import numpy as np\n\nA = np.array([[1, 2], [3, 4]])\nB = np.array([[5, 6], [7, 8]])\n\n# 矩阵加法\nprint('A + B =', A + B)\n\n# 矩阵乘法\nprint('A @ B =', A @ B)\n\n# 矩阵转置\nprint('A^T =', A.T)\n\n# 验证 (AB)^T = B^T A^T\nprint('验证:', np.allclose((A @ B).T, B.T @ A.T))"
+      },
+      {
+        "title": "逆矩阵与行列式",
+        "subtitle": "矩阵的除法",
+        "content": "逆矩阵是矩阵的\"除法\"，行列式判断矩阵是否可逆。\n\n**逆矩阵定义：**\n• A·A^(-1) = I（单位矩阵）\n• 只有方阵可能有逆\n• 可逆条件：行列式不为0\n\n**行列式：**\n• 2x2矩阵：det(A) = ad - bc\n• 几何意义：面积/体积的缩放因子\n• det(A) = 0：矩阵奇异（不可逆）\n\n**求逆方法：**\n• 高斯-约旦消元法\n• 伴随矩阵法\n• 数值计算用numpy.linalg.inv()\n\n**应用场景：**\n• 求解线性方程组 Ax = b → x = A^(-1)b\n• 最小二乘法\n• 坐标变换",
+        "keyPoints": ["逆矩阵是除法", "行列式判可逆", "奇异矩阵不可逆"],
+        "example": "import numpy as np\n\nA = np.array([[1, 2], [3, 4]])\n\n# 计算行列式\ndet = np.linalg.det(A)\nprint(f'行列式: {det:.2f}')\n\n# 计算逆矩阵\nif abs(det) > 1e-10:\n    A_inv = np.linalg.inv(A)\n    print(f'逆矩阵:\\n{A_inv}')\n    \n    # 验证 A * A^(-1) = I\n    print(f'验证 A * A_inv:\\n{A @ A_inv}')"
+      },
+      {
+        "title": "特征值与特征向量",
+        "subtitle": "矩阵的核心性质",
+        "content": "特征值分解揭示矩阵的本质性质，是PCA、SVD等算法的基础。\n\n**定义：**\n• Ax = λx\n• A：矩阵\n• x：特征向量\n• λ：特征值\n\n**几何意义：**\n• 矩阵A对向量x只做缩放\n• 缩放倍数就是特征值λ\n• 方向不变的向量就是特征向量\n\n**求解方法：**\n• 特征多项式：det(A - λI) = 0\n• 数值方法：QR迭代、幂迭代\n\n**性质：**\n• 实对称矩阵特征值为实数\n• 特征向量相互正交\n• 迹 = 特征值之和\n• 行列式 = 特征值之积",
+        "keyPoints": ["Ax=λx定义", "缩放不改方向", "实对称矩阵特殊"],
+        "example": "import numpy as np\n\nA = np.array([[2, 1], [1, 2]])\n\n# 计算特征值和特征向量\neigenvalues, eigenvectors = np.linalg.eig(A)\n\nprint(f'特征值: {eigenvalues}')\nprint(f'特征向量:\\n{eigenvectors}')\n\n# 验证 Ax = λx\nfor i in range(len(eigenvalues)):\n    x = eigenvectors[:, i]\n    lam = eigenvalues[i]\n    print(f'\\n验证 λ={lam:.1f}:')\n    print(f'  Ax = {A @ x}')\n    print(f'  λx = {lam * x}')"
+      },
+      {
+        "title": "SVD奇异值分解",
+        "subtitle": "矩阵分解的瑞士军刀",
+        "content": "SVD是最通用的矩阵分解方法，应用广泛。\n\n**分解形式：**\n• A = UΣV^T\n• U：左奇异向量（正交矩阵）\n• Σ：奇异值（对角矩阵）\n• V^T：右奇异向量（正交矩阵）\n\n**几何直觉：**\n• 旋转 → 缩放 → 旋转\n• 奇异值表示各方向的缩放比例\n\n**应用：**\n• 数据压缩：保留前k个奇异值\n• 降维：与PCA等价\n• 推荐系统：矩阵分解\n• 图像压缩：低秩近似\n• 伪逆计算：A^+ = VΣ^+U^T",
+        "keyPoints": ["A=UΣV^T分解", "旋转-缩放-旋转", "应用非常广泛"],
+        "example": "import numpy as np\n\n# 创建一个矩阵\nA = np.array([[1, 2, 3], [4, 5, 6], [7, 8, 9]])\n\n# SVD分解\nU, S, Vt = np.linalg.svd(A)\n\nprint(f'U shape: {U.shape}')\nprint(f'奇异值: {S}')\nprint(f'Vt shape: {Vt.shape}')\n\n# 低秩近似（保留前2个奇异值）\nk = 2\nA_approx = U[:, :k] @ np.diag(S[:k]) @ Vt[:k, :]\nprint(f'\\n原矩阵:\\n{A}')\nprint(f'低秩近似:\\n{A_approx}')\nprint(f'近似误差: {np.linalg.norm(A - A_approx):.4f}')"
+      },
+      {
+        "title": "向量空间与正交性",
+        "subtitle": "线性代数的几何视角",
+        "content": "向量空间是线性代数的抽象框架，正交性是很多算法的核心。\n\n**向量空间：**\n• 定义：对加法和数乘封闭\n• 子空间：满足向量空间定义的子集\n• 基：线性无关的生成集\n• 维度：基中向量的个数\n\n**四大子空间：**\n• 列空间：A的列向量生成的空间\n• 零空间：Ax=0的解空间\n• 行空间：A^T的列空间\n• 左零空间：A^T的零空间\n\n**正交投影：**\n• 向量到子空间的最近点\n• 最小二乘法的几何解释\n• 公式：proj = A(A^TA)^(-1)A^Tb",
+        "keyPoints": ["基是线性无关生成集", "四大子空间相互关联", "投影是最小二乘"],
+        "tip": "理解正交投影对理解最小二乘法和PCA非常重要。"
+      }
+    ]
   },
   {
     "id": 3,
@@ -53,7 +191,37 @@
     "author": "NLP 研究组",
     "difficulty": "高级",
     "estTime": "90分钟",
-    "reason": "## 📖 简介\n\n深入拆解 Transformer 架构 —— 这是 GPT、BERT、LLaMA 等所有现代大语言模型的底层基础。90 分钟视频从论文推导到 PyTorch 代码实现，帮你彻底理解 Attention is All You Need。\n\n## 🎬 视频大纲\n\n### Part 1：为什么需要 Transformer（15 分钟）\n- RNN 的致命缺陷：无法并行 + 长距离依赖衰减\n- Seq2Seq 的信息瓶颈：一个固定长度的向量如何编码整句话？\n- Attention 的直觉：让模型自己决定「看哪里」\n\n### Part 2：自注意力机制（25 分钟）\n- **Scaled Dot-Product Attention**：Q·K^T / √d_k 的每一步在做什么\n- **为什么除以 √d_k**：不除会怎样？softmax 梯度消失问题\n- **Multi-Head Attention**：多个注意力头各自学什么？拼接后如何融合\n- **注意力权重的可视化**：不同头关注的语法/语义模式\n\n### Part 3：Transformer 架构全解（25 分钟）\n- **Encoder 结构**：Self-Attention → Add&Norm → FFN → Add&Norm\n- **Decoder 结构**：Masked Self-Attention + Cross-Attention 的区别\n- **位置编码**：为什么需要？正弦编码 vs 可学习编码\n- **残差连接 + LayerNorm**：训练深层网络的关键技巧\n\n### Part 4：代码实现（25 分钟）\n- 用 PyTorch 从零实现 Multi-Head Attention\n- 完整 Transformer Encoder 的构建\n- 用一个简单的序列到序列任务验证\n\n## 🎯 适用人群\n\n- 了解基础深度学习，想要深入 NLP 的工程师\n- 准备 AI 方向面试的候选人\n- 想要复现/改进 Transformer 论文的研究者"
+    "reason": "深入拆解Transformer架构，GPT/BERT/LLaMA的底层基础。",
+    "slides": [
+      {
+        "title": "为什么需要Transformer",
+        "subtitle": "RNN的局限与Attention的突破",
+        "content": "2017年Google提出Transformer，彻底改变了NLP领域。\n\n**RNN的问题：**\n• 无法并行计算：必须按顺序处理\n• 长距离依赖困难：信息逐层衰减\n• 训练速度慢：无法利用GPU并行\n\n**Transformer的优势：**\n• 完全并行计算\n• 直接建模任意距离依赖\n• 训练效率大幅提升\n\n**核心思想：**\n• 自注意力机制：让每个位置都能直接关注其他位置\n• 位置编码：注入序列顺序信息\n• 多头注意力：学习多种关注模式",
+        "keyPoints": ["RNN无法并行", "Transformer完全并行", "自注意力是核心"],
+        "tip": "Transformer不仅是NLP的基础，也广泛用于CV、语音等领域。"
+      },
+      {
+        "title": "自注意力机制详解",
+        "subtitle": "Query、Key、Value",
+        "content": "自注意力是Transformer的核心，让每个位置都能关注序列中的所有位置。\n\n**计算步骤：**\n1. 生成Q、K、V三个矩阵\n   - Q = X·W_Q（查询）\n   - K = X·W_K（键）\n   - V = X·W_V（值）\n\n2. 计算注意力分数\n   - scores = Q·K^T / √d_k\n   - 除以√d_k防止分数过大\n\n3. Softmax归一化\n   - weights = softmax(scores)\n   - 转换为概率分布\n\n4. 加权求和\n   - output = weights · V\n\n**直觉理解：**\n• Q：我想找什么\n• K：我有什么特征\n• V：我的实际内容\n• 相似度高的位置获得更高权重",
+        "keyPoints": ["Q查询K键V值", "缩放防止梯度消失", "softmax归一化"],
+        "example": "import torch\nimport torch.nn.functional as F\n\ndef self_attention(Q, K, V):\n    \"\"\"\n    Q, K, V: (batch, seq_len, d_model)\n    \"\"\"\n    d_k = Q.size(-1)\n    \n    # 计算注意力分数\n    scores = torch.matmul(Q, K.transpose(-2, -1))\n    scores = scores / (d_k ** 0.5)\n    \n    # Softmax归一化\n    attention_weights = F.softmax(scores, dim=-1)\n    \n    # 加权求和\n    output = torch.matmul(attention_weights, V)\n    \n    return output, attention_weights"
+      },
+      {
+        "title": "多头注意力机制",
+        "subtitle": "多个注意力头并行",
+        "content": "多头注意力让模型同时关注不同位置的不同表示子空间。\n\n**实现方式：**\n1. 将Q、K、V分成h个头\n   - 每个头的维度：d_model / h\n\n2. 每个头独立计算注意力\n   - head_i = Attention(Q·W_i, K·W_i, V·W_i)\n\n3. 拼接所有头的输出\n   - Concat(head_1, ..., head_h)\n\n4. 线性变换\n   - output = Concat · W_O\n\n**为什么需要多头：**\n• 不同头学习不同模式\n  - 有的头关注语法关系\n  - 有的头关注语义关系\n  - 有的头关注位置关系\n• 增强模型表达能力",
+        "keyPoints": ["多头并行计算", "不同头学不同模式", "拼接后线性变换"],
+        "example": "import torch\nimport torch.nn as nn\n\nclass MultiHeadAttention(nn.Module):\n    def __init__(self, d_model, num_heads):\n        super().__init__()\n        self.num_heads = num_heads\n        self.d_model = d_model\n        self.d_k = d_model // num_heads\n        \n        self.W_Q = nn.Linear(d_model, d_model)\n        self.W_K = nn.Linear(d_model, d_model)\n        self.W_V = nn.Linear(d_model, d_model)\n        self.W_O = nn.Linear(d_model, d_model)\n    \n    def forward(self, Q, K, V):\n        batch_size = Q.size(0)\n        \n        # 线性变换并分头\n        Q = self.W_Q(Q).view(batch_size, -1, self.num_heads, self.d_k).transpose(1, 2)\n        K = self.W_K(K).view(batch_size, -1, self.num_heads, self.d_k).transpose(1, 2)\n        V = self.W_V(V).view(batch_size, -1, self.num_heads, self.d_k).transpose(1, 2)\n        \n        # 计算注意力\n        scores = torch.matmul(Q, K.transpose(-2, -1)) / (self.d_k ** 0.5)\n        weights = torch.softmax(scores, dim=-1)\n        output = torch.matmul(weights, V)\n        \n        # 拼接并线性变换\n        output = output.transpose(1, 2).contiguous().view(batch_size, -1, self.d_model)\n        output = self.W_O(output)\n        \n        return output"
+      },
+      {
+        "title": "Transformer完整架构",
+        "subtitle": "Encoder与Decoder",
+        "content": "Transformer由编码器和解码器组成，各有N层堆叠。\n\n**Encoder层：**\n1. 多头自注意力\n2. 残差连接 + LayerNorm\n3. 前馈神经网络(FFN)\n4. 残差连接 + LayerNorm\n\n**Decoder层：**\n1. 掩码多头自注意力（防止看到未来）\n2. 残差连接 + LayerNorm\n3. 编码器-解码器注意力\n4. 残差连接 + LayerNorm\n5. 前馈神经网络\n6. 残差连接 + LayerNorm\n\n**位置编码：**\n• 正弦位置编码：PE(pos,2i) = sin(pos/10000^(2i/d))\n• 可学习的位置编码\n• 注入序列顺序信息\n\n**LayerNorm：**\n• 稳定训练\n• 加速收敛",
+        "keyPoints": ["Encoder：自注意力+FFN", "Decoder：掩码+交叉注意力", "残差连接必须"],
+        "tip": "残差连接和LayerNorm是训练深层Transformer的关键，缺一不可。"
+      }
+    ]
   },
   {
     "id": 4,
@@ -67,7 +235,38 @@
     "author": "算法工程组",
     "difficulty": "初级",
     "estTime": "40分钟",
-    "reason": "## 📖 简介\n\n用 NumPy 从零实现 K 近邻（KNN）分类器。KNN 是最直观的机器学习算法之一，通过「物以类聚」的思想实现分类。本代码包含完整实现、单元测试与性能优化。\n\n## 🔧 代码结构\n\n### 核心实现\n```python\nclass KNNClassifier:\n    def __init__(self, k=5, metric='euclidean'):\n        self.k = k\n        self.metric = metric\n    \n    def fit(self, X_train, y_train):\n        self.X_train = np.array(X_train)\n        self.y_train = np.array(y_train)\n    \n    def predict(self, X_test):\n        # 对每个测试样本，找最近的 k 个训练样本\n        # 投票决定分类\n        pass\n```\n\n### 距离度量\n- **欧氏距离**：最常用，适合连续特征\n- **曼哈顿距离**：适合稀疏数据\n- **余弦相似度**：适合文本分类场景\n- **闵可夫斯基距离**：统一框架，p=1 为曼哈顿，p=2 为欧氏\n\n### KD-Tree 加速\n- 暴力搜索复杂度 O(n·d)，KD-Tree 降到 O(d·log n)\n- 适用于特征维度不太高（< 20）的场景\n- 高维时退化为暴力搜索（维度灾难）\n\n## 📊 性能分析\n\n| 方法 | 时间复杂度 | 空间复杂度 | 适用场景 |\n|------|-----------|-----------|----------|\n| 暴力搜索 | O(n·d) | O(1) | 小数据集 |\n| KD-Tree | O(d·log n) | O(n) | 低维数据 |\n| Ball-Tree | O(d·log n) | O(n) | 高维数据 |\n\n## 🧪 测试用例\n\n包含 5 个标准测试场景：基本分类、边界条件、空数据集、单样本预测、多类别分类。"
+    "reason": "用NumPy从零实现K近邻分类器。",
+    "slides": [
+      {
+        "title": "KNN算法原理",
+        "subtitle": "物以类聚的分类思想",
+        "content": "KNN(K-Nearest Neighbors)是最简单的机器学习算法之一。\n\n**核心思想：**\n• 一个样本的类别由其K个最近邻居决定\n• \"近朱者赤，近墨者黑\"\n\n**算法步骤：**\n1. 计算待分类样本与所有训练样本的距离\n2. 找到距离最近的K个样本\n3. 统计K个邻居中各类别的数量\n4. 将待分类样本归为数量最多的类别\n\n**关键选择：**\n• K值选择：\n  - K太小：容易受噪声影响\n  - K太大：边界模糊\n  - 通常K=3或K=5\n\n• 距离度量：\n  - 欧氏距离：最常用\n  - 曼哈顿距离：适合稀疏数据\n  - 余弦距离：适合文本",
+        "keyPoints": ["K个最近邻居投票", "K值需要选择", "距离度量很重要"],
+        "tip": "KNN不需要训练，但预测时需要计算所有距离，大数据集会很慢。"
+      },
+      {
+        "title": "NumPy实现KNN",
+        "subtitle": "从零开始编写",
+        "content": "使用NumPy实现KNN分类器，理解算法细节。",
+        "example": "import numpy as np\nfrom collections import Counter\n\nclass KNNClassifier:\n    def __init__(self, k=3):\n        self.k = k\n    \n    def fit(self, X_train, y_train):\n        \"\"\"存储训练数据\"\"\"\n        self.X_train = np.array(X_train)\n        self.y_train = np.array(y_train)\n    \n    def _euclidean_distance(self, x1, x2):\n        \"\"\"计算欧氏距离\"\"\"\n        return np.sqrt(np.sum((x1 - x2) ** 2))\n    \n    def predict(self, X_test):\n        \"\"\"预测多个样本\"\"\"\n        return [self._predict_single(x) for x in X_test]\n    \n    def _predict_single(self, x):\n        \"\"\"预测单个样本\"\"\"\n        # 计算与所有训练样本的距离\n        distances = [self._euclidean_distance(x, x_train) \n                     for x_train in self.X_train]\n        \n        # 找到K个最近邻的索引\n        k_indices = np.argsort(distances)[:self.k]\n        \n        # 获取K个最近邻的标签\n        k_labels = self.y_train[k_indices]\n        \n        # 投票决定类别\n        most_common = Counter(k_labels).most_common(1)\n        return most_common[0][0]",
+        "keyPoints": ["fit存储数据", "计算欧氏距离", "K个邻居投票"]
+      },
+      {
+        "title": "使用sklearn实现",
+        "subtitle": "工业级实现",
+        "content": "sklearn提供了优化过的KNN实现，支持多种距离度量和加速方法。\n\n**sklearn KNN特点：**\n• 支持多种距离度量\n• 自动选择最优算法\n• 支持KD-Tree和Ball-Tree加速\n• 支持分类和回归",
+        "example": "from sklearn.neighbors import KNeighborsClassifier\nfrom sklearn.model_selection import train_test_split\nfrom sklearn.metrics import accuracy_score, classification_report\nfrom sklearn.datasets import load_iris\n\n# 加载数据\niris = load_iris()\nX, y = iris.data, iris.target\n\n# 划分训练/测试集\nX_train, X_test, y_train, y_test = train_test_split(\n    X, y, test_size=0.2, random_state=42)\n\n# 创建KNN分类器\nknn = KNeighborsClassifier(\n    n_neighbors=5,\n    metric='euclidean',\n    algorithm='auto'  # 自动选择最优算法\n)\n\n# 训练\nknn.fit(X_train, y_train)\n\n# 预测\ny_pred = knn.predict(X_test)\n\n# 评估\nprint(f'准确率: {accuracy_score(y_test, y_pred):.3f}')\nprint(f'\\n分类报告:\\n{classification_report(y_test, y_pred)}')",
+        "keyPoints": ["sklearn实现更高效", "支持多种距离", "自动选择算法"]
+      },
+      {
+        "title": "KD-Tree加速",
+        "subtitle": "空间划分优化",
+        "content": "KD-Tree是一种空间划分数据结构，可以加速KNN的最近邻搜索。\n\n**KD-Tree原理：**\n• 递归地将空间划分为两半\n• 每次选择一个维度进行划分\n• 构建时间：O(n log n)\n• 查询时间：O(log n)（理想情况）\n\n**构建过程：**\n1. 选择划分维度（轮流或方差最大）\n2. 找到中位数作为划分点\n3. 递归构建左右子树\n\n**查询过程：**\n1. 从根节点开始，找到包含查询点的叶子\n2. 回溯搜索，检查是否有更近的点\n3. 利用三角不等式剪枝\n\n**适用场景：**\n• 低维数据（维度<20）\n• 高维时退化为暴力搜索",
+        "keyPoints": ["空间划分加速", "构建O(nlogn)", "低维效果好"],
+        "example": "from sklearn.neighbors import KNeighborsClassifier\nimport time\nimport numpy as np\n\n# 生成大数据集\nnp.random.seed(42)\nX_train = np.random.rand(10000, 5)\ny_train = np.random.randint(0, 3, 10000)\nX_test = np.random.rand(100, 5)\n\n# 暴力搜索\nknn_brute = KNeighborsClassifier(n_neighbors=5, algorithm='brute')\nknn_brute.fit(X_train, y_train)\nstart = time.time()\nknn_brute.predict(X_test)\nprint(f'暴力搜索: {time.time()-start:.4f}s')\n\n# KD-Tree\nknn_kd = KNeighborsClassifier(n_neighbors=5, algorithm='kd_tree')\nknn_kd.fit(X_train, y_train)\nstart = time.time()\nknn_kd.predict(X_test)\nprint(f'KD-Tree: {time.time()-start:.4f}s')",
+        "tip": "数据维度超过20时，KD-Tree效果可能不如暴力搜索，此时考虑降维。"
+      }
+    ]
   },
   {
     "id": 5,
@@ -81,7 +280,46 @@
     "author": "统计学教研组",
     "difficulty": "中级",
     "estTime": "35分钟",
-    "reason": "## 📖 简介\n\n高频统计知识点速查手册，覆盖概率论基础、常见分布族、假设检验流程与贝叶斯推断。特别适合面试前快速回顾，或在做数据分析时作为参考卡片。\n\n## 📊 常见概率分布\n\n### 离散分布\n- **伯努利分布 Bernoulli(p)**：单次试验成功/失败，p=0.5 为公平硬币\n- **二项分布 Binomial(n,p)**：n 次独立试验中成功的次数\n- **泊松分布 Poisson(λ)**：单位时间内事件发生次数，λ 为平均速率\n- **几何分布 Geometric(p)**：首次成功所需的试验次数\n\n### 连续分布\n- **正态分布 N(μ,σ²)**：中心极限定理的主角，68-95-99.7 法则\n- **均匀分布 U(a,b)**：最简单的连续分布，常用于随机数生成\n- **指数分布 Exp(λ)**：无记忆性，泊松过程中事件间隔时间\n- **Beta 分布 Beta(α,β)**：概率的概率，贝叶斯推断中的先验分布\n- **Gamma 分布 Gamma(α,β)**：指数分布的推广，等待时间的推广\n\n## 🔬 假设检验流程\n\n1. **建立假设**：H₀（零假设）vs H₁（备择假设）\n2. **选择检验统计量**：Z 检验 / T 检验 / 卡方检验 / F 检验\n3. **确定显著性水平**：通常 α = 0.05\n4. **计算 p 值**：在 H₀ 成立下，观察到当前或更极端结果的概率\n5. **决策**：p < α → 拒绝 H₀；p ≥ α → 无法拒绝 H₀\n\n### 常见检验选择\n| 场景 | 检验方法 | 条件 |\n|------|---------|------|\n| 单样本均值 | Z/T 检验 | σ 已知用 Z，未知用 T |\n| 两样本均值 | 独立 T 检验 | 正态性 + 方差齐性 |\n| 配对样本 | 配对 T 检验 | 差值正态 |\n| 分类数据 | 卡方检验 | 期望频数 ≥ 5 |\n\n## 🧠 贝叶斯定理\n\n**P(A|B) = P(B|A) · P(A) / P(B)**\n\n- **后验概率** = 似然 × 先验 / 证据\n- 直觉：看到新证据后，更新你对假设的信念\n- 应用：朴素贝叶斯分类器、贝叶斯优化、A/B 测试的贝叶斯方法"
+    "reason": "高频统计知识点速查手册。",
+    "slides": [
+      {
+        "title": "离散概率分布",
+        "subtitle": "基础分布族",
+        "content": "离散分布描述取有限或可数个值的随机变量。\n\n**伯努利分布 Bernoulli(p)：**\n• 只有两种结果：成功(1)或失败(0)\n• P(X=1) = p, P(X=0) = 1-p\n• 期望：E[X] = p\n• 方差：Var(X) = p(1-p)\n• 应用：单次试验\n\n**二项分布 Binomial(n,p)：**\n• n次独立伯努利试验中成功的次数\n• P(X=k) = C(n,k) * p^k * (1-p)^(n-k)\n• 期望：E[X] = np\n• 方差：Var(X) = np(1-p)\n• 应用：抛硬币、质量检测\n\n**泊松分布 Poisson(λ)：**\n• 单位时间内稀有事件发生次数\n• P(X=k) = (λ^k * e^(-λ)) / k!\n• 期望：E[X] = λ\n• 方差：Var(X) = λ\n• 应用：电话呼叫、放射性衰变",
+        "keyPoints": ["伯努利：单次试验", "二项：n次试验", "泊松：稀有事件"],
+        "example": "import numpy as np\nfrom scipy import stats\n\n# 伯努利分布\nbernoulli = stats.bernoulli(p=0.5)\nprint(f'P(X=1) = {bernoulli.pmf(1)}')\n\n# 二项分布：抛10次硬币，正面朝上次数\nbinomial = stats.binom(n=10, p=0.5)\nprint(f'P(X=5) = {binomial.pmf(5):.4f}')\nprint(f'E[X] = {binomial.mean()}')\n\n# 泊松分布：每小时平均来3个客户\npoisson = stats.poisson(mu=3)\nprint(f'P(X=2) = {poisson.pmf(2):.4f}')",
+        "tip": "二项分布当n很大、p很小时，近似于泊松分布。"
+      },
+      {
+        "title": "连续概率分布",
+        "subtitle": "常用连续分布",
+        "content": "连续分布描述取连续值的随机变量，用概率密度函数(PDF)描述。\n\n**正态分布 N(μ,σ²)：**\n• 最重要的分布，中心极限定理\n• PDF: f(x) = (1/√(2πσ²)) * e^(-(x-μ)²/(2σ²))\n• 68-95-99.7法则：\n  - μ±1σ包含68%数据\n  - μ±2σ包含95%数据\n  - μ±3σ包含99.7%数据\n• 标准正态：μ=0, σ=1\n\n**均匀分布 U(a,b)：**\n• 区间[a,b]上等可能取值\n• PDF: f(x) = 1/(b-a)\n• 期望：E[X] = (a+b)/2\n• 方差：Var(X) = (b-a)²/12\n\n**指数分布 Exp(λ)：**\n• 描述事件间隔时间\n• 无记忆性：P(X>s+t|X>s) = P(X>t)\n• 期望：E[X] = 1/λ\n• 应用：寿命、等待时间",
+        "keyPoints": ["正态分布最重要", "68-95-99.7法则", "指数分布无记忆"],
+        "example": "import numpy as np\nfrom scipy import stats\nimport matplotlib.pyplot as plt\n\n# 正态分布\nnormal = stats.norm(loc=170, scale=10)  # 身高170cm，标准差10\nprint(f'P(160<X<180) = {normal.cdf(180) - normal.cdf(160):.4f}')\n\n# 标准化：Z = (X - μ) / σ\nx = 185\nz = (x - 170) / 10\nprint(f'身高{x}cm的Z分数: {z}')\n\n# 指数分布：平均等待时间5分钟\nexpon = stats.expon(scale=5)\nprint(f'P(X>10) = {1 - expon.cdf(10):.4f}')"
+      },
+      {
+        "title": "假设检验流程",
+        "subtitle": "统计推断的核心",
+        "content": "假设检验是用样本数据对总体参数进行推断的方法。\n\n**5步标准流程：**\n\n**1. 建立假设**\n• H₀（零假设）：默认假设\n• H₁（备择假设）：研究假设\n\n**2. 选择检验统计量**\n• Z检验：σ已知的大样本\n• T检验：σ未知的小样本\n• 卡方检验：分类数据\n• F检验：方差比较\n\n**3. 确定显著性水平**\n• 通常α = 0.05\n• α = 0.01更严格\n\n**4. 计算p值**\n• 在H₀成立下，观察到当前结果的概率\n\n**5. 决策**\n• p < α：拒绝H₀\n• p ≥ α：无法拒绝H₀",
+        "keyPoints": ["H₀是默认假设", "p值是关键", "p<α拒绝H₀"],
+        "tip": "\"无法拒绝H₀\"不等于\"接受H₀\"，只是证据不足以拒绝。"
+      },
+      {
+        "title": "常用检验方法",
+        "subtitle": "场景匹配选择",
+        "content": "根据数据类型和研究问题选择合适的检验方法。\n\n**T检验：**\n• 单样本T检验：\n  - 检验总体均值是否等于某值\n  - 条件：正态分布\n\n• 独立样本T检验：\n  - 比较两组均值是否有差异\n  - 条件：正态+方差齐性\n\n• 配对样本T检验：\n  - 比较同一组前后差异\n  - 条件：差值正态\n\n**卡方检验：**\n• 独立性检验：两变量是否独立\n• 拟合优度检验：是否符合某分布\n• 条件：期望频数≥5\n\n**ANOVA方差分析：**\n• 比较三组及以上均值\n• F统计量 = 组间方差/组内方差",
+        "keyPoints": ["T检验比较均值", "卡方检验分类数据", "ANOVA多组比较"],
+        "example": "from scipy import stats\nimport numpy as np\n\n# 独立样本T检验\n# 问题：男女学生成绩是否有差异？\nmale_scores = [85, 90, 78, 92, 88, 76, 95, 89]\nfemale_scores = [92, 88, 95, 90, 87, 91, 93, 89]\n\nt_stat, p_value = stats.ttest_ind(male_scores, female_scores)\nprint(f'T统计量: {t_stat:.4f}')\nprint(f'P值: {p_value:.4f}')\nprint(f'结论: {\"拒绝H₀\" if p_value < 0.05 else \"无法拒绝H₀\"}')\n\n# 配对样本T检验\n# 问题：培训前后成绩是否有提升？\nbefore = [70, 75, 80, 65, 72, 78, 68, 73]\nafter = [75, 80, 85, 70, 78, 82, 72, 79]\n\nt_stat, p_value = stats.ttest_rel(after, before)\nprint(f'\\n配对T检验P值: {p_value:.4f}')"
+      },
+      {
+        "title": "贝叶斯定理",
+        "subtitle": "条件概率的核心",
+        "content": "贝叶斯定理描述了如何根据新证据更新信念。\n\n**公式：**\nP(A|B) = P(B|A) * P(A) / P(B)\n\n**术语：**\n• P(A|B)：后验概率（看到B后对A的信念）\n• P(B|A)：似然（A成立时B的概率）\n• P(A)：先验概率（初始信念）\n• P(B)：证据（归一化常数）\n\n**直觉理解：**\n• 先验 + 新证据 → 后验\n• 不断用新数据更新信念\n\n**应用：**\n• 朴素贝叶斯分类器：文本分类\n• 贝叶斯优化：超参数调优\n• A/B测试：贝叶斯方法\n• 医学诊断：检测准确率\n\n**贝叶斯 vs 频率学派：**\n• 贝叶斯：概率是信念的度量\n• 频率学派：概率是长期频率",
+        "keyPoints": ["后验∝似然×先验", "更新信念", "朴素贝叶斯实用"],
+        "example": "def bayes_theorem(prior, likelihood, evidence):\n    \"\"\"\n    prior: 先验概率 P(A)\n    likelihood: 似然 P(B|A)\n    evidence: 证据 P(B)\n    \"\"\"\n    posterior = (likelihood * prior) / evidence\n    return posterior\n\n# 医学诊断示例\n# 某疾病患病率1%，检测准确率95%\n# 检测阳性，实际患病概率？\n\np_disease = 0.01          # 患病率（先验）\np_positive_given_disease = 0.95  # 患病时阳性（似然）\np_positive_given_healthy = 0.05  # 健康时阳性（误诊）\n\n# 计算总阳性率\ntotal_positive = (p_positive_given_disease * p_disease + \n                  p_positive_given_healthy * (1 - p_disease))\n\n# 贝叶斯计算\nposterior = bayes_theorem(p_disease, p_positive_given_disease, total_positive)\nprint(f'检测阳性时实际患病概率: {posterior:.4f}')\nprint(f'即约{posterior*100:.1f}%，远低于检测准确率95%')",
+        "tip": "贝叶斯定理解释了为什么即使检测准确率很高，阳性结果也可能大部分是误诊。"
+      }
+    ]
   },
   {
     "id": 6,
@@ -95,7 +333,44 @@
     "author": "运维工程组",
     "difficulty": "初级",
     "estTime": "30分钟",
-    "reason": "## 📖 简介\n\n精选 50 个开发场景高频命令，按使用场景分类组织。不堆砌所有命令，而是直接切入研发团队工作中用得最多、救命频率最高的核心集合。\n\n## 🗂️ 场景分类\n\n### 文件操作\n```bash\n# 递归查找所有 .log 文件，按大小排序\nfind /var/log -name '*.log' -size +100M -exec ls -lh {} \\; | sort -k5 -h\n\n# 批量替换文件中的字符串\nsed -i 's/old/new/g' *.conf\n\n# 统计代码行数（排除 node_modules）\nfind . -name '*.py' -not -path '*/node_modules/*' | xargs wc -l | tail -1\n```\n\n### 进程管理\n```bash\n# 查找占用端口的进程\nlsof -i :8080\n\n# 按内存排序显示前 10 个进程\nps aux --sort=-%mem | head -10\n\n# 杀掉所有 python 进程\nkillall python3\n\n# 后台运行并输出日志\nnohup python server.py > server.log 2>&1 &\n```\n\n### 网络调试\n```bash\n# 测试端口连通性\nnc -zv 192.168.1.100 8080\n\n# 抓取 HTTP 请求头\ncurl -I https://api.example.com/health\n\n# 实时查看网络连接状态\nss -tunlp\n\n# DNS 解析诊断\ndig example.com +trace\n```\n\n### 磁盘与性能\n```bash\n# 查看磁盘使用率\ndf -h\n\n# 查找大文件\ndu -sh /* | sort -rh | head -10\n\n# 实时 IO 监控\niostat -x 1 5\n\n# 内存使用详情\nfree -m\n```\n\n### 日志分析\n```bash\n# 实时跟踪日志\ntail -f /var/log/nginx/access.log\n\n# 统计访问量 TOP 10 IP\nawk '{print $1}' access.log | sort | uniq -c | sort -rn | head -10\n\n# 搜索错误日志\ngrep -rn 'ERROR\\|Exception' ./logs/ --include='*.log'\n```\n\n## 💡 进阶技巧\n\n- **tmux**：终端复用，断线不丢会话\n- **alias**：给常用命令起别名，如 `alias ll='ls -la'`\n- **管道 + 重定向**：`|`、`>`、`>>`、`2>&1` 的组合使用"
+    "reason": "精选50个开发场景高频命令。",
+    "slides": [
+      {
+        "title": "文件查找与搜索",
+        "subtitle": "定位文件和内容",
+        "content": "文件操作是Linux最基础也最常用的操作。\n\n**find命令 - 查找文件：**\n• 基本语法：find [路径] [选项] [表达式]\n• 按名称：find . -name \"*.log\"\n• 按大小：find / -size +100M\n• 按时间：find . -mtime -7（7天内）\n• 按类型：find . -type f（文件）/ -type d（目录）\n\n**grep命令 - 搜索内容：**\n• 基本语法：grep [选项] \"模式\" 文件\n• 递归搜索：grep -r \"error\" /var/log/\n• 显示行号：grep -n \"TODO\" *.py\n• 忽略大小写：grep -i \"error\" file.txt\n• 反向匹配：grep -v \"debug\" log.txt\n\n**组合使用：**\n• find + xargs + grep：递归搜索文件内容",
+        "keyPoints": ["find找文件", "grep搜内容", "可组合使用"],
+        "example": "# 查找大于100MB的日志文件\nfind /var/log -name '*.log' -size +100M\n\n# 查找7天内修改的Python文件\nfind . -name '*.py' -mtime -7\n\n# 递归搜索包含\"error\"的文件\ngrep -rn \"error\" /var/log/ --include='*.log'\n\n# 统计代码行数（排除node_modules）\nfind . -name '*.py' -not -path '*/node_modules/*' | xargs wc -l\n\n# 查找并删除临时文件\nfind /tmp -name '*.tmp' -mtime +7 -delete"
+      },
+      {
+        "title": "进程管理",
+        "subtitle": "监控与控制进程",
+        "content": "进程管理是系统运维的核心技能。\n\n**查看进程：**\n• ps aux：显示所有进程\n• ps aux --sort=-%mem：按内存排序\n• ps aux --sort=-%cpu：按CPU排序\n• top/htop：实时监控\n\n**查找占用端口的进程：**\n• lsof -i :8080\n• netstat -tlnp | grep 8080\n• ss -tlnp | grep 8080\n\n**终止进程：**\n• kill PID：发送SIGTERM\n• kill -9 PID：强制终止\n• killall name：按名称终止\n• pkill pattern：按模式终止\n\n**后台运行：**\n• nohup cmd &：后台运行\n• jobs：查看后台任务\n• fg %n：调到前台\n• bg %n：后台继续",
+        "keyPoints": ["ps查看进程", "lsof查端口", "kill终止进程"],
+        "example": "# 查找占用8080端口的进程\nlsof -i :8080\n\n# 按内存排序显示前10个进程\nps aux --sort=-%mem | head -10\n\n# 查找所有python进程\nps aux | grep python\n\n# 终止所有python进程\npkill -f python\n\n# 后台运行并记录日志\nnohup python server.py > server.log 2>&1 &\n\n# 查看后台任务\njobs -l"
+      },
+      {
+        "title": "网络调试",
+        "subtitle": "网络诊断工具",
+        "content": "网络问题是常见的运维挑战，需要掌握诊断工具。\n\n**连通性测试：**\n• ping host：测试网络连通\n• traceroute host：路由追踪\n• mtr host：实时路由监控\n\n**端口测试：**\n• nc -zv host port：测试端口\n• telnet host port：交互式连接\n• curl -I url：HTTP请求头\n\n**网络状态：**\n• ss -tunlp：显示所有连接\n• netstat -tunlp：同上（较旧）\n• ss -s：连接统计\n\n**DNS诊断：**\n• dig domain：DNS查询\n• dig +trace domain：追踪解析\n• nslookup domain：简单查询",
+        "keyPoints": ["ping测试连通", "nc测试端口", "ss查看连接"],
+        "example": "# 测试端口连通性\nnc -zv 192.168.1.100 8080\n\n# 抓取HTTP请求头\ncurl -I https://api.example.com/health\n\n# 实时查看网络连接\nss -tunlp\n\n# DNS解析诊断\ndig example.com +trace\n\n# 查看HTTP响应时间\ncurl -o /dev/null -s -w '%{time_total}\\n' https://example.com\n\n# 测试带宽\niperf3 -c server_ip"
+      },
+      {
+        "title": "日志分析",
+        "subtitle": "快速定位问题",
+        "content": "日志是排查问题的第一手资料。\n\n**实时查看：**\n• tail -f file：实时跟踪\n• tail -f file | grep error：过滤\n• less +F file：可滚动的实时查看\n\n**搜索分析：**\n• grep -n \"ERROR\" file：显示行号\n• grep -c \"ERROR\" file：统计次数\n• grep -A 3 -B 3 \"ERROR\" file：上下文\n\n**统计分析：**\n• awk '{print $1}' access.log | sort | uniq -c | sort -rn：统计IP\n• awk '{print $9}' access.log | sort | uniq -c：统计状态码\n\n**日志轮转：**\n• logrotate：自动轮转\n• journalctl：systemd日志\n• journalctl -u nginx -f：跟踪服务日志",
+        "keyPoints": ["tail -f实时查看", "grep过滤搜索", "awk统计分析"],
+        "example": "# 实时跟踪错误日志\ntail -f /var/log/nginx/error.log | grep -i error\n\n# 统计访问量TOP 10 IP\nawk '{print $1}' /var/log/nginx/access.log | \\\n    sort | uniq -c | sort -rn | head -10\n\n# 统计HTTP状态码\nawk '{print $9}' /var/log/nginx/access.log | \\\n    sort | uniq -c | sort -rn\n\n# 搜索最近1小时的错误\nawk -v d=\"$(date -d '1 hour ago' '+%d/%b/%Y:%H')\" \\\n    '$4 >= d' /var/log/nginx/error.log\n\n# journalctl查看nginx日志\njournalctl -u nginx --since '1 hour ago'"
+      },
+      {
+        "title": "实用技巧",
+        "subtitle": "提升效率的命令",
+        "content": "掌握这些技巧能大幅提升工作效率。\n\n**别名设置：**\n• alias ll='ls -la'\n• alias gs='git status'\n• 持久化：写入 ~/.bashrc\n\n**管道与重定向：**\n• |：管道，前一个命令的输出作为下一个的输入\n• >：覆盖写入文件\n• >>：追加写入文件\n• 2>&1：标准错误重定向到标准输出\n\n**xargs：**\n• 将标准输入转换为命令参数\n• find . -name '*.log' | xargs rm\n\n**tmux终端复用：**\n• tmux new -s name：创建会话\n• tmux attach -t name：连接会话\n• 断开SSH不会丢失会话\n\n**crontab定时任务：**\n• crontab -e：编辑定时任务\n• 格式：分 时 日 月 周 命令",
+        "keyPoints": ["alias设别名", "管道组合命令", "tmux防断连"],
+        "example": "# 设置常用别名\nalias ll='ls -la'\nalias gs='git status'\nalias gp='git push'\n\n# 管道组合：查找大文件\ndu -sh /* 2>/dev/null | sort -rh | head -10\n\n# xargs批量操作\nfind . -name '*.tmp' | xargs rm -f\n\n# crontab每天凌晨3点备份\ncrontab -e\n# 0 3 * * * /home/user/backup.sh >> /var/log/backup.log 2>&1"
+      }
+    ]
   },
   {
     "id": 7,
@@ -109,7 +384,40 @@
     "author": "架构专家组",
     "difficulty": "高级",
     "estTime": "50分钟",
-    "reason": "## 📖 简介\n\n微服务全景图：从服务注册发现到链路追踪，梳理微服务架构中每个核心组件的作用、选型与协作关系。适合有单体应用经验、准备向微服务转型的团队。\n\n## 🏗️ 核心组件\n\n### 服务注册与发现\n- **Consul**：HashiCorp 出品，支持健康检查、KV 存储、服务网格\n- **Nacos**：阿里开源，同时支持配置中心和服务发现\n- **Eureka**：Netflix 开源（已停止维护），Spring Cloud 经典选择\n- **核心问题**：服务实例动态变化时，调用方如何知道目标地址？\n\n### API 网关\n- **Kong**：基于 Nginx + Lua，高性能、插件丰富\n- **Spring Cloud Gateway**：Spring 生态原生，响应式编程\n- **APISIX**：Apache 项目，云原生网关\n- **职责**：路由转发、认证鉴权、限流熔断、协议转换、请求聚合\n\n### 熔断降级\n- **Hystrix**（已停更）：Netflix 的经典实现，线程池隔离\n- **Sentinel**：阿里开源，流量控制 + 熔断降级 + 系统自适应保护\n- **Resilience4j**：轻量级替代方案，函数式编程风格\n- **核心模式**：关闭 → 开启 → 半开，状态机驱动\n\n### 链路追踪\n- **Jaeger**：Uber 开源，OpenTracing 标准实现\n- **Zipkin**：Twitter 开源，Spring Cloud Sleuth 集成\n- **SkyWalking**：Apache 项目，Java Agent 无侵入接入\n- **核心概念**：Trace ID、Span ID、Annotation、采样策略\n\n### 配置中心\n- **Apollo**：携程开源，多环境、灰度发布、权限管理\n- **Spring Cloud Config**：Git 存储，Webhook 热更新\n- **Nacos Config**：与服务发现统一部署\n\n## 🔄 调用链路\n\n```\n客户端 → API 网关(鉴权/限流) → 服务A → 服务注册中心(查找B) → 服务B → 数据库\n         ↑                                              ↓\n      链路追踪 ←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←\n```\n\n## ⚠️ 常见陷阱\n\n1. 分布式事务难以保证（Saga/TCC 模式）\n2. 服务间调用延迟累积\n3. 数据一致性最终一致性 vs 强一致性取舍\n4. 运维复杂度指数级上升"
+    "reason": "微服务全景图，适合向微服务转型的团队。",
+    "slides": [
+      {
+        "title": "服务注册与发现",
+        "subtitle": "微服务的基础设施",
+        "content": "服务注册与发现是微服务架构的基础，解决服务实例动态管理问题。\n\n**核心问题：**\n• 服务实例IP不固定\n• 实例动态扩缩容\n• 需要健康检查\n\n**主流方案：**\n\n**Consul：**\n• HashiCorp开源\n• 支持健康检查\n• KV存储\n• 多数据中心\n• 服务网格\n\n**Nacos：**\n• 阿里开源\n• 同时支持配置中心\n• 简单易用\n• 国内使用广泛\n\n**工作流程：**\n1. 服务启动时注册到注册中心\n2. 定期发送心跳\n3. 消费者从注册中心获取服务列表\n4. 负载均衡选择实例调用",
+        "keyPoints": ["解决动态IP问题", "Consul功能全", "Nacos简单易用"]
+      },
+      {
+        "title": "API网关",
+        "subtitle": "统一入口管理",
+        "content": "API网关是微服务的统一入口，处理跨切面关注点。\n\n**核心功能：**\n• 路由转发：将请求路由到对应服务\n• 认证鉴权：统一身份验证\n• 限流熔断：保护后端服务\n• 协议转换：HTTP/gRPC/WebSocket\n• 请求聚合：合并多个服务响应\n\n**主流方案：**\n\n**Kong：**\n• 基于Nginx+Lua\n• 高性能\n• 插件丰富\n• 社区活跃\n\n**Spring Cloud Gateway：**\n• Spring生态原生\n• 响应式编程\n• 与Spring Cloud集成好\n\n**APISIX：**\n• Apache项目\n• 云原生设计\n• 高性能\n• 国内使用多",
+        "keyPoints": ["统一入口", "路由/鉴权/限流", "Kong性能好"],
+        "tip": "选择网关要考虑团队技术栈，Java团队用Spring Cloud Gateway，其他考虑Kong或APISIX。"
+      },
+      {
+        "title": "熔断降级",
+        "subtitle": "容错保护机制",
+        "content": "熔断降级是微服务容错的核心机制，防止级联故障。\n\n**熔断模式：**\n• 关闭状态：正常调用\n• 开启状态：快速失败，不调用下游\n• 半开状态：允许部分请求探测\n\n**触发条件：**\n• 错误率超过阈值\n• 响应时间过长\n• 请求量过大\n\n**降级策略：**\n• 返回默认值\n• 返回缓存数据\n• 调用备用服务\n• 直接报错\n\n**主流方案：**\n\n**Sentinel（阿里）：**\n• 流控+熔断+降级\n• 实时监控\n• 规则动态配置\n\n**Resilience4j：**\n• 轻量级\n• 函数式编程\n• 适合Spring Boot",
+        "keyPoints": ["三种状态转换", "防止级联故障", "Sentinel功能全"]
+      },
+      {
+        "title": "链路追踪",
+        "subtitle": "分布式系统可观测性",
+        "content": "链路追踪帮助理解请求在微服务间的流转路径。\n\n**核心概念：**\n• Trace：一次完整请求的追踪\n• Span：一个操作的追踪单元\n• Trace ID：贯穿整个请求链\n• Span ID：单个操作标识\n\n**需要记录：**\n• 服务名称\n• 操作名称\n• 开始/结束时间\n• 请求/响应数据\n• 错误信息\n\n**主流方案：**\n\n**Jaeger：**\n• Uber开源\n• OpenTracing标准\n• UI友好\n\n**SkyWalking：**\n• Apache项目\n• Java Agent无侵入\n• 性能监控\n\n**Zipkin：**\n• Twitter开源\n• 简单易用\n• Spring Cloud Sleuth集成",
+        "keyPoints": ["Trace追踪请求", "Span记录操作", "Jaeger/SkyWalking常用"]
+      },
+      {
+        "title": "配置中心",
+        "subtitle": "集中化配置管理",
+        "content": "配置中心实现配置的集中管理和动态更新。\n\n**核心功能：**\n• 配置存储：集中存储所有配置\n• 环境隔离：dev/test/prod\n• 动态更新：不重启生效\n• 版本管理：配置变更历史\n• 权限控制：不同环境不同权限\n\n**主流方案：**\n\n**Apollo（携程）：**\n• 功能完善\n• 灰度发布\n• 权限管理\n• 国内使用广泛\n\n**Nacos Config：**\n• 与服务发现统一\n• 简单易用\n• 阿里生态\n\n**Spring Cloud Config：**\n• Git存储\n• Spring生态集成\n• Webhook热更新",
+        "keyPoints": ["集中管理配置", "支持动态更新", "Apollo功能全"]
+      }
+    ]
   },
   {
     "id": 8,
@@ -123,6 +431,225 @@
     "author": "刷题特训营",
     "difficulty": "高级",
     "estTime": "120分钟",
-    "reason": "## 📖 简介\n\n大厂面试高频 30 题精选，按数据结构分类组织。每题包含：题目描述、思路分析、代码模板、复杂度分析与变体扩展。目标不是刷题数量，而是掌握每类问题的通用解题框架。\n\n## 📋 题目清单\n\n### 链表（5 题）\n1. **反转链表**：迭代法 + 递归法，理解指针操作的核心\n2. **合并两个有序链表**：归并排序的子问题，双指针模板\n3. **环形链表检测**：快慢指针（Floyd 判圈），O(1) 空间\n4. **删除倒数第 N 个节点**：一次遍历，快指针先走 N 步\n5. **LRU 缓存**：哈希表 + 双向链表的组合设计\n\n### 二叉树（5 题）\n6. **层序遍历**：BFS 模板，队列的使用\n7. **最大深度**：递归 DFS，一行代码的优雅\n8. **验证二叉搜索树**：中序遍历递增性质\n9. **最近公共祖先（LCA）**：递归分治的经典应用\n10. **序列化与反序列化**：树的持久化，前序/层序遍历\n\n### 动态规划（10 题）\n11. **爬楼梯**：DP 入门，状态转移方程的建立\n12. **最长递增子序列（LIS）**：O(n²) DP → O(n log n) 贪心+二分\n13. **背包问题**：0-1 背包、完全背包、多重背包的模板\n14. **最长公共子序列（LCS）**：二维 DP 表的填法\n15. **编辑距离**：经典的字符串 DP 问题\n16. **零钱兑换**：完全背包变体，求最小硬币数\n17. **打家劫舍**：线性 DP，不相邻约束\n18. **股票买卖**：状态机 DP 的经典应用\n19. **正则表达式匹配**：二维 DP，处理 . 和 * 两种通配\n20. **接雨水**：双指针 / 单调栈 / DP 三种解法对比\n\n### 图论（5 题）\n21. **岛屿数量**：DFS/BFS 模板题\n22. **课程表（拓扑排序）**：有向无环图的线性排序\n23. **最短路径（Dijkstra）**：优先队列 + 松弛操作\n24. **克隆图**：DFS + 哈希表的记忆化\n25. **并查集**：连通分量问题的通用解法\n\n### 设计题（5 题）\n26. **实现 Trie**：前缀树的插入、搜索、前缀匹配\n27. **最小栈**：O(1) 获取最小值的数据结构设计\n28. **数据流中位数**：对顶堆（大根堆 + 小根堆）\n29. **LFU 缓存**：最不频繁使用淘汰策略\n30. **序列化二叉树**：设计紧凑的编解码方案\n\n## 🧠 通用解题模板\n\n### BFS 模板\n```python\nfrom collections import deque\ndef bfs(start):\n    queue = deque([start])\n    visited = {start}\n    while queue:\n        node = queue.popleft()\n        for neighbor in get_neighbors(node):\n            if neighbor not in visited:\n                visited.add(neighbor)\n                queue.append(neighbor)\n```\n\n### DP 模板\n```python\ndef dp(items):\n    n = len(items)\n    dp = [0] * (n + 1)\n    for i in range(1, n + 1):\n        dp[i] = max(dp[j] + value(i, j) for j in range(i))\n    return dp[n]\n```"
+    "reason": "大厂面试高频30题精选。",
+    "slides": [
+      {
+        "title": "链表操作基础",
+        "subtitle": "指针操作是核心",
+        "content": "链表是面试中最常考的数据结构之一，重点是理解指针操作。\n\n**单链表结构：**\n• 节点包含：值 + 下一个节点指针\n• 头节点：链表的起点\n• 尾节点：next指向None\n\n**核心操作：**\n• 遍历：while node: node = node.next\n• 插入：新节点.next = 当前节点.next\n• 删除：前节点.next = 当前节点.next\n\n**常用技巧：**\n• 哑节点dummy：简化头节点处理\n• 快慢指针：找中点、检测环\n• 双指针：找倒数第k个\n\n**经典题目：**\n• 反转链表\n• 合并有序链表\n• 检测环\n• 删除倒数第N个",
+        "keyPoints": ["哑节点简化操作", "快慢指针找中点", "双指针技巧多"],
+        "example": "# 反转链表（迭代法）\ndef reverse_list(head):\n    prev = None\n    curr = head\n    while curr:\n        next_node = curr.next  # 保存下一个\n        curr.next = prev       # 反转指向\n        prev = curr            # 移动prev\n        curr = next_node       # 移动curr\n    return prev\n\n# 检测环（快慢指针）\ndef has_cycle(head):\n    slow = fast = head\n    while fast and fast.next:\n        slow = slow.next\n        fast = fast.next.next\n        if slow == fast:\n            return True\n    return False"
+      },
+      {
+        "title": "二叉树遍历",
+        "subtitle": "递归与迭代",
+        "content": "二叉树遍历是树问题的基础，掌握递归和迭代两种方式。\n\n**前序遍历（根-左-右）：**\n• 递归：先访问根，再左子树，再右子树\n• 应用：复制树\n\n**中序遍历（左-根-右）：**\n• 递归：先左子树，再根，再右子树\n• 应用：BST的有序遍历\n\n**后序遍历（左-右-根）：**\n• 递归：先左子树，再右子树，再根\n• 应用：删除树\n\n**层序遍历（BFS）：**\n• 使用队列\n• 逐层访问\n• 应用：求树的深度\n\n**迭代实现：**\n• 用栈模拟递归\n• 前序：根入栈，先压右再压左\n• 中序：一直向左，弹出时访问",
+        "keyPoints": ["前序：根左右", "中序：左根右", "层序：队列BFS"],
+        "example": "# 前序遍历（递归）\ndef preorder(root):\n    if not root:\n        return []\n    return [root.val] + preorder(root.left) + preorder(root.right)\n\n# 中序遍历（迭代）\ndef inorder(root):\n    result = []\n    stack = []\n    curr = root\n    while curr or stack:\n        while curr:\n            stack.append(curr)\n            curr = curr.left\n        curr = stack.pop()\n        result.append(curr.val)\n        curr = curr.right\n    return result\n\n# 层序遍历（BFS）\nfrom collections import deque\ndef level_order(root):\n    if not root:\n        return []\n    result = []\n    queue = deque([root])\n    while queue:\n        level = []\n        for _ in range(len(queue)):\n            node = queue.popleft()\n            level.append(node.val)\n            if node.left:\n                queue.append(node.left)\n            if node.right:\n                queue.append(node.right)\n        result.append(level)\n    return result"
+      },
+      {
+        "title": "动态规划入门",
+        "subtitle": "状态转移方程",
+        "content": "动态规划通过将问题分解为子问题来求解，关键是找到状态转移方程。\n\n**DP核心思想：**\n• 最优子结构：大问题的最优解包含子问题的最优解\n• 重叠子问题：子问题会被重复计算\n• 状态转移方程：描述状态之间的关系\n\n**解题步骤：**\n1. 定义状态：dp[i]表示什么\n2. 找转移方程：dp[i]如何由之前状态得出\n3. 确定初始值：dp[0], dp[1]等\n4. 确定遍历顺序\n\n**经典题目：**\n• 爬楼梯：dp[i] = dp[i-1] + dp[i-2]\n• 最大子数组和：dp[i] = max(nums[i], dp[i-1]+nums[i])\n• 打家劫舍：dp[i] = max(dp[i-1], dp[i-2]+nums[i])",
+        "keyPoints": ["定义状态", "找转移方程", "确定初始值"],
+        "example": "# 爬楼梯\ndef climb_stairs(n):\n    if n <= 2:\n        return n\n    dp = [0] * (n + 1)\n    dp[1] = 1\n    dp[2] = 2\n    for i in range(3, n + 1):\n        dp[i] = dp[i-1] + dp[i-2]\n    return dp[n]\n\n# 最大子数组和\ndef max_sub_array(nums):\n    dp = [0] * len(nums)\n    dp[0] = nums[0]\n    for i in range(1, len(nums)):\n        dp[i] = max(nums[i], dp[i-1] + nums[i])\n    return max(dp)\n\n# 打家劫舍\ndef rob(nums):\n    if len(nums) <= 2:\n        return max(nums)\n    dp = [0] * len(nums)\n    dp[0] = nums[0]\n    dp[1] = max(nums[0], nums[1])\n    for i in range(2, len(nums)):\n        dp[i] = max(dp[i-1], dp[i-2] + nums[i])\n    return dp[-1]"
+      },
+      {
+        "title": "BFS与DFS模板",
+        "subtitle": "图与树的遍历",
+        "content": "BFS和DFS是图和树遍历的两种基本方式。\n\n**BFS广度优先：**\n• 使用队列\n• 逐层遍历\n• 找最短路径\n• 应用：层序遍历、最短路径\n\n**DFS深度优先：**\n• 使用栈（或递归）\n• 深度优先\n• 空间复杂度低\n• 应用：路径搜索、连通分量\n\n**选择建议：**\n• 求最短路径：BFS\n• 求所有路径：DFS\n• 空间受限：DFS\n\n**visited集合：**\n• 记录已访问节点\n• 防止重复访问\n• 防止无限循环",
+        "keyPoints": ["BFS用队列", "DFS用栈", "visited防重复"],
+        "example": "from collections import deque\n\n# BFS模板\ndef bfs(graph, start):\n    queue = deque([start])\n    visited = {start}\n    result = []\n    \n    while queue:\n        node = queue.popleft()\n        result.append(node)\n        \n        for neighbor in graph[node]:\n            if neighbor not in visited:\n                visited.add(neighbor)\n                queue.append(neighbor)\n    \n    return result\n\n# DFS模板\ndef dfs(graph, start, visited=None):\n    if visited is None:\n        visited = set()\n    \n    visited.add(start)\n    result = [start]\n    \n    for neighbor in graph[start]:\n        if neighbor not in visited:\n            result.extend(dfs(graph, neighbor, visited))\n    \n    return result"
+      }
+    ]
+  },
+  {
+    "id": 9,
+    "type": "doc",
+    "title": "Git 版本控制实战指南",
+    "desc": "从基础命令到高级技巧，覆盖分支管理、合并冲突、rebase等核心操作。",
+    "tags": ["Git", "工具"],
+    "date": "2026-05-01",
+    "color": "#f97316",
+    "reads": 189,
+    "author": "工程效率组",
+    "difficulty": "初级",
+    "estTime": "40分钟",
+    "reason": "Git是现代开发必备技能。",
+    "slides": [
+      {
+        "title": "Git工作区域",
+        "subtitle": "理解三个区域",
+        "content": "Git有三个核心区域，理解它们是掌握Git的基础。\n\n**工作区(Working Directory)：**\n• 你正在编辑的文件\n• 直接看到和修改的地方\n\n**暂存区(Staging Area)：**\n• git add后的区域\n• 准备提交的更改\n• 位于.git/index\n\n**本地仓库(Local Repository)：**\n• git commit后的存储\n• 完整的版本历史\n• 位于.git/objects\n\n**远程仓库(Remote Repository)：**\n• GitHub/GitLab上的仓库\n• git push推送，git pull拉取\n\n**基本流程：**\n1. 在工作区修改文件\n2. git add添加到暂存区\n3. git commit提交到本地仓库\n4. git push推送到远程仓库",
+        "keyPoints": ["工作区编辑", "暂存区准备", "仓库存储历史"]
+      },
+      {
+        "title": "日常开发命令",
+        "subtitle": "每天都要用",
+        "content": "这些是日常开发中最常用的Git命令。\n\n**查看状态：**\n• git status：查看文件状态\n• git diff：查看未暂存的更改\n• git diff --staged：查看已暂存的更改\n\n**提交更改：**\n• git add .：添加所有更改\n• git add file：添加指定文件\n• git commit -m \"message\"：提交\n• git commit -am \"message\"：跳过add直接提交\n\n**查看历史：**\n• git log：查看提交历史\n• git log --oneline：简洁模式\n• git log -p：查看具体更改\n• git blame file：查看每行是谁改的\n\n**撤销操作：**\n• git checkout -- file：撤销工作区更改\n• git reset HEAD file：撤销暂存\n• git reset --soft HEAD~1：撤销提交保留更改",
+        "keyPoints": ["status看状态", "add+commit提交", "log看历史"],
+        "example": "# 查看状态\ngit status\n\n# 添加所有更改\ngit add .\n\n# 提交\ngit commit -m \"feat: add user login\"\n\n# 查看简洁日志\ngit log --oneline -10\n\n# 撤销工作区更改\ngit checkout -- src/app.py\n\n# 撤销暂存\ngit reset HEAD src/app.py\n\n# 修改最后一次提交\ngit commit --amend -m \"fix: update message\""
+      },
+      {
+        "title": "分支管理",
+        "subtitle": "团队协作必备",
+        "content": "分支是Git最强大的功能之一，支持并行开发。\n\n**分支操作：**\n• git branch：查看分支\n• git branch name：创建分支\n• git checkout name：切换分支\n• git checkout -b name：创建并切换\n• git branch -d name：删除分支\n\n**合并分支：**\n• git merge name：合并到当前分支\n• git merge --no-ff name：禁用快进合并\n\n**变基：**\n• git rebase name：将当前分支变基到name\n• 保持线性历史\n• 合并时可能冲突\n\n**Git Flow工作流：**\n• main：生产环境\n• develop：开发分支\n• feature/*：功能分支\n• release/*：发布分支\n• hotfix/*：热修复分支",
+        "keyPoints": ["branch创建分支", "merge合并分支", "rebase变基"],
+        "example": "# 创建功能分支\ngit checkout -b feature/user-login develop\n\n# 开发完成后合并\ngit checkout develop\ngit merge --no-ff feature/user-login\n\n# 删除功能分支\ngit branch -d feature/user-login\n\n# 变基（保持线性历史）\ngit checkout feature/user-login\ngit rebase develop\n\n# 强制推送（变基后需要）\ngit push --force-with-lease"
+      },
+      {
+        "title": "冲突解决",
+        "subtitle": "合并时的挑战",
+        "content": "多人协作时，合并冲突是常见问题。\n\n**冲突原因：**\n• 同一文件的同一位置被修改\n• 一方修改，一方删除\n\n**冲突标记：**\n<<<<<<< HEAD\n你当前分支的代码\n=======\n要合并的分支代码\n>>>>>>> feature-branch\n\n**解决步骤：**\n1. 找到冲突文件\n2. 手动编辑解决冲突\n3. 删除冲突标记\n4. git add添加解决后的文件\n5. git commit提交\n\n**预防策略：**\n• 频繁pull更新\n• 小步提交\n• 及时合并主分支\n• 使用IDE的合并工具",
+        "keyPoints": ["同一位置修改会冲突", "手动解决后提交", "频繁pull预防"],
+        "example": "# 查看冲突文件\ngit status\n\n# 解决冲突后\ngit add conflicted-file.py\ngit commit -m \"merge: resolve conflict\"\n\n# 使用合并工具\ngit mergetool\n\n# 放弃合并\ngit merge --abort\n\n# 使用rebase解决冲突\ngit rebase develop\n# 解决冲突后\ngit add .\ngit rebase --continue"
+      },
+      {
+        "title": "高级技巧",
+        "subtitle": "提升效率",
+        "content": "掌握这些高级技巧能大幅提升Git使用效率。\n\n**Stash暂存：**\n• git stash：暂存当前更改\n• git stash pop：恢复暂存\n• git stash list：查看暂存列表\n• 应用：切换分支前暂存\n\n**Cherry-pick：**\n• git cherry-pick commit-id\n• 将特定提交应用到当前分支\n• 应用：修复bug时只合并特定提交\n\n**Reset vs Revert：**\n• git reset：回退版本（修改历史）\n• git revert：创建新提交撤销（不改历史）\n• 推荐：公共分支用revert\n\n**Reflog：**\n• git reflog：查看所有操作记录\n• 可以恢复误删的提交\n• HEAD@{n}：第n次HEAD位置",
+        "keyPoints": ["stash暂存更改", "cherry-pick拣选", "revert安全撤销"],
+        "example": "# 暂存更改\ngit stash\ngit stash list\ngit stash pop\n\n# 拣选特定提交\ngit cherry-pick abc123\n\n# 安全撤销（不改历史）\ngit revert HEAD\n\n# 查看操作历史\ngit reflog\n\n# 恢复误删的分支\ngit reflog\ngit checkout -b recovered HEAD@{2}\n\n# 交互式rebase（整理提交历史）\ngit rebase -i HEAD~5"
+      }
+    ]
+  },
+  {
+    "id": 10,
+    "type": "doc",
+    "title": "Docker 容器化入门到实战",
+    "desc": "掌握容器化技术，从Dockerfile编写到docker-compose编排，实现应用快速部署。",
+    "tags": ["Docker", "DevOps"],
+    "date": "2026-04-30",
+    "color": "#2563eb",
+    "reads": 156,
+    "author": "云原生团队",
+    "difficulty": "中级",
+    "estTime": "50分钟",
+    "reason": "Docker是现代应用部署的标准方式。",
+    "slides": [
+      {
+        "title": "Docker核心概念",
+        "subtitle": "容器化技术基础",
+        "content": "Docker是容器化技术的代表，解决\"在我机器上能跑\"的问题。\n\n**容器 vs 虚拟机：**\n• 容器：共享宿主机内核，轻量级\n• 虚拟机：完整操作系统，重量级\n• 容器启动秒级，虚拟机分钟级\n\n**核心概念：**\n• 镜像(Image)：只读模板，包含运行环境\n• 容器(Container)：镜像的运行实例\n• 仓库(Registry)：存储镜像的中心\n\n**Dockerfile：**\n• 定义如何构建镜像\n• 一系列指令的集合\n• 构建时执行\n\n**常用命令：**\n• docker pull：拉取镜像\n• docker run：运行容器\n• docker build：构建镜像\n• docker push：推送镜像",
+        "keyPoints": ["镜像是模板", "容器是实例", "Dockerfile定义构建"]
+      },
+      {
+        "title": "Dockerfile编写",
+        "subtitle": "构建自定义镜像",
+        "content": "Dockerfile定义了镜像的构建过程。\n\n**常用指令：**\n• FROM：基础镜像（必须第一条）\n• WORKDIR：设置工作目录\n• COPY/ADD：复制文件\n• RUN：执行命令\n• EXPOSE：声明端口\n• ENV：设置环境变量\n• CMD/ENTRYPOINT：启动命令\n\n**多阶段构建：**\n• 构建阶段：编译代码\n• 运行阶段：只包含运行时\n• 优点：减小镜像体积\n\n**最佳实践：**\n• 使用.dockerignore排除无关文件\n• 合并RUN指令减少层数\n• 使用官方基础镜像\n• 固定版本号",
+        "keyPoints": ["FROM指定基础镜像", "RUN执行命令", "多阶段构建减小体积"],
+        "example": "# Python应用Dockerfile\nFROM python:3.9-slim\n\n# 设置工作目录\nWORKDIR /app\n\n# 复制依赖文件\ncopy requirements.txt .\n\n# 安装依赖\nRUN pip install --no-cache-dir -r requirements.txt\n\n# 复制应用代码\nCOPY . .\n\n# 声明端口\nEXPOSE 8000\n\n# 启动命令\ncmd [\"python\", \"app.py\"]",
+        "tip": "COPY和ADD的区别：ADD会自动解压tar文件，一般推荐用COPY。"
+      },
+      {
+        "title": "Docker Compose",
+        "subtitle": "多容器编排",
+        "content": "Docker Compose用于定义和运行多容器应用。\n\n**docker-compose.yml结构：**\n• version：文件版本\n• services：服务定义\n• volumes：数据卷\n• networks：网络定义\n\n**服务配置：**\n• image：使用的镜像\n• build：构建上下文\n• ports：端口映射\n• volumes：数据卷挂载\n• environment：环境变量\n• depends_on：启动依赖\n\n**常用命令：**\n• docker-compose up：启动所有服务\n• docker-compose up -d：后台启动\n• docker-compose down：停止并删除\n• docker-compose logs：查看日志\n• docker-compose ps：查看状态",
+        "keyPoints": ["yml定义服务", "up启动服务", "down停止服务"],
+        "example": "version: '3.8'\nservices:\n  web:\n    build: .\n    ports:\n      - \"8000:8000\"\n    depends_on:\n      - db\n      - redis\n    environment:\n      - DATABASE_URL=postgresql://user:pass@db/mydb\n  \n  db:\n    image: postgres:14\n    volumes:\n      - postgres_data:/var/lib/postgresql/data\n    environment:\n      - POSTGRES_PASSWORD=pass\n  \n  redis:\n    image: redis:7\n\nvolumes:\n  postgres_data:"
+      },
+      {
+        "title": "生产环境最佳实践",
+        "subtitle": "安全与优化",
+        "content": "生产环境使用Docker需要注意安全和性能。\n\n**安全实践：**\n• 使用非root用户运行\n• 扫描镜像漏洞\n• 使用最小基础镜像\n• 不存储敏感信息在镜像中\n\n**性能优化：**\n• 合理设置资源限制\n• 使用多阶段构建减小体积\n• 利用构建缓存\n• 使用.dockerignore\n\n**日志管理：**\n• 使用日志驱动\n• 集成日志系统\n• 设置日志轮转\n\n**健康检查：**\nHEALTHCHECK --interval=30s --timeout=3s \\\n  CMD curl -f http://localhost/ || exit 1\n\n**监控：**\n• docker stats：资源使用\n• cAdvisor：容器监控\n• Prometheus + Grafana",
+        "keyPoints": ["非root运行", "资源限制", "健康检查必须"],
+        "example": "# docker-compose.yml 生产配置\nversion: '3.8'\nservices:\n  app:\n    build: .\n    deploy:\n      resources:\n        limits:\n          cpus: '1.0'\n          memory: 512M\n    healthcheck:\n      test: [\"CMD\", \"curl\", \"-f\", \"http://localhost:8000/health\"]\n      interval: 30s\n      timeout: 10s\n      retries: 3\n    logging:\n      driver: \"json-file\"\n      options:\n        max-size: \"10m\"\n        max-file: \"3\""
+      }
+    ]
+  },
+  {
+    "id": 11,
+    "type": "video",
+    "title": "React 18 新特性深度解析",
+    "desc": "讲解Concurrent Mode、Suspense、Server Components等React 18核心特性。",
+    "tags": ["React", "前端"],
+    "date": "2026-04-28",
+    "color": "#06b6d4",
+    "reads": 234,
+    "author": "前端技术组",
+    "difficulty": "中级",
+    "estTime": "60分钟",
+    "reason": "React 18引入了多项革命性特性。",
+    "slides": [
+      {
+        "title": "Concurrent Mode并发模式",
+        "subtitle": "React 18的核心特性",
+        "content": "Concurrent Mode让React能够同时准备多个版本的UI。\n\n**核心思想：**\n• 渲染可以被中断\n• 高优先级更新可以插队\n• 保持UI响应性\n\n**useTransition：**\n• 标记低优先级更新\n• 返回isPending状态\n• 用于tab切换、页面导航等\n\n**useDeferredValue：**\n• 延迟更新某个值\n• 用于搜索框等场景\n• 保持输入响应性\n\n**自动批处理：**\n• 多个setState自动合并\n• 减少渲染次数\n• 包括Promise、setTimeout中的更新",
+        "keyPoints": ["渲染可中断", "useTransition标记低优先级", "自动批处理"],
+        "example": "import { useTransition, useState } from 'react';\n\nfunction TabContainer() {\n  const [isPending, startTransition] = useTransition();\n  const [tab, setTab] = useState('home');\n\n  function selectTab(nextTab) {\n    // 标记为低优先级更新\n    startTransition(() => {\n      setTab(nextTab);\n    });\n  }\n\n  return (\n    <div>\n      <TabBar onSelect={selectTab} />\n      {isPending ? <Spinner /> : <TabContent tab={tab} />}\n    </div>\n  );\n}"
+      },
+      {
+        "title": "Suspense增强",
+        "subtitle": "异步UI处理",
+        "content": "Suspense让组件能够\"等待\"某些操作，显示加载状态。\n\n**代码分割：**\nconst LazyComponent = React.lazy(() => import('./Heavy'));\n\n<Suspense fallback={<Loading />}>\n  <LazyComponent />\n</Suspense>\n\n**数据获取（实验性）：**\n• 配合use() hook\n• 声明式数据获取\n• 嵌套Suspense分层加载\n\n**流式SSR：**\n• 服务端逐步发送HTML\n• 先显示shell，再填充内容\n• 提升首屏体验\n\n**最佳实践：**\n• 合理划分Suspense边界\n• 提供有意义的loading状态\n• 配合ErrorBoundary处理错误",
+        "keyPoints": ["代码分割加载", "数据获取等待", "流式SSR提升体验"],
+        "example": "import { Suspense, lazy } from 'react';\nimport ErrorBoundary from './ErrorBoundary';\n\nconst Dashboard = lazy(() => import('./Dashboard'));\nconst Settings = lazy(() => import('./Settings'));\n\nfunction App() {\n  return (\n    <ErrorBoundary fallback={<Error />}>\n      <Suspense fallback={<Loading />}>\n        <Dashboard />\n        <Suspense fallback={<SettingsSkeleton />}>\n          <Settings />\n        </Suspense>\n      </Suspense>\n    </ErrorBoundary>\n  );\n}"
+      },
+      {
+        "title": "Server Components",
+        "subtitle": "服务端组件",
+        "content": "Server Components是React的新范式，组件可以在服务端渲染。\n\n**核心优势：**\n• 零客户端JavaScript体积\n• 直接访问后端资源\n• 自动代码分割\n• 流式渲染\n\n**使用场景：**\n• 静态内容展示\n• 数据获取组件\n• 大型依赖的组件\n• SEO关键内容\n\n**与客户端组件配合：**\n• 'use client'标记客户端组件\n• 服务端组件可以包含客户端组件\n• 客户端组件不能包含服务端组件\n\n**Next.js App Router：**\n• 默认所有组件都是Server Component\n• 需要交互的组件加'use client'\n• 嵌套布局支持",
+        "keyPoints": ["服务端渲染", "零客户端JS", "直接访问后端"],
+        "example": "// Server Component (默认)\nasync function UserProfile({ userId }) {\n  // 直接访问数据库\n  const user = await db.user.findUnique({\n    where: { id: userId }\n  });\n\n  return (\n    <div>\n      <h1>{user.name}</h1>\n      <p>{user.email}</p>\n      <ClientSideButton userId={userId} />\n    </div>\n  );\n}\n\n// Client Component\n'use client';\nimport { useState } from 'react';\n\nfunction ClientSideButton({ userId }) {\n  const [liked, setLiked] = useState(false);\n  return (\n    <button onClick={() => setLiked(!liked)}>\n      {liked ? 'Liked' : 'Like'}\n    </button>\n  );\n}"
+      },
+      {
+        "title": "新增Hooks",
+        "subtitle": "React 18新API",
+        "content": "React 18引入了多个新的Hooks。\n\n**useId：**\n• 生成唯一ID\n• 服务端渲染安全\n• 用于无障碍属性\n\n**useTransition：**\n• 标记低优先级更新\n• 返回isPending状态\n\n**useDeferredValue：**\n• 延迟更新值\n• 保持输入响应\n\n**useSyncExternalStore：**\n• 订阅外部状态库\n• 保证一致性\n\n**useInsertionEffect：**\n• CSS-in-JS专用\n• 在DOM插入前执行",
+        "keyPoints": ["useId生成唯一ID", "useTransition低优先级", "useDeferredValue延迟"],
+        "example": "import { useId, useTransition, useDeferredValue } from 'react';\n\nfunction Form() {\n  const id = useId();\n  return (\n    <div>\n      <label htmlFor={`${id}-name`}>Name</label>\n      <input id={`${id}-name`} />\n    </div>\n  );\n}\n\nfunction SearchableList({ items }) {\n  const [query, setQuery] = useState('');\n  const deferredQuery = useDeferredValue(query);\n  \n  // deferredQuery会在输入稳定后才更新\n  const filtered = items.filter(item =>\n    item.name.includes(deferredQuery)\n  );\n\n  return (\n    <div>\n      <input value={query} onChange={e => setQuery(e.target.value)} />\n      <List items={filtered} />\n    </div>\n  );\n}"
+      }
+    ]
+  },
+  {
+    "id": 12,
+    "type": "code",
+    "title": "TypeScript 高级类型体操",
+    "desc": "深入讲解条件类型、映射类型、模板字面量类型等TypeScript高级特性。",
+    "tags": ["TypeScript", "前端"],
+    "date": "2026-04-25",
+    "color": "#3b82f6",
+    "reads": 178,
+    "author": "前端架构组",
+    "difficulty": "高级",
+    "estTime": "45分钟",
+    "reason": "掌握TypeScript高级类型，编写更安全的代码。",
+    "slides": [
+      {
+        "title": "条件类型",
+        "subtitle": "Conditional Types",
+        "content": "条件类型让类型可以根据条件进行选择。\n\n**基本语法：**\ntype IsString<T> = T extends string ? true : false\n\n**extends关键字：**\n• 表示\"是否可以赋值给\"\n• 用于类型约束\n• 条件类型的基础\n\n**infer关键字：**\n• 在条件类型中推断类型\n• 类似于模式匹配\n• 提取类型的一部分\n\n**分布式条件类型：**\n• 联合类型会自动分发\n• T extends U ? X : Y\n• 当T是联合类型时，每个成员都会分别计算\n\n**内置工具类型：**\n• Exclude<T, U>：从T中排除可赋值给U的类型\n• Extract<T, U>：从T中提取可赋值给U的类型\n• NonNullable<T>：排除null和undefined\n• ReturnType<T>：获取函数返回类型",
+        "keyPoints": ["extends表示约束", "infer推断类型", "联合类型会分发"],
+        "example": "type IsString<T> = T extends string ? true : false;\ntype A = IsString<string>;  // true\ntype B = IsString<number>;  // false\n\n// infer提取类型\ntype UnpackPromise<T> = T extends Promise<infer U> ? U : T;\ntype C = UnpackPromise<Promise<string>>;  // string\ntype D = UnpackPromise<number>;  // number\n\n// 分布式条件类型\ntype ToArray<T> = T extends any ? T[] : never;\ntype E = ToArray<string | number>;  // string[] | number[]\n\n// 实用：获取函数参数类型\ntype MyParameters<T> = T extends (...args: infer P) => any ? P : never;\nfunction greet(name: string, age: number) {}\ntype GreetParams = MyParameters<typeof greet>;  // [string, number]"
+      },
+      {
+        "title": "映射类型",
+        "subtitle": "Mapped Types",
+        "content": "映射类型基于已有类型创建新类型。\n\n**基本语法：**\ntype Readonly<T> = {\n  readonly [P in keyof T]: T[P]\n}\n\n**keyof关键字：**\n• 获取对象所有键\n• 返回联合类型\n\n**in关键字：**\n• 遍历联合类型\n• 用于映射类型\n\n**+/-修饰符：**\n• 添加或移除readonly/optional\n• +readonly / -readonly\n• +optional / -optional\n\n**内置映射类型：**\n• Readonly<T>：所有属性只读\n• Partial<T>：所有属性可选\n• Required<T>：所有属性必需\n• Pick<T, K>：选取指定属性\n• Omit<T, K>：排除指定属性\n• Record<K, V>：创建类型对象",
+        "keyPoints": ["keyof获取键", "in遍历联合", "+/-修饰符"],
+        "example": "type MyReadonly<T> = {\n  readonly [P in keyof T]: T[P];\n};\n\ntype MyPartial<T> = {\n  [P in keyof T]?: T[P];\n};\n\ninterface User {\n  name: string;\n  age: number;\n  email: string;\n}\n\ntype ReadonlyUser = MyReadonly<User>;\ntype PartialUser = MyPartial<User>;\n\n// Pick：选取部分属性\ntype UserBasic = Pick<User, 'name' | 'age'>;\n\n// Omit：排除部分属性\ntype UserWithoutEmail = Omit<User, 'email'>;\n\n// Record：创建类型对象\ntype UserRoles = Record<string, string[]>;\nconst roles: UserRoles = {\n  admin: ['read', 'write', 'delete'],\n  user: ['read']\n};"
+      },
+      {
+        "title": "模板字面量类型",
+        "subtitle": "Template Literal Types",
+        "content": "模板字面量类型基于字符串模板创建类型。\n\n**基本语法：**\ntype Greeting = `Hello ${string}`\n\n**联合类型展开：**\ntype Color = 'red' | 'blue'\ntype Size = 'sm' | 'lg'\ntype ColorSize = `${Color}-${Size}`\n// 'red-sm' | 'red-lg' | 'blue-sm' | 'blue-lg'\n\n**内置字符串工具：**\n• Uppercase<T>：转大写\n• Lowercase<T>：转小写\n• Capitalize<T>：首字母大写\n• Uncapitalize<T>：首字母小写\n\n**实际应用：**\n• CSS属性名：`on${Capitalize<string>}`\n• 事件名：`on${Capitalize<'click' | 'focus'>}`\n• 路由参数：`/users/${string}/posts`",
+        "keyPoints": ["字符串模板类型", "联合类型展开", "内置字符串工具"],
+        "example": "type EventName = `on${Capitalize<'click' | 'focus' | 'blur'>}`;\n// 'onClick' | 'onFocus' | 'onBlur'\n\ntype CSSProperty = `${'margin' | 'padding'}-${'top' | 'right' | 'bottom' | 'left'}`;\n// 'margin-top' | 'margin-right' | ... | 'padding-left'\n\n// 实际应用：类型安全的事件绑定\ntype EventHandler<T extends string> = `on${Capitalize<T>}`;\n\ntype DOMEvents = 'click' | 'focus' | 'blur' | 'change';\ntype DOMEventHandlers = EventHandler<DOMEvents>;\n// 'onClick' | 'onFocus' | 'onBlur' | 'onChange'\n\n// 路由参数提取\ntype ExtractParams<T extends string> =\n  T extends `${string}:${infer Param}/${infer Rest}`\n    ? Param | ExtractParams<Rest>\n    : T extends `${string}:${infer Param}`\n    ? Param\n    : never;\n\ntype Params = ExtractParams<'/users/:userId/posts/:postId'>;\n// 'userId' | 'postId'"
+      },
+      {
+        "title": "递归类型",
+        "subtitle": "Recursive Types",
+        "content": "递归类型可以处理嵌套结构。\n\n**深度只读：**\ntype DeepReadonly<T> = {\n  readonly [P in keyof T]:\n    T[P] extends object ? DeepReadonly<T[P]> : T[P]\n}\n\n**深度可选：**\ntype DeepPartial<T> = {\n  [P in keyof T]?:\n    T[P] extends object ? DeepPartial<T[P]> : T[P]\n}\n\n**类型安全的递归：**\n• 需要终止条件\n• 处理基本情况\n• 避免无限递归\n\n**实际应用：**\n• 嵌套配置对象\n• JSON数据结构\n• 树形结构",
+        "keyPoints": ["处理嵌套结构", "需要终止条件", "配置/JSON常用"],
+        "example": "type DeepReadonly<T> = {\n  readonly [P in keyof T]: T[P] extends object\n    ? DeepReadonly<T[P]>\n    : T[P];\n};\n\ntype DeepPartial<T> = {\n  [P in keyof T]?: T[P] extends object\n    ? DeepPartial<T[P]>\n    : T[P];\n};\n\ninterface Config {\n  database: {\n    host: string;\n    port: number;\n    credentials: {\n      username: string;\n      password: string;\n    };\n  };\n  cache: {\n    enabled: boolean;\n    ttl: number;\n  };\n}\n\ntype ReadonlyConfig = DeepReadonly<Config>;\n// 所有嵌套属性都变为只读\n\ntype PartialConfig = DeepPartial<Config>;\n// 所有嵌套属性都变为可选"
+      },
+      {
+        "title": "实战：类型安全的API",
+        "subtitle": "综合应用",
+        "content": "综合运用高级类型构建类型安全的API。\n\n**类型安全的路由：**\n• 路由参数提取\n• 参数类型约束\n• 编译时检查\n\n**表单验证：**\n• 字段类型推导\n• 验证规则类型\n• 错误信息类型\n\n**状态管理：**\n• Action类型约束\n• Reducer类型安全\n• Selector类型推导",
+        "keyPoints": ["编译时类型检查", "减少运行时错误", "提升开发体验"],
+        "example": "// 类型安全的路由\ntype RouteParams<T extends string> =\n  T extends `${string}:${infer Param}/${infer Rest}`\n    ? { [K in Param | keyof RouteParams<Rest>]: string }\n    : T extends `${string}:${infer Param}`\n    ? { [K in Param]: string }\n    : {};\n\nfunction useParams<T extends string>(route: T): RouteParams<T> {\n  // 实现略\n  return {} as any;\n}\n\n// 使用\nconst params = useParams('/users/:userId/posts/:postId');\n// { userId: string; postId: string }\n\n// 类型安全的Reducer\ntype Action =\n  | { type: 'INCREMENT'; payload: number }\n  | { type: 'DECREMENT'; payload: number }\n  | { type: 'RESET' };\n\nfunction reducer(state: number, action: Action): number {\n  switch (action.type) {\n    case 'INCREMENT':\n      return state + action.payload;\n    case 'DECREMENT':\n      return state - action.payload;\n    case 'RESET':\n      return 0;\n  }\n}"
+      }
+    ]
   }
 ]

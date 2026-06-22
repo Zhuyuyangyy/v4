@@ -21,7 +21,6 @@ import {
   Check,
 } from 'lucide-vue-next'
 import { useAppStore } from '@/store'
-import { desktopPetProfiles, desktopPetMotionOptions } from '@/config/companionPet'
 
 const appStore = useAppStore()
 const theme = ref('dark')
@@ -161,38 +160,6 @@ function saveSettings() {
             <button :class="['toggle-switch', { on: appStore.desktopPetEnabled }]" @click="appStore.setDesktopPetEnabled(!appStore.desktopPetEnabled)" role="switch" :aria-checked="appStore.desktopPetEnabled">
               <span class="switch-knob" />
             </button>
-          </div>
-          <div v-if="appStore.desktopPetEnabled" class="field-row">
-            <div class="field-info">
-              <span class="field-label">宠物档案</span>
-              <span class="field-desc">选择陪伴体的性格和功能倾向</span>
-            </div>
-            <div class="toggle-group">
-              <button
-                v-for="profile in desktopPetProfiles"
-                :key="profile.id"
-                :class="['toggle-opt', { active: appStore.petProfile === profile.id }]"
-                @click="appStore.setPetProfile(profile.id)"
-              >
-                {{ profile.shortName }}
-              </button>
-            </div>
-          </div>
-          <div v-if="appStore.desktopPetEnabled" class="field-row">
-            <div class="field-info">
-              <span class="field-label">动作风格</span>
-              <span class="field-desc">控制向日葵的活跃程度</span>
-            </div>
-            <div class="toggle-group">
-              <button
-                v-for="opt in desktopPetMotionOptions"
-                :key="opt.id"
-                :class="['toggle-opt', { active: appStore.petMotion === opt.id }]"
-                @click="appStore.setPetMotion(opt.id)"
-              >
-                {{ opt.label }}
-              </button>
-            </div>
           </div>
           <div class="field-row">
             <div class="field-info">

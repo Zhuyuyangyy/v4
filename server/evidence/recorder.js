@@ -16,7 +16,7 @@ function tracesPath() {
   return path.join(tracesDir, 'traces.json')
 }
 
-function readTraces() {
+export function readTraces() {
   ensureDir()
   const fp = tracesPath()
   if (!fs.existsSync(fp)) return []
@@ -32,11 +32,24 @@ function writeTraces(traces) {
   fs.writeFileSync(tracesPath(), JSON.stringify(traces, null, 2), 'utf8')
 }
 
+let traceHook = null
+
+export function setTraceRecordedHook(hook) {
+  traceHook = hook
+}
+
 export function recordTrace(trace) {
   const traces = readTraces()
   traces.push(trace)
   const kept = traces.slice(-200)
   writeTraces(kept)
+  if (typeof traceHook === 'function') {
+    try {
+      traceHook(trace)
+    } catch (err) {
+      console.error('[traceHook] failed:', err)
+    }
+  }
   return trace
 }
 

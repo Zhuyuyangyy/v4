@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref } from 'vue'
-import { X, Save, FileText, CheckCircle } from 'lucide-vue-next'
+import { X, Save } from 'lucide-vue-next'
 import type { Resource, ResourceCategory, Difficulty } from '../../types/edu-mind'
 
 const emit = defineEmits<{

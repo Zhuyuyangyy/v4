@@ -3,6 +3,7 @@ import { ref, computed } from 'vue'
 import { useRoute } from 'vue-router'
 import AppLayout from './components/layout/AppLayout.vue'
 import GlobalCompanionPet from './components/tutor/GlobalCompanionPet.vue'
+import NewUserPetGuide from './components/tutor/NewUserPetGuide.vue'
 import { useAppStore } from '@/store'
 
 const showScanLine = ref(true)
@@ -15,11 +16,17 @@ const showCompanionPet = computed(() => appStore.desktopPetEnabled && route.path
   <div :class="['app-wrapper', { 'scan-effect': showScanLine }]">
     <AppLayout />
     <GlobalCompanionPet v-if="showCompanionPet" />
+    <NewUserPetGuide />
   </div>
 </template>
 
 <style scoped>
 .app-wrapper {
   position: relative;
+}
+
+:global(html.new-user-guide-open),
+:global(html.new-user-guide-open body) {
+  overflow: hidden;
 }
 </style>

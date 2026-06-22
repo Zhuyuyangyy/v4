@@ -30,7 +30,7 @@ watch(
           ref="frameRef"
           class="agent-hub-frame"
           src="/agenthub/index.html"
-          title="多智能体协同枢纽"
+          title="12智能体与6模块协同枢纽"
           loading="eager"
           @load="postControlBeat"
         />
@@ -38,7 +38,7 @@ watch(
     </div>
 
     <div class="hub-head">
-      <h2>智能体枢纽，把一次学习卡顿变成闭环协作</h2>
+      <h2>12 个智能体在 6 个模块里接力，把一次学习卡顿变成闭环协作</h2>
     </div>
   </section>
 </template>

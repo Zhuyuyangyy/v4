@@ -24,6 +24,7 @@ function nowTime() {
 function defaultStore() {
   return {
     profileResult: null,
+    knowledgePathResult: null,
     chatHistory: [],
     tutoringHistory: [],
   }
@@ -80,6 +81,16 @@ export function getLatestProfileResult() {
 export function saveProfileResult(profileResult) {
   const store = readStore()
   store.profileResult = profileResult
+  writeStore(store)
+}
+
+export function getLatestKnowledgePath() {
+  return readStore().knowledgePathResult
+}
+
+export function saveKnowledgePathResult(result) {
+  const store = readStore()
+  store.knowledgePathResult = result
   writeStore(store)
 }
 

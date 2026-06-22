@@ -84,30 +84,6 @@ img {
   min-height: 100vh;
 }
 
-#app::before {
-  content: '';
-  position: fixed;
-  inset: 0;
-  background-image:
-    linear-gradient(rgba(0, 212, 255, 0.012) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(0, 212, 255, 0.012) 1px, transparent 1px);
-  background-size: 80px 80px;
-  pointer-events: none;
-  z-index: 0;
-}
-
-#app::after {
-  content: '';
-  position: fixed;
-  inset: 0;
-  background:
-    radial-gradient(ellipse 80% 50% at 50% -10%, rgba(0, 212, 255, 0.04), transparent),
-    radial-gradient(ellipse 50% 40% at 85% 85%, rgba(124, 58, 237, 0.025), transparent),
-    radial-gradient(ellipse 40% 30% at 10% 70%, rgba(6, 214, 160, 0.015), transparent);
-  pointer-events: none;
-  z-index: 0;
-}
-
 :focus-visible {
   outline: 2px solid var(--color-accent-cyan);
   outline-offset: 2px;

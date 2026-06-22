@@ -70,29 +70,29 @@ const PREMIUM_THEMES: MindTheme[] = [
   {
     id: 'midnight-charcoal',
     name: '黑曜重力',
-    bgClass: 'bg-[#090a24]',
-    canvasBg: '#090a24',
+    bgClass: 'bg-[#050510]',
+    canvasBg: '#050510',
     gridColor: '#141230',
-    rootBox: 'bg-[#0d1030] text-white border border-[rgba(117,98,255,0.22)] shadow-xl',
+    rootBox: 'bg-[#050510] text-white border border-[rgba(59,130,246,0.22)] shadow-xl',
     rootText: 'text-white font-extrabold',
-    branchColors: ['#ef4444', '#3b82f6', '#06b6d4', '#a855f7', '#8b5cf6', '#10b981'],
-    nodeBorder: 'border-[#252060] hover:border-[#6d5cff] bg-[#111438]',
+    branchColors: ['#ef4444', '#00d4ff', '#06b6d4', '#0097a7', '#22d3ee', '#10b981'],
+    nodeBorder: 'border-[#10102a] hover:border-[#00d4ff] bg-[#0a0a1e]',
     textColor: 'text-[#d8def0]',
-    accentColor: '#a855f7',
+    accentColor: '#0097a7',
     isDark: true
   },
   {
     id: 'aurora-navy',
     name: '极光幽蓝',
-    bgClass: 'bg-[#090a24]',
-    canvasBg: '#090a24',
+    bgClass: 'bg-[#050510]',
+    canvasBg: '#050510',
     gridColor: '#141230',
-    rootBox: 'bg-[#0d1030] text-white border border-[rgba(117,98,255,0.22)] shadow-xl',
+    rootBox: 'bg-[#050510] text-white border border-[rgba(59,130,246,0.22)] shadow-xl',
     rootText: 'text-white',
-    branchColors: ['#00b4d8', '#00f5d4', '#70e000', '#a855f7', '#f15bb5', '#fee440'],
-    nodeBorder: 'border-[#252060] hover:border-cyan-400 bg-[#111438]',
+    branchColors: ['#00d4ff', '#00f5d4', '#70e000', '#0097a7', '#f15bb5', '#fee440'],
+    nodeBorder: 'border-[#10102a] hover:border-cyan-400 bg-[#0a0a1e]',
     textColor: 'text-[#d8def0]',
-    accentColor: '#00b4d8',
+    accentColor: '#00d4ff',
     isDark: true
   }
 ]
@@ -1116,18 +1116,18 @@ const getNodeStyle = (layout: NodeLayout, isSelected: boolean) => {
     nodeStyle = {
       ...nodeStyle,
       borderRadius: '20px',
-      background: 'linear-gradient(145deg, #0d1030, #0a0c24)',
-      border: '1px solid rgba(117, 98, 255, 0.25)',
+      background: 'linear-gradient(145deg, #050510, #050510)',
+      border: '1px solid rgba(0, 212, 255, 0.25)',
       boxShadow: isSelected
         ? `0 0 0 4px ${branchColor}30, 0 12px 40px rgba(0, 0, 0, 0.4), 0 0 60px ${branchColor}15`
-        : '0 12px 40px rgba(0, 0, 0, 0.35), 0 0 30px rgba(117, 98, 255, 0.08)',
+        : '0 12px 40px rgba(0, 0, 0, 0.35), 0 0 30px rgba(0, 212, 255, 0.08)',
       color: '#f0f2ff',
     }
   } else if (isLevel1) {
     nodeStyle = {
       ...nodeStyle,
       backgroundColor: isSelected
-        ? 'rgba(109, 92, 255, 0.15)'
+        ? 'rgba(0, 212, 255, 0.15)'
         : 'rgba(17, 20, 56, 0.8)',
       border: `1.5px solid ${branchColor}35`,
       borderRadius: '14px',
@@ -1241,7 +1241,7 @@ const onOutlineViewClick = (layoutId: string, label: string) => {
     <Transition name="toast">
       <div
         v-if="toastStr"
-        class="fixed top-8 left-1/2 -translate-x-1/2 bg-[#1a1640] text-white border border-[#252060] px-6 py-3 rounded-2xl shadow-2xl z-50 text-[15px] font-semibold flex items-center gap-2.5"
+        class="fixed top-8 left-1/2 -translate-x-1/2 bg-[#0a0a1e] text-white border border-[#10102a] px-6 py-3 rounded-2xl shadow-2xl z-50 text-[15px] font-semibold flex items-center gap-2.5"
       >
         <span class="w-2 h-2 bg-emerald-400 rounded-full animate-ping" />
         <span class="text-[#d8def0]">{{ toastStr }}</span>
@@ -1249,10 +1249,10 @@ const onOutlineViewClick = (layoutId: string, label: string) => {
     </Transition>
 
     <!-- UPPER HEADER COMPONENT AND TOGGLES -->
-    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white dark:bg-[#111438] px-6 py-4.5 rounded-2xl border border-[#1e1b4b]/90 dark:border-[#252060] shadow-2xs">
+    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white dark:bg-[#0a0a1e] px-6 py-4.5 rounded-2xl border border-[#0a0a1e]/90 dark:border-[#10102a] shadow-2xs">
       <div>
         <div class="flex items-center gap-2">
-          <span class="bg-[rgba(109,92,255,0.12)] text-[#c4b5fd] px-2.5 py-1 text-[13px] font-bold tracking-wide uppercase rounded-md">Xmind Edition</span>
+          <span class="bg-[rgba(0,212,255,0.08)] text-[#00d4ff] px-2.5 py-1 text-[13px] font-bold tracking-wide uppercase rounded-md">Xmind Edition</span>
           <span class="text-[14px] text-[#8b9bc0] dark:text-[#9aa4d9] font-medium">快捷、流式、高频考点总览</span>
         </div>
         <h2 class="text-[20px] font-extrabold text-[#1e293b] dark:text-white mt-1 flex items-center gap-2 tracking-tight">
@@ -1262,20 +1262,20 @@ const onOutlineViewClick = (layoutId: string, label: string) => {
       </div>
 
       <div class="flex items-center gap-3 w-full sm:w-auto self-stretch">
-        <div class="flex items-center gap-1 bg-[#0d0f2c]/80 dark:bg-[#0d0f2c] p-1.5 rounded-xl border border-[#1e1b4b] dark:border-[#282260]">
+        <div class="flex items-center gap-1 bg-[#0a0a1e]/80 dark:bg-[#0a0a1e] p-1.5 rounded-xl border border-[#0a0a1e] dark:border-[#10102a]">
           <button
             @click="viewMode = 'map'; showToast('已切换至 心灵制图 模式')"
             :class="`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all border-none cursor-pointer ${
-              viewMode === 'map' ? 'bg-white dark:bg-[#16183c] text-[#f0f2ff] dark:text-white shadow-3xs' : 'text-[#9aa4d9] dark:text-[#8b9bc0] hover:text-[#f0f2ff] dark:hover:text-white'
+              viewMode === 'map' ? 'bg-white dark:bg-[#0a0a1e] text-[#f0f2ff] dark:text-white shadow-3xs' : 'text-[#9aa4d9] dark:text-[#8b9bc0] hover:text-[#f0f2ff] dark:hover:text-white'
             }`"
           >
-            <Network class="w-3.5 h-3.5 text-[#c4b5fd]" />
+            <Network class="w-3.5 h-3.5 text-[#00d4ff]" />
             <span>导图视图</span>
           </button>
           <button
             @click="viewMode = 'outline'; showToast('已导入 纲要树 结构')"
             :class="`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all border-none cursor-pointer ${
-              viewMode === 'outline' ? 'bg-white dark:bg-[#16183c] text-[#f0f2ff] dark:text-white shadow-3xs' : 'text-[#9aa4d9] dark:text-[#8b9bc0] hover:text-[#f0f2ff] dark:hover:text-white'
+              viewMode === 'outline' ? 'bg-white dark:bg-[#0a0a1e] text-[#f0f2ff] dark:text-white shadow-3xs' : 'text-[#9aa4d9] dark:text-[#8b9bc0] hover:text-[#f0f2ff] dark:hover:text-white'
             }`"
           >
             <Layers class="w-3.5 h-3.5 text-orange-500" />
@@ -1283,12 +1283,12 @@ const onOutlineViewClick = (layoutId: string, label: string) => {
           </button>
         </div>
 
-        <div class="h-6 w-[1.5px] bg-[#1a1640] dark:bg-[#16183c] hidden md:block" />
+        <div class="h-6 w-[1.5px] bg-[#0a0a1e] dark:bg-[#0a0a1e] hidden md:block" />
 
         <select
           :value="selectedCourseId"
           @change="onCourseSelect"
-          class="px-3.5 py-2 text-xs font-bold bg-[#f1f5f9] dark:bg-[#0d0f2c] hover:bg-[#1a1640] dark:hover:bg-[#16183c] text-[#b8c4dc] dark:text-[#c4b5fd] rounded-xl border border-[#1e1b4b] dark:border-[#282260] cursor-pointer outline-none focus:ring-1 focus:ring-blue-500"
+          class="px-3.5 py-2 text-xs font-bold bg-[#f1f5f9] dark:bg-[#0a0a1e] hover:bg-[#0a0a1e] dark:hover:bg-[#0a0a1e] text-[#b8c4dc] dark:text-[#00d4ff] rounded-xl border border-[#0a0a1e] dark:border-[#10102a] cursor-pointer outline-none focus:ring-1 focus:ring-blue-500"
         >
           <option value="prog-ds">📁 数据结构与算法 学习大纲</option>
           <option value="prog-py">📁 Python 程序设计 基础总览</option>
@@ -1299,24 +1299,24 @@ const onOutlineViewClick = (layoutId: string, label: string) => {
     </div>
 
     <!-- REAL-TIME XMIND SHORTCUT ACTIONS QUICK NAVIGATION RAIL -->
-    <div class="bg-white dark:bg-[#111438] border border-[#1e1b4b] dark:border-[#252060] p-3 rounded-2xl flex flex-wrap items-center justify-between gap-3 shadow-3xs select-none">
+    <div class="bg-white dark:bg-[#0a0a1e] border border-[#0a0a1e] dark:border-[#10102a] p-3 rounded-2xl flex flex-wrap items-center justify-between gap-3 shadow-3xs select-none">
       <div class="flex items-center gap-2.5 flex-wrap">
         <button
           @click="handleAddSiblingTopic(selectedNodeId)"
-          class="flex items-center gap-1.5 px-3.5 py-2 hover:bg-[#111338] dark:hover:bg-[#0d0f2c] text-[#b8c4dc] dark:text-[#c4b5fd] text-[14px] font-semibold rounded-xl border border-[#1e1b4b] dark:border-[#282260] cursor-pointer transition-colors"
+          class="flex items-center gap-1.5 px-3.5 py-2 hover:bg-[#0a0a1e] dark:hover:bg-[#0a0a1e] text-[#b8c4dc] dark:text-[#00d4ff] text-[14px] font-semibold rounded-xl border border-[#0a0a1e] dark:border-[#10102a] cursor-pointer transition-colors"
           title="快捷键: Enter"
         >
           <PlusCircle class="w-3.5 h-3.5 text-[#10b981]" />
-          <span>添加同级分支 <kbd class="font-mono text-[11.5px] bg-[#0d0f2c] dark:bg-[#16183c] px-1 py-0.5 rounded border border-[#1e1b4b] dark:border-[#282260] text-[#9aa4d9] dark:text-[#8b9bc0]">Enter</kbd></span>
+          <span>添加同级分支 <kbd class="font-mono text-[11.5px] bg-[#0a0a1e] dark:bg-[#0a0a1e] px-1 py-0.5 rounded border border-[#0a0a1e] dark:border-[#10102a] text-[#9aa4d9] dark:text-[#8b9bc0]">Enter</kbd></span>
         </button>
 
         <button
           @click="handleAddChildTopic(selectedNodeId)"
-          class="flex items-center gap-1.5 px-3.5 py-2 hover:bg-[#111338] dark:hover:bg-[#0d0f2c] text-[#b8c4dc] dark:text-[#c4b5fd] text-[14px] font-semibold rounded-xl border border-[#1e1b4b] dark:border-[#282260] cursor-pointer transition-colors"
+          class="flex items-center gap-1.5 px-3.5 py-2 hover:bg-[#0a0a1e] dark:hover:bg-[#0a0a1e] text-[#b8c4dc] dark:text-[#00d4ff] text-[14px] font-semibold rounded-xl border border-[#0a0a1e] dark:border-[#10102a] cursor-pointer transition-colors"
           title="快捷键: Tab"
         >
-          <Compass class="w-3.5 h-3.5 text-[#3b82f6]" />
-          <span>插入子课题 <kbd class="font-mono text-[11.5px] bg-[#0d0f2c] dark:bg-[#16183c] px-1 py-0.5 rounded border border-[#1e1b4b] dark:border-[#282260] text-[#9aa4d9] dark:text-[#8b9bc0]">Tab</kbd></span>
+          <Compass class="w-3.5 h-3.5 text-[#00d4ff]" />
+          <span>插入子课题 <kbd class="font-mono text-[11.5px] bg-[#0a0a1e] dark:bg-[#0a0a1e] px-1 py-0.5 rounded border border-[#0a0a1e] dark:border-[#10102a] text-[#9aa4d9] dark:text-[#8b9bc0]">Tab</kbd></span>
         </button>
 
         <button
@@ -1325,32 +1325,32 @@ const onOutlineViewClick = (layoutId: string, label: string) => {
           title="快捷键: Delete"
         >
           <Trash2 class="w-3.5 h-3.5 text-red-500 transition-transform hover:scale-105" />
-          <span>剪掉节点 <kbd class="font-mono text-[11.5px] bg-[#0d0f2c] dark:bg-[#16183c] px-1 py-0.5 rounded border border-[#1e1b4b] dark:border-[#282260] text-[#9aa4d9] dark:text-[#8b9bc0]">Del</kbd></span>
+          <span>剪掉节点 <kbd class="font-mono text-[11.5px] bg-[#0a0a1e] dark:bg-[#0a0a1e] px-1 py-0.5 rounded border border-[#0a0a1e] dark:border-[#10102a] text-[#9aa4d9] dark:text-[#8b9bc0]">Del</kbd></span>
         </button>
 
-        <div class="h-4 w-[1px] bg-[#1a1640] dark:bg-[#16183c]" />
+        <div class="h-4 w-[1px] bg-[#0a0a1e] dark:bg-[#0a0a1e]" />
 
         <button
           @click="handleCollapseAllNodes(true)"
-          class="p-1 px-2 hover:bg-[#111438] dark:hover:bg-[#0d0f2c] text-[#9aa4d9] dark:text-[#8b9bc0] hover:text-[#f0f2ff] dark:hover:text-white text-[13.5px] font-medium rounded-lg border-none bg-transparent cursor-pointer"
+          class="p-1 px-2 hover:bg-[#0a0a1e] dark:hover:bg-[#0a0a1e] text-[#9aa4d9] dark:text-[#8b9bc0] hover:text-[#f0f2ff] dark:hover:text-white text-[13.5px] font-medium rounded-lg border-none bg-transparent cursor-pointer"
         >
           收叠所有
         </button>
 
         <button
           @click="handleCollapseAllNodes(false)"
-          class="p-1 px-2 hover:bg-[#111438] dark:hover:bg-[#0d0f2c] text-[#9aa4d9] dark:text-[#8b9bc0] hover:text-[#f0f2ff] dark:hover:text-white text-[13.5px] font-medium rounded-lg border-none bg-transparent cursor-pointer"
+          class="p-1 px-2 hover:bg-[#0a0a1e] dark:hover:bg-[#0a0a1e] text-[#9aa4d9] dark:text-[#8b9bc0] hover:text-[#f0f2ff] dark:hover:text-white text-[13.5px] font-medium rounded-lg border-none bg-transparent cursor-pointer"
         >
           展开层级
         </button>
       </div>
 
       <div class="flex items-center gap-3">
-        <div class="flex items-center gap-1 bg-[#0d0f2c] dark:bg-[#0d0f2c] px-1.5 py-1 rounded-xl border border-[#1e1b4b] dark:border-[#282260]">
+        <div class="flex items-center gap-1 bg-[#0a0a1e] dark:bg-[#0a0a1e] px-1.5 py-1 rounded-xl border border-[#0a0a1e] dark:border-[#10102a]">
           <button
             @click="handleUndo"
             :disabled="historyIndex <= 0"
-            class="p-1.5 hover:bg-white dark:hover:bg-[#16183c] text-[#6f7a9e] dark:text-[#c4b5fd] disabled:opacity-45 rounded-lg border-none bg-transparent cursor-pointer transition-all"
+            class="p-1.5 hover:bg-white dark:hover:bg-[#0a0a1e] text-[#6f7a9e] dark:text-[#00d4ff] disabled:opacity-45 rounded-lg border-none bg-transparent cursor-pointer transition-all"
             title="撤销 (Ctrl+Z)"
           >
             <Undo2 class="w-3.5 h-3.5" />
@@ -1358,23 +1358,23 @@ const onOutlineViewClick = (layoutId: string, label: string) => {
           <button
             @click="handleRedo"
             :disabled="historyIndex >= history.length - 1"
-            class="p-1.5 hover:bg-white dark:hover:bg-[#16183c] text-[#6f7a9e] dark:text-[#c4b5fd] disabled:opacity-45 rounded-lg border-none bg-transparent cursor-pointer transition-all"
+            class="p-1.5 hover:bg-white dark:hover:bg-[#0a0a1e] text-[#6f7a9e] dark:text-[#00d4ff] disabled:opacity-45 rounded-lg border-none bg-transparent cursor-pointer transition-all"
             title="重做"
           >
             <Redo2 class="w-3.5 h-3.5" />
           </button>
         </div>
 
-        <div class="h-4 w-[1px] bg-[#1a1640] dark:bg-[#16183c]" />
+        <div class="h-4 w-[1px] bg-[#0a0a1e] dark:bg-[#0a0a1e]" />
 
-        <div class="relative flex items-center bg-[#0d0f2c] dark:bg-[#0d0f2c] hover:bg-[#111438]/90 dark:hover:bg-[#0d0f2c]/90 rounded-xl px-2.5 py-1.5 border border-[#1e1b4b] dark:border-[#282260]">
+        <div class="relative flex items-center bg-[#0a0a1e] dark:bg-[#0a0a1e] hover:bg-[#0a0a1e]/90 dark:hover:bg-[#0a0a1e]/90 rounded-xl px-2.5 py-1.5 border border-[#0a0a1e] dark:border-[#10102a]">
           <Search class="w-3.5 h-3.5 text-[#8b9bc0] mr-1.5 shrink-0" />
           <input
             type="text"
             placeholder="搜索考点/导图..."
             :value="searchText"
             @input="searchText = ($event.target as HTMLInputElement).value"
-            class="bg-transparent border-none text-[13px] outline-none w-32 font-bold text-[#b8c4dc] dark:text-[#c4b5fd] placeholder:text-[#8b9bc0]"
+            class="bg-transparent border-none text-[13px] outline-none w-32 font-bold text-[#b8c4dc] dark:text-[#00d4ff] placeholder:text-[#8b9bc0]"
           />
           <div v-if="searchMatches.length > 0" class="flex items-center gap-1.5 ml-2">
             <span class="text-[12px] text-[#8b9bc0] font-mono font-bold leading-none">{{ currentMatchIndex + 1 }}/{{ searchMatches.length }}</span>
@@ -1389,7 +1389,7 @@ const onOutlineViewClick = (layoutId: string, label: string) => {
 
         <button
           @click="showShortcutsHelp = !showShortcutsHelp"
-          class="p-2 hover:bg-[#111438] dark:hover:bg-[#0d0f2c] text-[#9aa4d9] dark:text-[#8b9bc0] hover:text-[#c4b5fd] rounded-xl border-none bg-transparent cursor-pointer"
+          class="p-2 hover:bg-[#0a0a1e] dark:hover:bg-[#0a0a1e] text-[#9aa4d9] dark:text-[#8b9bc0] hover:text-[#00d4ff] rounded-xl border-none bg-transparent cursor-pointer"
           title="快捷键图例说明"
         >
           <Keyboard class="w-4 h-4" />
@@ -1401,44 +1401,44 @@ const onOutlineViewClick = (layoutId: string, label: string) => {
     <Transition name="modal">
       <div
         v-if="showShortcutsHelp"
-        class="fixed inset-0 bg-[#1a1640]/35 backdrop-blur-xs z-50 flex items-center justify-center p-4 select-none"
+        class="fixed inset-0 bg-[#0a0a1e]/35 backdrop-blur-xs z-50 flex items-center justify-center p-4 select-none"
         @click="showShortcutsHelp = false"
       >
         <div
-          class="bg-white dark:bg-[#111438] rounded-2xl w-full max-w-sm border border-[#1e1b4b] dark:border-[#252060] p-6 shadow-2xl relative"
+          class="bg-white dark:bg-[#0a0a1e] rounded-2xl w-full max-w-sm border border-[#0a0a1e] dark:border-[#10102a] p-6 shadow-2xl relative"
           @click.stop
         >
           <h3 class="text-sm font-bold text-[#f0f2ff] dark:text-white flex items-center gap-2 mb-4">
-            <Keyboard class="w-4 h-4 text-[#c4b5fd]" />
+            <Keyboard class="w-4 h-4 text-[#00d4ff]" />
             <span>Xmind 极速键盘操作流</span>
           </h3>
 
           <div class="flex flex-col gap-3 font-sans">
-            <div class="flex items-center justify-between py-1.5 border-b border-[#1e1b4b] font-medium">
+            <div class="flex items-center justify-between py-1.5 border-b border-[#0a0a1e] font-medium">
               <span class="text-xs text-[#9aa4d9]">新建子节点</span>
-              <span class="text-[12.5px] font-mono bg-[#0d0f2c] border border-[#1e1b4b] text-[#b8c4dc] px-2 py-0.5 rounded shadow-3xs font-extrabold">Tab</span>
+              <span class="text-[12.5px] font-mono bg-[#0a0a1e] border border-[#0a0a1e] text-[#b8c4dc] px-2 py-0.5 rounded shadow-3xs font-extrabold">Tab</span>
             </div>
-            <div class="flex items-center justify-between py-1.5 border-b border-[#1e1b4b] font-medium">
+            <div class="flex items-center justify-between py-1.5 border-b border-[#0a0a1e] font-medium">
               <span class="text-xs text-[#9aa4d9]">新建同级节点</span>
-              <span class="text-[12.5px] font-mono bg-[#0d0f2c] border border-[#1e1b4b] text-[#b8c4dc] px-2 py-0.5 rounded shadow-3xs font-extrabold">Enter</span>
+              <span class="text-[12.5px] font-mono bg-[#0a0a1e] border border-[#0a0a1e] text-[#b8c4dc] px-2 py-0.5 rounded shadow-3xs font-extrabold">Enter</span>
             </div>
-            <div class="flex items-center justify-between py-1.5 border-b border-[#1e1b4b] font-medium">
+            <div class="flex items-center justify-between py-1.5 border-b border-[#0a0a1e] font-medium">
               <span class="text-xs text-[#9aa4d9]">双击卡片 / 空格修改内容</span>
-              <span class="text-[12.5px] font-mono bg-[#0d0f2c] border border-[#1e1b4b] text-[#b8c4dc] px-2 py-0.5 rounded shadow-3xs font-extrabold">Space</span>
+              <span class="text-[12.5px] font-mono bg-[#0a0a1e] border border-[#0a0a1e] text-[#b8c4dc] px-2 py-0.5 rounded shadow-3xs font-extrabold">Space</span>
             </div>
-            <div class="flex items-center justify-between py-1.5 border-b border-[#1e1b4b] font-medium">
+            <div class="flex items-center justify-between py-1.5 border-b border-[#0a0a1e] font-medium">
               <span class="text-xs text-[#9aa4d9]">删除当前分支</span>
-              <span class="text-[12.5px] font-mono bg-[#0d0f2c] border border-[#1e1b4b] text-[#b8c4dc] px-2 py-0.5 rounded shadow-3xs font-extrabold">Delete</span>
+              <span class="text-[12.5px] font-mono bg-[#0a0a1e] border border-[#0a0a1e] text-[#b8c4dc] px-2 py-0.5 rounded shadow-3xs font-extrabold">Delete</span>
             </div>
-            <div class="flex items-center justify-between py-1.5 border-b border-[#1e1b4b] font-medium">
+            <div class="flex items-center justify-between py-1.5 border-b border-[#0a0a1e] font-medium">
               <span class="text-xs text-[#9aa4d9]">关闭当前气泡</span>
-              <span class="text-[12.5px] font-mono bg-[#0d0f2c] border border-[#1e1b4b] text-[#b8c4dc] px-2 py-0.5 rounded shadow-3xs font-extrabold">Esc</span>
+              <span class="text-[12.5px] font-mono bg-[#0a0a1e] border border-[#0a0a1e] text-[#b8c4dc] px-2 py-0.5 rounded shadow-3xs font-extrabold">Esc</span>
             </div>
           </div>
 
           <button
             @click="showShortcutsHelp = false"
-            class="mt-5 w-full bg-[#6d5cff] hover:bg-[#6d5cff] text-white font-bold text-xs py-2 rounded-xl border-none cursor-pointer"
+            class="mt-5 w-full bg-[#00d4ff] hover:bg-[#00d4ff] text-white font-bold text-xs py-2 rounded-xl border-none cursor-pointer"
           >
             我知道了
           </button>
@@ -1448,7 +1448,7 @@ const onOutlineViewClick = (layoutId: string, label: string) => {
 
     <!-- MAIN GRID WORKSPACE CONFIGURATION -->
     <template v-if="viewMode === 'map'">
-      <div class="grid grid-cols-1 lg:grid-cols-12 grid-rows-[1fr] border border-[#1e1b4b] dark:border-[#252060] bg-[#f8fafc] dark:bg-[#090a24] rounded-2xl overflow-hidden shadow-3xs flex-1 min-h-0">
+      <div class="grid grid-cols-1 lg:grid-cols-12 grid-rows-[1fr] border border-[#0a0a1e] dark:border-[#10102a] bg-[#f8fafc] dark:bg-[#050510] rounded-2xl overflow-hidden shadow-3xs flex-1 min-h-0">
 
         <!-- LEFT 9 COLUMNS: THE XMIND INTERACTIVE CANVAS -->
         <div
@@ -1456,7 +1456,7 @@ const onOutlineViewClick = (layoutId: string, label: string) => {
           @mousemove="handlePanMouseMove"
           @mouseup="handlePanMouseUp"
           @mouseleave="handlePanMouseUp"
-          :class="`col-span-12 lg:col-span-9 h-full overflow-hidden relative select-none border-b lg:border-b-0 lg:border-r border-[#1e1b4b] dark:border-[#252060] ${
+          :class="`col-span-12 lg:col-span-9 h-full overflow-hidden relative select-none border-b lg:border-b-0 lg:border-r border-[#0a0a1e] dark:border-[#10102a] ${
             currentTheme.bgClass
           } ${isDragging ? 'cursor-grabbing' : 'cursor-grab'}`"
           :style="{ backgroundColor: currentTheme.canvasBg }"
@@ -1473,26 +1473,26 @@ const onOutlineViewClick = (layoutId: string, label: string) => {
           />
 
           <!-- FLOATING ACTION TOOLBAR: ZOOM AND ADAPTATION PANEL -->
-          <div class="absolute bottom-4 right-4 bg-white/95 dark:bg-[#111438]/95 backdrop-blur-xs border border-[#1e1b4b]/90 dark:border-[#252060] px-3 py-2 rounded-2xl shadow-md z-30 flex items-center gap-3">
+          <div class="absolute bottom-4 right-4 bg-white/95 dark:bg-[#0a0a1e]/95 backdrop-blur-xs border border-[#0a0a1e]/90 dark:border-[#10102a] px-3 py-2 rounded-2xl shadow-md z-30 flex items-center gap-3">
             <button
               @click="handleZoom('out')"
-              class="p-1.5 hover:bg-[#111438] dark:hover:bg-[#16183c] hover:text-[#c4b5fd] text-[#9aa4d9] dark:text-[#8b9bc0] rounded-lg cursor-pointer border-none bg-transparent"
+              class="p-1.5 hover:bg-[#0a0a1e] dark:hover:bg-[#0a0a1e] hover:text-[#00d4ff] text-[#9aa4d9] dark:text-[#8b9bc0] rounded-lg cursor-pointer border-none bg-transparent"
               title="缩小"
             >
               <Minus class="w-4 h-4" />
             </button>
-            <span class="text-xs font-mono font-bold text-[#b8c4dc] dark:text-[#c4b5fd] select-none">{{ zoom }}%</span>
+            <span class="text-xs font-mono font-bold text-[#b8c4dc] dark:text-[#00d4ff] select-none">{{ zoom }}%</span>
             <button
               @click="handleZoom('in')"
-              class="p-1.5 hover:bg-[#111438] dark:hover:bg-[#16183c] hover:text-[#c4b5fd] text-[#9aa4d9] dark:text-[#8b9bc0] rounded-lg cursor-pointer border-none bg-transparent"
+              class="p-1.5 hover:bg-[#0a0a1e] dark:hover:bg-[#0a0a1e] hover:text-[#00d4ff] text-[#9aa4d9] dark:text-[#8b9bc0] rounded-lg cursor-pointer border-none bg-transparent"
               title="放大"
             >
               <Plus class="w-4 h-4" />
             </button>
-            <div class="w-[1.5px] h-4 bg-[#1a1640] dark:bg-[#16183c]" />
+            <div class="w-[1.5px] h-4 bg-[#0a0a1e] dark:bg-[#0a0a1e]" />
             <button
               @click="handleResetCanvasOffset"
-              class="p-1.5 hover:bg-[#111438] dark:hover:bg-[#16183c] text-[#b8c4dc] dark:text-[#c4b5fd] bg-transparent border-none rounded-lg cursor-pointer text-xs font-bold"
+              class="p-1.5 hover:bg-[#0a0a1e] dark:hover:bg-[#0a0a1e] text-[#b8c4dc] dark:text-[#00d4ff] bg-transparent border-none rounded-lg cursor-pointer text-xs font-bold"
               title="视野归心居中"
             >
               <Maximize class="w-3.5 h-3.5" />
@@ -1580,7 +1580,7 @@ const onOutlineViewClick = (layoutId: string, label: string) => {
                 v-if="layout.node.children && layout.node.children.length > 0"
                 @click="onCollapseClick(layout.node.id, $event)"
                 :style="{ transform: 'translate(-50%, -50%)' }"
-                :class="`absolute top-1/2 w-4.5 h-4.5 bg-[#111338] border border-[#282260] text-[12px] rounded-full flex items-center justify-center cursor-pointer shadow-3xs hover:bg-[#111438] z-50 text-[#6f7a9e] transition-transform hover:scale-105 pointer-events-auto ${
+                :class="`absolute top-1/2 w-4.5 h-4.5 bg-[#0a0a1e] border border-[#10102a] text-[12px] rounded-full flex items-center justify-center cursor-pointer shadow-3xs hover:bg-[#0a0a1e] z-50 text-[#6f7a9e] transition-transform hover:scale-105 pointer-events-auto ${
                   layout.side === 'left' ? 'left-0.5' : 'right-0.5 translate-x-1'
                 }`"
               >
@@ -1592,15 +1592,15 @@ const onOutlineViewClick = (layoutId: string, label: string) => {
         </div>
 
         <!-- RIGHT 3 COLUMNS: XMIND PROPERTIES FORMATTER SIDEBAR -->
-        <div class="col-span-12 lg:col-span-3 bg-white dark:bg-[#111438] p-5 flex flex-col justify-between select-none border-l border-[#1e1b4b] dark:border-[#252060]">
+        <div class="col-span-12 lg:col-span-3 bg-white dark:bg-[#0a0a1e] p-5 flex flex-col justify-between select-none border-l border-[#0a0a1e] dark:border-[#10102a]">
           <div class="flex flex-col gap-5">
 
             <!-- Sidebar Header Category selector tabs -->
-            <div class="flex items-center gap-1.5 border-b border-[#1e1b4b] dark:border-[#252060] pb-3">
+            <div class="flex items-center gap-1.5 border-b border-[#0a0a1e] dark:border-[#10102a] pb-3">
               <button
                 @click="activeTab = '样式'"
                 :class="`flex items-center gap-1 px-3 py-1.5 text-xs font-bold rounded-lg border-none bg-transparent cursor-pointer transition-all ${
-                  activeTab === '样式' ? 'text-[#c4b5fd] bg-[rgba(109,92,255,0.12)] dark:bg-[rgba(109,92,255,0.2)]' : 'text-[#9aa4d9] dark:text-[#8b9bc0] hover:text-[#f0f2ff] dark:hover:text-white'
+                  activeTab === '样式' ? 'text-[#00d4ff] bg-[rgba(0,212,255,0.08)] dark:bg-[rgba(59,130,246,0.2)]' : 'text-[#9aa4d9] dark:text-[#8b9bc0] hover:text-[#f0f2ff] dark:hover:text-white'
                 }`"
               >
                 <Palette class="w-3.5 h-3.5" />
@@ -1609,7 +1609,7 @@ const onOutlineViewClick = (layoutId: string, label: string) => {
               <button
                 @click="activeTab = '大纲'"
                 :class="`flex items-center gap-1 px-3 py-1.5 text-xs font-bold rounded-lg border-none bg-transparent cursor-pointer transition-all ${
-                  activeTab === '大纲' ? 'text-[#c4b5fd] bg-[rgba(109,92,255,0.12)] dark:bg-[rgba(109,92,255,0.2)]' : 'text-[#9aa4d9] dark:text-[#8b9bc0] hover:text-[#f0f2ff] dark:hover:text-white'
+                  activeTab === '大纲' ? 'text-[#00d4ff] bg-[rgba(0,212,255,0.08)] dark:bg-[rgba(59,130,246,0.2)]' : 'text-[#9aa4d9] dark:text-[#8b9bc0] hover:text-[#f0f2ff] dark:hover:text-white'
                 }`"
               >
                 <FolderOpen class="w-3.5 h-3.5" />
@@ -1618,7 +1618,7 @@ const onOutlineViewClick = (layoutId: string, label: string) => {
               <button
                 @click="activeTab = '笔记'"
                 :class="`flex items-center gap-1 px-3 py-1.5 text-xs font-bold rounded-lg border-none bg-transparent cursor-pointer transition-all ${
-                  activeTab === '笔记' ? 'text-[#c4b5fd] bg-[rgba(109,92,255,0.12)] dark:bg-[rgba(109,92,255,0.2)]' : 'text-[#9aa4d9] dark:text-[#8b9bc0] hover:text-[#f0f2ff] dark:hover:text-white'
+                  activeTab === '笔记' ? 'text-[#00d4ff] bg-[rgba(0,212,255,0.08)] dark:bg-[rgba(59,130,246,0.2)]' : 'text-[#9aa4d9] dark:text-[#8b9bc0] hover:text-[#f0f2ff] dark:hover:text-white'
                 }`"
               >
                 <FileText class="w-3.5 h-3.5" />
@@ -1635,32 +1635,32 @@ const onOutlineViewClick = (layoutId: string, label: string) => {
                 <div class="grid grid-cols-3 gap-2">
                   <button
                     @click="structureStyle = 'curved'; showToast('已切换为 Xmind 极光贝塞尔曲线线段')"
-                    :class="`flex flex-col items-center justify-center p-2 rounded-xl border border-[#1e1b4b] dark:border-[#282260] cursor-pointer bg-white dark:bg-[#0d0f2c] transition-all ${
-                      structureStyle === 'curved' ? 'border-[#6d5cff] bg-blue-50/35 dark:bg-[rgba(109,92,255,0.2)] ring-1 ring-[#6d5cff]' : 'hover:border-[#282260] dark:hover:border-[#6d5cff]'
+                    :class="`flex flex-col items-center justify-center p-2 rounded-xl border border-[#0a0a1e] dark:border-[#10102a] cursor-pointer bg-white dark:bg-[#0a0a1e] transition-all ${
+                      structureStyle === 'curved' ? 'border-[#00d4ff] bg-blue-50/35 dark:bg-[rgba(59,130,246,0.2)] ring-1 ring-[#00d4ff]' : 'hover:border-[#10102a] dark:hover:border-[#00d4ff]'
                     }`"
                   >
-                    <Network class="w-4 h-4 text-[#c4b5fd]" />
-                    <span class="text-[12px] font-bold text-[#b8c4dc] dark:text-[#c4b5fd] mt-1">贝塞尔曲线</span>
+                    <Network class="w-4 h-4 text-[#00d4ff]" />
+                    <span class="text-[12px] font-bold text-[#b8c4dc] dark:text-[#00d4ff] mt-1">贝塞尔曲线</span>
                   </button>
 
                   <button
                     @click="structureStyle = 'logic-right'; showToast('已重塑为直角折线连接方式')"
-                    :class="`flex flex-col items-center justify-center p-2 rounded-xl border border-[#1e1b4b] dark:border-[#282260] cursor-pointer bg-white dark:bg-[#0d0f2c] transition-all ${
-                      structureStyle === 'logic-right' ? 'border-[#6d5cff] bg-blue-50/35 dark:bg-[rgba(109,92,255,0.2)] ring-1 ring-[#6d5cff]' : 'hover:border-[#282260] dark:hover:border-[#6d5cff]'
+                    :class="`flex flex-col items-center justify-center p-2 rounded-xl border border-[#0a0a1e] dark:border-[#10102a] cursor-pointer bg-white dark:bg-[#0a0a1e] transition-all ${
+                      structureStyle === 'logic-right' ? 'border-[#00d4ff] bg-blue-50/35 dark:bg-[rgba(59,130,246,0.2)] ring-1 ring-[#00d4ff]' : 'hover:border-[#10102a] dark:hover:border-[#00d4ff]'
                     }`"
                   >
                     <Layout class="w-4 h-4 text-emerald-500" />
-                    <span class="text-[12px] font-bold text-[#b8c4dc] dark:text-[#c4b5fd] mt-1">直角折线图</span>
+                    <span class="text-[12px] font-bold text-[#b8c4dc] dark:text-[#00d4ff] mt-1">直角折线图</span>
                   </button>
 
                   <button
                     @click="structureStyle = 'org-vertical'; showToast('已开启极简直连线连接方式')"
-                    :class="`flex flex-col items-center justify-center p-2 rounded-xl border border-[#1e1b4b] dark:border-[#282260] cursor-pointer bg-white dark:bg-[#0d0f2c] transition-all ${
-                      structureStyle === 'org-vertical' ? 'border-[#6d5cff] bg-blue-50/35 dark:bg-[rgba(109,92,255,0.2)] ring-1 ring-[#6d5cff]' : 'hover:border-[#282260] dark:hover:border-[#6d5cff]'
+                    :class="`flex flex-col items-center justify-center p-2 rounded-xl border border-[#0a0a1e] dark:border-[#10102a] cursor-pointer bg-white dark:bg-[#0a0a1e] transition-all ${
+                      structureStyle === 'org-vertical' ? 'border-[#00d4ff] bg-blue-50/35 dark:bg-[rgba(59,130,246,0.2)] ring-1 ring-[#00d4ff]' : 'hover:border-[#10102a] dark:hover:border-[#00d4ff]'
                     }`"
                   >
                     <Compass class="w-4 h-4 text-orange-500" />
-                    <span class="text-[12px] font-bold text-[#b8c4dc] dark:text-[#c4b5fd] mt-1">极简直连线</span>
+                    <span class="text-[12px] font-bold text-[#b8c4dc] dark:text-[#00d4ff] mt-1">极简直连线</span>
                   </button>
                 </div>
               </div>
@@ -1673,16 +1673,16 @@ const onOutlineViewClick = (layoutId: string, label: string) => {
                     v-for="theme in PREMIUM_THEMES"
                     :key="theme.id"
                     @click="activeThemeId = theme.id; showToast(`主题切换为 [${theme.name}]`)"
-                    :class="`flex items-center gap-1.5 px-3 py-2 rounded-xl border cursor-pointer border-[#1e1b4b] dark:border-[#282260] bg-white dark:bg-[#0d0f2c] transition-all text-left ${
-                      activeThemeId === theme.id ? 'border-[#6d5cff] bg-blue-50/40 dark:bg-[rgba(109,92,255,0.2)] ring-1 ring-[#6d5cff]' : 'hover:border-[#282260] dark:hover:border-[#6d5cff]'
+                    :class="`flex items-center gap-1.5 px-3 py-2 rounded-xl border cursor-pointer border-[#0a0a1e] dark:border-[#10102a] bg-white dark:bg-[#0a0a1e] transition-all text-left ${
+                      activeThemeId === theme.id ? 'border-[#00d4ff] bg-blue-50/40 dark:bg-[rgba(59,130,246,0.2)] ring-1 ring-[#00d4ff]' : 'hover:border-[#10102a] dark:hover:border-[#00d4ff]'
                     }`"
                   >
-                    <span class="text-[13px] font-bold text-[#b8c4dc] dark:text-[#c4b5fd] truncate">{{ theme.name }}</span>
+                    <span class="text-[13px] font-bold text-[#b8c4dc] dark:text-[#00d4ff] truncate">{{ theme.name }}</span>
                   </button>
                 </div>
               </div>
 
-              <div class="h-[1px] bg-[#0d0f2c] dark:bg-[#16183c] my-1" />
+              <div class="h-[1px] bg-[#0a0a1e] dark:bg-[#0a0a1e] my-1" />
 
               <!-- Category 3: Selected Node Active topic parameters -->
               <div>
@@ -1691,21 +1691,21 @@ const onOutlineViewClick = (layoutId: string, label: string) => {
                   <span>3. 激活项属性 (Node Parameters)</span>
                 </div>
 
-                <div v-if="getActiveNode()" class="bg-[#111338]/70 dark:bg-[#0d0f2c] border border-[rgba(117,98,255,0.12)] dark:border-[#282260] rounded-xl p-3.5 flex flex-col gap-3.5 font-sans">
-                  <span class="text-[12px] font-bold text-[#8b9bc0] dark:text-[#9aa4d9] block uppercase">当前节点: <span class="text-[#c4b5fd] font-extrabold">{{ getActiveNode()?.label }}</span></span>
+                <div v-if="getActiveNode()" class="bg-[#0a0a1e]/70 dark:bg-[#0a0a1e] border border-[rgba(0,212,255,0.08)] dark:border-[#10102a] rounded-xl p-3.5 flex flex-col gap-3.5 font-sans">
+                  <span class="text-[12px] font-bold text-[#8b9bc0] dark:text-[#9aa4d9] block uppercase">当前节点: <span class="text-[#00d4ff] font-extrabold">{{ getActiveNode()?.label }}</span></span>
 
                   <!-- Option 1: Task Priority Badge selectors -->
                   <div>
                     <span class="text-[13px] text-[#9aa4d9] dark:text-[#8b9bc0] block mb-1.5 font-semibold">1. 考点权重优先级</span>
-                    <div class="flex items-center gap-1.5 bg-white dark:bg-[#1a1640] p-1 rounded-xl border border-[rgba(117,98,255,0.12)] dark:border-[#282260] justify-between">
+                    <div class="flex items-center gap-1.5 bg-white dark:bg-[#0a0a1e] p-1 rounded-xl border border-[rgba(0,212,255,0.08)] dark:border-[#10102a] justify-between">
                       <button
                         v-for="prio in (['P1', 'P2', 'P3', 'None'] as const)"
                         :key="prio"
                         @click="handleSetPriority(selectedNodeId, prio)"
                         :class="`flex-1 py-1.5 text-[12px] font-bold rounded-lg border cursor-pointer transition-all ${
                           getActiveNode()?.priority === prio
-                            ? prio === 'P1' ? 'bg-rose-500 text-white border-rose-500 shadow-xs' : prio === 'P2' ? 'bg-amber-500 text-white border-amber-500 shadow-xs' : prio === 'P3' ? 'bg-sky-500 text-white border-sky-500 shadow-xs' : 'bg-[#16183c] text-white border-[#252060]'
-                            : 'bg-white hover:bg-[#0d0f2c] text-[#6f7a9e] border-transparent'
+                            ? prio === 'P1' ? 'bg-rose-500 text-white border-rose-500 shadow-xs' : prio === 'P2' ? 'bg-amber-500 text-white border-amber-500 shadow-xs' : prio === 'P3' ? 'bg-sky-500 text-white border-sky-500 shadow-xs' : 'bg-[#0a0a1e] text-white border-[#10102a]'
+                            : 'bg-white hover:bg-[#0a0a1e] text-[#6f7a9e] border-transparent'
                         }`"
                       >
                         {{ prio === 'None' ? '无权重' : prio }}
@@ -1723,8 +1723,8 @@ const onOutlineViewClick = (layoutId: string, label: string) => {
                         @click="handleSetProgress(selectedNodeId, prog)"
                         :class="`py-1 rounded-lg border text-[12px] font-bold cursor-pointer transition-all ${
                           getActiveNode()?.progress === prog
-                            ? 'bg-[#6d5cff] text-white border-[#6d5cff]'
-                            : 'bg-white hover:bg-[#111338] text-[#6f7a9e] border-[rgba(117,98,255,0.12)]'
+                            ? 'bg-[#00d4ff] text-white border-[#00d4ff]'
+                            : 'bg-white hover:bg-[#0a0a1e] text-[#6f7a9e] border-[rgba(0,212,255,0.08)]'
                         }`"
                       >
                         {{ prog }}%
@@ -1733,7 +1733,7 @@ const onOutlineViewClick = (layoutId: string, label: string) => {
                   </div>
 
                 </div>
-                <div v-else class="text-center py-8 text-[#8b9bc0] dark:text-[#9aa4d9] text-[13.5px] font-medium border border-dashed border-[#1e1b4b] dark:border-[#282260] rounded-xl leading-relaxed">
+                <div v-else class="text-center py-8 text-[#8b9bc0] dark:text-[#9aa4d9] text-[13.5px] font-medium border border-dashed border-[#0a0a1e] dark:border-[#10102a] rounded-xl leading-relaxed">
                   点击选中画布中的任何考点节点，<br />即可在此设置权重优先级与学习进度。
                 </div>
               </div>
@@ -1744,7 +1744,7 @@ const onOutlineViewClick = (layoutId: string, label: string) => {
             <div v-if="activeTab === '大纲'" class="flex flex-col gap-3">
               <span class="text-[13.5px] font-bold text-[#8b9bc0] dark:text-[#9aa4d9] block mb-1 font-sans">考点大纲层级结构列表</span>
 
-              <div class="max-h-[360px] overflow-y-auto border border-[rgba(117,98,255,0.12)] dark:border-[#282260] bg-[#111338]/50 dark:bg-[#0d0f2c] rounded-xl p-3 flex flex-col gap-2 select-none">
+              <div class="max-h-[360px] overflow-y-auto border border-[rgba(0,212,255,0.08)] dark:border-[#10102a] bg-[#0a0a1e]/50 dark:bg-[#0a0a1e] rounded-xl p-3 flex flex-col gap-2 select-none">
                 <div
                   v-for="layout in placedLayoutsComputed"
                   :key="layout.id"
@@ -1752,8 +1752,8 @@ const onOutlineViewClick = (layoutId: string, label: string) => {
                   :style="{ paddingLeft: `${layout.level * 14}px` }"
                   :class="`flex items-center gap-1.5 py-1.5 px-2.5 rounded-lg cursor-pointer transition-colors text-xs font-semibold ${
                     selectedNodeId === layout.id
-                      ? 'bg-[rgba(109,92,255,0.12)] text-[#c4b5fd]'
-                      : 'hover:bg-[#111438] dark:hover:bg-[#16183c] text-[#b8c4dc] dark:text-[#c4b5fd]'
+                      ? 'bg-[rgba(0,212,255,0.08)] text-[#00d4ff]'
+                      : 'hover:bg-[#0a0a1e] dark:hover:bg-[#0a0a1e] text-[#b8c4dc] dark:text-[#00d4ff]'
                   }`"
                 >
                   <span
@@ -1780,20 +1780,20 @@ const onOutlineViewClick = (layoutId: string, label: string) => {
               </div>
 
               <div v-if="getActiveNode()" class="flex flex-col gap-3">
-                <div class="flex items-center gap-1 bg-[#111338] dark:bg-[#0d0f2c] px-3 py-2 rounded-xl text-xs text-[#6f7a9e] dark:text-[#8b9bc0] border border-[#1e1b4b] dark:border-[#282260]">
-                  <BookOpen class="w-3.5 h-3.5 text-[#c4b5fd] mr-1" />
+                <div class="flex items-center gap-1 bg-[#0a0a1e] dark:bg-[#0a0a1e] px-3 py-2 rounded-xl text-xs text-[#6f7a9e] dark:text-[#8b9bc0] border border-[#0a0a1e] dark:border-[#10102a]">
+                  <BookOpen class="w-3.5 h-3.5 text-[#00d4ff] mr-1" />
                   <span class="font-bold">备考总结卡: </span>
-                  <span class="truncate text-[#c4b5fd] font-semibold">{{ getActiveNode()?.label }}</span>
+                  <span class="truncate text-[#00d4ff] font-semibold">{{ getActiveNode()?.label }}</span>
                 </div>
 
                 <textarea
                   :value="nodeNotes[selectedNodeId] || ''"
                   @input="handleSaveNotes(selectedNodeId, ($event.target as HTMLTextAreaElement).value)"
                   placeholder="在此写入针对本高频考点的手写总结、答题要点、备考警示、或代码示例。支持直接渲染..."
-                  class="w-full h-80 border border-[#1e1b4b] dark:border-[#282260] focus:border-[#6d5cff] focus:ring-1 focus:ring-[#6d5cff] rounded-xl p-3.5 text-xs font-semibold leading-relaxed text-[#f0f2ff] dark:text-white outline-none resize-none placeholder:text-[#8b9bc0]/80 bg-[#111338]/20 dark:bg-[#0d0f2c]"
+                  class="w-full h-80 border border-[#0a0a1e] dark:border-[#10102a] focus:border-[#00d4ff] focus:ring-1 focus:ring-[#00d4ff] rounded-xl p-3.5 text-xs font-semibold leading-relaxed text-[#f0f2ff] dark:text-white outline-none resize-none placeholder:text-[#8b9bc0]/80 bg-[#0a0a1e]/20 dark:bg-[#0a0a1e]"
                 />
               </div>
-              <div v-else class="text-center py-10 text-[#8b9bc0] dark:text-[#9aa4d9] text-[13.5px] font-medium border border-dashed border-[#1e1b4b] dark:border-[#282260] rounded-xl">
+              <div v-else class="text-center py-10 text-[#8b9bc0] dark:text-[#9aa4d9] text-[13.5px] font-medium border border-dashed border-[#0a0a1e] dark:border-[#10102a] rounded-xl">
                 请先在思维导图中点选一个考点分支，即可归纳相关延伸学习笔记卡。
               </div>
             </div>
@@ -1801,19 +1801,19 @@ const onOutlineViewClick = (layoutId: string, label: string) => {
           </div>
 
           <!-- LOWER PORTION: EXPORT AND FORMAT FILES BUTTONS -->
-          <div class="flex flex-col gap-2 mt-5 border-t border-[#1e1b4b] dark:border-[#252060] pt-4.5">
+          <div class="flex flex-col gap-2 mt-5 border-t border-[#0a0a1e] dark:border-[#10102a] pt-4.5">
             <span class="text-[13px] text-[#8b9bc0] dark:text-[#9aa4d9] block mb-1">多维学习成果生成 (Export Data)</span>
             <div class="grid grid-cols-2 gap-2">
               <button
                 @click="handleExportMarkdown"
-                class="flex items-center justify-center gap-1.5 py-2 hover:bg-orange-50 dark:hover:bg-orange-900/20 text-[#ea580c] hover:border-[#ea580c] font-bold text-xs bg-white dark:bg-[#0d0f2c] rounded-xl border border-orange-200 dark:border-orange-800 cursor-pointer transition-colors"
+                class="flex items-center justify-center gap-1.5 py-2 hover:bg-orange-50 dark:hover:bg-orange-900/20 text-[#ea580c] hover:border-[#ea580c] font-bold text-xs bg-white dark:bg-[#0a0a1e] rounded-xl border border-orange-200 dark:border-orange-800 cursor-pointer transition-colors"
               >
                 <FileText class="w-3.5 h-3.5" />
                 <span>导出MD笔记</span>
               </button>
               <button
                 @click="handleExportJSON"
-                class="flex items-center justify-center gap-1.5 py-2 hover:bg-blue-50 dark:hover:bg-blue-900/20 text-[#c4b5fd] hover:border-blue-400 font-bold text-xs bg-white dark:bg-[#0d0f2c] rounded-xl border border-blue-200 dark:border-blue-800 cursor-pointer transition-colors"
+                class="flex items-center justify-center gap-1.5 py-2 hover:bg-blue-50 dark:hover:bg-blue-900/20 text-[#00d4ff] hover:border-blue-400 font-bold text-xs bg-white dark:bg-[#0a0a1e] rounded-xl border border-blue-200 dark:border-blue-800 cursor-pointer transition-colors"
               >
                 <Download class="w-3.5 h-3.5" />
                 <span>导出纯数据</span>
@@ -1828,7 +1828,7 @@ const onOutlineViewClick = (layoutId: string, label: string) => {
 
     <!-- FALLBACK BIG OUTLINE EXPLORATION STRUCTURE VIEW -->
     <template v-else>
-      <div class="bg-white dark:bg-[#111438] border border-[#1e1b4b]/90 dark:border-[#252060] rounded-2xl p-6 md:p-10 shadow-3xs min-h-[500px]" id="mindmap-fullscreen-outline-panel">
+      <div class="bg-white dark:bg-[#0a0a1e] border border-[#0a0a1e]/90 dark:border-[#10102a] rounded-2xl p-6 md:p-10 shadow-3xs min-h-[500px]" id="mindmap-fullscreen-outline-panel">
         <div class="max-w-3xl mx-auto flex flex-col gap-6 font-sans">
           <div>
             <h3 class="text-xl font-extrabold text-[#111827] dark:text-white flex items-center gap-2">
@@ -1839,7 +1839,7 @@ const onOutlineViewClick = (layoutId: string, label: string) => {
             </p>
           </div>
 
-          <div class="border border-[#1e1b4b] dark:border-[#252060] bg-[#f8fafc]/60 dark:bg-[#0d0f2c]/60 rounded-2xl p-5 flex flex-col gap-3 shadow-3xs">
+          <div class="border border-[#0a0a1e] dark:border-[#10102a] bg-[#f8fafc]/60 dark:bg-[#0a0a1e]/60 rounded-2xl p-5 flex flex-col gap-3 shadow-3xs">
             <div
               v-for="layout in placedLayoutsComputed"
               :key="layout.id"
@@ -1848,7 +1848,7 @@ const onOutlineViewClick = (layoutId: string, label: string) => {
               :class="`flex flex-col md:flex-row md:items-center justify-between gap-3 p-3 rounded-xl border cursor-pointer transition-all ${
                 selectedNodeId === layout.id
                   ? 'bg-amber-50/50 border-amber-300 ring-2 ring-amber-400/20 scale-101'
-                  : 'bg-white dark:bg-[#0d0f2c] border-[#1e1b4b] dark:border-[#252060] hover:border-[#282260] dark:hover:border-[#6d5cff] hover:shadow-3xs'
+                  : 'bg-white dark:bg-[#0a0a1e] border-[#0a0a1e] dark:border-[#10102a] hover:border-[#10102a] dark:hover:border-[#00d4ff] hover:shadow-3xs'
               }`"
             >
               <div class="flex items-center gap-2">
@@ -1875,7 +1875,7 @@ const onOutlineViewClick = (layoutId: string, label: string) => {
             </div>
           </div>
 
-          <div class="flex items-center justify-end gap-3 self-stretch border-t border-[#1e1b4b] dark:border-[#252060] pt-5 mt-3">
+          <div class="flex items-center justify-end gap-3 self-stretch border-t border-[#0a0a1e] dark:border-[#10102a] pt-5 mt-3">
             <button
               @click="handleExportMarkdown"
               class="flex items-center gap-1.5 px-4 py-2 bg-[#ea580c] hover:bg-orange-600 font-semibold text-white text-xs rounded-xl border-none cursor-pointer transition-colors"
@@ -1885,7 +1885,7 @@ const onOutlineViewClick = (layoutId: string, label: string) => {
             </button>
             <button
               @click="viewMode = 'map'"
-              class="flex items-center gap-1.5 px-4 py-2 bg-[#0d0f2c] dark:bg-[#16183c] hover:bg-[#1a1640] dark:hover:bg-[#16183c] font-semibold text-[#b8c4dc] dark:text-[#c4b5fd] text-xs rounded-xl border-none cursor-pointer transition-colors"
+              class="flex items-center gap-1.5 px-4 py-2 bg-[#0a0a1e] dark:bg-[#0a0a1e] hover:bg-[#0a0a1e] dark:hover:bg-[#0a0a1e] font-semibold text-[#b8c4dc] dark:text-[#00d4ff] text-xs rounded-xl border-none cursor-pointer transition-colors"
             >
               <ArrowLeft class="w-3.5 h-3.5" />
               <span>返回 Xmind 二维思维导图</span>

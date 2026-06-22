@@ -3,7 +3,7 @@
     <div class="edu-side-panel">
       <div class="flex justify-between items-center mb-3">
         <h4 class="text-[15px] font-semibold text-white flex items-center gap-1.5">
-          <Sparkles class="w-4 h-4 text-[#c4b5fd]" />
+          <Sparkles class="w-4 h-4 text-[#00d4ff]" />
           <span>为你推荐</span>
         </h4>
         <button
@@ -55,7 +55,7 @@
     <div class="edu-side-panel">
       <div class="flex justify-between items-center mb-3">
         <h4 class="text-[15px] font-semibold text-white flex items-center gap-1.5">
-          <Bookmark class="w-4 h-4 text-[#c4b5fd]" />
+          <Bookmark class="w-4 h-4 text-[#00d4ff]" />
           <span>我的收藏</span>
         </h4>
         <span class="text-[12px] text-[#8b9bc0] font-mono">共 {{ collections.length }} 个</span>
@@ -152,9 +152,9 @@ const getIconAndClass = (category: ResourceCategory) => {
     case '流程图':
       return {
         icon: Network,
-        bgColor: 'bg-[rgba(186,142,255,0.18)]',
-        color: 'text-[#c4b5fd]',
-        badgeClass: 'bg-[rgba(186,142,255,0.18)] text-[#c4b5fd] border border-[rgba(196,181,253,0.28)]'
+        bgColor: 'bg-[rgba(0,212,255,0.12)]',
+        color: 'text-[#00d4ff]',
+        badgeClass: 'bg-[rgba(0,212,255,0.1)] text-[#00d4ff] border border-[rgba(0,212,255,0.2)]'
       }
     case '习题':
       return {
@@ -194,7 +194,7 @@ const getIconAndClass = (category: ResourceCategory) => {
   height: 100%;
 }
 
-/* === Sidebar 容器:深紫光底,与 edu-course-card 一致 === */
+/* === Sidebar 容器:深蓝光底,与对话页面一致 === */
 .edu-side-panel {
   position: relative;
   display: flex;
@@ -203,10 +203,10 @@ const getIconAndClass = (category: ResourceCategory) => {
   min-height: 0;
   border-radius: 12px;
   padding: 16px;
-  border: 1px solid rgba(117, 98, 255, 0.2);
+  border: 1px solid rgba(59, 130, 246, 0.1);
   background:
-    linear-gradient(180deg, rgba(29, 27, 83, 0.82), rgba(11, 13, 46, 0.96)),
-    radial-gradient(circle at 26% 0%, rgba(117, 71, 255, 0.22), transparent 36%);
+    linear-gradient(135deg, rgba(22, 18, 32, 0.7), rgba(17, 14, 26, 0.5));
+  backdrop-filter: blur(16px);
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.05),
     0 14px 42px rgba(3, 5, 22, 0.28);
@@ -218,8 +218,8 @@ const getIconAndClass = (category: ResourceCategory) => {
   position: absolute;
   inset: 0;
   background:
-    linear-gradient(90deg, transparent, rgba(149, 118, 255, 0.08), transparent),
-    radial-gradient(circle at 100% 100%, rgba(79, 56, 214, 0.2), transparent 34%);
+    linear-gradient(90deg, transparent, rgba(59, 130, 246, 0.05), transparent),
+    radial-gradient(circle at 100% 100%, rgba(59, 130, 246, 0.06), transparent 34%);
   opacity: 0;
   transition: opacity 0.25s ease;
   pointer-events: none;
@@ -235,18 +235,18 @@ const getIconAndClass = (category: ResourceCategory) => {
 
 /* === 顶部动作按钮:换一换 === */
 .edu-side-panel__action {
-  color: #c4b5fd;
-  background: rgba(140, 92, 255, 0.12);
-  border: 1px solid rgba(140, 92, 255, 0.22);
+  color: #60a5fa;
+  background: rgba(59, 130, 246, 0.1);
+  border: 1px solid rgba(59, 130, 246, 0.18);
   padding: 4px 10px;
   border-radius: 999px;
   transition: all 0.2s ease;
 }
 .edu-side-panel__action:hover {
-  color: #fff;
-  background: rgba(140, 92, 255, 0.28);
-  border-color: rgba(186, 142, 255, 0.55);
-  box-shadow: 0 0 16px rgba(140, 92, 255, 0.32);
+  color: #93c5fd;
+  background: rgba(59, 130, 246, 0.18);
+  border-color: rgba(96, 165, 250, 0.35);
+  box-shadow: 0 0 14px rgba(59, 130, 246, 0.2);
 }
 
 /* === 列表项:半透明白 + 紫色边框 hover === */
@@ -256,13 +256,13 @@ const getIconAndClass = (category: ResourceCategory) => {
   position: relative;
 }
 .edu-side-item:hover {
-  background: rgba(140, 92, 255, 0.1);
-  border-color: rgba(145, 111, 255, 0.42);
-  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.02), 0 4px 16px rgba(76, 48, 180, 0.18);
+  background: rgba(59, 130, 246, 0.08);
+  border-color: rgba(59, 130, 246, 0.2);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.02), 0 4px 14px rgba(59, 130, 246, 0.1);
 }
 
 .edu-side-item__title:hover {
-  color: #c4b5fd !important;
+  color: #60a5fa !important;
 }
 
 .edu-side-item__star {
@@ -275,14 +275,19 @@ const getIconAndClass = (category: ResourceCategory) => {
 
 /* === 底部脚注 === */
 .edu-side-panel__footer {
-  border-top: 1px solid rgba(117, 98, 255, 0.14);
+  border-top: 1px solid rgba(59, 130, 246, 0.1);
   flex-shrink: 0;
+}
+
+.edu-side-empty {
+  background: rgba(14, 12, 21, 0.6);
+  border: 1px dashed rgba(59, 130, 246, 0.18);
 }
 
 /* === 空状态 === */
 .edu-side-empty {
   background: rgba(13, 15, 44, 0.6);
-  border: 1px dashed rgba(117, 98, 255, 0.22);
+  border: 1px dashed rgba(0, 212, 255, 0.22);
 }
 
 /* === 滚动条:与 EduMind.vue 主文件一致 === */
@@ -290,11 +295,11 @@ const getIconAndClass = (category: ResourceCategory) => {
   width: 4px;
 }
 .edu-side-scroll::-webkit-scrollbar-thumb {
-  background: rgba(140, 92, 255, 0.25);
+  background: rgba(59, 130, 246, 0.2);
   border-radius: 4px;
 }
 .edu-side-scroll::-webkit-scrollbar-thumb:hover {
-  background: rgba(140, 92, 255, 0.45);
+  background: rgba(59, 130, 246, 0.35);
 }
 
 .rec-list-enter-active,

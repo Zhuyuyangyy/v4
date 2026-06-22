@@ -25,7 +25,7 @@ const dateRanges = ['本周', '本月', '近三月', '全部']
 const activityTypes = ['全部', '观看视频', '完成练习', '阅读资料']
 
 const stats = ref([
-  { label: '总学习时长', value: '128.5h', icon: Clock, color: '#c4b5fd' },
+  { label: '总学习时长', value: '128.5h', icon: Clock, color: '#00d4ff' },
   { label: '完成课程', value: '12', icon: BookOpen, color: '#7be3b8' },
   { label: '完成练习', value: '86', icon: PenTool, color: '#ffb46c' },
   { label: '连续学习', value: '15天', icon: Flame, color: '#ff8da1' }
@@ -49,7 +49,7 @@ const timeline = ref([
   {
     date: '今天',
     items: [
-      { course: 'C语言程序设计', type: '观看视频', typeIcon: Video, duration: '45分钟', time: '14:30', color: '#6d5cff' },
+      { course: 'C语言程序设计', type: '观看视频', typeIcon: Video, duration: '45分钟', time: '14:30', color: '#00d4ff' },
       { course: '数据结构与算法', type: '完成练习', typeIcon: PenTool, duration: '30分钟', time: '11:20', color: '#7be3b8' },
       { course: 'Python编程基础', type: '阅读资料', typeIcon: FileText, duration: '20分钟', time: '09:15', color: '#ffb46c' }
     ]
@@ -57,28 +57,28 @@ const timeline = ref([
   {
     date: '昨天',
     items: [
-      { course: '机器学习导论', type: '观看视频', typeIcon: Video, duration: '60分钟', time: '20:00', color: '#6d5cff' },
+      { course: '机器学习导论', type: '观看视频', typeIcon: Video, duration: '60分钟', time: '20:00', color: '#00d4ff' },
       { course: 'C语言程序设计', type: '完成练习', typeIcon: PenTool, duration: '40分钟', time: '16:45', color: '#7be3b8' },
       { course: '操作系统原理', type: '阅读资料', typeIcon: FileText, duration: '25分钟', time: '14:10', color: '#ffb46c' },
-      { course: '数据结构与算法', type: '观看视频', typeIcon: Video, duration: '35分钟', time: '10:30', color: '#6d5cff' }
+      { course: '数据结构与算法', type: '观看视频', typeIcon: Video, duration: '35分钟', time: '10:30', color: '#00d4ff' }
     ]
   },
   {
     date: '05月24日',
     items: [
       { course: 'Python编程基础', type: '完成练习', typeIcon: PenTool, duration: '50分钟', time: '19:20', color: '#7be3b8' },
-      { course: '深度学习基础', type: '观看视频', typeIcon: Video, duration: '55分钟', time: '15:00', color: '#6d5cff' },
+      { course: '深度学习基础', type: '观看视频', typeIcon: Video, duration: '55分钟', time: '15:00', color: '#00d4ff' },
       { course: 'C语言程序设计', type: '阅读资料', typeIcon: FileText, duration: '15分钟', time: '11:05', color: '#ffb46c' }
     ]
   }
 ])
 
 const courseProgress = ref([
-  { name: 'C语言程序设计', progress: 78, lastStudied: '今天 14:30', color: '#6d5cff' },
+  { name: 'C语言程序设计', progress: 78, lastStudied: '今天 14:30', color: '#00d4ff' },
   { name: '数据结构与算法', progress: 62, lastStudied: '今天 11:20', color: '#8b7bff' },
-  { name: 'Python编程基础', progress: 45, lastStudied: '今天 09:15', color: '#6d5cff' },
+  { name: 'Python编程基础', progress: 45, lastStudied: '今天 09:15', color: '#00d4ff' },
   { name: '机器学习导论', progress: 33, lastStudied: '昨天 20:00', color: '#8b7bff' },
-  { name: '操作系统原理', progress: 21, lastStudied: '昨天 14:10', color: '#6d5cff' }
+  { name: '操作系统原理', progress: 21, lastStudied: '昨天 14:10', color: '#00d4ff' }
 ])
 
 const filteredTimeline = computed(() => {
@@ -126,9 +126,9 @@ function getTypeBadgeClass(type: string) {
             <div class="sr-chart__sub">日均 {{ weeklyAvg }}h · 累计 {{ weeklyTotal.toFixed(1) }}h</div>
           </div>
           <div class="sr-chart__legend">
-            <span><i style="background:#6d5cff" />视频</span>
+            <span><i style="background:#00d4ff" />视频</span>
             <span><i style="background:#8b7bff" />练习</span>
-            <span><i style="background:#c4b5fd" />阅读</span>
+            <span><i style="background:#00d4ff" />阅读</span>
           </div>
         </div>
 
@@ -250,7 +250,7 @@ function getTypeBadgeClass(type: string) {
       </div>
       <div class="sr-achievements">
         <div v-for="a in [
-          { e: '🔥', t: '连续打卡', d: '坚持15天不间断', c: '#c4b5fd' },
+          { e: '🔥', t: '连续打卡', d: '坚持15天不间断', c: '#00d4ff' },
           { e: '📚', t: '课程达人', d: '完成12门课程', c: '#7be3b8' },
           { e: '✍️', t: '练习高手', d: '累计86道练习', c: '#ffb46c' },
           { e: '⏱️', t: '百小时学者', d: '突破100小时', c: '#ff8da1' }
@@ -275,11 +275,11 @@ function getTypeBadgeClass(type: string) {
   display: flex; align-items: center; gap: 14px;
   padding: 18px 16px;
   background: rgba(18, 20, 50, 0.6);
-  border: 1px solid rgba(117, 98, 255, 0.12);
+  border: 1px solid rgba(0, 212, 255, 0.12);
   border-radius: 14px;
   transition: border-color 0.2s;
 }
-.sr-stat:hover { border-color: rgba(117, 98, 255, 0.3); }
+.sr-stat:hover { border-color: rgba(0, 212, 255, 0.3); }
 .sr-stat__icon {
   width: 42px; height: 42px; border-radius: 12px;
   display: flex; align-items: center; justify-content: center;
@@ -295,7 +295,7 @@ function getTypeBadgeClass(type: string) {
 .sr-chart {
   padding: 22px 24px;
   background: rgba(18, 20, 50, 0.6);
-  border: 1px solid rgba(117, 98, 255, 0.12);
+  border: 1px solid rgba(0, 212, 255, 0.12);
   border-radius: 14px;
   display: flex; flex-direction: column;
 }
@@ -328,14 +328,14 @@ function getTypeBadgeClass(type: string) {
 }
 .sr-chart__gridline-bar {
   position: absolute; left: 44px; right: 0; top: 50%;
-  height: 1px; background: rgba(117, 98, 255, 0.06);
+  height: 1px; background: rgba(0, 212, 255, 0.06);
 }
 
 /* 柱子容器 */
 .sr-chart__bars {
   flex: 1; display: flex; align-items: flex-end; gap: 0;
   position: relative;
-  border-bottom: 1px solid rgba(117, 98, 255, 0.12);
+  border-bottom: 1px solid rgba(0, 212, 255, 0.12);
   padding: 0 4px;
 }
 
@@ -346,7 +346,7 @@ function getTypeBadgeClass(type: string) {
 
 /* 数值标签 */
 .sr-col__val {
-  font-size: 11px; font-weight: 600; color: #c4b5fd;
+  font-size: 11px; font-weight: 600; color: #00d4ff;
   font-family: "JetBrains Mono", monospace;
   margin-bottom: 6px; opacity: 0;
   transform: translateY(4px);
@@ -377,28 +377,28 @@ function getTypeBadgeClass(type: string) {
 
 /* 柱子分段 */
 .sr-seg { transition: height 0.3s ease; flex-shrink: 0; }
-.sr-seg--video { background: #6d5cff; }
+.sr-seg--video { background: #00d4ff; }
 .sr-seg--practice { background: #8b7bff; }
-.sr-seg--reading { background: #c4b5fd; border-radius: 4px 4px 0 0; }
+.sr-seg--reading { background: #00d4ff; border-radius: 4px 4px 0 0; }
 
 /* 日期 */
 .sr-col__day {
   margin-top: 10px; font-size: 11px; color: #8b9bc0;
   transition: color 0.15s; white-space: nowrap;
 }
-.sr-col__day.is-active { color: #c4b5fd; font-weight: 600; }
-.sr-col:hover .sr-col__day { color: #d8def0; }
+.sr-col__day.is-active { color: #00d4ff; font-weight: 600; }
+.sr-col:hover .sr-col__day { color: #a0aec0; }
 
 /* ===== 课程进度 ===== */
 .sr-courses {
   padding: 22px 20px;
   background: rgba(18, 20, 50, 0.6);
-  border: 1px solid rgba(117, 98, 255, 0.12);
+  border: 1px solid rgba(0, 212, 255, 0.12);
   border-radius: 14px;
 }
 .sr-courses__head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; }
 .sr-courses__title { display: flex; align-items: center; gap: 7px; font-size: 15px; font-weight: 600; color: #f0f2ff; }
-.sr-courses__title svg { color: #c4b5fd; }
+.sr-courses__title svg { color: #00d4ff; }
 .sr-courses__count { font-size: 11px; color: #6f7a9e; font-family: "JetBrains Mono", monospace; }
 
 .sr-courses__list { display: flex; flex-direction: column; gap: 10px; }
@@ -406,7 +406,7 @@ function getTypeBadgeClass(type: string) {
   display: flex; align-items: center; gap: 12px;
   padding: 12px 14px;
   background: rgba(13, 15, 40, 0.5);
-  border: 1px solid rgba(117, 98, 255, 0.08);
+  border: 1px solid rgba(0, 212, 255, 0.08);
   border-radius: 10px;
   transition: border-color 0.15s;
   cursor: pointer;
@@ -423,7 +423,7 @@ function getTypeBadgeClass(type: string) {
 .sr-course__info { flex: 1; min-width: 0; }
 .sr-course__top { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 6px; }
 .sr-course__name { font-size: 13px; font-weight: 600; color: #f0f2ff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.sr-course__pct { font-size: 12px; font-weight: 700; color: #c4b5fd; font-family: "JetBrains Mono", monospace; margin-left: 8px; flex-shrink: 0; }
+.sr-course__pct { font-size: 12px; font-weight: 700; color: #00d4ff; font-family: "JetBrains Mono", monospace; margin-left: 8px; flex-shrink: 0; }
 .sr-course__bar { height: 4px; background: rgba(58, 48, 122, 0.6); border-radius: 4px; overflow: hidden; }
 .sr-course__fill { height: 100%; border-radius: 4px; transition: width 0.6s ease; }
 .sr-course__bottom { display: flex; justify-content: space-between; align-items: center; margin-top: 6px; }
@@ -432,18 +432,18 @@ function getTypeBadgeClass(type: string) {
   font-size: 10px; padding: 1px 7px; border-radius: 4px; font-weight: 600;
   background: rgba(255, 180, 108, 0.14); color: #ffb46c;
 }
-.sr-course__badge.active { background: rgba(109, 92, 255, 0.16); color: #c4b5fd; }
+.sr-course__badge.active { background: rgba(0, 212, 255, 0.16); color: #00d4ff; }
 
 /* ===== 学习动态 ===== */
 .sr-section {
   padding: 22px 24px;
   background: rgba(18, 20, 50, 0.6);
-  border: 1px solid rgba(117, 98, 255, 0.12);
+  border: 1px solid rgba(0, 212, 255, 0.12);
   border-radius: 14px;
 }
 .sr-section__head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; flex-wrap: wrap; gap: 10px; }
 .sr-section__title { display: flex; align-items: center; gap: 7px; font-size: 15px; font-weight: 600; color: #f0f2ff; }
-.sr-section__title svg { color: #c4b5fd; }
+.sr-section__title svg { color: #00d4ff; }
 .sr-section__sub { font-size: 12px; color: #8b9bc0; }
 .sr-section__filters { display: flex; align-items: center; gap: 10px; }
 
@@ -456,21 +456,21 @@ function getTypeBadgeClass(type: string) {
   font-size: 12px; font-weight: 600; color: #8b9bc0;
   background: transparent; cursor: pointer; transition: all 0.15s;
 }
-.sr-tabs button.active { background: rgba(109, 92, 255, 0.2); color: #c4b5fd; }
-.sr-tabs button:hover:not(.active) { color: #d8def0; }
+.sr-tabs button.active { background: rgba(0, 212, 255, 0.2); color: #00d4ff; }
+.sr-tabs button:hover:not(.active) { color: #a0aec0; }
 
 .sr-select {
   appearance: none;
   padding: 5px 28px 5px 10px; border-radius: 8px;
   background: rgba(13, 15, 40, 0.6);
-  border: 1px solid rgba(117, 98, 255, 0.14);
-  font-size: 12px; font-weight: 600; color: #d8def0;
+  border: 1px solid rgba(0, 212, 255, 0.14);
+  font-size: 12px; font-weight: 600; color: #a0aec0;
   cursor: pointer; outline: none;
   background-image: url("data:image/svg+xml,%3Csvg width='10' height='6' viewBox='0 0 10 6' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%238b9bc0' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E");
   background-repeat: no-repeat;
   background-position: right 10px center;
 }
-.sr-select option { background: #0d0f2c; color: #d8def0; }
+.sr-select option { background: #0a0a1e; color: #a0aec0; }
 
 /* 时间线 */
 .sr-timeline { display: flex; flex-direction: column; gap: 24px; }
@@ -480,15 +480,15 @@ function getTypeBadgeClass(type: string) {
   font-size: 13px; font-weight: 600; color: #f0f2ff;
   margin-bottom: 10px;
 }
-.sr-tl-date__dot { width: 7px; height: 7px; border-radius: 50%; background: #6d5cff; flex-shrink: 0; }
-.sr-tl-date__line { flex: 1; height: 1px; background: rgba(117, 98, 255, 0.1); }
+.sr-tl-date__dot { width: 7px; height: 7px; border-radius: 50%; background: #00d4ff; flex-shrink: 0; }
+.sr-tl-date__line { flex: 1; height: 1px; background: rgba(0, 212, 255, 0.1); }
 
 .sr-tl-items { display: flex; flex-direction: column; gap: 8px; padding-left: 3px; }
 .sr-tl-item {
   display: flex; align-items: center; gap: 12px;
   padding: 12px 14px;
   background: rgba(13, 15, 40, 0.45);
-  border: 1px solid rgba(117, 98, 255, 0.06);
+  border: 1px solid rgba(0, 212, 255, 0.06);
   border-radius: 10px;
   transition: border-color 0.15s;
 }
@@ -498,7 +498,7 @@ function getTypeBadgeClass(type: string) {
   display: flex; align-items: center; justify-content: center;
   flex-shrink: 0;
 }
-.type-video { background: rgba(109, 92, 255, 0.16); color: #c4b5fd; }
+.type-video { background: rgba(0, 212, 255, 0.16); color: #00d4ff; }
 .type-practice { background: rgba(123, 227, 184, 0.16); color: #7be3b8; }
 .type-reading { background: rgba(255, 180, 108, 0.16); color: #ffb46c; }
 
@@ -521,7 +521,7 @@ function getTypeBadgeClass(type: string) {
 .sr-ach {
   text-align: center; padding: 20px 12px;
   background: rgba(13, 15, 40, 0.45);
-  border: 1px solid rgba(117, 98, 255, 0.08);
+  border: 1px solid rgba(0, 212, 255, 0.08);
   border-radius: 12px;
   transition: border-color 0.15s, transform 0.15s;
   cursor: pointer;

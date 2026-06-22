@@ -5,42 +5,205 @@ import {
   xunfeiSubtitle, isVirtualMuted, xunfeiLanguage, xunfeiVolume, syncToMainChat,
 } from './useAppState'
 import { avatarStatus, avatarWriteText, setAvatarNlpHandler, setAvatarAsrHandler, getAvatarInstance } from './useAvatarSdk'
-import type { ChatMessage, StudyReport, ChatResponse } from '@/types/dialogue'
+import type { ChatMessage, StudyReport, DimensionMap } from '@/types/dialogue'
+
+/* ───────── DeepSeek API 配置 ───────── */
+const DEEPSEEK_API_URL = '/deepseek-api/chat/completions'
+const DEEPSEEK_API_KEY = import.meta.env.VITE_DEEPSEEK_API_KEY || ''
+const DEEPSEEK_MODEL = 'deepseek-chat'
+
+const SYSTEM_PROMPT = `你是 EduMind 智能学习助手，专注于帮助学生进行学习规划和课程咨询。你必须通过对话主动收集以下 9 个画像维度。
+
+## 9 个画像维度
+- identity: 身份（大学生/研究生/自学者/职场人等）
+- domain: 学科方向（计算机科学/人工智能/软件工程等）
+- level: 当前水平（零基础/初级/中级/高级）
+- experience: 项目/实践经验（无经验/有小项目/有工作经验等）
+- goal: 学习目标（就业/考研/做项目/转行等）
+- motivation: 学习动机（兴趣/学业要求/职业需要等）
+- period: 计划学习周期（1个月/3个月/半年/1年等）
+- weeklyHours: 每周可投入时间（5小时以下/5-10小时/10-20小时/20小时以上等）
+- method: 偏好学习方式（看视频/读文档/做项目/刷题等）
+
+## 关键规则
+1. 用中文回复，语气亲切专业
+2. **每次回复末尾必须输出维度标签，格式严格为 [维度:xxx=值]**
+   - 例如：[维度:identity=大学生] [维度:domain=人工智能]
+3. 用户说的每句话都可能包含维度信息，仔细分析
+4. 如果本轮没有新维度，也要追问缺失的维度
+5. 每次回复末尾给出 2-3 个建议追问短句（每条 10 字以内）
+
+## 你当前已知的画像信息
+{currentDimensions}
+
+## 维度标签输出要求（非常重要！）
+**必须在回复的最后一行输出所有识别到的维度标签**，格式：
+[维度:identity=值] [维度:domain=值] [维度:level=值] ...
+即使只有一个新维度也要输出标签！这是系统自动采集数据的关键！`
+
+interface DeepSeekChoice {
+  message: { content: string; role: string }
+  finish_reason: string
+}
+
+interface DeepSeekResponse {
+  choices: DeepSeekChoice[]
+  usage?: { prompt_tokens: number; completion_tokens: number; total_tokens: number }
+  model?: string
+}
+
+/** 调用 DeepSeek Chat API */
+async function callDeepSeek(messages: { role: string; content: string }[]): Promise<string> {
+  const res = await fetch(DEEPSEEK_API_URL, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${DEEPSEEK_API_KEY}`,
+    },
+    body: JSON.stringify({
+      model: DEEPSEEK_MODEL,
+      messages,
+      max_tokens: 1024,
+      temperature: 0.7,
+    }),
+  })
+
+  if (!res.ok) {
+    const errBody = await res.text().catch(() => '')
+    throw new Error(`DeepSeek API 请求失败 (${res.status}): ${errBody}`)
+  }
+
+  const data: DeepSeekResponse = await res.json()
+  const content = data.choices?.[0]?.message?.content
+  if (!content) throw new Error('DeepSeek 返回内容为空')
+  console.log(`[DeepSeek] model=${data.model} tokens=${data.usage?.total_tokens}`)
+  return content
+}
+
+/** 从 AI 回复中解析维度标签 [维度:xxx=值] */
+function parseDimensions(text: string): Partial<DimensionMap> {
+  const extracted: Partial<DimensionMap> = {}
+  // 支持多种格式: [维度:key=value], [维度: key=value], 【维度:key=值】
+  const regex = /[【\[]维度[：:]\s*(\w+)\s*[=＝]\s*(.+?)[】\]]/g
+  let match
+  while ((match = regex.exec(text)) !== null) {
+    const key = match[1] as keyof DimensionMap
+    if (key in dimensions.value) {
+      extracted[key] = match[2].trim()
+    }
+  }
+  return extracted
+}
+
+/** 关键词自动提取：从文本中识别维度信息（作为标签提取的补充） */
+function extractByKeywords(text: string): Partial<DimensionMap> {
+  const extracted: Partial<DimensionMap> = {}
+  const t = text.toLowerCase()
+
+  // identity
+  if (!dimensions.value.identity) {
+    if (t.includes('学生') || t.includes('在校') || t.includes('大学')) extracted.identity = '在校学生'
+    else if (t.includes('程序员') || t.includes('开发') || t.includes('工程师') || t.includes('工作')) extracted.identity = '职场人'
+    else if (t.includes('研究生') || t.includes('硕士') || t.includes('博士')) extracted.identity = '研究生'
+    else if (t.includes('自学者') || t.includes('自学')) extracted.identity = '自学者'
+    else if (t.includes('老师') || t.includes('教师') || t.includes('教授')) extracted.identity = '教育工作者'
+  }
+
+  // domain
+  if (!dimensions.value.domain) {
+    if (t.includes('人工智能') || t.includes(' ai ') || t.includes('ai')) extracted.domain = '人工智能'
+    else if (t.includes('计算机') || t.includes('cs') || t.includes('编程')) extracted.domain = '计算机科学'
+    else if (t.includes('软件') || t.includes('开发') || t.includes('前端') || t.includes('后端')) extracted.domain = '软件工程'
+    else if (t.includes('数据') || t.includes('分析') || t.includes('统计')) extracted.domain = '数据科学'
+    else if (t.includes('数学')) extracted.domain = '数学'
+  }
+
+  // level
+  if (!dimensions.value.level) {
+    if (t.includes('零基础') || t.includes('初学') || t.includes('刚开始') || t.includes('不会')) extracted.level = '零基础'
+    else if (t.includes('初级') || t.includes('入门')) extracted.level = '初级'
+    else if (t.includes('中级') || t.includes('有一些') || t.includes('了解')) extracted.level = '中级'
+    else if (t.includes('高级') || t.includes('精通') || t.includes('深入')) extracted.level = '高级'
+  }
+
+  // experience
+  if (!dimensions.value.experience) {
+    if (t.includes('没经验') || t.includes('无经验') || t.includes('没做过')) extracted.experience = '无经验'
+    else if (t.includes('小项目') || t.includes('练手') || t.includes('课程项目')) extracted.experience = '有小项目'
+    else if (t.includes('工作经验') || t.includes('工作了') || t.includes('年经验')) extracted.experience = '有工作经验'
+  }
+
+  // goal
+  if (!dimensions.value.goal) {
+    if (t.includes('就业') || t.includes('找工作') || t.includes('求职')) extracted.goal = '就业'
+    else if (t.includes('考研') || t.includes('考博') || t.includes('升学')) extracted.goal = '考研'
+    else if (t.includes('做项目') || t.includes('项目') || t.includes('作品')) extracted.goal = '做项目'
+    else if (t.includes('转行') || t.includes('转型')) extracted.goal = '转行'
+    else if (t.includes('兴趣') || t.includes('爱好')) extracted.goal = '兴趣学习'
+  }
+
+  // motivation
+  if (!dimensions.value.motivation) {
+    if (t.includes('兴趣') || t.includes('好奇') || t.includes('喜欢')) extracted.motivation = '兴趣驱动'
+    else if (t.includes('学业') || t.includes('课程') || t.includes('考试')) extracted.motivation = '学业要求'
+    else if (t.includes('职业') || t.includes('工作需要') || t.includes('升职')) extracted.motivation = '职业需要'
+  }
+
+  // period
+  if (!dimensions.value.period) {
+    if (t.includes('1个月') || t.includes('一个月') || t.includes('很快')) extracted.period = '1个月'
+    else if (t.includes('3个月') || t.includes('三个月') || t.includes('一个季度')) extracted.period = '3个月'
+    else if (t.includes('半年') || t.includes('6个月')) extracted.period = '半年'
+    else if (t.includes('1年') || t.includes('一年') || t.includes('长期')) extracted.period = '1年'
+  }
+
+  // weeklyHours
+  if (!dimensions.value.weeklyHours) {
+    if (t.includes('5小时以下') || t.includes('很少') || t.includes('每天半小时')) extracted.weeklyHours = '5小时以下'
+    else if (t.includes('5-10') || t.includes('每天1小时') || t.includes('一小时')) extracted.weeklyHours = '5-10小时'
+    else if (t.includes('10-20') || t.includes('每天2小时') || t.includes('两小时')) extracted.weeklyHours = '10-20小时'
+    else if (t.includes('20小时') || t.includes('很多时间') || t.includes('全职')) extracted.weeklyHours = '20小时以上'
+  }
+
+  // method
+  if (!dimensions.value.method) {
+    if (t.includes('看视频') || t.includes('视频课') || t.includes('网课')) extracted.method = '看视频'
+    else if (t.includes('读文档') || t.includes('看书') || t.includes('阅读')) extracted.method = '读文档'
+    else if (t.includes('做项目') || t.includes('实战') || t.includes('动手')) extracted.method = '做项目'
+    else if (t.includes('刷题') || t.includes('做题') || t.includes('练习')) extracted.method = '刷题'
+  }
+
+  return extracted
+}
+
+/** 从 AI 回复末尾提取建议追问 chips（最后几行以数字开头的短句） */
+function parseSuggestChips(text: string): string[] {
+  const lines = text.split('\n').map(l => l.replace(/^[\d]+[.、）)]\s*/, '').trim()).filter(Boolean)
+  const chips: string[] = []
+  for (let i = lines.length - 1; i >= 0 && chips.length < 3; i--) {
+    const line = lines[i]
+    if (line.length <= 15 && !line.includes('。') && !line.includes('！') && !line.includes('，')) {
+      chips.unshift(line)
+    } else break
+  }
+  return chips
+}
+
+/** 清理回复文本，移除维度标签和 chips 行 */
+function cleanReply(text: string): string {
+  return text
+    .replace(/\[维度:\w+=.+?\]/g, '')
+    .split('\n')
+    .filter(line => {
+      const stripped = line.replace(/^[\d]+[.、）)]\s*/, '').trim()
+      return !(stripped.length <= 15 && stripped.length > 0 && !stripped.includes('。') && !stripped.includes('！') && !stripped.includes('，'))
+    })
+    .join('\n')
+    .trim()
+}
 
 function getTime() {
   return new Date().toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit', hour12: false })
-}
-
-async function readJsonResponse<T>(res: Response): Promise<T> {
-  const raw = await res.text()
-  const contentType = res.headers.get('Content-Type') || ''
-  const hasJsonContent = contentType.includes('application/json')
-  let data: unknown = null
-
-  if (raw && hasJsonContent) {
-    try {
-      data = JSON.parse(raw)
-    } catch {
-      throw new Error('服务返回了无法解析的 JSON')
-    }
-  }
-
-  if (!res.ok) {
-    const message = data && typeof data === 'object' && 'message' in data
-      ? String((data as { message?: unknown }).message)
-      : `请求失败：HTTP ${res.status}`
-    throw new Error(message)
-  }
-
-  if (!raw) {
-    throw new Error('服务返回为空，请确认 API 服务已启动')
-  }
-
-  if (!hasJsonContent) {
-    throw new Error('服务返回格式不是 JSON')
-  }
-
-  return data as T
 }
 
 function appendChatError(message: string) {
@@ -90,6 +253,28 @@ setAvatarAsrHandler((data: any) => {
   }
 })
 
+/** 将聊天记录转为 DeepSeek messages 格式 */
+function buildApiMessages(): { role: string; content: string }[] {
+  // 把当前已收集的维度注入系统提示
+  const dimEntries = Object.entries(dimensions.value)
+  const collected = dimEntries.filter(([, v]) => v !== null)
+  const missing = dimEntries.filter(([, v]) => v === null)
+  const dimSummary = collected.length > 0
+    ? `已收集：${collected.map(([k, v]) => `${k}=${v}`).join(' | ')}\n待收集：${missing.map(([k]) => k).join('、')}`
+    : '尚未收集任何维度，请从用户第一句话就开始提取。'
+
+  const systemContent = SYSTEM_PROMPT.replace('{currentDimensions}', dimSummary)
+
+  const msgs: { role: string; content: string }[] = [{ role: 'system', content: systemContent }]
+  // 只取最近 20 条避免 token 过多
+  const recent = chats.value.slice(-20)
+  for (const c of recent) {
+    if (c.sender === 'user') msgs.push({ role: 'user', content: c.text })
+    else if (c.sender === 'ai' && c.source === 'chat') msgs.push({ role: 'assistant', content: c.text })
+  }
+  return msgs
+}
+
 export async function sendMessage() {
   if (!inputText.value.trim() || isAiLoading.value) return
 
@@ -102,45 +287,43 @@ export async function sendMessage() {
   isAiLoading.value = true
 
   try {
-    const res = await fetch('/api/chat', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        messages: chats.value,
-        currentDimensions: dimensions.value,
-      }),
-    })
-    const data = await readJsonResponse<ChatResponse & { content?: string; suggestions?: string[] }>(res)
-    const replyText = data.reply || data.content
-    if (!replyText) {
-      throw new Error('服务响应缺少回复内容')
+    const apiMessages = buildApiMessages()
+    const replyText = await callDeepSeek(apiMessages)
+
+    // 解析维度：标签提取（AI回复）+ 关键词提取（仅用户消息）
+    const extractedFromTags = parseDimensions(replyText)
+    const extractedFromKeywords = extractByKeywords(userMsgText)
+    const extracted = { ...extractedFromKeywords, ...extractedFromTags }
+    if (Object.keys(extracted).length > 0) {
+      dimensions.value = { ...dimensions.value, ...extracted }
     }
 
-    if (data.extractedDimensions) {
-      dimensions.value = { ...dimensions.value, ...data.extractedDimensions }
-    }
+    // 提取 chips
+    const chips = parseSuggestChips(replyText)
+
+    // 清理回复
+    const cleanText = cleanReply(replyText) || replyText
 
     const aiMsg: ChatMessage = {
       id: `msg-${Date.now()}-ai`, sender: 'ai',
-      text: replyText, time: getTime(),
-      capturedTags: data.capturedTags || [],
-      suggestChips: data.suggestChips || data.suggestions || [],
+      text: cleanText, time: getTime(),
+      capturedTags: Object.entries(extracted).map(([k, v]) => `${k}: ${v}`),
+      suggestChips: chips,
       source: 'chat',
     }
+    chats.value = [...chats.value, aiMsg]
 
+    // 自动补全逻辑
     if (dimensions.value.identity && dimensions.value.domain && dimensions.value.level && !dimensions.value.goal) {
       dimensions.value = { ...dimensions.value, goal: '做项目' }
     }
 
-    chats.value = [...chats.value, aiMsg]
-    if (data.report) report.value = data.report
-
     if (syncToMainChat.value && avatarStatus.value === 'connected') {
-      avatarWriteText(replyText, false)
+      avatarWriteText(cleanText, false)
       isXunfeiSpeaking.value = true
     }
   } catch (err) {
-    console.error('Message transmission error:', err)
+    console.error('DeepSeek API error:', err)
     appendChatError(err instanceof Error ? err.message : '消息发送失败，请稍后重试')
   } finally {
     isAiLoading.value = false
@@ -150,18 +333,47 @@ export async function sendMessage() {
 export async function triggerReport() {
   if (!canUnlockReport.value) return
   try {
-    const res = await fetch('/api/chat', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ messages: chats.value, currentDimensions: dimensions.value }),
-    })
-    const data = await readJsonResponse<ChatResponse>(res)
-    if (data.report) {
-      report.value = data.report
+    const dimSummary = Object.entries(dimensions.value)
+      .filter(([, v]) => v)
+      .map(([k, v]) => `${k}: ${v}`)
+      .join('\n')
+
+    const reportPrompt = `当前已收集到的画像维度：\n${dimSummary}\n\n请基于以上信息生成一份学习画像报告，严格按以下 JSON 格式返回（不要包含 markdown 代码块标记）：\n{"score":<0-100总分>,"evaluation":"<一句话总评>","radarPoints":[{"dimension":"知识基础","score":<0-100>},{"dimension":"学习速度","score":<0-100>},{"dimension":"逻辑思维","score":<0-100>},{"dimension":"创造力","score":<0-100>},{"dimension":"专注力","score":<0-100>},{"dimension":"自律力","score":<0-100>}],"weaknesses":["<弱点1>","<弱点2>","<弱点3>"],"suggestions":["<建议1>","<建议2>","<建议3>"],"skills":{"core":["<核心技能1>","<核心技能2>","<核心技能3>"],"foundation":["<基础技能1>","<基础技能2>"],"additional":["<拓展技能1>","<拓展技能2>"]},"recommendedPath":[{"step":1,"title":"<阶段1标题>","description":"<描述>"},{"step":2,"title":"<阶段2标题>","description":"<描述>"},{"step":3,"title":"<阶段3标题>","description":"<描述>"},{"step":4,"title":"<阶段4标题>","description":"<描述>"}]}`
+
+    const apiMessages = [
+      { role: 'system', content: '你是一个专业的学习评估系统，请严格按要求的 JSON 格式输出，不要输出任何其他内容。' },
+      { role: 'user', content: reportPrompt },
+    ]
+
+    const replyText = await callDeepSeek(apiMessages)
+    // 提取 JSON
+    const jsonMatch = replyText.match(/\{[\s\S]*\}/)
+    if (jsonMatch) {
+      const parsed = JSON.parse(jsonMatch[0]) as StudyReport
+      report.value = parsed
       showReport.value = true
       activeMenu.value = 'portrait-report'
+
+      // 将画像数据保存到后端，并触发AI生成个性化知识路径
+      try {
+        const { saveProfile, triggerKnowledgePath } = await import('@/lib/api')
+        await saveProfile({
+          score: parsed.score,
+          radarPoints: parsed.radarPoints,
+          weaknesses: parsed.weaknesses,
+          suggestions: parsed.suggestions,
+        })
+        // 异步触发AI生成知识路径（不阻塞UI）
+        triggerKnowledgePath().catch(() => {})
+      } catch (e) {
+        console.warn('Failed to save profile to backend:', e)
+      }
+    } else {
+      throw new Error('无法解析报告 JSON')
     }
-  } catch {
+  } catch (err) {
+    console.error('Report generation error:', err)
+    // fallback
     const fallback: StudyReport = {
       score: 87, evaluation: '优秀',
       radarPoints: [
@@ -169,9 +381,9 @@ export async function triggerReport() {
         { dimension: '逻辑思维', score: 88 }, { dimension: '创造力', score: 82 },
         { dimension: '专注力', score: 80 }, { dimension: '自律力', score: 86 },
       ],
-      weaknesses: ['数学基础需要加强，特别是线性代数和概率统计', '项目实战经验较少，缺乏完整项目开发经历', '学习时长可以适当增加，建议每周 ≥ 10 小时'],
-      suggestions: ['从小项目入手，边学边做，建立项目经验', '系统补充数学基础，推荐相关课程和练习', '保持当前学习节奏，逐步提升深度学习能力'],
-      skills: { core: ['Python', '机器学习', '深度学习', '数据分析'], foundation: ['算法基础', '数学基础', '项目实战', '大模型应用'], additional: ['工程化部署', '强化学习', '计算机视觉'] },
+      weaknesses: ['数学基础需要加强', '项目实战经验较少', '学习时长可以适当增加'],
+      suggestions: ['从小项目入手，边学边做', '系统补充数学基础', '保持当前学习节奏，逐步提升深度'],
+      skills: { core: ['Python', '机器学习', '深度学习', '数据分析'], foundation: ['算法基础', '数学基础', '项目实战'], additional: ['工程化部署', '强化学习', '计算机视觉'] },
       recommendedPath: [
         { step: 1, title: '巩固优势', description: '夯实基础知识' }, { step: 2, title: '补齐短板', description: '强化薄弱环节' },
         { step: 3, title: '实战跃迁', description: '完成项目实践' }, { step: 4, title: '周期校准', description: '定期复盘优化' },
@@ -180,6 +392,18 @@ export async function triggerReport() {
     report.value = fallback
     showReport.value = true
     activeMenu.value = 'portrait-report'
+
+    // fallback 也保存到后端并触发AI生成
+    try {
+      const { saveProfile, triggerKnowledgePath } = await import('@/lib/api')
+      await saveProfile({
+        score: fallback.score,
+        radarPoints: fallback.radarPoints,
+        weaknesses: fallback.weaknesses,
+        suggestions: fallback.suggestions,
+      })
+      triggerKnowledgePath().catch(() => {})
+    } catch { /* ignore */ }
   }
 }
 

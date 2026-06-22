@@ -473,7 +473,8 @@ onBeforeUnmount(() => {
   object-fit: contain;
   pointer-events: none;
   transform: translate(-50%, -50%);
-  filter: saturate(1.08) contrast(1.04);
+  opacity: 0.86;
+  filter: saturate(1.08) contrast(1.04) drop-shadow(0 10px 28px rgba(34, 211, 238, 0.16));
 }
 
 .reflection-card .card-visual img,

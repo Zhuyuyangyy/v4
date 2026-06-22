@@ -294,7 +294,7 @@ function handlePrint() {
   background:
     linear-gradient(180deg, rgba(29, 27, 83, 0.82), rgba(11, 13, 46, 0.96)),
     radial-gradient(circle at 26% 0%, rgba(117, 71, 255, 0.22), transparent 36%);
-  border: 1px solid rgba(117, 98, 255, 0.22) !important;
+  border: 1px solid rgba(0, 212, 255, 0.22) !important;
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.05),
     0 24px 70px rgba(3, 5, 22, 0.65),
@@ -306,14 +306,14 @@ function handlePrint() {
 #resource-modal-container > :first-child {
   background:
     linear-gradient(90deg, rgba(11, 13, 46, 0.6), rgba(44, 18, 102, 0.35)) !important;
-  border-bottom: 1px solid rgba(117, 98, 255, 0.18) !important;
+  border-bottom: 1px solid rgba(0, 212, 255, 0.18) !important;
 }
 
 /* 头部徽章:分类 */
 #resource-modal-container > :first-child > :first-child > :first-child > span:first-child {
-  background: rgba(140, 92, 255, 0.18) !important;
-  color: #c4b5fd !important;
-  border: 1px solid rgba(186, 142, 255, 0.28) !important;
+  background: rgba(0, 212, 255, 0.18) !important;
+  color: #00d4ff !important;
+  border: 1px solid rgba(147, 197, 253, 0.28) !important;
 }
 
 /* 头部徽章:难度 */
@@ -328,8 +328,8 @@ function handlePrint() {
   color: #9aa4d9 !important;
 }
 #resource-modal-container > :first-child > :last-child > button:hover {
-  background: rgba(140, 92, 255, 0.16) !important;
-  color: #c4b5fd !important;
+  background: rgba(0, 212, 255, 0.16) !important;
+  color: #00d4ff !important;
 }
 
 /* --- 右上角关闭按钮 hover 红色 --- */
@@ -346,7 +346,7 @@ function handlePrint() {
 
 /* --- 作者/学时/阅读行 --- */
 .edu-detail-modal .flex.flex-wrap {
-  border-bottom-color: rgba(117, 98, 255, 0.14) !important;
+  border-bottom-color: rgba(0, 212, 255, 0.14) !important;
 }
 
 /* --- 内容正文 --- */
@@ -358,14 +358,14 @@ function handlePrint() {
 .edu-detail-modal .bg-slate-50,
 .edu-detail-modal .dark\:bg-slate-800\/60 {
   background: rgba(13, 15, 44, 0.72) !important;
-  border-color: rgba(117, 98, 255, 0.14) !important;
+  border-color: rgba(0, 212, 255, 0.14) !important;
 }
 
 /* --- 学习控制台区 --- */
 .edu-detail-modal .bg-\[#f0f4ff\]\/50,
 .edu-detail-modal .dark\:bg-\[#4a6cf7\]\/10 {
-  background: rgba(140, 92, 255, 0.12) !important;
-  border-color: rgba(140, 92, 255, 0.22) !important;
+  background: rgba(0, 212, 255, 0.12) !important;
+  border-color: rgba(0, 212, 255, 0.22) !important;
 }
 
 /* --- 完成提示 (绿色) --- */
@@ -381,55 +381,55 @@ function handlePrint() {
 
 /* --- 标记学完 CTA 按钮 --- */
 .edu-detail-modal .bg-\[#4a6cf7\] {
-  background: linear-gradient(135deg, #7e3cff, #4e33b6) !important;
+  background: linear-gradient(135deg, #00d4ff, #0097a7) !important;
   color: #fff !important;
 }
 .edu-detail-modal .hover\:bg-\[#3b5bdb\]:hover {
-  background: linear-gradient(135deg, #6d2de0, #3f28a0) !important;
+  background: linear-gradient(135deg, #2563eb, #1d4ed8) !important;
 }
 
 /* --- 笔记区块 --- */
 .edu-detail-modal .bg-white,
 .edu-detail-modal .dark\:bg-slate-800 {
   background: rgba(13, 15, 44, 0.72) !important;
-  border-color: rgba(117, 98, 255, 0.14) !important;
+  border-color: rgba(0, 212, 255, 0.14) !important;
 }
 .edu-detail-modal textarea {
   background: rgba(13, 15, 44, 0.62) !important;
-  border-color: rgba(117, 98, 255, 0.18) !important;
+  border-color: rgba(0, 212, 255, 0.18) !important;
   color: #d8def0 !important;
 }
 .edu-detail-modal textarea::placeholder {
   color: #6f7a9e !important;
 }
 .edu-detail-modal textarea:focus {
-  border-color: rgba(140, 92, 255, 0.5) !important;
-  box-shadow: 0 0 0 3px rgba(140, 92, 255, 0.12) !important;
+  border-color: rgba(0, 212, 255, 0.5) !important;
+  box-shadow: 0 0 0 3px rgba(0, 212, 255, 0.12) !important;
   background: rgba(13, 15, 44, 0.82) !important;
 }
 
 /* --- 笔记保存按钮 --- */
 .edu-detail-modal .border-\[\#e2e8f0\] {
-  border-color: rgba(117, 98, 255, 0.18) !important;
+  border-color: rgba(0, 212, 255, 0.18) !important;
   color: #9aa4d9 !important;
 }
 .edu-detail-modal .hover\:bg-\[#4a6cf7\]:hover {
-  background: rgba(140, 92, 255, 0.28) !important;
-  border-color: rgba(140, 92, 255, 0.42) !important;
-  color: #c4b5fd !important;
+  background: rgba(0, 212, 255, 0.28) !important;
+  border-color: rgba(0, 212, 255, 0.42) !important;
+  color: #00d4ff !important;
 }
 
 /* --- 底部栏 --- */
 #resource-modal-container > div:last-child {
   background: rgba(11, 13, 44, 0.82) !important;
-  border-top: 1px solid rgba(117, 98, 255, 0.14) !important;
+  border-top: 1px solid rgba(0, 212, 255, 0.14) !important;
 }
 #resource-modal-container > div:last-child p,
 #resource-modal-container > div:last-child button {
   color: #6f7a9e !important;
 }
 #resource-modal-container > div:last-child button:hover {
-  color: #c4b5fd !important;
+  color: #00d4ff !important;
 }
 
 /* --- 通用:所有白色文字 → 深色主文字 --- */
@@ -469,17 +469,17 @@ function handlePrint() {
   background: rgba(13, 15, 44, 0.62) !important;
 }
 .edu-detail-modal .bg-\[#f0f4ff\] {
-  background: rgba(140, 92, 255, 0.18) !important;
-  color: #c4b5fd !important;
+  background: rgba(0, 212, 255, 0.18) !important;
+  color: #00d4ff !important;
 }
 
 /* hover 效果 */
 .edu-detail-modal .hover\:bg-slate-200:hover {
-  background: rgba(140, 92, 255, 0.16) !important;
-  color: #c4b5fd !important;
+  background: rgba(0, 212, 255, 0.16) !important;
+  color: #00d4ff !important;
 }
 .edu-detail-modal .hover\:bg-slate-100:hover {
-  background: rgba(140, 92, 255, 0.12) !important;
+  background: rgba(0, 212, 255, 0.12) !important;
 }
 .edu-detail-modal .hover\:bg-red-50:hover {
   background: rgba(220, 60, 60, 0.18) !important;
@@ -488,17 +488,17 @@ function handlePrint() {
 
 /* border 覆盖 */
 .edu-detail-modal .border-\[\#e8e8e8\] {
-  border-color: rgba(117, 98, 255, 0.14) !important;
+  border-color: rgba(0, 212, 255, 0.14) !important;
 }
 .edu-detail-modal .border-slate-200,
 .edu-detail-modal .dark\:border-slate-600 {
-  border-color: rgba(117, 98, 255, 0.18) !important;
+  border-color: rgba(0, 212, 255, 0.18) !important;
 }
 .edu-detail-modal .border-\[\#dbe4ff\] {
-  border-color: rgba(186, 142, 255, 0.28) !important;
+  border-color: rgba(147, 197, 253, 0.28) !important;
 }
 .edu-detail-modal .border-\[\#d9e2ff\] {
-  border-color: rgba(140, 92, 255, 0.22) !important;
+  border-color: rgba(0, 212, 255, 0.22) !important;
 }
 .edu-detail-modal .border-emerald-100 {
   border-color: rgba(6, 120, 80, 0.28) !important;

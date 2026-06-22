@@ -8,9 +8,9 @@ export const isMetricCollapsed = ref(false)
 export const themeAccent = ref<ThemeAccent>('blue')
 
 export const dimensions = ref<DimensionMap>({
-  identity: '学生',
-  domain: '计算机 / AI',
-  level: '初学者',
+  identity: null,
+  domain: null,
+  level: null,
   experience: null,
   goal: null,
   motivation: null,

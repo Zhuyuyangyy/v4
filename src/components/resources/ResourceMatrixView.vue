@@ -240,7 +240,7 @@ onUnmounted(() => { styleEl?.remove() })
 .matrix-banner {
   display: flex; align-items: center; gap: 10px;
   padding: 14px 20px; border-radius: 14px;
-  background: rgba(12, 12, 30, 0.6); backdrop-filter: blur(20px);
+  background: rgba(12, 12, 30, 0.42); backdrop-filter: blur(20px);
   border: 1px solid rgba(255, 255, 255, 0.06);
   margin-bottom: 20px; font-size: 13px; color: #8892b0; line-height: 1.6;
 }
@@ -248,7 +248,7 @@ onUnmounted(() => { styleEl?.remove() })
 
 .matrix-canvas {
   position: relative; padding: 24px;
-  border-radius: 18px; background: rgba(7, 7, 13, 0.85);
+  border-radius: 18px; background: rgba(7, 7, 13, 0.62);
   border: 1px solid rgba(255, 255, 255, 0.06);
   overflow-x: auto;
 }
@@ -340,7 +340,7 @@ onUnmounted(() => { styleEl?.remove() })
   z-index: 8; pointer-events: none;
 }
 .annotation-badge {
-  background: rgba(245, 158, 11, 0.14); border: 1px solid #f59e0b;
+  background: rgba(245, 158, 11, 0.1); border: 1px solid #f59e0b;
   border-radius: 10px; padding: 8px 12px;
   font-size: 11px; color: #f59e0b; font-weight: 600;
   white-space: nowrap; letter-spacing: 0.02em;
@@ -350,7 +350,7 @@ onUnmounted(() => { styleEl?.remove() })
 /* Detail card */
 .matrix-detail {
   margin-top: 24px; padding: 22px;
-  background: rgba(12, 12, 30, 0.72); backdrop-filter: blur(20px);
+  background: rgba(12, 12, 30, 0.48); backdrop-filter: blur(20px);
   border: 1px solid rgba(255, 255, 255, 0.06); border-radius: 16px;
   box-shadow: 0 12px 40px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.04);
   max-width: 520px;
@@ -363,7 +363,7 @@ onUnmounted(() => { styleEl?.remove() })
 .detail-title { font-family: var(--font-display); font-size: 22px; color: #e8edf5; line-height: 1.15; margin-bottom: 6px; }
 .detail-desc { font-size: 12px; color: #8892b0; line-height: 1.6; margin-bottom: 16px; }
 .detail-metrics { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px; }
-.metric-card { padding: 10px 14px; background: rgba(255,255,255,0.03); border-radius: 10px; }
+.metric-card { padding: 10px 14px; background: rgba(255,255,255,0.05); border-radius: 10px; }
 .metric-label { font-size: 10px; color: #8892b0; letter-spacing: 0.12em; margin-bottom: 4px; }
 .metric-value { font-family: var(--font-mono); font-size: 18px; font-weight: 600; }
 .detail-btn {
@@ -374,7 +374,7 @@ onUnmounted(() => { styleEl?.remove() })
 /* Diagnostic */
 .diagnostic {
   position: absolute; right: 24px; bottom: 24px;
-  background: rgba(12, 12, 30, 0.72); backdrop-filter: blur(20px);
+  background: rgba(12, 12, 30, 0.48); backdrop-filter: blur(20px);
   border: 1px solid rgba(255, 255, 255, 0.06); border-radius: 16px;
   padding: 22px; width: 280px; z-index: 10;
   box-shadow: 0 12px 40px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.04);

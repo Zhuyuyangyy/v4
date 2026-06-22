@@ -50,7 +50,7 @@ export async function runReflectionAgent({ profile, evaluation, learningHistory 
 
 function fallbackReflection({ profile, evaluation }) {
   const score = profile?.totalScore || 50
-  const weakTags = (profile?.weaknesses || []).map(w => w.tag)
+  const weakTags = (profile?.weaknesses || [])
 
   return {
     reflection: score >= 70

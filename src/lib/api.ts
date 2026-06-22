@@ -93,6 +93,24 @@ export async function fetchLatestProfile() {
   return data.result
 }
 
+export function saveProfile(report: { score: number; radarPoints: { dimension: string; score: number }[]; weaknesses: string[]; suggestions: string[] }) {
+  return requestJson<any>('/api/profile/save', {
+    method: 'POST',
+    body: JSON.stringify(report),
+  })
+}
+
+export function triggerKnowledgePath(profile?: unknown) {
+  return requestJson<any>('/api/knowledge-path/generate', {
+    method: 'POST',
+    body: JSON.stringify({ profile }),
+  })
+}
+
+export function fetchKnowledgePath() {
+  return requestJson<{ result: any }>('/api/knowledge-path/latest')
+}
+
 export function sendChatMessage(message: string, multimodalContents?: MultimodalContent[]) {
   return requestJson<ChatReply>('/api/chat', {
     method: 'POST',
@@ -219,4 +237,70 @@ export function agentFullRun(payload: FullRunRequest) {
     method: 'POST',
     body: JSON.stringify(payload),
   })
+}
+
+export interface AgentCollaborationEvent {
+  id: string
+  chain: string
+  agent: string
+  t: number
+  type: string
+  label: string
+  detail: string
+}
+
+export interface AgentCollaborationChain {
+  id: string
+  name: string
+  summary: string
+  issue: string
+  outcome: string
+  eventIds: string[]
+}
+
+export interface AgentCollaborationAgent {
+  id: string
+  name: string
+  role: string
+  color: string
+  artSrc: string
+}
+
+export interface AgentCollaborationModule {
+  id: string
+  chainId: string
+  name: string
+  agentNames: string[]
+  color: string
+  artSrc: string
+  eventCount: number
+}
+
+export interface AgentCollaborationDay {
+  name: string
+  label: string
+  index: number
+}
+
+export interface AgentCollaborationResponse {
+  dayOfWeek: number
+  dayName: string
+  dayLabel: string
+  dateString: string
+  totalAgents: number
+  totalEvents: number
+  totalChains: number
+  agents: AgentCollaborationAgent[]
+  chains: AgentCollaborationChain[]
+  events: AgentCollaborationEvent[]
+  modules: AgentCollaborationModule[]
+}
+
+export function fetchAgentCollaboration(day: string) {
+  return requestJson<AgentCollaborationResponse>(`/api/agent-collaboration?day=${encodeURIComponent(day)}`)
+}
+
+export async function fetchAgentCollaborationDays() {
+  const data = await requestJson<{ days: AgentCollaborationDay[] }>('/api/agent-collaboration/days')
+  return data.days
 }

@@ -248,7 +248,7 @@ const EVIDENCE_FIELDS: { key: keyof GeneratedResource['evidence']; label: string
 }
 
 .rgp-header-icon {
-  color: #4a6cf7;
+  color: #3b82f6;
   flex-shrink: 0;
 }
 
@@ -271,19 +271,19 @@ const EVIDENCE_FIELDS: { key: keyof GeneratedResource['evidence']; label: string
   padding: 8px 18px;
   border-radius: 10px;
   border: none;
-  background: linear-gradient(135deg, #4a6cf7 0%, #6a8cff 100%);
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
   color: #fff;
   font-size: 14px;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s ease;
-  box-shadow: 0 2px 8px rgba(74, 108, 247, 0.3);
+  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
   white-space: nowrap;
 }
 
 .rgp-generate-btn:hover:not(:disabled) {
-  background: linear-gradient(135deg, #3555db 0%, #5a7cee 100%);
-  box-shadow: 0 4px 14px rgba(74, 108, 247, 0.4);
+  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+  box-shadow: 0 4px 14px rgba(59, 130, 246, 0.4);
   transform: translateY(-1px);
 }
 
@@ -374,7 +374,7 @@ const EVIDENCE_FIELDS: { key: keyof GeneratedResource['evidence']; label: string
 }
 
 .rgp-card-header-icon {
-  color: #4a6cf7;
+  color: #3b82f6;
   flex-shrink: 0;
 }
 
@@ -436,8 +436,8 @@ const EVIDENCE_FIELDS: { key: keyof GeneratedResource['evidence']; label: string
 }
 
 .rgp-section-label--reason {
-  background: #f0f4ff;
-  color: #4a6cf7;
+  background: rgba(59, 130, 246, 0.1);
+  color: #3b82f6;
 }
 
 .dark .rgp-section-label--concept {
@@ -491,9 +491,9 @@ const EVIDENCE_FIELDS: { key: keyof GeneratedResource['evidence']; label: string
   gap: 5px;
   padding: 6px 12px;
   border-radius: 8px;
-  border: 1px solid #e8e8e8;
-  background: #fafbff;
-  color: #4a6cf7;
+  border: 1px solid rgba(59, 130, 246, 0.15);
+  background: rgba(59, 130, 246, 0.06);
+  color: #3b82f6;
   font-size: 13px;
   font-weight: 500;
   cursor: pointer;
@@ -501,9 +501,9 @@ const EVIDENCE_FIELDS: { key: keyof GeneratedResource['evidence']; label: string
 }
 
 .rgp-evidence-btn:hover {
-  background: #f0f4ff;
-  border-color: #4a6cf7;
-  box-shadow: 0 2px 6px rgba(74, 108, 247, 0.15);
+  background: rgba(59, 130, 246, 0.12);
+  border-color: rgba(59, 130, 246, 0.25);
+  box-shadow: 0 2px 6px rgba(59, 130, 246, 0.12);
 }
 
 .dark .rgp-evidence-btn {
@@ -578,7 +578,7 @@ const EVIDENCE_FIELDS: { key: keyof GeneratedResource['evidence']; label: string
 }
 
 .rgp-modal-title-icon {
-  color: #4a6cf7;
+  color: #3b82f6;
   flex-shrink: 0;
 }
 

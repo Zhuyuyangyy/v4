@@ -1,13 +1,11 @@
 <script setup lang="ts">
 import { ref, reactive, computed } from 'vue'
-import { useTheme } from '../../composables/useEduMindTheme'
 import {
   Search,
   Plus,
   FileText,
   BookOpen,
   Clock,
-  Tag,
   Trash2,
   Save,
   Eye,
@@ -18,12 +16,8 @@ import {
   Calendar,
   ArrowUpDown,
   FolderOpen,
-  Hash,
-  CheckCircle,
-  AlertCircle
+  Hash
 } from 'lucide-vue-next'
-
-const { isDark } = useTheme()
 
 interface NoteItem {
   id: string
