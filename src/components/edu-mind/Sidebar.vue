@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
 import {
+  Home,
   PlaySquare,
   Folder,
   CheckSquare,
@@ -42,6 +43,7 @@ watch(
 )
 
 const menuItems = [
+  { name: '首页', icon: Home },
   { name: '课程', icon: PlaySquare },
   { name: '资源中心', icon: Folder },
   { name: '练习中心', icon: CheckSquare },

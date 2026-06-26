@@ -57,7 +57,7 @@ const ITEMS_PER_PAGE = 9
 
 const currentTab = ref<string>((() => {
   const saved = localStorage.getItem('edumind_active_tab')
-  return (saved && saved !== '首页' && saved !== '学习路径') ? saved : '课程'
+  return saved || '首页'
 })())
 
 watch(currentTab, (val) => {
@@ -390,16 +390,11 @@ onBeforeUnmount(() => {
 
 
       <div class="edu-main-stage flex-1 p-5 sm:p-6 flex flex-col">
-        <div v-if="currentTab === '首页'" class="flex flex-col lg:flex-row gap-6">
-          <div class="flex-1 min-w-0">
-            <HomeView :weeklyHours="weeklyHours" :goalHours="goalHours" @navigateToTab="(tab: string) => currentTab = tab" />
-          </div>
-          <RightSidebar
-            :recommendations="recommendations"
-            :collections="collections"
-            @toggleRecommendStar="handleToggleRecommendStar"
-            @refreshRecommend="handleRefreshRecommend"
-            @collectionItemClick="handleCollectionItemClick"
+        <div v-if="currentTab === '首页'" class="w-full">
+          <HomeView
+            :weeklyHours="weeklyHours"
+            :goalHours="goalHours"
+            @navigateToTab="(tab: string) => currentTab = tab"
           />
         </div>
 
