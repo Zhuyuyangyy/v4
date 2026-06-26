@@ -324,7 +324,7 @@ function statusText(status: StarNode['status']) {
   background:
     radial-gradient(ellipse 780px 460px at 18% 10%, rgba(124, 58, 237, 0.18), transparent 58%),
     radial-gradient(ellipse 760px 460px at 92% 82%, rgba(0, 212, 255, 0.14), transparent 56%),
-    rgba(7, 8, 18, 0.82);
+    transparent;
   box-shadow: 0 28px 90px rgba(0, 0, 0, 0.3);
 }
 
@@ -537,7 +537,7 @@ function statusText(status: StarNode['status']) {
   background:
     radial-gradient(ellipse 460px 260px at 14% 12%, rgba(124, 58, 237, 0.2), transparent 58%),
     radial-gradient(ellipse 420px 260px at 92% 82%, rgba(0, 212, 255, 0.15), transparent 56%),
-    rgba(7, 8, 18, 0.72);
+    transparent;
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04), 0 18px 44px rgba(0, 0, 0, 0.25);
 }
 

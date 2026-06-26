@@ -161,13 +161,13 @@ const server = http.createServer(async (req, res) => {
       const body = await readJson(req)
       // 将对话页的 radarPoints 转为统一格式
       const profile = {
-        dimensions: (body.radarPoints || []).map((p: any) => ({
+        dimensions: (body.radarPoints || []).map((p) => ({
           label: p.dimension,
           value: p.score,
           color: '#3b82f6',
         })),
         totalScore: body.score || 50,
-        weaknesses: (body.weaknesses || []).map((w: string) => ({ tag: w, count: 1 })),
+        weaknesses: (body.weaknesses || []).map((w) => ({ tag: w, count: 1 })),
         recommendations: body.suggestions || [],
         source: 'dialogue',
         savedAt: new Date().toISOString(),

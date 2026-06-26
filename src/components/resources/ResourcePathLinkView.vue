@@ -1,6 +1,9 @@
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
-import { BookOpen, MessageCircle, RefreshCw, ClipboardCheck, GraduationCap } from 'lucide-vue-next'
+import { useRouter } from 'vue-router'
+import { BookOpen, MessageCircle, RefreshCw, ClipboardCheck, GraduationCap, FileText, Video } from 'lucide-vue-next'
+
+const router = useRouter()
 
 interface Topic {
   id: string; label: string; mastery: number; recommended?: boolean
@@ -259,6 +262,19 @@ function toggleStage(id: string) {
   activeStage.value = activeStage.value === id ? null : id
 }
 
+function goToResource(res: { title: string; type: string }, sourceType: 'doc' | 'video', stageLabel: string) {
+  router.push({
+    path: '/resources',
+    query: {
+      resourceTitle: res.title,
+      domain: props.domain?.name || '',
+      topic: props.topic?.label || '',
+      stage: stageLabel,
+      sourceType,
+    },
+  })
+}
+
 watch(() => props.topic?.id, () => { activeStage.value = null })
 </script>
 
@@ -301,6 +317,16 @@ watch(() => props.topic?.id, () => { activeStage.value = null })
               <div class="res-content">
                 <span class="res-title">{{ res.title }}</span>
                 <span v-if="res.isRemedial" class="remedial-badge">评估后新增</span>
+              </div>
+              <div class="res-actions">
+                <button class="res-btn res-btn--doc" @click.stop="goToResource(res, 'doc', stage.label)">
+                  <FileText :size="12" />
+                  <span>文档</span>
+                </button>
+                <button class="res-btn res-btn--video" @click.stop="goToResource(res, 'video', stage.label)">
+                  <Video :size="12" />
+                  <span>视频</span>
+                </button>
               </div>
             </div>
           </div>
@@ -368,6 +394,30 @@ watch(() => props.topic?.id, () => { activeStage.value = null })
 .stage-resource:hover { border-color: rgba(0,212,255,.12); background: rgba(12,12,30,.6); }
 .stage-resource.remedial { border-color: rgba(6,214,160,.18); background: rgba(6,214,160,.04); }
 .stage-resource.remedial:hover { border-color: rgba(6,214,160,.3); }
+.res-actions {
+  display: flex; gap: 6px; flex-shrink: 0; opacity: 0; transition: opacity .2s ease;
+}
+.stage-resource:hover .res-actions { opacity: 1; }
+.res-btn {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: 600;
+  cursor: pointer; transition: all .2s ease; border: 1px solid transparent;
+  font-family: var(--font-mono, 'JetBrains Mono', monospace); letter-spacing: .02em;
+}
+.res-btn--doc {
+  background: rgba(59,130,246,.08); color: #60a5fa; border-color: rgba(59,130,246,.15);
+}
+.res-btn--doc:hover {
+  background: rgba(59,130,246,.18); border-color: rgba(59,130,246,.3);
+  box-shadow: 0 0 10px rgba(59,130,246,.15);
+}
+.res-btn--video {
+  background: rgba(139,92,246,.08); color: #a78bfa; border-color: rgba(139,92,246,.15);
+}
+.res-btn--video:hover {
+  background: rgba(139,92,246,.18); border-color: rgba(139,92,246,.3);
+  box-shadow: 0 0 10px rgba(139,92,246,.15);
+}
 .res-connector {
   width: 6px; height: 6px; border-radius: 50%; background: var(--stage-color); opacity: .5;
   flex-shrink: 0; box-shadow: 0 0 6px color-mix(in srgb, var(--stage-color) 25%, transparent);
