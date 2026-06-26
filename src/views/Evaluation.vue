@@ -23,23 +23,6 @@ const selectedPanelTick = ref(0)
 const reducedMotion = ref(false)
 const timeRange = ref('7d')
 
-interface AgentLens {
-  key: string
-  name: string
-  icon: string
-  color: string
-  capabilityKey: string
-}
-
-const AGENTS: AgentLens[] = [
-  { key: 'perception', name: '感知智能体', icon: '👁️', color: '#00d4ff', capabilityKey: 'perception' },
-  { key: 'planning', name: '规划智能体', icon: '🧭', color: '#5b8def', capabilityKey: 'planning' },
-  { key: 'execution', name: '执行智能体', icon: '⚡', color: '#eab308', capabilityKey: 'execution' },
-  { key: 'reflection', name: '反思智能体', icon: '🪞', color: '#a855f7', capabilityKey: 'reflection' },
-  { key: 'evaluation', name: '评估智能体', icon: '📊', color: '#06d6a0', capabilityKey: 'evaluation' },
-]
-
-const selectedAgent = ref<string>('evaluation')
 const panelOpen = ref(true)
 
 onMounted(() => {
@@ -84,17 +67,7 @@ const totalStats = computed(() => {
   return { total, mastered, learning, unlearned, avgMastery }
 })
 
-const agentStats = computed(() => {
-  const points = agentPoints.value.length > 0 ? agentPoints.value : allPoints.value
-  const total = points.length
-  const mastered = points.filter((p) => p.mastery >= 80).length
-  const learning = points.filter((p) => p.mastery >= 30 && p.mastery < 80).length
-  const unlearned = points.filter((p) => p.mastery < 30).length
-  const avgMastery = total ? points.reduce((s, p) => s + p.mastery, 0) / total : 0
-  return { total, mastered, learning, unlearned, avgMastery }
-})
-
-const stats = agentStats
+const stats = totalStats
 
 const distribution = computed(() => [
   { label: '已掌握', key: 'mastered', count: stats.value.mastered, color: '#22c55e' },
@@ -102,41 +75,13 @@ const distribution = computed(() => [
   { label: '未学习', key: 'unlearned', count: stats.value.unlearned, color: '#3b82f6' },
 ])
 
-const agentKey = computed(() => selectedAgent.value)
-
-function pointBelongsToAgent(point: KnowledgePoint): boolean {
-  if (!agentKey.value || agentKey.value === 'evaluation') return true
-  // Direct evidence match
-  if (point.agentEvidence?.some((ev) => ev.agentType === agentKey.value || ev.agentName?.includes(AGENTS.find((a) => a.key === agentKey.value)?.name ?? ''))) {
-    return true
-  }
-  // Capability / domain heuristics
-  const agent = AGENTS.find((a) => a.key === agentKey.value)
-  if (!agent) return true
-  const label = `${point.module} ${point.unit} ${point.name}`.toLowerCase()
-  const capabilityMap: Record<string, string[]> = {
-    perception: ['感知', '识别', '检测', '观察', '数据', '特征'],
-    planning: ['规划', '计划', '路径', '编排', '目标', '策略'],
-    execution: ['执行', '实现', '编码', '任务', '操作', '运行'],
-    reflection: ['反思', '复盘', '总结', '错误', '改进', '优化'],
-    evaluation: ['评估', '测评', '测试', '验证', '度量', '评分'],
-  }
-  return capabilityMap[agent.key]?.some((kw) => label.includes(kw)) ?? true
-}
-
-const agentPoints = computed(() => allPoints.value.filter(pointBelongsToAgent))
-
 const weakPoints = computed(() => {
-  const pool = agentPoints.value.length > 0 ? agentPoints.value : allPoints.value
-  return [...pool]
+  return [...allPoints.value]
     .filter((p) => p.mastery < 60)
     .sort((a, b) => a.mastery - b.mastery)
 })
 
-const highlightNames = computed(() => {
-  if (agentKey.value === 'evaluation') return []
-  return agentPoints.value.map((p) => p.name)
-})
+const highlightNames = computed(() => [])
 
 const trend = computed(() => {
   const today = new Date()
@@ -152,43 +97,18 @@ const trend = computed(() => {
 })
 
 const capabilities = computed<CapabilityMetric[]>(() => {
-  if (data.value?.capabilities?.length) return data.value.capabilities
-  return [
-    { key: 'comprehension', label: '综合理解', value: 68, previousValue: 62 },
-    { key: 'planning', label: '规划能力', value: 78, previousValue: 72 },
-    { key: 'execution', label: '执行能力', value: 64, previousValue: 60 },
-    { key: 'reflection', label: '反思能力', value: 41, previousValue: 38 },
-    { key: 'evaluation', label: '评估能力', value: 57, previousValue: 52 },
-    { key: 'perception', label: '感知能力', value: 92, previousValue: 85 },
-  ]
-})
-
-const agentCapabilityValue = computed(() => {
-  const agent = AGENTS.find((a) => a.key === selectedAgent.value)
-  if (!agent) return stats.value.avgMastery
-  const metric = capabilities.value.find((m) => m.key === agent.capabilityKey)
-  return metric?.value ?? stats.value.avgMastery
-})
-
-const metrics = computed(() => {
-  const agent = AGENTS.find((a) => a.key === selectedAgent.value)
-  const accent = agent?.color ?? '#00d4ff'
-  const agentAvg = agentCapabilityValue.value
-  const statusMap: Record<string, { label: string; sub: string }> = {
-    perception: { label: '敏锐', sub: '感知优秀' },
-    planning: { label: '良好', sub: '规划清晰' },
-    execution: { label: '稳健', sub: '执行到位' },
-    reflection: { label: '需加强', sub: '反思不足' },
-    evaluation: { label: 'Proficient', sub: '综合优秀' },
+  // Derive radar dimensions from the learning path modules/units instead of agent capabilities
+  if (!data.value?.modules?.length) {
+    return [
+      { key: 'all', label: '全部路径', value: stats.value.avgMastery, previousValue: Math.max(0, stats.value.avgMastery - 6) },
+    ]
   }
-  return [
-    { icon: 'progress', label: `${agent?.name ?? '学习'}进度`, value: `${agentAvg.toFixed(1)}%`, sub: `较昨日 ↑2.1%`, subPositive: true, accent },
-    { icon: 'mastery', label: '掌握度', value: `${stats.value.avgMastery.toFixed(1)}%`, sub: `较昨日 ↑1.8%`, subPositive: true, accent: '#5b8def' },
-    { icon: 'confidence', label: '置信度', value: `${Math.round(50 + agentAvg * 0.35)}%`, sub: '较昨日 ↓3.2%', subPositive: false, accent: '#45c486' },
-    { icon: 'trend', label: '提升趋势', value: '+3.2%', sub: `较昨日 ↑0.7%`, subPositive: true, accent: '#e9a23b' },
-    { icon: 'weight', label: '权重', value: '1.03', sub: '较昨日 ↑0.02', subPositive: true, accent: '#7c5cfc' },
-    { icon: 'status', label: '状态', value: statusMap[selectedAgent.value]?.label ?? 'Proficient', sub: statusMap[selectedAgent.value]?.sub ?? '优秀', subPositive: true, accent: '#06d6a0' },
-  ]
+  return data.value.modules.map((m) => ({
+    key: m.id,
+    label: m.name,
+    value: Math.round(m.avgMastery),
+    previousValue: Math.max(0, Math.round(m.avgMastery) - 6),
+  }))
 })
 
 function appleColorForStatus(status?: string): string {
@@ -258,13 +178,14 @@ function onMarkerSelect(marker: any) {
       </div>
     </header>
 
-    <main class="dashboard-grid">
+    <main class="dashboard-grid" :class="{ 'panel-open': panelOpen }">
       <button class="panel-toggle" :class="{ 'panel-open': panelOpen }" @click="panelOpen = !panelOpen">
+        <span class="panel-toggle-glow" />
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M9 19l-7-7 7-7" v-if="panelOpen"/>
-          <path d="M3 12h18M3 6h18M3 18h18" v-else/>
+          <path d="M11 17l-5-5 5-5M19 17l-5-5 5-5" v-if="panelOpen"/>
+          <path d="M13 17l5-5-5-5M5 17l5-5-5-5" v-else/>
         </svg>
-        {{ panelOpen ? '收起分析' : '智能体分析' }}
+        <span class="panel-toggle-text">{{ panelOpen ? '收起分析' : '展开学习分析' }}</span>
       </button>
 
       <section class="tree-section">
@@ -323,36 +244,26 @@ function onMarkerSelect(marker: any) {
 
       <aside class="right-panel" :class="{ open: panelOpen }">
         <div class="right-scroll">
-          <div class="agent-selector">
-            <div
-              v-for="agent in AGENTS"
-              :key="agent.key"
-              class="agent-tab"
-              :class="{ active: selectedAgent === agent.key }"
-              :style="{ '--agent-color': agent.color }"
-              @click="selectedAgent = agent.key"
-            >
-              <span class="agent-icon">{{ agent.icon }}</span>
-              <span class="agent-name">{{ agent.name }}</span>
+          <Transition name="panel-fade" mode="out-in">
+            <div :key="selectedPanelTick" class="panel-content">
+              <LearningOverview
+                :total="stats.total"
+                :mastered="stats.mastered"
+                :learning="stats.learning"
+                :unlearned="stats.unlearned"
+                :avg-mastery="stats.avgMastery"
+              />
+
+              <div class="charts-grid">
+                <OverallMasteryGauge :value="stats.avgMastery" :total="stats.total" :change="overallChange" :trends="trend" />
+                <CapabilityRadar :metrics="capabilities" />
+                <LearningTrend :trends="trend" />
+                <MasteryDistribution :distribution="distribution" />
+              </div>
+
+              <WeakPointTop5 :points="weakPoints" />
             </div>
-          </div>
-
-          <LearningOverview
-            :total="stats.total"
-            :mastered="stats.mastered"
-            :learning="stats.learning"
-            :unlearned="stats.unlearned"
-            :avg-mastery="stats.avgMastery"
-          />
-
-          <div class="charts-grid">
-            <OverallMasteryGauge :value="stats.avgMastery" :total="stats.total" :change="overallChange" :trends="trend" />
-            <CapabilityRadar :metrics="capabilities" :highlight-key="AGENTS.find(a => a.key === selectedAgent)?.capabilityKey" />
-            <LearningTrend :trends="trend" />
-            <MasteryDistribution :distribution="distribution" />
-          </div>
-
-          <WeakPointTop5 :points="weakPoints" />
+          </Transition>
         </div>
       </aside>
     </main>
@@ -475,44 +386,58 @@ function onMarkerSelect(marker: any) {
   position: relative;
   min-height: 0;
   overflow: hidden;
+  display: grid;
+  grid-template-columns: 1fr 0fr;
+  transition: grid-template-columns 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.dashboard-grid.panel-open {
+  grid-template-columns: 1fr 520px;
 }
 
 .tree-section {
-  position: absolute;
-  inset: 0;
+  position: relative;
   z-index: 1;
+  min-width: 0;
+  min-height: 0;
 }
 
 .right-panel {
-  position: absolute;
-  top: 16px;
-  right: 16px;
-  bottom: 16px;
-  width: 520px;
+  position: relative;
   z-index: 20;
-  border-radius: 18px;
-  background: rgba(6, 11, 24, 0.78);
-  border: 1px solid rgba(0, 212, 255, 0.15);
-  backdrop-filter: blur(28px) saturate(1.3);
+  width: 520px;
+  height: 100%;
+  border-radius: 18px 0 0 18px;
+  background: rgba(6, 11, 24, 0.82);
+  border: 1px solid rgba(0, 212, 255, 0.16);
+  border-right: none;
+  backdrop-filter: blur(34px) saturate(1.35);
   box-shadow:
-    0 14px 44px rgba(0, 0, 0, 0.55),
-    inset 0 1px 0 rgba(255, 255, 255, 0.06),
+    0 20px 60px rgba(0, 0, 0, 0.6),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
     0 0 30px rgba(0, 212, 255, 0.08);
-  transform: translateX(calc(100% + 32px));
-  transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1);
-}
-
-.right-panel.open {
-  transform: translateX(0);
+  overflow: hidden;
 }
 
 .right-panel::before {
   content: '';
   position: absolute;
   inset: 0;
-  background: radial-gradient(circle at top right, rgba(0, 212, 255, 0.08), transparent 60%);
+  background:
+    radial-gradient(circle at 80% 0%, rgba(0, 212, 255, 0.08), transparent 50%),
+    radial-gradient(circle at 0% 100%, rgba(124, 58, 237, 0.06), transparent 45%);
   pointer-events: none;
   border-radius: inherit;
+}
+
+.right-panel::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  opacity: 0.05;
+  pointer-events: none;
+  border-radius: inherit;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
 }
 
 .panel-toggle {
@@ -525,43 +450,77 @@ function onMarkerSelect(marker: any) {
   gap: 8px;
   padding: 10px 16px;
   border-radius: 12px;
-  background: rgba(13, 18, 38, 0.72);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(13, 18, 38, 0.82);
+  border: 1px solid rgba(0, 212, 255, 0.25);
   backdrop-filter: blur(24px) saturate(1.2);
   color: #f2f6fa;
   font-size: 13px;
-  font-weight: 500;
+  font-weight: 600;
   cursor: pointer;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
-  transition: all 0.2s ease;
+  box-shadow:
+    0 8px 24px rgba(0, 0, 0, 0.35),
+    0 0 18px rgba(0, 212, 255, 0.18),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  transition: right 0.35s cubic-bezier(0.22, 1, 0.36, 1), background 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+  overflow: hidden;
+}
+
+.panel-toggle-glow {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent, rgba(0, 212, 255, 0.14), transparent);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  z-index: -1;
+  pointer-events: none;
+}
+
+.panel-toggle:hover .panel-toggle-glow {
+  opacity: 1;
 }
 
 .panel-toggle:hover {
-  background: rgba(13, 18, 38, 0.88);
+  background: rgba(13, 18, 38, 0.95);
   transform: translateY(-1px);
+  box-shadow:
+    0 10px 28px rgba(0, 0, 0, 0.4),
+    0 0 28px rgba(0, 212, 255, 0.28),
+    inset 0 1px 0 rgba(255, 255, 255, 0.12);
+  border-color: rgba(0, 212, 255, 0.4);
+}
+
+.panel-toggle:active {
+  transform: translateY(0);
 }
 
 .panel-toggle.panel-open {
-  right: 552px;
+  right: 536px;
+  border-color: rgba(0, 212, 255, 0.4);
 }
 
 .panel-toggle svg {
   width: 18px;
   height: 18px;
+  flex-shrink: 0;
+}
+
+.panel-toggle-text {
+  white-space: nowrap;
 }
 
 .right-scroll {
   position: relative;
+  z-index: 2;
   height: 100%;
   overflow-y: auto;
-  padding: 16px;
+  padding: 18px;
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 16px;
 }
 
 .right-scroll::-webkit-scrollbar {
-  width: 5px;
+  width: 4px;
 }
 
 .right-scroll::-webkit-scrollbar-track {
@@ -569,61 +528,29 @@ function onMarkerSelect(marker: any) {
 }
 
 .right-scroll::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.08);
   border-radius: 4px;
 }
 
-.agent-selector {
+.panel-content {
   display: flex;
-  gap: 8px;
-  padding: 12px;
-  border-radius: 14px;
-  background: rgba(8, 14, 30, 0.72);
-  border: 1px solid rgba(0, 212, 255, 0.15);
-  box-shadow:
-    0 10px 32px rgba(0, 0, 0, 0.35),
-    inset 0 1px 0 rgba(255, 255, 255, 0.05),
-    0 0 20px rgba(0, 212, 255, 0.06);
+  flex-direction: column;
+  gap: 16px;
 }
 
-.agent-tab {
-  flex: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  padding: 8px 10px;
-  border-radius: 10px;
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.05);
-  cursor: pointer;
-  transition: all 0.2s ease;
+.panel-fade-enter-active,
+.panel-fade-leave-active {
+  transition: opacity 0.35s cubic-bezier(0.22, 1, 0.36, 1), transform 0.35s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
-.agent-tab:hover {
-  background: rgba(255, 255, 255, 0.07);
+.panel-fade-enter-from {
+  opacity: 0;
+  transform: translateY(10px);
 }
 
-.agent-tab.active {
-  background: linear-gradient(135deg, rgba(0, 212, 255, 0.18), rgba(124, 58, 237, 0.18));
-  border-color: var(--agent-color);
-  box-shadow: 0 0 16px color-mix(in srgb, var(--agent-color) 30%, transparent);
-}
-
-.agent-icon {
-  font-size: 16px;
-  line-height: 1;
-}
-
-.agent-name {
-  font-size: 12px;
-  color: rgba(176, 190, 210, 0.85);
-  font-weight: 500;
-}
-
-.agent-tab.active .agent-name {
-  color: #f2f6fa;
-  font-weight: 600;
+.panel-fade-leave-to {
+  opacity: 0;
+  transform: translateY(-6px);
 }
 
 .tree-card {
@@ -778,13 +705,20 @@ function onMarkerSelect(marker: any) {
 }
 
 @media (max-width: 1280px) {
-  .dashboard-grid {
-    grid-template-columns: 1.6fr 1fr;
+  .dashboard-grid.panel-open {
+    grid-template-columns: 1fr 460px;
+  }
+  .right-panel {
+    width: 460px;
+  }
+  .panel-toggle.panel-open {
+    right: 476px;
   }
 }
 
 @media (max-width: 1024px) {
-  .dashboard-grid {
+  .dashboard-grid,
+  .dashboard-grid.panel-open {
     grid-template-columns: 1fr;
     grid-template-rows: 1fr auto;
     overflow: auto;
@@ -793,7 +727,22 @@ function onMarkerSelect(marker: any) {
     min-height: 420px;
   }
   .right-panel {
+    width: 100%;
+    height: auto;
+    max-height: 0;
+    border-radius: 18px 18px 0 0;
+    opacity: 0;
+    transform: translateY(20px);
+    transition: max-height 0.35s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.3s ease, transform 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  .right-panel.open {
     max-height: 50vh;
+    opacity: 1;
+    transform: translateY(0);
+  }
+  .panel-toggle,
+  .panel-toggle.panel-open {
+    right: 16px;
   }
 }
 

@@ -36,7 +36,7 @@ const DOMAIN_COLORS: Record<string, { color: string; short: string }> = {
   nlp: { color: '#f43f5e', short: 'NLP' },
 }
 
-const FALLBACK_DOMAINS: KnowledgeDomain[] = [
+export const FALLBACK_DOMAINS: KnowledgeDomain[] = [
   {
     id: 'math', name: '数学基础', color: '#00d4ff', short: 'MATH', mastery: 0.72,
     topics: [

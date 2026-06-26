@@ -26,17 +26,6 @@ function formatDate(iso: string) {
     return iso
   }
 }
-
-function evidenceTypeLabel(type: string) {
-  const map: Record<string, string> = {
-    behavior: '行为证据',
-    reflection: '反思证据',
-    task_result: '任务结果',
-    assessment: '评估证据',
-    planning: '规划证据',
-  }
-  return map[type] || type
-}
 </script>
 
 <template>
@@ -79,16 +68,6 @@ function evidenceTypeLabel(type: string) {
           <div class="info-row"><span>模块</span><span>{{ p?.module }}</span></div>
           <div class="info-row"><span>单元</span><span>{{ p?.unit || '-' }}</span></div>
           <div class="info-row"><span>最近评估</span><span>{{ formatDate(p?.lastEvaluatedAt || '') }}</span></div>
-        </div>
-
-        <div class="drawer-section">
-          <div class="section-title">智能体评估证据</div>
-          <div v-for="ev in p?.agentEvidence" :key="ev.agentType" class="evidence-row">
-            <span class="ev-agent">{{ ev.agentName }}</span>
-            <span class="ev-type">{{ evidenceTypeLabel(ev.evidenceType) }}</span>
-            <span class="ev-count">{{ ev.count }} 条</span>
-          </div>
-          <div class="evidence-total">证据总数 {{ p?.evidenceCount }}</div>
         </div>
 
         <div class="drawer-section">

@@ -16,6 +16,14 @@ if (!fs.existsSync(dbDir)) {
 
 const db = new Database(dbPath)
 
+// Mitigate "database is locked" on Windows by using WAL mode and a busy timeout.
+try {
+  db.exec('PRAGMA journal_mode = WAL;')
+  db.exec('PRAGMA busy_timeout = 5000;')
+} catch (err) {
+  // Some WASM builds may not support WAL; continue with defaults.
+}
+
 db.exec(`
   CREATE TABLE IF NOT EXISTS agent_collaboration (
     id INTEGER PRIMARY KEY AUTOINCREMENT,

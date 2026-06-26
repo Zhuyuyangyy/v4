@@ -7,6 +7,7 @@ import SectionSkyline from '@/components/homepage/SectionSkyline.vue'
 import SectionMissions from '@/components/homepage/SectionMissions.vue'
 import AgentHub from '@/components/homepage/AgentHub.vue'
 import TrainFlow from '@/views/TrainFlow.vue'
+import InkMouseBackground from '@/components/homepage/InkMouseBackground.vue'
 
 const loaded = ref(false)
 const activeHubBeatId = ref('profile')
@@ -51,6 +52,7 @@ onBeforeUnmount(() => {
 
 <template>
   <div class="welcome">
+    <InkMouseBackground />
     <div class="home-image-layer" aria-hidden="true">
       <img class="home-art home-art-hero" src="/homepage/agent-constellation-hero.png" alt="">
       <img class="home-art home-art-path" src="/homepage/learning-path-repair.png" alt="">
@@ -98,10 +100,12 @@ onBeforeUnmount(() => {
     <!-- Agent live ticker -->
     <AgentLiveTicker />
 
-    <!-- Collaboration telemetry -->
-    <SectionTelemetry />
+    <!-- Knowledge map & next step learning -->
     <SectionSkyline />
     <SectionMissions />
+
+    <!-- Collaboration telemetry -->
+    <SectionTelemetry />
 
     <footer class="footer" aria-hidden="true" />
   </div>

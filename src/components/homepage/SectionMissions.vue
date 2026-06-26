@@ -1,51 +1,68 @@
 <script setup lang="ts">
 import { useRouter } from 'vue-router'
+import { Target, BookOpen, FileCheck, MessageCircle } from 'lucide-vue-next'
+import type { Component } from 'vue'
 
 const router = useRouter()
 
-const actions = [
+interface Action {
+  id: string
+  icon: Component
+  title: string
+  desc: string
+  cta: string
+  focus: string
+  tone: string
+  time: string
+}
+
+const actions: Action[] = [
   {
     id: 'remedial',
-    eyebrow: 'PATH + TUTOR',
+    icon: Target,
     title: '先补一个关键薄弱点',
-    desc: '二级指针和 BFS visited 是本轮路径里最影响后续学习的两个节点。',
-    cta: '进入补弱路径',
+    desc: '聚焦二级指针与 BFS visited，快速打通后续学习阻塞。',
+    cta: '开始补弱',
     focus: 'remedial',
     tone: '#35e0d8',
+    time: '15 min',
   },
   {
     id: 'resource',
-    eyebrow: 'RESOURCE',
-    title: '把图结构做成可视资料',
-    desc: '打开已经生成的思维导图、例题拆解和专项练习，不再从空白页开始。',
-    cta: '查看推荐资源',
+    icon: BookOpen,
+    title: '查看今日推荐资源',
+    desc: '已生成思维导图、例题拆解和专项练习，直接开始。',
+    cta: '开始学习',
     focus: 'recommended',
     tone: '#f0b24a',
+    time: '20 min',
   },
   {
     id: 'evaluation',
-    eyebrow: 'EVAL + FEEDBACK',
+    icon: FileCheck,
     title: '用一次小测刷新画像',
-    desc: '评估结果会回写到画像和下一轮路径，让系统知道你是真的掌握了。',
-    cta: '查看评估建议',
+    desc: '评估结果会回写画像，让下轮路径更准确。',
+    cta: '开始测评',
     focus: 'evaluation',
     tone: '#f0586e',
+    time: '25 min',
   },
   {
     id: 'dialogue',
-    eyebrow: 'AI DIALOGUE',
-    title: '和智能导师直接聊',
-    desc: '不知道先做哪一步时，直接把困惑丢给 AI，它会继续补全画像并拆出下一步。',
-    cta: '打开智能对话',
+    icon: MessageCircle,
+    title: '和智能导师聊聊',
+    desc: '不知道先做哪一步？把困惑丢给 AI 导师。',
+    cta: '开始对话',
     focus: 'dialogue',
     tone: '#8fa7ff',
+    time: '10 min',
   },
 ]
 
-const signals = [
-  { label: '薄弱节点', value: '4', note: '已定位' },
-  { label: '路径调整', value: '+3', note: '补救节点' },
-  { label: '今日建议', value: '35', note: '分钟' },
+const metrics = [
+  { label: '今日推荐任务数', value: '4', unit: '个' },
+  { label: '预计学习时长', value: '35', unit: 'min' },
+  { label: '资源匹配度', value: '92', unit: '%' },
 ]
 
 const quickQuestions = [
@@ -65,7 +82,7 @@ function goToResources(focus: string, extraQuery: Record<string, string> = {}) {
   })
 }
 
-function onActionClick(action: (typeof actions)[number]) {
+function onActionClick(action: Action) {
   if (action.id === 'dialogue') {
     router.push('/dialogue')
     return
@@ -80,58 +97,57 @@ function askTutor(question: string) {
 
 <template>
   <section class="section-missions" aria-labelledby="next-step-title">
-    <div class="mission-shell">
-      <img class="mission-bg-art mission-bg-art-soft" src="/homepage/next-step-left-atmosphere.png" alt="" aria-hidden="true">
-      <img class="mission-bg-art" src="/homepage/next-action-beacon.png" alt="" aria-hidden="true">
-      <div class="mission-orbit" aria-hidden="true">
-        <span />
-        <span />
-      </div>
+    <div class="missions-inner">
+      <header class="missions-header">
+        <div>
+          <div class="missions-eyebrow">NEXT BEST STEP</div>
+          <h2 id="next-step-title">下一步学习建议</h2>
+          <p class="missions-sub">基于画像与路径，为你精选今日最值得先做的学习任务。</p>
+        </div>
 
-      <div class="mission-copy">
-        <p class="mission-kicker">NEXT BEST STEP</p>
-        <h2 id="next-step-title">你的下一步学习，已经整理好了。</h2>
-        <p class="mission-desc">
-          系统已经把画像、路径、资源和评估结果合成了一条更短的学习建议：
-          今天先处理最卡人的薄弱点，再用小测把结果写回画像。
-        </p>
-
-        <div class="signal-row" aria-label="今日学习信号">
-          <div v-for="signal in signals" :key="signal.label" class="signal-card">
-            <strong>{{ signal.value }}</strong>
-            <span>{{ signal.label }}</span>
-            <small>{{ signal.note }}</small>
+        <div class="metrics-row">
+          <div v-for="m in metrics" :key="m.label" class="metric-card glass-card">
+            <div class="metric-label">{{ m.label }}</div>
+            <div class="metric-value">{{ m.value }}<small>{{ m.unit }}</small></div>
           </div>
         </div>
-      </div>
+      </header>
 
-      <div class="action-panel">
+      <div class="actions-grid">
         <button
           v-for="action in actions"
           :key="action.id"
           type="button"
-          class="action-card"
+          class="action-card glass-card"
           :style="{ '--tone': action.tone }"
           @click="onActionClick(action)"
         >
-          <span class="action-line" />
-          <span class="action-meta">{{ action.eyebrow }}</span>
-          <strong>{{ action.title }}</strong>
-          <span class="action-desc">{{ action.desc }}</span>
-          <span class="action-cta">{{ action.cta }} <i>↗</i></span>
+          <div class="action-icon">
+            <component :is="action.icon" :size="20" />
+          </div>
+          <div class="action-body">
+            <div class="action-title">{{ action.title }}</div>
+            <div class="action-desc">{{ action.desc }}</div>
+            <div class="action-meta">
+              <span class="action-time">{{ action.time }}</span>
+              <span class="action-cta">{{ action.cta }}</span>
+            </div>
+          </div>
         </button>
       </div>
 
-      <div class="question-strip">
-        <span>想自由问？</span>
-        <button
-          v-for="question in quickQuestions"
-          :key="question"
-          type="button"
-          @click="askTutor(question)"
-        >
-          {{ question }}
-        </button>
+      <div class="quick-questions">
+        <span class="quick-label">快速提问</span>
+        <div class="question-chips">
+          <button
+            v-for="question in quickQuestions"
+            :key="question"
+            type="button"
+            @click="askTutor(question)"
+          >
+            {{ question }}
+          </button>
+        </div>
       </div>
     </div>
   </section>
@@ -140,332 +156,288 @@ function askTutor(question: string) {
 <style scoped>
 .section-missions {
   position: relative;
-  padding: 78px clamp(24px, 4vw, 56px) 88px;
+  padding: 24px;
+  color: #e8edf5;
+  font-family: 'Outfit', 'PingFang SC', sans-serif;
 }
 
-.mission-shell {
-  position: relative;
-  max-width: 1760px;
+.missions-inner {
+  max-width: 1440px;
   margin: 0 auto;
+}
+
+.missions-header {
   display: grid;
-  grid-template-columns: minmax(280px, 0.78fr) minmax(420px, 1fr);
-  gap: clamp(24px, 4vw, 58px);
-  overflow: hidden;
-  padding: clamp(28px, 4vw, 54px);
-  border: 1px solid rgba(143, 167, 255, 0.18);
-  border-radius: 28px;
-  background:
-    linear-gradient(120deg, rgba(8, 14, 34, 0.22), rgba(5, 10, 24, 0.06)),
-    radial-gradient(circle at 16% 10%, rgba(53, 224, 216, 0.07), transparent 34%),
-    radial-gradient(circle at 92% 24%, rgba(240, 178, 74, 0.05), transparent 30%);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06), 0 24px 72px rgba(0, 0, 0, 0.16);
-  backdrop-filter: blur(4px) saturate(1.04);
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 20px;
+  align-items: end;
+  margin-bottom: 18px;
 }
 
-.mission-shell::after {
-  content: '';
-  position: absolute;
-  inset: 18px;
-  pointer-events: none;
-  border-radius: 22px;
-  border: 1px solid rgba(255, 255, 255, 0.04);
+.missions-eyebrow {
+  font-size: 10px;
+  font-weight: 600;
+  color: #22d3ee;
+  letter-spacing: 0.18em;
 }
 
-.mission-bg-art {
-  position: absolute;
-  top: 0;
-  right: -8%;
-  width: min(860px, 56vw);
-  height: 100%;
-  object-fit: cover;
-  opacity: 0.64;
-  mix-blend-mode: screen;
-  filter: saturate(1.04) contrast(1.08);
-  mask-image: linear-gradient(90deg, transparent 0%, rgba(0, 0, 0, 0.18) 10%, #000 30%, #000 100%);
-  pointer-events: none;
+.missions-header h2 {
+  margin: 8px 0 0;
+  color: #f7fbff;
+  font-size: 26px;
+  font-weight: 760;
+  line-height: 1.1;
 }
 
-.mission-bg-art-soft {
-  top: -14%;
-  left: -8%;
-  right: auto;
-  width: min(980px, 64vw);
-  height: 132%;
-  opacity: 0.22;
-  filter: saturate(0.92) contrast(1.04);
-  mask-image: radial-gradient(ellipse at 50% 50%, #000 0%, rgba(0, 0, 0, 0.7) 54%, transparent 88%);
+.missions-sub {
+  margin: 6px 0 0;
+  color: #91a3c7;
+  font-size: 13px;
+  line-height: 1.6;
 }
 
-.mission-orbit {
-  position: absolute;
-  inset: auto -120px -170px auto;
-  width: 460px;
-  height: 460px;
-  border: 1px solid rgba(53, 224, 216, 0.16);
-  border-radius: 50%;
-  opacity: 0.9;
+.metrics-row {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
 }
 
-.mission-orbit span {
-  position: absolute;
-  border-radius: 50%;
-  border: 1px dashed rgba(143, 167, 255, 0.18);
-}
-
-.mission-orbit span:first-child {
-  inset: 58px;
-}
-
-.mission-orbit span:last-child {
-  inset: 128px;
-}
-
-.mission-copy,
-.action-panel,
-.question-strip {
-  position: relative;
-  z-index: 1;
-}
-
-.mission-copy {
+.metric-card {
   display: flex;
   flex-direction: column;
-  justify-content: center;
+  gap: 4px;
+  min-width: 120px;
+  padding: 12px 16px;
 }
 
-.mission-kicker,
-.action-meta {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 11px;
-  letter-spacing: 0.2em;
-  color: #35e0d8;
+.metric-label {
+  font-size: 10px;
+  color: #7f93ba;
+  letter-spacing: 0.06em;
 }
 
-.mission-copy h2 {
-  max-width: 760px;
-  margin: 12px 0 16px;
-  color: #f3f7ff;
-  font-family: 'Instrument Serif', 'Noto Serif SC', serif;
-  font-size: clamp(34px, 4.2vw, 64px);
-  font-weight: 500;
-  line-height: 0.98;
-  letter-spacing: -0.035em;
-  text-wrap: balance;
-}
-
-.mission-desc {
-  max-width: 660px;
-  margin: 0;
-  color: #9aa9c8;
-  font-size: 15px;
-  line-height: 1.85;
-}
-
-.signal-row {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 12px;
-  margin-top: 34px;
-}
-
-.signal-card {
-  padding: 16px 18px;
-  border: 1px solid rgba(255, 255, 255, 0.07);
-  border-radius: 18px;
-  background: rgba(255, 255, 255, 0.022);
-}
-
-.signal-card strong {
-  display: block;
-  color: #ffffff;
-  font-family: 'Instrument Serif', serif;
-  font-size: 34px;
-  font-weight: 500;
+.metric-value {
+  font-size: 24px;
+  font-weight: 760;
+  color: #f7fbff;
   line-height: 1;
 }
 
-.signal-card span,
-.signal-card small {
-  display: block;
-  font-size: 12px;
+.metric-value small {
+  margin-left: 2px;
+  font-size: 11px;
+  color: #7f93ba;
+  font-weight: 500;
 }
 
-.signal-card span {
-  margin-top: 8px;
-  color: #d7e3ff;
+.glass-card {
+  position: relative;
+  border-radius: 16px;
+  padding: 16px;
+  background:
+    radial-gradient(ellipse at 20% 0%, rgba(34, 211, 238, 0.04), transparent 46%),
+    linear-gradient(180deg, rgba(12, 18, 38, 0.72), rgba(6, 10, 24, 0.55));
+  border: 1px solid rgba(150, 175, 220, 0.10);
+  backdrop-filter: blur(26px) saturate(1.24);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.05),
+    0 18px 46px rgba(0, 0, 0, 0.22);
+  isolation: isolate;
+  overflow: hidden;
 }
 
-.signal-card small {
-  margin-top: 2px;
-  color: #667493;
+.glass-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(34, 211, 238, 0.35), transparent);
+  opacity: 0.6;
 }
 
-.action-panel {
+.actions-grid {
   display: grid;
-  gap: 12px;
-  align-content: center;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
 }
 
 .action-card {
-  --tone: #35e0d8;
-  position: relative;
-  display: grid;
-  grid-template-columns: 6px 1fr auto;
-  column-gap: 18px;
-  align-items: center;
-  min-height: 124px;
-  padding: 20px 22px;
-  text-align: left;
-  color: #eef4ff;
-  border: 1px solid color-mix(in srgb, var(--tone) 22%, rgba(255, 255, 255, 0.08));
-  border-radius: 22px;
-  background:
-    linear-gradient(90deg, color-mix(in srgb, var(--tone) 14%, transparent), transparent 46%),
-    rgba(6, 11, 28, 0.34);
+  --tone: #22d3ee;
+  appearance: none;
   cursor: pointer;
-  transition: transform 0.24s ease, border-color 0.24s ease, background 0.24s ease;
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 16px;
+  text-align: left;
+  color: inherit;
+  border-color: color-mix(in srgb, var(--tone) 22%, rgba(255, 255, 255, 0.08));
+  background:
+    radial-gradient(ellipse at 0% 0%, color-mix(in srgb, var(--tone) 10%, transparent), transparent 50%),
+    linear-gradient(180deg, rgba(12, 18, 38, 0.72), rgba(6, 10, 24, 0.55));
+  transition: transform 0.2s ease, border-color 0.2s ease, background 0.2s ease;
 }
 
 .action-card:hover {
-  transform: translateX(-6px);
-  border-color: color-mix(in srgb, var(--tone) 52%, rgba(255, 255, 255, 0.1));
+  transform: translateY(-2px);
+  border-color: color-mix(in srgb, var(--tone) 50%, rgba(255, 255, 255, 0.1));
   background:
-    linear-gradient(90deg, color-mix(in srgb, var(--tone) 22%, transparent), transparent 54%),
-    rgba(8, 14, 34, 0.50);
+    radial-gradient(ellipse at 0% 0%, color-mix(in srgb, var(--tone) 16%, transparent), transparent 52%),
+    linear-gradient(180deg, rgba(14, 22, 46, 0.78), rgba(7, 12, 28, 0.60));
 }
 
-.action-line {
-  grid-row: 1 / span 4;
-  width: 6px;
-  height: 76px;
-  border-radius: 999px;
-  background: var(--tone);
-  box-shadow: 0 0 18px color-mix(in srgb, var(--tone) 58%, transparent);
+.action-icon {
+  width: 40px;
+  height: 40px;
+  display: grid;
+  place-items: center;
+  border-radius: 11px;
+  flex: 0 0 auto;
+  color: var(--tone);
+  background: color-mix(in srgb, var(--tone) 10%, rgba(255, 255, 255, 0.03));
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--tone) 22%, rgba(255, 255, 255, 0.06));
 }
 
-.action-meta,
-.action-card strong,
-.action-desc {
-  grid-column: 2;
+.action-body {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
 }
 
-.action-card strong {
-  margin-top: 8px;
-  color: #f4f8ff;
-  font-size: 19px;
+.action-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: #f7fbff;
   line-height: 1.25;
 }
 
 .action-desc {
-  margin-top: 6px;
-  color: #8fa0c0;
-  font-size: 13px;
-  line-height: 1.55;
+  font-size: 12px;
+  color: #91a3c7;
+  line-height: 1.5;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.action-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: auto;
+  padding-top: 4px;
+}
+
+.action-time {
+  font-size: 10px;
+  color: #7f93ba;
+  padding: 3px 7px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.06);
 }
 
 .action-cta {
-  grid-column: 3;
-  grid-row: 1 / span 4;
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  align-self: center;
-  color: var(--tone);
-  font-size: 13px;
+  font-size: 11px;
   font-weight: 700;
-  white-space: nowrap;
+  color: var(--tone);
+  padding: 5px 12px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--tone) 10%, rgba(255, 255, 255, 0.03));
+  border: 1px solid color-mix(in srgb, var(--tone) 28%, rgba(255, 255, 255, 0.08));
 }
 
-.action-cta i {
-  font-style: normal;
-  transition: transform 0.24s ease;
-}
-
-.action-card:hover .action-cta i {
-  transform: translate(3px, -3px);
-}
-
-.question-strip {
-  grid-column: 1 / -1;
+.quick-questions {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
   flex-wrap: wrap;
-  margin-top: 4px;
-  padding-top: 24px;
-  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  margin-top: 18px;
+  padding-top: 16px;
+  border-top: 1px solid rgba(150, 175, 220, 0.08);
 }
 
-.question-strip span {
-  color: #7281a1;
-  font-size: 13px;
+.quick-label {
+  font-size: 12px;
+  color: #7f93ba;
+  font-weight: 600;
 }
 
-.question-strip button {
-  border: 1px solid rgba(53, 224, 216, 0.18);
-  border-radius: 999px;
-  background: rgba(53, 224, 216, 0.06);
-  color: #dce8ff;
-  padding: 9px 14px;
-  font-size: 13px;
+.question-chips {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.question-chips button {
+  appearance: none;
   cursor: pointer;
+  border: 1px solid rgba(34, 211, 238, 0.18);
+  border-radius: 999px;
+  background: rgba(34, 211, 238, 0.06);
+  color: #dce8ff;
+  padding: 8px 13px;
+  font-size: 12px;
   transition: background 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
 }
 
-.question-strip button:hover {
+.question-chips button:hover {
   transform: translateY(-1px);
-  border-color: rgba(53, 224, 216, 0.42);
-  background: rgba(53, 224, 216, 0.13);
+  border-color: rgba(34, 211, 238, 0.42);
+  background: rgba(34, 211, 238, 0.12);
 }
 
 @media (prefers-reduced-motion: reduce) {
   .action-card,
-  .action-cta i,
-  .question-strip button {
+  .question-chips button {
     transition: none !important;
   }
 }
 
-@media (max-width: 980px) {
-  .mission-shell {
-    grid-template-columns: 1fr;
-  }
-
-  .mission-bg-art {
-    right: -42%;
-    width: 118vw;
-    opacity: 0.24;
-  }
-
-  .mission-bg-art-soft {
-    left: -38%;
-    width: 120vw;
-    opacity: 0.16;
-  }
-
-  .action-card {
-    grid-template-columns: 6px 1fr;
-  }
-
-  .action-cta {
-    grid-column: 2;
-    grid-row: auto;
-    margin-top: 10px;
+@media (max-width: 1100px) {
+  .actions-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
-@media (max-width: 640px) {
-  .section-missions {
-    padding: 54px 18px 64px;
-  }
-
-  .mission-shell {
-    padding: 24px;
-    border-radius: 22px;
-  }
-
-  .signal-row {
+@media (max-width: 900px) {
+  .missions-header {
     grid-template-columns: 1fr;
+  }
+
+  .metrics-row {
+    width: 100%;
+  }
+
+  .metric-card {
+    flex: 1 1 0;
+    min-width: 0;
+  }
+
+  .actions-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 720px) {
+  .section-missions {
+    padding: 16px;
+  }
+
+  .metrics-row {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+
+  .action-card {
+    flex-direction: column;
+    gap: 12px;
   }
 }
 </style>

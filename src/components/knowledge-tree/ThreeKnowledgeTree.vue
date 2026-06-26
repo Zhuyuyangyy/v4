@@ -1318,9 +1318,9 @@ function animate() {
     const clickedUntil = marker.userData.clickedUntil ?? 0
     const clickedBoost = clickedUntil > performance.now() ? 0.18 * ((clickedUntil - performance.now()) / 720) : 0
     const selectedBoost = marker.userData.marker?.id === selectedMarkerId.value ? 0.1 : 0
-    const highlightedBoost = marker.userData.isHighlighted ? 0.08 : 0
-    const pulseSpeed = marker.userData.isHighlighted ? 2.5 : 1.2
-    const pulseAmp = marker.userData.isHighlighted ? 0.06 : 0.035
+    const highlightedBoost = marker.userData.isHighlighted ? 0.18 : 0
+    const pulseSpeed = marker.userData.isHighlighted ? 3 : 1.2
+    const pulseAmp = marker.userData.isHighlighted ? 0.09 : 0.035
     const pulse = 1 + Math.sin(time * pulseSpeed + index * 0.65) * pulseAmp
     marker.scale.setScalar(pulse + clickedBoost + selectedBoost + highlightedBoost)
   })

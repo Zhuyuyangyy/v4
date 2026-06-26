@@ -5,30 +5,12 @@ import type {
   KnowledgePoint,
   KnowledgeUnit,
   CapabilityMetric,
-  AgentContribution,
   WeakPointItem,
   TrendPoint,
-  AgentType,
 } from '@/types/knowledge-tree'
 import type { EvaluationResponse, EvaluationDashboardMetric, EvaluationDashboardWeakness } from '@/types/api'
 import { fetchEvaluation, fetchLearningPath, fetchKnowledgePath } from '@/lib/api'
-
-const AGENT_CONFIG: { type: AgentType; name: string; color: string }[] = [
-  { type: 'profile', name: '画像智能体', color: '#46b5d1' },
-  { type: 'planning', name: '规划智能体', color: '#5b8def' },
-  { type: 'action', name: '执行智能体', color: '#45c486' },
-  { type: 'reflection', name: '反思智能体', color: '#e9a23b' },
-  { type: 'evaluation', name: '评估智能体', color: '#7c5cfc' },
-]
-
-const MODULE_DEFS = [
-  { id: 'basics', name: '基础知识', color: '#46b5d1', units: ['语法基础', '数据类型', '控制结构'] },
-  { id: 'concepts', name: '概念理解', color: '#5b8def', units: ['抽象概念', '核心原理', '模型理解'] },
-  { id: 'methods', name: '方法应用', color: '#45c486', units: ['算法实现', '设计模式', '调试技巧'] },
-  { id: 'reasoning', name: '综合推理', color: '#e9a23b', units: ['问题分析', '方案比较', '复杂度评估'] },
-  { id: 'practice', name: '实践操作', color: '#7c5cfc', units: ['项目实战', '代码重构', '测试覆盖'] },
-  { id: 'reflection', name: '反思与迁移', color: '#e66a6a', units: ['复盘总结', '知识迁移', '创新应用'] },
-]
+import { FALLBACK_DOMAINS } from './useKnowledgeGraphData'
 
 function masteryToStatus(mastery: number) {
   if (mastery === 0) return 'none'
@@ -39,39 +21,11 @@ function masteryToStatus(mastery: number) {
   return 'mastered'
 }
 
-function generateAgentEvidence(): {
-  agentEvidence: {
-    agentType: AgentType
-    agentName: string
-    evidenceType: 'behavior' | 'reflection' | 'task_result' | 'assessment' | 'plan'
-    count: number
-    samples?: string[]
-  }[]
-  evidenceCount: number
-} {
-  const behavior = Math.floor(Math.random() * 8) + 2
-  const reflection = Math.floor(Math.random() * 5) + 1
-  const taskResult = Math.floor(Math.random() * 6) + 2
-  const assessment = Math.floor(Math.random() * 4) + 1
-  const plan = Math.floor(Math.random() * 3)
-  return {
-    agentEvidence: [
-      { agentType: 'profile', agentName: '画像智能体', evidenceType: 'behavior', count: behavior },
-      { agentType: 'planning', agentName: '规划智能体', evidenceType: 'plan', count: plan },
-      { agentType: 'action', agentName: '执行智能体', evidenceType: 'task_result', count: taskResult },
-      { agentType: 'reflection', agentName: '反思智能体', evidenceType: 'reflection', count: reflection },
-      { agentType: 'evaluation', agentName: '评估智能体', evidenceType: 'assessment', count: assessment },
-    ],
-    evidenceCount: behavior + reflection + taskResult + assessment + plan,
-  }
-}
-
 function createKnowledgePoint(moduleName: string, unitId: string, unitName: string, topicId: string, topicLabel: string, masteryPct: number): KnowledgePoint {
   const previous = Math.max(0, Math.min(100, masteryPct + (Math.random() - 0.5) * 16))
   const confidence = 55 + Math.random() * 40
   const weight = 0.8 + Math.random() * 1.2
   const change = masteryPct - previous
-  const { agentEvidence, evidenceCount } = generateAgentEvidence()
   const issues = [
     '基础概念记忆不牢，需要重复练习',
     '复杂场景迁移能力不足',
@@ -86,7 +40,7 @@ function createKnowledgePoint(moduleName: string, unitId: string, unitName: stri
     '参与协作任务加深理解',
     '整理错题本并复盘反思',
   ]
-  return {
+  const point: KnowledgePoint = {
     id: topicId,
     name: topicLabel,
     module: moduleName,
@@ -98,8 +52,8 @@ function createKnowledgePoint(moduleName: string, unitId: string, unitName: stri
     weight,
     status: masteryToStatus(masteryPct),
     recentChange: change,
-    agentEvidence,
-    evidenceCount,
+    agentEvidence: [],
+    evidenceCount: 0,
     prerequisiteIds: [],
     relatedIds: [],
     lastEvaluatedAt: new Date().toISOString(),
@@ -108,29 +62,30 @@ function createKnowledgePoint(moduleName: string, unitId: string, unitName: stri
     recentError: masteryPct < 70 ? '最近一次练习中出现了理解性错误' : undefined,
     reasonAnalysis: '综合行为证据与任务结果，智能体判断该知识点掌握尚不稳定。',
   }
+  ;(point as any).knowledgePointId = topicId
+  return point
 }
 
 function generateMockModules(): KnowledgeModule[] {
-  return MODULE_DEFS.map((m) => {
-    const units: KnowledgeUnit[] = m.units.map((unitName) => {
-      const count = Math.floor(Math.random() * 3) + 3
-      const points: KnowledgePoint[] = Array.from({ length: count }).map((_, i) =>
-        createKnowledgePoint(m.name, `${m.id}-${unitName}`, unitName, `${m.id}-${unitName}-${i}`, `${unitName} 知识点 ${i + 1}`, Math.random() * 100),
-      )
+  return FALLBACK_DOMAINS.map((domain) => {
+    const units: KnowledgeUnit[] = domain.topics.map((topic) => {
+      const masteryPct = Math.round(topic.mastery * 100)
+      const point = createKnowledgePoint(domain.name, topic.id, topic.label, topic.id, topic.label, masteryPct)
+      ;(point as any).knowledgePointId = topic.id
       return {
-        id: `${m.id}-${unitName}`,
-        name: unitName,
-        module: m.name,
-        avgMastery: points.reduce((s, p) => s + p.mastery, 0) / points.length,
-        points,
+        id: topic.id,
+        name: topic.label,
+        module: domain.name,
+        avgMastery: point.mastery,
+        points: [point],
       }
     })
     return {
-      id: m.id,
-      name: m.name,
-      color: m.color,
-      agentColor: m.color,
-      avgMastery: units.reduce((s, u) => s + u.avgMastery, 0) / units.length,
+      id: domain.id,
+      name: domain.name,
+      color: domain.color,
+      agentColor: domain.color,
+      avgMastery: units.length > 0 ? units.reduce((s, u) => s + u.avgMastery, 0) / units.length : 0,
       units,
     }
   })
@@ -193,18 +148,6 @@ function generateCapabilities(): CapabilityMetric[] {
   ]
 }
 
-function generateAgentContributions(): AgentContribution[] {
-  return AGENT_CONFIG.map((a) => ({
-    agentType: a.type,
-    agentName: a.name,
-    color: a.color,
-    behaviorEvidence: a.type === 'profile' ? 12 : a.type === 'action' ? 8 : Math.floor(Math.random() * 5),
-    reflectionEvidence: a.type === 'reflection' ? 5 : Math.floor(Math.random() * 3),
-    taskResultEvidence: a.type === 'action' ? 8 : a.type === 'evaluation' ? 3 : Math.floor(Math.random() * 4),
-    assessmentEvidence: a.type === 'evaluation' ? 6 : Math.floor(Math.random() * 3),
-  }))
-}
-
 function generateTrends(): TrendPoint[] {
   return Array.from({ length: 7 }).map((_, i) => ({
     date: `06-${String(12 + i).padStart(2, '0')}`,
@@ -240,9 +183,8 @@ export function createMockData(): EvaluationTreeData {
     modules,
     capabilities: generateCapabilities(),
     weakPoints,
-    agentContributions: generateAgentContributions(),
-    agentConclusion:
-      '规划智能体发现任务拆分较完整，但执行阶段在综合推理模块出现重复错误；反思智能体已识别该问题，建议下一轮增加针对性练习与复盘。',
+    agentContributions: [],
+    agentConclusion: '基于当前学习路径的知识掌握情况，建议优先巩固薄弱知识点并完成针对性练习。',
     trends: generateTrends(),
   }
 }
@@ -321,7 +263,8 @@ export function useEvaluationTreeData() {
           }))
         }
         if (apiData.value.stats?.length) {
-          mock.agentConclusion = apiData.value.stats.map((s) => `${s.label}: ${s.value}（${s.change}）`).join('；')
+          const statSummary = apiData.value.stats.map((s) => `${s.label}: ${s.value}`).join('；')
+          mock.agentConclusion = `当前学习路径统计：${statSummary}。建议根据薄弱模块调整后续学习重点。`
         }
       }
 
