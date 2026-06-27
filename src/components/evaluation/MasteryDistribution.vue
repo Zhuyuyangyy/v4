@@ -106,31 +106,35 @@ window.addEventListener('resize', onResize)
   display: flex;
   flex-direction: column;
   height: 100%;
-  padding: 14px;
-  border-radius: 16px;
-  background: rgba(8, 14, 30, 0.72);
-  border: 1px solid rgba(0, 212, 255, 0.18);
-  box-shadow:
-    0 10px 32px rgba(0, 0, 0, 0.35),
-    inset 0 1px 0 rgba(255, 255, 255, 0.05),
-    0 0 20px rgba(0, 212, 255, 0.08);
+  padding: 13px;
+  border-radius: 14px;
+  background: rgba(18, 22, 48, 0.66);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.045);
   overflow: hidden;
+  transition: border-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.dist-card:hover {
+  transform: translateY(-1px);
+  border-color: rgba(6, 214, 160, 0.26);
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.05);
 }
 
 .dist-card::before {
   content: '';
   position: absolute;
   inset: 0;
-  background: radial-gradient(circle at top right, rgba(6, 214, 160, 0.1), transparent 55%);
+  background: radial-gradient(circle at 88% 0%, rgba(6, 214, 160, 0.09), transparent 48%);
   pointer-events: none;
 }
 
 .card-title {
   position: relative;
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 700;
   color: #f2f6fa;
-  letter-spacing: 0.3px;
+  letter-spacing: 0;
 }
 
 .dist-chart {

@@ -49,11 +49,38 @@ const allPoints = computed<KnowledgePoint[]>(() => {
   return data.value.modules.flatMap((m) => m.units.flatMap((u) => u.points))
 })
 
+const labeledPointIds = computed(() => {
+  return new Set(
+    [...allPoints.value]
+      .filter((pt) => pt.mastery < 65 || pt.status === 'weak' || pt.status === 'none')
+      .sort((a, b) => a.mastery - b.mastery)
+      .slice(0, 8)
+      .map((pt) => pt.id),
+  )
+})
+
+function labelBadgeForPoint(pt: KnowledgePoint) {
+  if (!labeledPointIds.value.has(pt.id)) return undefined
+  if (pt.status === 'none' || pt.mastery < 30) return '先学'
+  if (pt.status === 'weak' || pt.mastery < 50) return '补弱'
+  if (pt.mastery < 65) return '巩固'
+  return '练习'
+}
+
+function labelToneForPoint(pt: KnowledgePoint) {
+  if (pt.status === 'none' || pt.mastery < 50) return 'danger'
+  if (pt.mastery < 65) return 'warning'
+  return 'info'
+}
+
 const allKnowledgePoints = computed(() => {
   return allPoints.value.map((pt) => ({
     name: pt.name,
     status: pt.status,
     progress: Math.round(pt.mastery),
+    course: pt.module,
+    labelBadge: labelBadgeForPoint(pt),
+    labelTone: labelToneForPoint(pt),
   }))
 })
 
@@ -179,7 +206,13 @@ function onMarkerSelect(marker: any) {
     </header>
 
     <main class="dashboard-grid" :class="{ 'panel-open': panelOpen }">
-      <button class="panel-toggle" :class="{ 'panel-open': panelOpen }" @click="panelOpen = !panelOpen">
+      <button
+        class="panel-toggle"
+        :class="{ 'panel-open': panelOpen }"
+        :aria-expanded="panelOpen"
+        aria-controls="evaluation-analysis-panel"
+        @click="panelOpen = !panelOpen"
+      >
         <span class="panel-toggle-glow" />
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <path d="M11 17l-5-5 5-5M19 17l-5-5 5-5" v-if="panelOpen"/>
@@ -242,8 +275,18 @@ function onMarkerSelect(marker: any) {
         </div>
       </section>
 
-      <aside class="right-panel" :class="{ open: panelOpen }">
+      <aside id="evaluation-analysis-panel" class="right-panel" :class="{ open: panelOpen }">
         <div class="right-scroll">
+          <div class="analysis-header">
+            <div>
+              <span class="analysis-kicker">Evaluation cockpit</span>
+              <h2>学习分析</h2>
+            </div>
+            <div class="analysis-status">
+              <span>{{ statusText }}</span>
+              <strong>{{ totalStats.avgMastery.toFixed(0) }}%</strong>
+            </div>
+          </div>
           <Transition name="panel-fade" mode="out-in">
             <div :key="selectedPanelTick" class="panel-content">
               <LearningOverview
@@ -407,15 +450,18 @@ function onMarkerSelect(marker: any) {
   z-index: 20;
   width: 520px;
   height: 100%;
-  border-radius: 18px 0 0 18px;
-  background: rgba(6, 11, 24, 0.82);
-  border: 1px solid rgba(0, 212, 255, 0.16);
+  border-radius: 0;
+  background:
+    linear-gradient(180deg, rgba(15, 19, 43, 0.94), rgba(8, 11, 26, 0.96)),
+    rgba(7, 7, 13, 0.94);
+  border-left: 1px solid rgba(255, 255, 255, 0.1);
+  border-top: none;
+  border-bottom: none;
   border-right: none;
-  backdrop-filter: blur(34px) saturate(1.35);
+  backdrop-filter: blur(28px) saturate(1.2);
   box-shadow:
-    0 20px 60px rgba(0, 0, 0, 0.6),
-    inset 0 1px 0 rgba(255, 255, 255, 0.08),
-    0 0 30px rgba(0, 212, 255, 0.08);
+    -18px 0 46px rgba(0, 0, 0, 0.38),
+    inset 1px 0 0 rgba(0, 212, 255, 0.08);
   overflow: hidden;
 }
 
@@ -424,8 +470,11 @@ function onMarkerSelect(marker: any) {
   position: absolute;
   inset: 0;
   background:
-    radial-gradient(circle at 80% 0%, rgba(0, 212, 255, 0.08), transparent 50%),
-    radial-gradient(circle at 0% 100%, rgba(124, 58, 237, 0.06), transparent 45%);
+    linear-gradient(rgba(255, 255, 255, 0.025) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.025) 1px, transparent 1px),
+    radial-gradient(circle at 86% 6%, rgba(0, 212, 255, 0.1), transparent 34%),
+    radial-gradient(circle at 18% 94%, rgba(245, 158, 11, 0.055), transparent 30%);
+  background-size: 42px 42px, 42px 42px, auto, auto;
   pointer-events: none;
   border-radius: inherit;
 }
@@ -513,10 +562,10 @@ function onMarkerSelect(marker: any) {
   z-index: 2;
   height: 100%;
   overflow-y: auto;
-  padding: 18px;
+  padding: 18px 18px 22px;
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 14px;
 }
 
 .right-scroll::-webkit-scrollbar {
@@ -528,14 +577,67 @@ function onMarkerSelect(marker: any) {
 }
 
 .right-scroll::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.08);
+  background: rgba(136, 146, 176, 0.3);
   border-radius: 4px;
+}
+
+.analysis-header {
+  position: sticky;
+  top: -18px;
+  z-index: 4;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 18px 0 14px;
+  background: linear-gradient(180deg, rgba(13, 17, 38, 0.98) 0%, rgba(13, 17, 38, 0.88) 72%, rgba(13, 17, 38, 0) 100%);
+}
+
+.analysis-kicker {
+  display: block;
+  margin-bottom: 4px;
+  color: rgba(136, 146, 176, 0.82);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.analysis-header h2 {
+  margin: 0;
+  color: #f2f6fa;
+  font-family: 'Instrument Serif', Georgia, serif;
+  font-size: 28px;
+  font-weight: 400;
+  line-height: 1;
+}
+
+.analysis-status {
+  min-width: 92px;
+  padding: 9px 10px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.035);
+  text-align: right;
+}
+
+.analysis-status span {
+  display: block;
+  margin-bottom: 2px;
+  color: rgba(176, 190, 210, 0.68);
+  font-size: 11px;
+}
+
+.analysis-status strong {
+  color: #06d6a0;
+  font-family: 'JetBrains Mono', 'Cascadia Code', monospace;
+  font-size: 18px;
 }
 
 .panel-content {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 14px;
 }
 
 .panel-fade-enter-active,
@@ -655,8 +757,8 @@ function onMarkerSelect(marker: any) {
 .charts-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  grid-template-rows: 200px 180px;
-  gap: 12px;
+  grid-template-rows: 196px 172px;
+  gap: 10px;
 }
 
 .charts-grid > * {
@@ -730,19 +832,28 @@ function onMarkerSelect(marker: any) {
     width: 100%;
     height: auto;
     max-height: 0;
-    border-radius: 18px 18px 0 0;
+    border-radius: 16px 16px 0 0;
+    border-left: none;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
     opacity: 0;
     transform: translateY(20px);
     transition: max-height 0.35s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.3s ease, transform 0.35s cubic-bezier(0.22, 1, 0.36, 1);
   }
   .right-panel.open {
-    max-height: 50vh;
+    max-height: 58vh;
     opacity: 1;
     transform: translateY(0);
   }
   .panel-toggle,
   .panel-toggle.panel-open {
     right: 16px;
+  }
+  .analysis-header {
+    top: -18px;
+  }
+  .charts-grid {
+    grid-template-columns: 1fr;
+    grid-template-rows: repeat(4, 180px);
   }
 }
 

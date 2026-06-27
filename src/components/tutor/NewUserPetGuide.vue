@@ -147,13 +147,16 @@ function showGuide() {
   nextTick(() => measureTarget(true))
 }
 
-function dismissGuide() {
+function persistGuideDismissed() {
   try {
     window.localStorage.setItem(GUIDE_STORAGE_KEY, '1')
   } catch {
     // Storage can be unavailable in restricted browser modes; still let the user enter.
   }
+}
 
+function completeGuide() {
+  persistGuideDismissed()
   animatePetReaction('cheer', 1200)
   visible.value = false
   lockPageScroll(false)
@@ -163,9 +166,16 @@ function dismissGuide() {
   }
 }
 
+function skipGuide() {
+  persistGuideDismissed()
+  animatePetReaction('idle', 600)
+  visible.value = false
+  lockPageScroll(false)
+}
+
 function goNext() {
   if (isLastStep.value) {
-    dismissGuide()
+    completeGuide()
     return
   }
 
@@ -183,7 +193,7 @@ function handleKeydown(event: KeyboardEvent) {
   if (!visible.value) return
 
   if (event.key === 'Escape') {
-    dismissGuide()
+    skipGuide()
     return
   }
 
@@ -296,6 +306,9 @@ onBeforeUnmount(() => {
           <p>{{ currentStep.detail }}</p>
 
           <div class="guide-actions">
+            <button class="guide-skip" type="button" @click="skipGuide">
+              跳过引导
+            </button>
             <button class="guide-secondary" type="button" :disabled="activeIndex === 0" @click="goBack">
               上一步
             </button>
@@ -490,7 +503,8 @@ onBeforeUnmount(() => {
 }
 
 .guide-primary,
-.guide-secondary {
+.guide-secondary,
+.guide-skip {
   min-height: 38px;
   border-radius: 10px;
   font-size: 14px;
@@ -514,9 +528,22 @@ onBeforeUnmount(() => {
   background: rgba(255, 255, 255, 0.06);
 }
 
+.guide-skip {
+  margin-right: auto;
+  padding: 0 10px;
+  border: 0;
+  color: rgba(215, 230, 255, 0.72);
+  background: transparent;
+}
+
 .guide-primary:hover,
-.guide-secondary:hover:not(:disabled) {
+.guide-secondary:hover:not(:disabled),
+.guide-skip:hover {
   transform: translateY(-1px);
+}
+
+.guide-skip:hover {
+  color: #fff;
 }
 
 .guide-secondary:disabled {
@@ -525,7 +552,8 @@ onBeforeUnmount(() => {
 }
 
 .guide-primary:focus-visible,
-.guide-secondary:focus-visible {
+.guide-secondary:focus-visible,
+.guide-skip:focus-visible {
   outline: 2px solid #fff;
   outline-offset: 3px;
 }
@@ -610,11 +638,17 @@ onBeforeUnmount(() => {
 
   .guide-actions {
     justify-content: stretch;
+    flex-wrap: wrap;
   }
 
   .guide-primary,
-  .guide-secondary {
+  .guide-secondary,
+  .guide-skip {
     flex: 1;
+  }
+
+  .guide-skip {
+    margin-right: 0;
   }
 }
 </style>

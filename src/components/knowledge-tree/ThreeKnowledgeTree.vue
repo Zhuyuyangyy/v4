@@ -17,6 +17,8 @@ interface KnowledgePoint {
   status?: 'none' | 'weak' | 'beginner' | 'basic' | 'proficient' | 'mastered'
   progress?: number
   course?: string
+  labelBadge?: string
+  labelTone?: 'danger' | 'warning' | 'info' | 'success'
 }
 
 type MarkerType = 'course' | 'branch' | 'knowledge'
@@ -27,6 +29,8 @@ interface GraphMarker {
   label: string
   status?: KnowledgePoint['status']
   progress?: number
+  labelBadge?: string
+  labelTone?: KnowledgePoint['labelTone']
   description: string
   items?: string[]
 }
@@ -102,6 +106,15 @@ const branchGroups = computed(() => {
   return Array.from(map.entries()).map(([label, points]) => ({ label, points }))
 })
 
+const priorityLabelNames = computed(() => {
+  const labeled = displayPoints.value
+    .filter(point => (point.progress ?? 0) < 65 || point.status === 'weak' || point.status === 'none')
+    .sort((a, b) => (a.progress ?? 100) - (b.progress ?? 100))
+    .slice(0, 8)
+    .map(point => point.name)
+  return new Set(labeled)
+})
+
 let renderer: THREE.WebGLRenderer | null = null
 let scene: THREE.Scene | null = null
 let camera: THREE.PerspectiveCamera | null = null
@@ -147,6 +160,22 @@ function markerStatusLabel(status?: KnowledgePoint['status']) {
   if (status === 'weak') return '薄弱点'
   if (status === 'none') return '未开始'
   return '未完成'
+}
+
+function labelBadgeForPoint(point: KnowledgePoint) {
+  if (point.labelBadge) {
+    return {
+      text: point.labelBadge,
+      tone: point.labelTone ?? 'info',
+    }
+  }
+  if (!priorityLabelNames.value.has(point.name)) return null
+
+  const progress = point.progress ?? 0
+  if (point.status === 'none' || progress < 30) return { text: '先学', tone: 'danger' as const }
+  if (point.status === 'weak' || progress < 50) return { text: '补弱', tone: 'danger' as const }
+  if (progress < 65) return { text: '巩固', tone: 'warning' as const }
+  return { text: `${Math.round(progress)}%`, tone: 'info' as const }
 }
 
 function masteryTint() {
@@ -1133,9 +1162,87 @@ function createAppleMarker(marker: GraphMarker, position: THREE.Vector3, size: n
   hitTarget.userData.marker = marker
   group.add(hitTarget)
 
+  if (marker.labelBadge) {
+    const label = createAppleLabel(marker.labelBadge, appleSize, marker.labelTone ?? 'info')
+    label.position.set(0, appleSize * 1.85, 0)
+    group.add(label)
+  }
+
   interactiveObjects.push(group)
   markerObjects.push(group)
   return group
+}
+
+function createAppleLabel(text: string, appleSize: number, tone: NonNullable<GraphMarker['labelTone']>) {
+  const canvas = document.createElement('canvas')
+  const ctx = canvas.getContext('2d')!
+  const fontSize = 22
+  const paddingX = 18
+  const paddingY = 9
+  const maxChars = 4
+  const displayText = text.length > maxChars ? text.slice(0, maxChars) + '…' : text
+  const palette = {
+    danger: { bg: 'rgba(55, 9, 18, 0.82)', border: 'rgba(255, 113, 133, 0.72)', text: '#ffe4e6', glow: 'rgba(244, 63, 94, 0.35)' },
+    warning: { bg: 'rgba(55, 35, 5, 0.82)', border: 'rgba(245, 158, 11, 0.72)', text: '#fef3c7', glow: 'rgba(245, 158, 11, 0.3)' },
+    info: { bg: 'rgba(8, 34, 55, 0.82)', border: 'rgba(56, 189, 248, 0.7)', text: '#e0f2fe', glow: 'rgba(56, 189, 248, 0.32)' },
+    success: { bg: 'rgba(7, 42, 26, 0.82)', border: 'rgba(34, 197, 94, 0.72)', text: '#dcfce7', glow: 'rgba(34, 197, 94, 0.3)' },
+  }[tone]
+
+  ctx.font = `bold ${fontSize}px "PingFang SC", "Microsoft YaHei", sans-serif`
+  const textWidth = ctx.measureText(displayText).width
+  const width = Math.ceil(textWidth + paddingX * 2)
+  const height = fontSize + paddingY * 2
+
+  canvas.width = width
+  canvas.height = height
+
+  ctx.font = `bold ${fontSize}px "PingFang SC", "Microsoft YaHei", sans-serif`
+  ctx.textAlign = 'center'
+  ctx.textBaseline = 'middle'
+
+  const radius = height / 2
+  ctx.shadowColor = palette.glow
+  ctx.shadowBlur = 12
+  ctx.fillStyle = palette.bg
+  ctx.strokeStyle = palette.border
+  ctx.lineWidth = 2
+  ctx.beginPath()
+  ctx.moveTo(radius, 0)
+  ctx.lineTo(width - radius, 0)
+  ctx.quadraticCurveTo(width, 0, width, radius)
+  ctx.lineTo(width, height - radius)
+  ctx.quadraticCurveTo(width, height, width - radius, height)
+  ctx.lineTo(radius, height)
+  ctx.quadraticCurveTo(0, height, 0, height - radius)
+  ctx.lineTo(0, radius)
+  ctx.quadraticCurveTo(0, 0, radius, 0)
+  ctx.closePath()
+  ctx.fill()
+  ctx.stroke()
+
+  ctx.shadowColor = 'rgba(0, 0, 0, 0.8)'
+  ctx.shadowBlur = 4
+  ctx.fillStyle = palette.text
+  ctx.fillText(displayText, width / 2, height / 2 + 1)
+  ctx.shadowBlur = 0
+
+  const texture = new THREE.CanvasTexture(canvas)
+  texture.minFilter = THREE.LinearFilter
+  texture.magFilter = THREE.LinearFilter
+
+  const material = new THREE.SpriteMaterial({
+    map: texture,
+    transparent: true,
+    opacity: 0.82,
+    depthTest: false,
+    depthWrite: false,
+  })
+
+  const sprite = new THREE.Sprite(material)
+  const worldScale = Math.max(0.28, appleSize * 1.62)
+  sprite.scale.set(worldScale * (width / height), worldScale, 1)
+  sprite.userData.isLabel = true
+  return sprite
 }
 
 function leafAnchor(index: number, fallbackAngle: number) {
@@ -1199,12 +1306,15 @@ function addGraphMarkers() {
   const maxPoints = 42
   displayPoints.value.slice(0, maxPoints).forEach((point, index) => {
     const angle = index * 2.399
+    const badge = labelBadgeForPoint(point)
     const marker: GraphMarker = {
       id: `knowledge-${index}-${point.name}`,
       type: 'knowledge',
       label: point.name,
       status: point.status ?? 'none',
       progress: point.progress ?? 0,
+      labelBadge: badge?.text,
+      labelTone: badge?.tone,
       description: `果实状态：${markerStatusLabel(point.status)}。`,
       items: [
         `掌握度: ${point.progress ?? 0}%`,

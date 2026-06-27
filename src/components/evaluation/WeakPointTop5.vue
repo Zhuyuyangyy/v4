@@ -19,14 +19,16 @@ function barColor(mastery: number) {
   <div class="weak-card">
     <div class="weak-header">
       <div class="card-title">Top 5 待提升知识点</div>
-      <div class="weak-more">查看全部 &gt;</div>
+      <div class="weak-more">按掌握度排序</div>
     </div>
     <div class="weak-list">
       <div v-for="(p, i) in topPoints" :key="p.id" class="weak-item">
-        <div class="weak-rank">{{ i + 1 }}</div>
-        <div class="weak-name" :title="p.name">{{ p.name }}</div>
-        <div class="weak-bar-bg">
-          <div class="weak-bar" :style="{ width: `${p.mastery}%`, background: barColor(p.mastery) }" />
+        <div class="weak-rank">{{ String(i + 1).padStart(2, '0') }}</div>
+        <div class="weak-main">
+          <div class="weak-name" :title="p.name">{{ p.name }}</div>
+          <div class="weak-bar-bg">
+            <div class="weak-bar" :style="{ width: `${p.mastery}%`, background: barColor(p.mastery) }" />
+          </div>
         </div>
         <div class="weak-value" :style="{ color: barColor(p.mastery) }">{{ p.mastery.toFixed(0) }}%</div>
       </div>
@@ -41,14 +43,13 @@ function barColor(mastery: number) {
   display: flex;
   flex-direction: column;
   height: 100%;
-  padding: 14px;
+  padding: 15px;
   border-radius: 16px;
-  background: rgba(8, 14, 30, 0.72);
-  border: 1px solid rgba(0, 212, 255, 0.18);
-  box-shadow:
-    0 10px 32px rgba(0, 0, 0, 0.35),
-    inset 0 1px 0 rgba(255, 255, 255, 0.05),
-    0 0 20px rgba(0, 212, 255, 0.08);
+  background:
+    linear-gradient(180deg, rgba(18, 22, 48, 0.78), rgba(12, 16, 34, 0.7)),
+    rgba(18, 22, 48, 0.75);
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.045);
   overflow: hidden;
 }
 
@@ -56,7 +57,9 @@ function barColor(mastery: number) {
   content: '';
   position: absolute;
   inset: 0;
-  background: radial-gradient(circle at top right, rgba(239, 68, 68, 0.1), transparent 55%);
+  background:
+    radial-gradient(circle at 88% 0%, rgba(244, 63, 94, 0.08), transparent 44%),
+    radial-gradient(circle at 0% 100%, rgba(245, 158, 11, 0.05), transparent 36%);
   pointer-events: none;
 }
 
@@ -69,70 +72,82 @@ function barColor(mastery: number) {
 }
 
 .card-title {
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 700;
   color: #f2f6fa;
-  letter-spacing: 0.3px;
+  letter-spacing: 0;
 }
 
 .weak-more {
   font-size: 11px;
-  color: rgba(176, 190, 210, 0.55);
-  cursor: pointer;
-}
-
-.weak-more:hover {
-  color: #00d4ff;
+  color: rgba(176, 190, 210, 0.58);
 }
 
 .weak-list {
   position: relative;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 8px;
   flex: 1;
   overflow-y: auto;
 }
 
 .weak-item {
   display: grid;
-  grid-template-columns: 22px 1fr 100px 34px;
+  grid-template-columns: 34px minmax(0, 1fr) 42px;
   align-items: center;
-  gap: 10px;
+  gap: 11px;
   font-size: 12px;
+  padding: 10px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.025);
+  border: 1px solid rgba(255, 255, 255, 0.055);
+  transition: background 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
+}
+
+.weak-item:hover {
+  transform: translateY(-1px);
+  background: rgba(255, 255, 255, 0.045);
+  border-color: rgba(244, 63, 94, 0.2);
 }
 
 .weak-rank {
-  width: 22px;
-  height: 22px;
+  width: 34px;
+  height: 34px;
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 6px;
-  background: rgba(255, 255, 255, 0.06);
-  color: rgba(176, 190, 210, 0.85);
-  font-size: 11px;
+  border-radius: 10px;
+  background: rgba(244, 63, 94, 0.08);
+  color: rgba(255, 153, 177, 0.92);
+  font-size: 10px;
   font-weight: 700;
+  font-family: 'JetBrains Mono', monospace;
+}
+
+.weak-main {
+  min-width: 0;
 }
 
 .weak-name {
   color: rgba(242, 246, 250, 0.88);
+  margin-bottom: 8px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  font-weight: 600;
 }
 
 .weak-bar-bg {
-  height: 8px;
-  border-radius: 4px;
+  height: 6px;
+  border-radius: 999px;
   background: rgba(255, 255, 255, 0.06);
   overflow: hidden;
 }
 
 .weak-bar {
   height: 100%;
-  border-radius: 4px;
-  box-shadow: 0 0 10px currentColor;
+  border-radius: 999px;
   transition: width 0.6s ease;
 }
 

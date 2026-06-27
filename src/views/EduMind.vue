@@ -57,15 +57,15 @@ const ITEMS_PER_PAGE = 9
 
 const currentTab = ref<string>((() => {
   const saved = localStorage.getItem('edumind_active_tab')
-  return saved || '首页'
+  return (saved && saved !== '首页' && saved !== '学习路径') ? saved : '课程'
 })())
 
 watch(currentTab, (val) => {
   localStorage.setItem('edumind_active_tab', val)
 })
 
-watch(() => route.query, (q) => {
-  if (q.source === 'home' || q.source === 'star-map' || q.source === 'mission') {
+watch(() => [route.path, route.query] as const, ([path, q]) => {
+  if (path === '/resources' || q.tab === 'resources' || q.source === 'home' || q.source === 'star-map' || q.source === 'mission') {
     currentTab.value = '资源中心'
   }
 }, { immediate: true })
@@ -390,11 +390,16 @@ onBeforeUnmount(() => {
 
 
       <div class="edu-main-stage flex-1 p-5 sm:p-6 flex flex-col">
-        <div v-if="currentTab === '首页'" class="w-full">
-          <HomeView
-            :weeklyHours="weeklyHours"
-            :goalHours="goalHours"
-            @navigateToTab="(tab: string) => currentTab = tab"
+        <div v-if="currentTab === '首页'" class="flex flex-col lg:flex-row gap-6">
+          <div class="flex-1 min-w-0">
+            <HomeView :weeklyHours="weeklyHours" :goalHours="goalHours" @navigateToTab="(tab: string) => currentTab = tab" />
+          </div>
+          <RightSidebar
+            :recommendations="recommendations"
+            :collections="collections"
+            @toggleRecommendStar="handleToggleRecommendStar"
+            @refreshRecommend="handleRefreshRecommend"
+            @collectionItemClick="handleCollectionItemClick"
           />
         </div>
 
@@ -716,7 +721,7 @@ onBeforeUnmount(() => {
 </template>
 
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
+/* Fonts: use system fallbacks instead of Google Fonts CDN */
 
 #edu-mind-app {
   font-family: "Inter", system-ui, -apple-system, sans-serif;

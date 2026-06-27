@@ -3,13 +3,13 @@ import { computed, onMounted, onUnmounted } from 'vue'
 
 const emit = defineEmits<{ 'select-node': [nodeId: string] }>()
 
-const DOMAIN_META: Record<string, { name: string; color: string; short: string }> = {
-  pointer: { name: '指针基础', color: '#00d4ff', short: 'PTR' },
-  memory: { name: '内存模型', color: '#7c3aed', short: 'MEM' },
-  array: { name: '数组与字符串', color: '#06d6a0', short: 'ARR' },
-  function: { name: '函数传参', color: '#f59e0b', short: 'FUNC' },
-  struct: { name: '结构体链表', color: '#3b82f6', short: 'LIST' },
-  debug: { name: '调试与追踪', color: '#f43f5e', short: 'DBG' },
+const DOMAIN_META: Record<string, { name: string; color: string; short: string; topicId: string }> = {
+  pointer: { name: '指针基础', color: '#00d4ff', short: 'PTR', topicId: 'a2' },
+  memory: { name: '内存模型', color: '#7c3aed', short: 'MEM', topicId: 'm1' },
+  array: { name: '数组与字符串', color: '#06d6a0', short: 'ARR', topicId: 'a1' },
+  function: { name: '函数传参', color: '#f59e0b', short: 'FUNC', topicId: 'ml4' },
+  struct: { name: '结构体链表', color: '#3b82f6', short: 'LIST', topicId: 'a3' },
+  debug: { name: '调试与追踪', color: '#f43f5e', short: 'DBG', topicId: 'e1' },
 }
 
 const LEVELS = [
@@ -151,7 +151,7 @@ onUnmounted(() => { styleEl?.remove() })
                   : 'rgba(255,255,255,0.04)',
               }"
               :title="`${cell.domainLabel} × ${cell.levelLabel}：${cell.lastScore}% | 证据 ${cell.evidenceCount} 条`"
-              @click="emit('select-node', cell.domain)">
+              @click="emit('select-node', DOMAIN_META[cell.domain].topicId)">
               <!-- High mastery gradient -->
               <div v-if="cell.value > 0.6" class="cell-glow" :style="{ background: `radial-gradient(circle at 30% 0%, ${row.meta.color}33, transparent 70%)` }"></div>
 

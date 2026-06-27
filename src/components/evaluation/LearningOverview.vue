@@ -23,8 +23,20 @@ const items = computed(() => [
 
 <template>
   <div class="overview-card">
-    <div class="overview-title">学习概览</div>
+    <div class="overview-title">
+      <span>闭环摘要</span>
+      <small>{{ pct }}% mastery</small>
+    </div>
     <div class="overview-body">
+      <div class="overview-score">
+        <div>
+          <div class="score-label">平均掌握度</div>
+          <div class="score-value">{{ pct }}%</div>
+        </div>
+        <div class="score-track" aria-hidden="true">
+          <span :style="{ width: `${pct}%` }" />
+        </div>
+      </div>
       <div class="overview-metrics">
         <div v-for="item in items" :key="item.label" class="overview-item">
           <div class="overview-icon" :style="{ color: item.color, background: item.color + '1a', borderColor: item.color + '33' }">
@@ -37,32 +49,8 @@ const items = computed(() => [
             <div class="overview-value" :style="{ color: item.color }">{{ item.value }}</div>
             <div class="overview-label">{{ item.label }}</div>
             <div class="overview-change" :class="{ up: item.up, down: !item.up }">
-              较昨日 {{ item.up ? '↑' : '↓' }} {{ item.change }}
+              较昨日 {{ item.up ? '+' : '-' }}{{ item.change }}
             </div>
-          </div>
-        </div>
-      </div>
-      <div class="overview-gauge">
-        <div ref="gaugeRef" class="gauge-ring">
-          <svg viewBox="0 0 120 120">
-            <defs>
-              <linearGradient id="ringGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-                <stop offset="0%" stop-color="#00d4ff" />
-                <stop offset="100%" stop-color="#7c3aed" />
-              </linearGradient>
-            </defs>
-            <circle cx="60" cy="60" r="50" fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="10" />
-            <circle
-              cx="60" cy="60" r="50" fill="none" stroke="url(#ringGrad)" stroke-width="10"
-              stroke-linecap="round" stroke-dasharray="314" :stroke-dashoffset="314 - (pct / 100) * 314"
-              transform="rotate(-90 60 60)"
-              style="filter: drop-shadow(0 0 6px rgba(0,212,255,0.45));"
-            />
-          </svg>
-          <div class="gauge-text">
-            <div class="gauge-pct">{{ pct }}%</div>
-            <div class="gauge-label">平均掌握度</div>
-            <div class="gauge-change up">较昨日 ↑ 3.2%</div>
           </div>
         </div>
       </div>
@@ -73,14 +61,13 @@ const items = computed(() => [
 <style scoped>
 .overview-card {
   position: relative;
-  padding: 16px;
+  padding: 14px;
   border-radius: 16px;
-  background: rgba(8, 14, 30, 0.72);
-  border: 1px solid rgba(0, 212, 255, 0.18);
-  box-shadow:
-    0 10px 32px rgba(0, 0, 0, 0.35),
-    inset 0 1px 0 rgba(255, 255, 255, 0.05),
-    0 0 20px rgba(0, 212, 255, 0.08);
+  background:
+    linear-gradient(135deg, rgba(18, 22, 48, 0.88), rgba(11, 15, 33, 0.78)),
+    rgba(18, 22, 48, 0.75);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 14px 34px rgba(0, 0, 0, 0.24);
   overflow: hidden;
 }
 
@@ -88,12 +75,18 @@ const items = computed(() => [
   content: '';
   position: absolute;
   inset: 0;
-  background: radial-gradient(circle at top right, rgba(0, 212, 255, 0.1), transparent 55%);
+  background:
+    radial-gradient(circle at 16% 8%, rgba(6, 214, 160, 0.12), transparent 30%),
+    radial-gradient(circle at 92% 0%, rgba(0, 212, 255, 0.1), transparent 34%);
   pointer-events: none;
 }
 
 .overview-title {
   position: relative;
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
   font-size: 15px;
   font-weight: 700;
   color: #f2f6fa;
@@ -101,52 +94,109 @@ const items = computed(() => [
   letter-spacing: 0.3px;
 }
 
+.overview-title small {
+  color: rgba(176, 190, 210, 0.62);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  font-weight: 500;
+}
+
 .overview-body {
   position: relative;
-  display: flex;
+  display: grid;
+  gap: 12px;
+}
+
+.overview-score {
+  display: grid;
+  grid-template-columns: auto minmax(120px, 1fr);
+  align-items: end;
   gap: 14px;
+  padding: 12px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.035);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.score-label {
+  color: rgba(176, 190, 210, 0.68);
+  font-size: 11px;
+  margin-bottom: 3px;
+}
+
+.score-value {
+  color: #06d6a0;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 30px;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.score-track {
+  height: 8px;
+  border-radius: 999px;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.07);
+  margin-bottom: 8px;
+}
+
+.score-track span {
+  display: block;
+  height: 100%;
+  min-width: 4px;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #06d6a0, #00d4ff);
+  transition: width 0.45s ease;
 }
 
 .overview-metrics {
-  flex: 1;
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 10px;
+  gap: 8px;
 }
 
 .overview-item {
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 10px 12px;
-  border-radius: 12px;
+  gap: 9px;
+  min-width: 0;
+  padding: 9px 10px;
+  border-radius: 10px;
   background: rgba(255, 255, 255, 0.03);
   border: 1px solid rgba(255, 255, 255, 0.05);
+  transition: background 0.2s ease, border-color 0.2s ease;
+}
+
+.overview-item:hover {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(0, 212, 255, 0.18);
 }
 
 .overview-icon {
-  width: 36px;
-  height: 36px;
+  width: 32px;
+  height: 32px;
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 10px;
+  border-radius: 8px;
   border: 1px solid;
+  flex-shrink: 0;
 }
 
 .overview-icon svg {
-  width: 18px;
-  height: 18px;
+  width: 16px;
+  height: 16px;
 }
 
 .overview-info {
   display: flex;
   flex-direction: column;
   gap: 1px;
+  min-width: 0;
 }
 
 .overview-value {
-  font-size: 20px;
+  font-size: 18px;
   font-weight: 800;
   line-height: 1.1;
   font-family: 'JetBrains Mono', monospace;
@@ -165,50 +215,13 @@ const items = computed(() => [
 .overview-change.up { color: #45c486; }
 .overview-change.down { color: #ef4444; }
 
-.overview-gauge {
-  width: 130px;
-  flex-shrink: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+@media (max-width: 1280px) {
+  .overview-score {
+    grid-template-columns: 1fr;
+    align-items: start;
+  }
+  .score-track {
+    margin-bottom: 0;
+  }
 }
-
-.gauge-ring {
-  position: relative;
-  width: 120px;
-  height: 120px;
-}
-
-.gauge-ring svg {
-  width: 100%;
-  height: 100%;
-}
-
-.gauge-text {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-}
-
-.gauge-pct {
-  font-size: 24px;
-  font-weight: 800;
-  color: #f2f6fa;
-  font-family: 'JetBrains Mono', monospace;
-}
-
-.gauge-label {
-  font-size: 10px;
-  color: rgba(176, 190, 210, 0.7);
-}
-
-.gauge-change {
-  font-size: 10px;
-  margin-top: 2px;
-}
-
-.gauge-change.up { color: #45c486; }
 </style>

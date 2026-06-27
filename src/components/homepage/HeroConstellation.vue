@@ -276,18 +276,44 @@ function initStarfield() {
           学习画像实时更新 · LIVE
         </div>
 
+        <div class="knowledge-transfer-scene" aria-hidden="true">
+          <div class="knowledge-glass-source">
+            <strong>课程知识源</strong>
+            <span>教材 · 代码 · 题目</span>
+            <div class="source-lines">
+              <span />
+              <span />
+              <span />
+            </div>
+          </div>
+          <div class="knowledge-stream">
+            <i v-for="glyph in ['知', '图', '码', '题', '练', '评', '路', 'AI']" :key="glyph">{{ glyph }}</i>
+          </div>
+          <div class="knowledge-ai-panel">
+            <strong>AI 学习面板</strong>
+            <span>画像诊断 → 路径规划</span>
+            <div class="panel-token">
+              <em />
+              <em />
+              <em />
+              <em />
+              <em />
+            </div>
+          </div>
+        </div>
+
         <h1 class="hero-title-hp">
           <span>EduMind</span>
           <span>
-            <em class="gradient-text">个性化学习</em>
+            <em class="gradient-text">知识转译</em>
             智能体系统
           </span>
         </h1>
 
         <p class="hero-desc">
-          画像驱动路径规划，资源匹配评估反馈 —
+          像老师参考图那样，把课程教材、代码样例和练习题转成可交互的 AI 学习界面 —
           6 个协同模块调度 12 个专业智能体，
-          从画像诊断、路径编排到资源生成、辅导互动、测评分析和反馈复盘全程接力，
+          从知识源解析、画像诊断到资源生成、路径编排和评估回写全程接力，
           <span style="color: #00d4ff;">每一次互动都反向更新画像</span>，让系统更懂你。
         </p>
 
@@ -582,6 +608,200 @@ function initStarfield() {
 .hero-copy {
   padding: 20px 0;
 }
+
+.knowledge-transfer-scene {
+  position: relative;
+  display: grid;
+  grid-template-columns: 188px minmax(120px, 1fr) 184px;
+  align-items: center;
+  gap: 12px;
+  width: min(100%, 620px);
+  min-height: 132px;
+  margin: 0 0 24px;
+  pointer-events: none;
+}
+
+.knowledge-transfer-scene::before {
+  content: '';
+  position: absolute;
+  left: 104px;
+  right: 132px;
+  top: 50%;
+  height: 3px;
+  background:
+    linear-gradient(90deg, transparent, rgba(238, 205, 142, 0.7), rgba(53, 224, 216, 0.9), transparent);
+  box-shadow:
+    0 0 20px rgba(53, 224, 216, 0.52),
+    0 0 42px rgba(238, 205, 142, 0.18);
+  transform: translateY(-50%);
+}
+
+.knowledge-glass-source {
+  position: relative;
+  overflow: hidden;
+  min-height: 118px;
+  border: 1px solid rgba(145, 223, 255, 0.24);
+  border-radius: 16px;
+  padding: 16px;
+  color: #eefaff;
+  background:
+    linear-gradient(135deg, rgba(53, 224, 216, 0.14), rgba(255, 255, 255, 0.035) 48%, rgba(240, 178, 74, 0.08)),
+    rgba(4, 12, 26, 0.42);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.12),
+    0 0 32px rgba(53, 224, 216, 0.12);
+  backdrop-filter: blur(12px) saturate(1.2);
+}
+
+.knowledge-glass-source::before {
+  content: '';
+  position: absolute;
+  inset: -40% 30% auto -20%;
+  height: 90px;
+  background: radial-gradient(circle, rgba(145, 223, 255, 0.22), transparent 62%);
+}
+
+.knowledge-glass-source strong,
+.knowledge-glass-source span,
+.source-lines {
+  position: relative;
+  z-index: 1;
+}
+
+.knowledge-glass-source strong {
+  display: block;
+  font-size: 16px;
+  letter-spacing: 0.02em;
+}
+
+.knowledge-glass-source span {
+  display: block;
+  margin-top: 8px;
+  color: #a9bdd6;
+  font-size: 12px;
+}
+
+.source-lines {
+  display: grid;
+  gap: 7px;
+  margin-top: 15px;
+}
+
+.source-lines span {
+  height: 6px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, rgba(240, 178, 74, 0.78), rgba(53, 224, 216, 0.42), transparent);
+}
+
+.source-lines span:nth-child(2) {
+  width: 82%;
+}
+
+.source-lines span:nth-child(3) {
+  width: 58%;
+}
+
+.knowledge-stream {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  gap: clamp(6px, 1vw, 13px);
+  min-width: 0;
+}
+
+.knowledge-stream i {
+  display: inline-grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  color: #dffbff;
+  background: rgba(53, 224, 216, 0.13);
+  box-shadow: 0 0 18px rgba(53, 224, 216, 0.42);
+  font-family: 'Noto Serif SC', serif;
+  font-size: 12px;
+  font-style: normal;
+  animation: stream-float 4s ease-in-out infinite;
+}
+
+.knowledge-stream i:nth-child(2n) {
+  color: #f6d68d;
+  background: rgba(240, 178, 74, 0.12);
+  box-shadow: 0 0 18px rgba(240, 178, 74, 0.34);
+  animation-delay: 0.45s;
+}
+
+.knowledge-stream i:nth-child(3n) {
+  transform: translateY(-18px);
+  animation-delay: 0.9s;
+}
+
+.knowledge-ai-panel {
+  position: relative;
+  overflow: hidden;
+  min-height: 126px;
+  border: 1px solid rgba(145, 223, 255, 0.34);
+  border-radius: 14px;
+  padding: 16px;
+  color: #e9f8ff;
+  background:
+    linear-gradient(90deg, rgba(53, 224, 216, 0.14), transparent 46%),
+    rgba(7, 13, 28, 0.62);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.12),
+    0 0 28px rgba(53, 224, 216, 0.16);
+  backdrop-filter: blur(10px);
+}
+
+.knowledge-ai-panel::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(120deg, transparent, rgba(255, 255, 255, 0.12), transparent);
+  transform: translateX(-100%);
+  animation: panel-scan 5.6s ease-in-out infinite;
+}
+
+.knowledge-ai-panel strong,
+.knowledge-ai-panel span {
+  position: relative;
+  z-index: 1;
+  display: block;
+}
+
+.knowledge-ai-panel strong {
+  font-size: 15px;
+  letter-spacing: 0.04em;
+}
+
+.knowledge-ai-panel span {
+  margin-top: 8px;
+  color: #91dfff;
+  font-size: 12px;
+}
+
+.panel-token {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: end;
+  gap: 5px;
+  height: 42px;
+  margin-top: 14px;
+}
+
+.panel-token em {
+  width: 100%;
+  border-radius: 999px 999px 0 0;
+  background: linear-gradient(180deg, #f0b24a, #35e0d8);
+  box-shadow: 0 0 12px rgba(53, 224, 216, 0.34);
+}
+
+.panel-token em:nth-child(1) { height: 34%; }
+.panel-token em:nth-child(2) { height: 52%; }
+.panel-token em:nth-child(3) { height: 78%; }
+.panel-token em:nth-child(4) { height: 46%; }
+.panel-token em:nth-child(5) { height: 66%; }
 
 .hero-badge-hp {
   display: inline-flex;
@@ -1072,6 +1292,16 @@ function initStarfield() {
   50% { background-position: 100% 50%; }
 }
 
+@keyframes stream-float {
+  0%, 100% { transform: translateY(0); opacity: 0.78; }
+  50% { transform: translateY(-14px); opacity: 1; }
+}
+
+@keyframes panel-scan {
+  0%, 55%, 100% { transform: translateX(-120%); }
+  72% { transform: translateX(120%); }
+}
+
 /* ── Reduced motion ── */
 @media (prefers-reduced-motion: reduce) {
   .badge-pulse,
@@ -1103,6 +1333,11 @@ function initStarfield() {
     animation: none !important;
     background-position: 0% 50%;
   }
+
+  .knowledge-stream i,
+  .knowledge-ai-panel::before {
+    animation: none !important;
+  }
 }
 
 /* ── Responsive ── */
@@ -1121,9 +1356,33 @@ function initStarfield() {
     padding: 60px 24px 40px;
     min-height: auto;
   }
+
+  .knowledge-transfer-scene {
+    grid-template-columns: 168px minmax(90px, 1fr) 164px;
+    min-height: 126px;
+  }
 }
 
 @media (max-width: 600px) {
+  .knowledge-transfer-scene {
+    grid-template-columns: 1fr;
+    gap: 10px;
+    max-width: 320px;
+  }
+
+  .knowledge-transfer-scene::before {
+    display: none;
+  }
+
+  .knowledge-stream {
+    justify-content: flex-start;
+    padding-left: 8px;
+  }
+
+  .knowledge-ai-panel {
+    min-height: 104px;
+  }
+
   .hero-stats-row {
     flex-wrap: wrap;
     gap: 16px;

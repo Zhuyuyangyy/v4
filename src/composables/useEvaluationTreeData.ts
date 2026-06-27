@@ -9,7 +9,7 @@ import type {
   TrendPoint,
 } from '@/types/knowledge-tree'
 import type { EvaluationResponse, EvaluationDashboardMetric, EvaluationDashboardWeakness } from '@/types/api'
-import { fetchEvaluation, fetchLearningPath, fetchKnowledgePath } from '@/lib/api'
+import { fetchEvaluation, fetchLearningPath, fetchKnowledgePath, fetchLatestProfile, triggerKnowledgePath } from '@/lib/api'
 import { FALLBACK_DOMAINS } from './useKnowledgeGraphData'
 
 function masteryToStatus(mastery: number) {
@@ -216,19 +216,38 @@ export function useEvaluationTreeData() {
     loading.value = true
     error.value = null
     try {
-      const [apiData, learningPathData, aiPathData] = await Promise.allSettled([
+      const [apiData, learningPathData, aiPathData, latestProfileData] = await Promise.allSettled([
         fetchEvaluation(),
         fetchLearningPath().catch(() => null),
         fetchKnowledgePath().catch(() => null),
+        fetchLatestProfile().catch(() => null),
       ])
 
       const mock = createMockData()
 
       // Prefer AI-generated knowledge path, then learning path, so the tree reflects the constellation data
-      const pathPayload =
+      let pathPayload =
         (aiPathData.status === 'fulfilled' && aiPathData.value?.result) ? aiPathData.value.result :
         (learningPathData.status === 'fulfilled' && learningPathData.value) ? learningPathData.value :
         null
+
+      // If a profile exists but no AI knowledge path has been generated yet, generate it now
+      // so evaluation apples reflect this round's profile-derived course knowledge.
+      if (
+        !(aiPathData.status === 'fulfilled' && aiPathData.value?.result) &&
+        latestProfileData.status === 'fulfilled' &&
+        latestProfileData.value
+      ) {
+        try {
+          const generatedPath = await triggerKnowledgePath(latestProfileData.value)
+          if (generatedPath?.phases?.length) {
+            pathPayload = generatedPath
+          }
+        } catch {
+          // Keep the static learning path fallback if profile-driven generation is unavailable.
+        }
+      }
+
       const pathModules = buildModulesFromKnowledgePath(pathPayload)
       if (pathModules && pathModules.length > 0) {
         mock.modules = pathModules

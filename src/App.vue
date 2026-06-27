@@ -9,14 +9,15 @@ import { useAppStore } from '@/store'
 const showScanLine = ref(true)
 const appStore = useAppStore()
 const route = useRoute()
-const showCompanionPet = computed(() => appStore.desktopPetEnabled && route.path !== '/edu-mind')
+const isAuthShellPage = computed(() => route.path === '/login' || route.path === '/admin')
+const showCompanionPet = computed(() => appStore.desktopPetEnabled && route.path !== '/edu-mind' && !isAuthShellPage.value)
 </script>
 
 <template>
   <div :class="['app-wrapper', { 'scan-effect': showScanLine }]">
     <AppLayout />
     <GlobalCompanionPet v-if="showCompanionPet" />
-    <NewUserPetGuide />
+    <NewUserPetGuide v-if="!isAuthShellPage" />
   </div>
 </template>
 

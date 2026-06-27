@@ -263,7 +263,7 @@ onBeforeUnmount(() => {
   align-items: stretch;
   max-width: 1760px;
   margin: 0 auto;
-  padding: 72px 36px 56px;
+  padding: 56px 36px 18px;
 }
 
 .hub-context-card {
@@ -281,6 +281,7 @@ onBeforeUnmount(() => {
     linear-gradient(145deg, rgba(7, 10, 24, 0.22), rgba(4, 7, 18, 0.08));
   backdrop-filter: blur(10px) saturate(1.2);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  animation: welcome-border-breathe 4.8s ease-in-out infinite;
 }
 
 .hub-context-kicker {
@@ -324,6 +325,7 @@ onBeforeUnmount(() => {
     border-color 0.28s ease,
     background 0.28s ease,
     box-shadow 0.28s ease;
+  animation: welcome-soft-border-breathe 5.4s ease-in-out infinite;
 }
 
 .hub-agent-item:hover {
@@ -383,6 +385,7 @@ onBeforeUnmount(() => {
   background:
     radial-gradient(circle at 18% 18%, color-mix(in srgb, var(--stage-color) 12%, transparent), transparent 48%),
     rgba(8, 12, 30, 0.10);
+  animation: welcome-soft-border-breathe 5s ease-in-out infinite;
 }
 
 .hub-role-visual img {
@@ -513,6 +516,46 @@ onBeforeUnmount(() => {
   margin-top: 14px;
 }
 
+:deep(.hub-frame-shell),
+:deep(.agent-stage),
+:deep(.course-chip),
+:deep(.handoff-strip),
+:deep(.log-container) {
+  animation: welcome-border-breathe 4.8s ease-in-out infinite;
+}
+
+@keyframes welcome-border-breathe {
+  0%,
+  100% {
+    border-color: rgba(120, 160, 220, 0.18);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.06),
+      0 0 0 rgba(0, 212, 255, 0);
+  }
+
+  50% {
+    border-color: rgba(0, 212, 255, 0.46);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.1),
+      0 0 34px rgba(0, 212, 255, 0.18);
+  }
+}
+
+@keyframes welcome-soft-border-breathe {
+  0%,
+  100% {
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.04),
+      0 0 0 color-mix(in srgb, var(--stage-color) 0%, transparent);
+  }
+
+  50% {
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.08),
+      0 0 24px color-mix(in srgb, var(--stage-color) 20%, transparent);
+  }
+}
+
 /* ── Section headers ── */
 .section-header {
   text-align: center;
@@ -578,7 +621,7 @@ onBeforeUnmount(() => {
 
   .hub-workbench {
     grid-template-columns: 1fr;
-    padding: 48px 16px 36px;
+    padding: 40px 16px 18px;
   }
 
   .hub-context-card,

@@ -36,7 +36,7 @@
         <h2 class="lp-section-title">知识点矩阵</h2>
         <p class="lp-section-desc">认知层级 × 学科领域的掌握度全景</p>
       </div>
-      <ResourceMatrixView />
+      <ResourceMatrixView @select-node="onSelectNode" />
     </section>
   </div>
 </template>

@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
 import {
-  Home,
   PlaySquare,
   Folder,
   CheckSquare,
@@ -43,7 +42,6 @@ watch(
 )
 
 const menuItems = [
-  { name: '首页', icon: Home },
   { name: '课程', icon: PlaySquare },
   { name: '资源中心', icon: Folder },
   { name: '练习中心', icon: CheckSquare },
@@ -87,23 +85,15 @@ function handleNavClick(itemName: string) {
       </button>
     </div>
 
-    <div class="edu-sidebar__brand">
-      <span class="edu-sidebar__mark">E</span>
-      <span>
-        <strong>EduMind</strong>
-        <small>AI Learning Console</small>
-      </span>
-    </div>
-
     <!-- Navigation -->
-    <nav class="px-4 pb-5 flex-1 space-y-2">
+    <nav class="p-5 flex-1 space-y-3">
       <div
         v-for="(item, index) in menuItems"
         :key="index"
         :id="`nav-item-${index}`"
         @click="handleNavClick(item.name)"
         :class="[
-          'edu-sidebar__item flex items-center gap-3 px-3.5 py-3 rounded-lg cursor-pointer transition-all duration-200 text-[14px]',
+          'edu-sidebar__item flex items-center gap-3 px-4 py-3 rounded-lg cursor-pointer transition-all duration-200 text-[15px]',
           item.name === currentTab
             ? 'is-active text-white font-bold'
             : 'text-[#a5b4d8] hover:text-white'
@@ -176,44 +166,6 @@ function handleNavClick(itemName: string) {
     linear-gradient(180deg, #07060a 0%, #0e0c15 52%, #161220 100%);
   border-right: 1px solid rgba(59, 130, 246, 0.15);
   box-shadow: inset -1px 0 0 rgba(255, 255, 255, 0.03), 18px 0 54px rgba(4, 5, 22, 0.34);
-}
-
-.edu-sidebar__brand {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 22px 18px 14px;
-}
-
-.edu-sidebar__mark {
-  display: grid;
-  place-items: center;
-  width: 38px;
-  height: 38px;
-  border: 1px solid rgba(53, 224, 216, 0.28);
-  border-radius: 12px;
-  color: #35e0d8;
-  background:
-    radial-gradient(circle at 50% 20%, rgba(240, 178, 74, 0.18), transparent 54%),
-    rgba(8, 12, 28, 0.72);
-  box-shadow: 0 0 24px rgba(53, 224, 216, 0.1);
-  font-weight: 800;
-}
-
-.edu-sidebar__brand strong {
-  display: block;
-  color: #fff;
-  font-size: 16px;
-  line-height: 1.1;
-}
-
-.edu-sidebar__brand small {
-  display: block;
-  margin-top: 3px;
-  color: #7184aa;
-  font-family: var(--font-mono, 'JetBrains Mono', monospace);
-  font-size: 10px;
-  letter-spacing: 0.1em;
 }
 
 .edu-sidebar__item {

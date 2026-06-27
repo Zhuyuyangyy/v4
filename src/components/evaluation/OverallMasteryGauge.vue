@@ -118,7 +118,7 @@ window.addEventListener('resize', onResize)
     <div class="gauge-meta">
       <span class="gauge-total">已评估 {{ total }} 个知识点</span>
       <span v-if="change !== undefined" class="gauge-change" :class="{ positive: change >= 0, negative: change < 0 }">
-        {{ change >= 0 ? '↑' : '↓' }} {{ Math.abs(change).toFixed(1) }}%
+        {{ change >= 0 ? '+' : '-' }}{{ Math.abs(change).toFixed(1) }}%
       </span>
     </div>
   </div>
@@ -130,32 +130,36 @@ window.addEventListener('resize', onResize)
   display: flex;
   flex-direction: column;
   height: 100%;
-  padding: 14px;
-  border-radius: 16px;
-  background: rgba(8, 14, 30, 0.72);
-  border: 1px solid rgba(0, 212, 255, 0.18);
-  box-shadow:
-    0 10px 32px rgba(0, 0, 0, 0.35),
-    inset 0 1px 0 rgba(255, 255, 255, 0.05),
-    0 0 20px rgba(0, 212, 255, 0.08);
+  padding: 13px;
+  border-radius: 14px;
+  background: rgba(18, 22, 48, 0.66);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.045);
   overflow: hidden;
+  transition: border-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.gauge-card:hover {
+  transform: translateY(-1px);
+  border-color: rgba(0, 212, 255, 0.24);
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.05);
 }
 
 .gauge-card::before {
   content: '';
   position: absolute;
   inset: 0;
-  background: radial-gradient(circle at top right, rgba(0, 212, 255, 0.1), transparent 55%);
+  background: radial-gradient(circle at 88% 0%, rgba(0, 212, 255, 0.08), transparent 48%);
   pointer-events: none;
 }
 
 .card-title {
   position: relative;
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 700;
   color: #f2f6fa;
   margin-bottom: 4px;
-  letter-spacing: 0.3px;
+  letter-spacing: 0;
 }
 
 .gauge-chart {

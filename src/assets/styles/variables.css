@@ -44,9 +44,9 @@
   --duration-normal: 300ms;
   --duration-slow: 500ms;
 
-  --font-display: 'Instrument Serif', 'Georgia', serif;
-  --font-body: 'Outfit', 'Segoe UI', sans-serif;
-  --font-mono: 'JetBrains Mono', 'Cascadia Code', monospace;
+  --font-display: 'Georgia', 'Noto Serif SC', serif;
+  --font-body: 'Segoe UI', 'PingFang SC', system-ui, sans-serif;
+  --font-mono: 'Cascadia Code', 'Menlo', 'Consolas', monospace;
 
   --z-base: 0;
   --z-dropdown: 100;

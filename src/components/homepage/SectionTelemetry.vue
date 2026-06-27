@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { useRouter } from 'vue-router'
 import * as echarts from 'echarts'
 import { fetchAgentCollaboration, fetchAgentCollaborationDays } from '@/lib/api'
 import type {
@@ -59,6 +60,8 @@ const T = {
   textDim: '#52607f',
   sans: "'Outfit', 'PingFang SC', sans-serif",
 }
+
+const router = useRouter()
 
 const dayLabelsFull = ['周一', '周二', '周三', '周四', '周五', '周六', '周日']
 
@@ -229,6 +232,10 @@ interface LatestEvent {
   label: string
   detail: string
   value: 'high' | 'medium' | 'low'
+  chainLabel: string
+  routeLabel: string
+  routePath: string
+  evidenceCount: number
 }
 
 const agents = ref<Agent[]>(defaultAgents())
@@ -529,14 +536,21 @@ const latestEvents = computed((): LatestEvent[] => {
     .slice()
     .sort((a, b) => b.t - a.t)
     .slice(0, 5)
-    .map(e => ({
-      id: e.id,
-      time: timeLabel(e.t),
-      agent: agentById(e.agent),
-      label: e.label,
-      detail: e.detail,
-      value: e.value ?? 'medium',
-    }))
+    .map(e => {
+      const route = routeForEvent(e)
+      return {
+        id: e.id,
+        time: timeLabel(e.t),
+        agent: agentById(e.agent),
+        label: e.label,
+        detail: e.detail,
+        value: e.value ?? 'medium',
+        chainLabel: chainLabel(e.chain),
+        routeLabel: route.label,
+        routePath: route.path,
+        evidenceCount: evidenceCount(e),
+      }
+    })
 })
 
 const detailMetrics = computed(() => {
@@ -779,6 +793,67 @@ const nowMinutes = 15 * 60 + 20
 const filterOptions = ['全部类型', '画像诊断', '路径编排', '资源生产', '辅导互动', '测评分析', '反馈复盘']
 const selectedFilter = ref('全部类型')
 
+const chainRouteMap: Record<string, { path: string; label: string }> = {
+  'profile-module': { path: '/dialogue', label: '查看画像' },
+  'path-module': { path: '/learning-path', label: '查看路径' },
+  'resource-module': { path: '/resources', label: '查看资源' },
+  'tutor-module': { path: '/tutoring', label: '进入辅导' },
+  'eval-module': { path: '/evaluation', label: '查看测评' },
+  'feedback-module': { path: '/reverse-evaluation', label: '查看反馈' },
+}
+
+const agentRouteMap: Record<string, { path: string; label: string }> = {
+  profileCapture: chainRouteMap['profile-module'],
+  profileDiagnosis: chainRouteMap['profile-module'],
+  pathPlan: chainRouteMap['path-module'],
+  pathReplan: chainRouteMap['path-module'],
+  resourceSearch: chainRouteMap['resource-module'],
+  resourceGenerate: chainRouteMap['resource-module'],
+  tutorExplain: chainRouteMap['tutor-module'],
+  tutorDialogue: chainRouteMap['tutor-module'],
+  evalQuiz: chainRouteMap['eval-module'],
+  evalCause: chainRouteMap['eval-module'],
+  feedbackWrite: chainRouteMap['feedback-module'],
+  reflection: chainRouteMap['feedback-module'],
+}
+
+const metricRoutes = ['/reverse-evaluation', '/evaluation', '/learning-path', '/dialogue', '/tutoring']
+const chartRoutes: Record<string, string> = {
+  trend: '/reverse-evaluation',
+  top: '/reverse-evaluation',
+  pie: '/evaluation',
+  heatmap: '/evaluation',
+  latest: '/reverse-evaluation',
+}
+
+function routeForEvent(event: EventNode) {
+  return agentRouteMap[event.agent] ?? chainRouteMap[event.chain] ?? { path: '/reverse-evaluation', label: '查看详情' }
+}
+
+function chainLabel(chainId: string) {
+  return chains.value.find(chain => chain.id === chainId)?.name ?? '协同模块'
+}
+
+function evidenceCount(event: EventNode) {
+  const base = event.value === 'high' ? 4 : event.value === 'medium' ? 3 : 2
+  return base + (event.t % 2)
+}
+
+function navigateTo(path: string) {
+  if (!path) return
+  router.push(path)
+}
+
+function navigateMetric(index: number) {
+  navigateTo(metricRoutes[index] ?? '/reverse-evaluation')
+}
+
+function activateKeyboard(event: KeyboardEvent, action: () => void) {
+  if (event.key !== 'Enter' && event.key !== ' ') return
+  event.preventDefault()
+  action()
+}
+
 const trendChartRef = ref<HTMLDivElement | null>(null)
 const topChartRef = ref<HTMLDivElement | null>(null)
 const pieChartRef = ref<HTMLDivElement | null>(null)
@@ -966,6 +1041,8 @@ function updateHeatmapChart() {
     }],
   }
   heatmapChart.setOption(option)
+  heatmapChart.off('click')
+  heatmapChart.on('click', () => navigateTo(chartRoutes.heatmap))
 }
 
 function handleResize() {
@@ -1297,7 +1374,11 @@ watch(selectedDay, () => {
             <div
               v-for="(metric, idx) in mainMetrics"
               :key="idx"
-              class="glass-card metric-card"
+              class="glass-card metric-card clickable-card"
+              role="button"
+              tabindex="0"
+              @click="navigateMetric(idx)"
+              @keydown="activateKeyboard($event, () => navigateMetric(idx))"
             >
               <div class="metric-icon">
                 <component :is="metric.icon" :size="18" />
@@ -1314,7 +1395,13 @@ watch(selectedDay, () => {
           </div>
 
           <div class="charts-grid">
-            <div class="glass-card chart-card trend-card">
+            <div
+              class="glass-card chart-card trend-card clickable-card"
+              role="button"
+              tabindex="0"
+              @click="navigateTo(chartRoutes.trend)"
+              @keydown="activateKeyboard($event, () => navigateTo(chartRoutes.trend))"
+            >
               <div class="card-header">
                 <span class="card-title">干预次数趋势</span>
                 <div class="chart-legend">
@@ -1325,21 +1412,39 @@ watch(selectedDay, () => {
               <div ref="trendChartRef" class="chart-body" />
             </div>
 
-            <div class="glass-card chart-card top-card">
+            <div
+              class="glass-card chart-card top-card clickable-card"
+              role="button"
+              tabindex="0"
+              @click="navigateTo(chartRoutes.top)"
+              @keydown="activateKeyboard($event, () => navigateTo(chartRoutes.top))"
+            >
               <div class="card-header">
                 <span class="card-title">模块干预频次 TOP 8</span>
               </div>
               <div ref="topChartRef" class="chart-body" />
             </div>
 
-            <div class="glass-card chart-card pie-card">
+            <div
+              class="glass-card chart-card pie-card clickable-card"
+              role="button"
+              tabindex="0"
+              @click="navigateTo(chartRoutes.pie)"
+              @keydown="activateKeyboard($event, () => navigateTo(chartRoutes.pie))"
+            >
               <div class="card-header">
                 <span class="card-title">干预类型占比</span>
               </div>
               <div ref="pieChartRef" class="chart-body" />
             </div>
 
-            <div class="glass-card chart-card heatmap-card">
+            <div
+              class="glass-card chart-card heatmap-card clickable-card"
+              role="button"
+              tabindex="0"
+              @click="navigateTo(chartRoutes.heatmap)"
+              @keydown="activateKeyboard($event, () => navigateTo(chartRoutes.heatmap))"
+            >
               <div class="card-header">
                 <span class="card-title">小时活跃热力图</span>
                 <div class="heatmap-scale">
@@ -1355,7 +1460,9 @@ watch(selectedDay, () => {
           <div class="glass-card latest-card">
             <div class="card-header">
               <span class="card-title">最新干预事件</span>
-              <button class="text-link">查看更多事件 <ChevronRight :size="12" /></button>
+              <button class="text-link" type="button" @click="navigateTo(chartRoutes.latest)">
+                查看更多事件 <ChevronRight :size="12" />
+              </button>
             </div>
             <div class="latest-list">
               <div
@@ -1363,7 +1470,10 @@ watch(selectedDay, () => {
                 :key="evt.id"
                 class="latest-item"
                 :class="{ active: selectedEvent?.id === evt.id }"
+                role="button"
+                tabindex="0"
                 @click="selectNodeById(evt.id, $event)"
+                @keydown="activateKeyboard($event, () => selectNodeById(evt.id))"
               >
                 <div class="latest-icon" :style="{ background: evt.agent.color }">
                   <component :is="evt.agent.icon" :size="14" />
@@ -1372,10 +1482,25 @@ watch(selectedDay, () => {
                   <div class="latest-title">{{ evt.label }}</div>
                   <div class="latest-desc">{{ evt.detail }}</div>
                 </div>
-                <div class="latest-time">{{ evt.time }}</div>
-                <div class="latest-tag" :class="evt.value">
-                  {{ evt.value === 'high' ? '高价值' : evt.value === 'medium' ? '中价值' : '低价值' }}
+                <div class="latest-context">
+                  <span>{{ evt.chainLabel }}</span>
+                  <span>{{ evt.agent.name }}</span>
+                  <span>{{ evt.evidenceCount }} 条证据</span>
                 </div>
+                <div class="latest-tail">
+                  <div class="latest-time">{{ evt.time }}</div>
+                  <div class="latest-tag" :class="evt.value">
+                    {{ evt.value === 'high' ? '高价值' : evt.value === 'medium' ? '中价值' : '低价值' }}
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  class="latest-route"
+                  @click.stop="navigateTo(evt.routePath)"
+                >
+                  {{ evt.routeLabel }}
+                  <ChevronRight :size="12" />
+                </button>
               </div>
             </div>
           </div>
@@ -1579,6 +1704,31 @@ watch(selectedDay, () => {
   color: #22d3ee;
   font-size: 11px;
   font-weight: 600;
+}
+
+.clickable-card {
+  cursor: pointer;
+  transition:
+    border-color 0.2s ease,
+    background 0.2s ease,
+    box-shadow 0.2s ease,
+    transform 0.2s ease;
+}
+
+.clickable-card:hover {
+  border-color: rgba(34, 211, 238, 0.24);
+  background:
+    radial-gradient(ellipse at 20% 0%, rgba(34, 211, 238, 0.075), transparent 48%),
+    linear-gradient(180deg, rgba(14, 23, 48, 0.76), rgba(6, 10, 24, 0.58));
+  transform: translateY(-1px);
+}
+
+.clickable-card:focus-visible,
+.text-link:focus-visible,
+.latest-item:focus-visible,
+.latest-route:focus-visible {
+  outline: 2px solid rgba(34, 211, 238, 0.72);
+  outline-offset: 3px;
 }
 
 /* Left column */
@@ -1888,19 +2038,24 @@ watch(selectedDay, () => {
 }
 
 .latest-item {
-  display: flex;
+  display: grid;
+  grid-template-columns: 34px minmax(260px, 1.1fr) minmax(360px, 0.9fr) 104px 118px;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
+  min-height: 62px;
   padding: 10px 12px;
-  border-radius: 10px;
+  border: 1px solid transparent;
+  border-radius: 12px;
   background: rgba(255, 255, 255, 0.03);
   cursor: pointer;
-  transition: all 0.2s ease;
+  color: inherit;
+  transition: background 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
 }
 
 .latest-item:hover,
 .latest-item.active {
   background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(34, 211, 238, 0.14);
 }
 
 .latest-icon {
@@ -1914,7 +2069,6 @@ watch(selectedDay, () => {
 }
 
 .latest-info {
-  flex: 1 1 auto;
   min-width: 0;
 }
 
@@ -1933,11 +2087,64 @@ watch(selectedDay, () => {
   text-overflow: ellipsis;
 }
 
+.latest-context {
+  display: grid;
+  grid-template-columns: minmax(96px, 1fr) minmax(86px, 0.9fr) 78px;
+  gap: 8px;
+  min-width: 0;
+}
+
+.latest-context span {
+  min-width: 0;
+  padding: 5px 8px;
+  border: 1px solid rgba(150, 175, 220, 0.08);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.035);
+  color: #8da3c8;
+  font-size: 10px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.latest-tail {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  min-width: 0;
+}
+
 .latest-time {
   font-size: 11px;
   color: #5d6e8f;
   flex: 0 0 auto;
   font-variant-numeric: tabular-nums;
+}
+
+.latest-route {
+  appearance: none;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  width: 100%;
+  min-height: 32px;
+  border: 1px solid rgba(34, 211, 238, 0.18);
+  border-radius: 9px;
+  background: rgba(34, 211, 238, 0.075);
+  color: #67e8f9;
+  font-size: 11px;
+  font-weight: 650;
+  white-space: nowrap;
+  transition: background 0.18s ease, border-color 0.18s ease, color 0.18s ease;
+}
+
+.latest-route:hover {
+  border-color: rgba(34, 211, 238, 0.36);
+  background: rgba(34, 211, 238, 0.13);
+  color: #d8fbff;
 }
 
 .latest-tag {
@@ -2452,6 +2659,16 @@ watch(selectedDay, () => {
   .heatmap-card {
     grid-column: span 1;
   }
+
+  .latest-item {
+    grid-template-columns: 34px minmax(220px, 1fr) minmax(260px, 0.9fr) 96px;
+  }
+
+  .latest-route {
+    grid-column: 3 / 5;
+    justify-self: end;
+    width: 128px;
+  }
 }
 
 @media (max-width: 900px) {
@@ -2508,6 +2725,29 @@ watch(selectedDay, () => {
   .detail-metrics,
   .impact-grid {
     grid-template-columns: 1fr;
+  }
+
+  .latest-item {
+    grid-template-columns: 34px minmax(0, 1fr);
+    align-items: flex-start;
+  }
+
+  .latest-context,
+  .latest-tail,
+  .latest-route {
+    grid-column: 2;
+  }
+
+  .latest-context {
+    grid-template-columns: 1fr;
+  }
+
+  .latest-tail {
+    justify-content: flex-start;
+  }
+
+  .latest-route {
+    width: 132px;
   }
 
   .detail-popup {

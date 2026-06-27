@@ -19,12 +19,13 @@ const route = useRoute()
 const appStore = useAppStore()
 useScrollReveal(0.12)
 
-const isHomePage = computed(() => route.path === '/')
+const isShellFreePage = computed(() => route.path === '/login' || route.path === '/admin')
+const isHomePage = computed(() => route.path === '/home')
 const isUniversePage = computed(() => route.path === '/learning-path')
 const isEduMindPage = computed(() => route.path === '/edu-mind')
 
 const navItems = [
-  { path: '/', label: '首页', icon: Home, guideId: 'welcome' },
+  { path: '/home', label: '首页', icon: Home, guideId: 'welcome' },
   { path: '/dialogue', label: '画像生成', icon: MessageCircle, guideId: 'dialogue' },
   { path: '/learning-path', label: '学习路径', icon: Map, guideId: 'learning-path' },
   { path: '/edu-mind', label: '学习资源', icon: Library, guideId: 'edu-mind' },
@@ -44,9 +45,9 @@ watch(
 <template>
   <div class="layout">
     <!-- Top Navigation Bar -->
-    <header class="topbar" role="banner">
+    <header v-if="!isShellFreePage" class="topbar" role="banner">
       <div class="topbar-inner">
-        <router-link to="/" class="topbar-brand" aria-label="EduMind 首页">
+        <router-link to="/home" class="topbar-brand" aria-label="EduMind 首页">
           <span class="brand-icon">
             <Sparkles :size="18" stroke-width="1.5" />
           </span>
@@ -72,11 +73,12 @@ watch(
 
     <!-- Main Content -->
     <main class="main-content" id="main-content" :class="{
+      'shell-free': isShellFreePage,
       'home-active': isHomePage,
       'universe-active': isUniversePage,
       'edu-mind-active': isEduMindPage,
     }">
-      <CosmicPageBackground />
+      <CosmicPageBackground v-if="!isShellFreePage" />
       <div class="page-content">
         <router-view v-slot="{ Component }">
           <transition name="fade" mode="out-in">
@@ -246,6 +248,12 @@ watch(
 .main-content.home-active {
   margin-top: 0;
   min-height: 100vh;
+}
+
+.main-content.shell-free {
+  margin-top: 0;
+  min-height: 100vh;
+  overflow: visible;
 }
 
 .main-content.universe-active {

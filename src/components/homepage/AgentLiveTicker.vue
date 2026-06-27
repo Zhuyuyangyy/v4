@@ -79,42 +79,53 @@ function getAgent(id: string) {
 
 <style scoped>
 .collaboration-log {
-  max-width: 1200px;
-  margin: 40px auto 0;
-  padding: 0 56px;
+  box-sizing: border-box;
+  max-width: 1760px;
+  margin: 0 auto 0;
+  padding: 0 36px;
   position: relative;
   z-index: 3;
+  transform: translateY(-26px);
 }
 
 .log-header {
   text-align: center;
-  margin-bottom: 32px;
+  margin-bottom: 14px;
 }
 
 .log-title {
   margin: 0;
   font-family: 'Instrument Serif', 'Georgia', serif;
-  font-size: 28px;
+  font-size: 30px;
   font-weight: 400;
   color: #e8edf5;
   letter-spacing: -0.01em;
+  line-height: 1.08;
 }
 
 .log-desc {
-  margin: 8px 0 0 0;
+  display: block;
+  margin: 6px 0 0 0;
   font-size: 14px;
   color: #8892b0;
   font-family: 'Outfit', 'Segoe UI', sans-serif;
+  line-height: 1.45;
 }
 
 .log-container {
-  background: rgba(18, 22, 48, 0.75);
-  border: 1px solid rgba(0, 212, 255, 0.12);
+  background:
+    radial-gradient(ellipse at 52% 0%, rgba(0, 212, 255, 0.08), transparent 62%),
+    rgba(18, 22, 48, 0.66);
+  border: 1px solid rgba(0, 212, 255, 0.18);
   border-radius: 16px;
   padding: 0 28px;
   position: relative;
   overflow: hidden;
   height: 192px;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.06),
+    0 0 0 rgba(0, 212, 255, 0);
+  animation: log-border-breathe 4.8s ease-in-out infinite;
 }
 
 .log-track {
@@ -194,10 +205,28 @@ function getAgent(id: string) {
   background: linear-gradient(0deg, rgba(18, 22, 48, 0.95), transparent);
 }
 
+@keyframes log-border-breathe {
+  0%,
+  100% {
+    border-color: rgba(0, 212, 255, 0.16);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.06),
+      0 0 0 rgba(0, 212, 255, 0);
+  }
+
+  50% {
+    border-color: rgba(0, 212, 255, 0.38);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.1),
+      0 0 28px rgba(0, 212, 255, 0.14);
+  }
+}
+
 @media (max-width: 900px) {
   .collaboration-log {
-    padding: 0 24px;
-    margin-top: 32px;
+    padding: 0 16px;
+    margin-top: 0;
+    transform: translateY(-12px);
   }
   
   .log-title {

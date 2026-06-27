@@ -53,7 +53,125 @@
       "建议每两周复盘一次学习进度，动态调整资源和节奏。"
     ]
   },
-  "knowledgePathResult": null,
+  "knowledgePathResult": {
+    "phases": [
+      {
+        "id": "fundamentals",
+        "name": "基础巩固",
+        "short": "FUND",
+        "color": "#00d4ff",
+        "topics": [
+          {
+            "id": "f1",
+            "name": "编程基础与语法",
+            "mastery": 0.5,
+            "importance": 1,
+            "recommended": true
+          },
+          {
+            "id": "f2",
+            "name": "数据结构入门",
+            "mastery": 0.4,
+            "importance": 0.8
+          },
+          {
+            "id": "f3",
+            "name": "算法思维培养",
+            "mastery": 0.35,
+            "importance": 0.7
+          }
+        ]
+      },
+      {
+        "id": "core-skills",
+        "name": "核心技能",
+        "short": "CORE",
+        "color": "#7c3aed",
+        "topics": [
+          {
+            "id": "c1",
+            "name": "机器学习基础概念",
+            "mastery": 0.2,
+            "importance": 0.95,
+            "recommended": true
+          },
+          {
+            "id": "c2",
+            "name": "数据处理与分析",
+            "mastery": 0.3,
+            "importance": 0.85
+          },
+          {
+            "id": "c3",
+            "name": "模型训练与评估",
+            "mastery": 0.15,
+            "importance": 0.8
+          },
+          {
+            "id": "c4",
+            "name": "特征工程实践",
+            "mastery": 0.1,
+            "importance": 0.7
+          }
+        ]
+      },
+      {
+        "id": "deep-learning",
+        "name": "深度学习",
+        "short": "DL",
+        "color": "#06d6a0",
+        "topics": [
+          {
+            "id": "d1",
+            "name": "神经网络原理",
+            "mastery": 0.1,
+            "importance": 0.9,
+            "recommended": true
+          },
+          {
+            "id": "d2",
+            "name": "CNN 图像处理",
+            "mastery": 0.05,
+            "importance": 0.7
+          },
+          {
+            "id": "d3",
+            "name": "Transformer 架构",
+            "mastery": 0.02,
+            "importance": 0.95,
+            "recommended": true
+          }
+        ]
+      },
+      {
+        "id": "practice",
+        "name": "实战应用",
+        "short": "PRACT",
+        "color": "#f59e0b",
+        "topics": [
+          {
+            "id": "p1",
+            "name": "项目实战练习",
+            "mastery": 0.1,
+            "importance": 0.85,
+            "recommended": true
+          },
+          {
+            "id": "p2",
+            "name": "代码规范与工程化",
+            "mastery": 0.5,
+            "importance": 0.6
+          },
+          {
+            "id": "p3",
+            "name": "部署与上线",
+            "mastery": 0.05,
+            "importance": 0.5
+          }
+        ]
+      }
+    ]
+  },
   "chatHistory": [
     {
       "id": 1778567366491,
