@@ -41,7 +41,8 @@ _tailwind.css
 *.glb
 
 # Claude 工作树
-.claude/worktrees/
+.claude/
+ez-tree-1.1.0/
 
 # Local browser/test artifacts
 .tmp-*/

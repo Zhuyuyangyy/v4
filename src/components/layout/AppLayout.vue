@@ -1,4 +1,4 @@
-﻿<script setup lang="ts">
+<script setup lang="ts">
 import { useRoute } from 'vue-router'
 import { computed, watch } from 'vue'
 import { useAppStore } from '@/store'
@@ -19,18 +19,19 @@ const route = useRoute()
 const appStore = useAppStore()
 useScrollReveal(0.12)
 
-const isHomePage = computed(() => route.path === '/')
+const isShellFreePage = computed(() => route.path === '/login' || route.path === '/admin')
+const isHomePage = computed(() => route.path === '/home')
 const isUniversePage = computed(() => route.path === '/learning-path')
 const isEduMindPage = computed(() => route.path === '/edu-mind')
 
 const navItems = [
-  { path: '/', label: '欢迎', icon: Home },
-  { path: '/dialogue', label: '智能对话', icon: MessageCircle },
-  { path: '/learning-path', label: '学习路径', icon: Map },
-  { path: '/edu-mind', label: '辅导资源', icon: Library },
-  { path: '/evaluation', label: '评估', icon: BarChart3 },
-  { path: '/reverse-evaluation', label: '反向评估', icon: Database },
-  { path: '/settings', label: '设置', icon: Settings },
+  { path: '/home', label: '首页', icon: Home, guideId: 'welcome' },
+  { path: '/dialogue', label: '画像生成', icon: MessageCircle, guideId: 'dialogue' },
+  { path: '/learning-path', label: '学习路径', icon: Map, guideId: 'learning-path' },
+  { path: '/edu-mind', label: '学习资源', icon: Library, guideId: 'edu-mind' },
+  { path: '/evaluation', label: '智能评估', icon: BarChart3, guideId: 'evaluation' },
+  { path: '/reverse-evaluation', label: '反向更新', icon: Database, guideId: 'reverse-evaluation' },
+  { path: '/settings', label: '设置', icon: Settings, guideId: 'settings' },
 ]
 watch(
   () => route.fullPath,
@@ -44,9 +45,9 @@ watch(
 <template>
   <div class="layout">
     <!-- Top Navigation Bar -->
-    <header class="topbar" role="banner">
+    <header v-if="!isShellFreePage" class="topbar" role="banner">
       <div class="topbar-inner">
-        <router-link to="/" class="topbar-brand" aria-label="EduMind 首页">
+        <router-link to="/home" class="topbar-brand" aria-label="EduMind 首页">
           <span class="brand-icon">
             <Sparkles :size="18" stroke-width="1.5" />
           </span>
@@ -59,6 +60,7 @@ watch(
             :key="item.path"
             :to="item.path"
             :class="['nav-item', { active: route.path === item.path }]"
+            :data-guide-target="item.guideId"
             :aria-current="route.path === item.path ? 'page' : undefined"
           >
             <component :is="item.icon" :size="16" stroke-width="1.5" class="nav-icon-svg" aria-hidden="true" />
@@ -71,11 +73,12 @@ watch(
 
     <!-- Main Content -->
     <main class="main-content" id="main-content" :class="{
+      'shell-free': isShellFreePage,
       'home-active': isHomePage,
       'universe-active': isUniversePage,
       'edu-mind-active': isEduMindPage,
     }">
-      <CosmicPageBackground />
+      <CosmicPageBackground v-if="!isShellFreePage" />
       <div class="page-content">
         <router-view v-slot="{ Component }">
           <transition name="fade" mode="out-in">
@@ -245,6 +248,12 @@ watch(
 .main-content.home-active {
   margin-top: 0;
   min-height: 100vh;
+}
+
+.main-content.shell-free {
+  margin-top: 0;
+  min-height: 100vh;
+  overflow: visible;
 }
 
 .main-content.universe-active {

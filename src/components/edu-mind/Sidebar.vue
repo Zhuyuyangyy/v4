@@ -185,26 +185,6 @@ function handleNavClick(itemName: string) {
     0 0 18px rgba(59, 130, 246, 0.12);
 }
 
-.edu-sidebar__mascot {
-  position: relative;
-  height: 260px;
-  margin: 4px 18px 12px;
-  display: flex;
-  align-items: flex-end;
-  justify-content: center;
-}
-
-.edu-sidebar__sprite {
-  width: 158px;
-  height: 210px;
-  background-image: url('/desktop-pet/peachu-idle-transparent.png');
-  background-repeat: no-repeat;
-  background-size: 980px auto;
-  background-position: -48px -14px;
-  filter: drop-shadow(0 18px 28px rgba(59, 130, 246, 0.25));
-  z-index: 2;
-}
-
 .edu-sidebar__halo {
   position: absolute;
   bottom: 2px;

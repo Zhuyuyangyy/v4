@@ -1,6 +1,5 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
-import type { DesktopPetProfile, DesktopPetMotion } from '@/config/companionPet'
 
 const APP_SETTINGS_KEY = 'app-settings'
 const COMPANION_RESET_MS: Record<Exclude<CompanionState, 'idle'>, number> = {
@@ -17,8 +16,6 @@ export const useAppStore = defineStore('app', () => {
   const desktopPetEnabled = ref(true)
   const companionState = ref<CompanionState>('idle')
   const activeAiRequests = ref(0)
-  const petProfile = ref<DesktopPetProfile>('coding-companion')
-  const petMotion = ref<DesktopPetMotion>('balanced')
   let companionTimeout: ReturnType<typeof setTimeout> | null = null
 
   function loadSettings() {
@@ -31,20 +28,12 @@ export const useAppStore = defineStore('app', () => {
       const parsed = JSON.parse(raw) as {
         desktopPetEnabled?: boolean
         currentTheme?: string
-        petProfile?: string
-        petMotion?: string
       }
       if (typeof parsed.desktopPetEnabled === 'boolean') {
         desktopPetEnabled.value = parsed.desktopPetEnabled
       }
       if (typeof parsed.currentTheme === 'string') {
         currentTheme.value = parsed.currentTheme
-      }
-      if (parsed.petProfile === 'coding-companion' || parsed.petProfile === 'debug-duck') {
-        petProfile.value = parsed.petProfile
-      }
-      if (parsed.petMotion === 'calm' || parsed.petMotion === 'balanced' || parsed.petMotion === 'lively') {
-        petMotion.value = parsed.petMotion
       }
     } catch {
       // Ignore invalid local storage payloads and use defaults.
@@ -59,24 +48,12 @@ export const useAppStore = defineStore('app', () => {
       JSON.stringify({
         currentTheme: currentTheme.value,
         desktopPetEnabled: desktopPetEnabled.value,
-        petProfile: petProfile.value,
-        petMotion: petMotion.value,
       }),
     )
   }
 
   function setDesktopPetEnabled(enabled: boolean) {
     desktopPetEnabled.value = enabled
-    persistSettings()
-  }
-
-  function setPetProfile(profile: DesktopPetProfile) {
-    petProfile.value = profile
-    persistSettings()
-  }
-
-  function setPetMotion(motion: DesktopPetMotion) {
-    petMotion.value = motion
     persistSettings()
   }
 
@@ -132,11 +109,7 @@ export const useAppStore = defineStore('app', () => {
     desktopPetEnabled,
     companionState,
     activeAiRequests,
-    petProfile,
-    petMotion,
     setDesktopPetEnabled,
-    setPetProfile,
-    setPetMotion,
     setTheme,
     setCompanionIdle,
     triggerPageLoading,

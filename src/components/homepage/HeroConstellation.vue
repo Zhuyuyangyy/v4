@@ -17,6 +17,12 @@ const T = {
   amber: '#f59e0b',
   rose: '#f43f5e',
   blue: '#3b82f6',
+  violet: '#a78bfa',
+  teal: '#14b8a6',
+  lime: '#84cc16',
+  orange: '#fb923c',
+  pink: '#ec4899',
+  indigo: '#6366f1',
   text: '#e8edf5',
   textSub: '#8892b0',
   textTri: '#4a5568',
@@ -38,33 +44,57 @@ interface Agent {
 }
 
 const agents: Agent[] = [
-  { id: 'profile', name: '画像智能体', en: 'Profile Agent', role: 'PROFILE', color: T.purple, glyph: '◉',
-    angle: -90, orbitRx: 260, orbitRy: 190, orbitTilt: -6, planetSize: 34,
-    activity: { verb: '识别中', text: '检测到指针与图结构 2 个薄弱域', detail: '二级指针传参 41% · BFS visited 38%', ts: '8 秒前' },
+  { id: 'profile-capture', name: '画像采集智能体', en: 'Profile Capture', role: 'PROFILE-1', color: T.purple, glyph: '◉',
+    angle: -90, orbitRx: 252, orbitRy: 188, orbitTilt: -6, planetSize: 25,
+    activity: { verb: '采集中', text: '汇总答题、停留、偏好和学习节奏', detail: '行为日志 18 条 · 偏好信号 4 类 · 画像维度 24', ts: '8 秒前' },
     stats: [{ label: '画像维度', value: '24' }, { label: '掌握度', value: '68%' }] },
-  { id: 'path', name: '路径规划智能体', en: 'Path Planner', role: 'PATH', color: T.cyan, glyph: '◈',
-    angle: -30, orbitRx: 340, orbitRy: 240, orbitTilt: 10, planetSize: 30,
-    activity: { verb: '重排中', text: '课后巩固阶段插入 2 个补弱节点', detail: '指针训练 → 图结构思维导图 → BFS 专项', ts: '4 秒前' },
+  { id: 'profile-diagnosis', name: '薄弱诊断智能体', en: 'Weakness Diagnosis', role: 'PROFILE-2', color: T.violet, glyph: '◎',
+    angle: -60, orbitRx: 328, orbitRy: 236, orbitTilt: 8, planetSize: 22,
+    activity: { verb: '诊断中', text: '锁定 2 个高风险薄弱域', detail: '二级指针传参 41% · BFS visited 38%', ts: '7 秒前' },
+    stats: [{ label: '风险域', value: '2' }, { label: '置信度', value: '91%' }] },
+  { id: 'path-plan', name: '路径规划智能体', en: 'Path Planner', role: 'PATH-1', color: T.cyan, glyph: '◈',
+    angle: -30, orbitRx: 282, orbitRy: 218, orbitTilt: 10, planetSize: 24,
+    activity: { verb: '规划中', text: '课后巩固阶段插入补弱路径', detail: '指针训练 → 图结构思维导图 → BFS 专项', ts: '4 秒前' },
     stats: [{ label: '路径阶段', value: '6' }, { label: '当前场景', value: '课后巩固' }] },
-  { id: 'resource', name: '资源推荐智能体', en: 'Resource Engine', role: 'RESOURCE', color: T.emerald, glyph: '◬',
-    angle: 30, orbitRx: 290, orbitRy: 220, orbitTilt: -14, planetSize: 28,
-    activity: { verb: '匹配中', text: '为图结构薄弱点匹配 5 个资源', detail: '思维导图 1 · 专项练习 3 · 图解卡片 1', ts: '6 秒前' },
+  { id: 'path-replan', name: '动态重规划智能体', en: 'Dynamic Replanner', role: 'PATH-2', color: T.teal, glyph: '◇',
+    angle: 0, orbitRx: 356, orbitRy: 244, orbitTilt: -3, planetSize: 22,
+    activity: { verb: '校准中', text: '根据新测评结果调整明日学习序列', detail: '推迟 1 个进阶节点 · 前置 2 个基础节点', ts: '5 秒前' },
+    stats: [{ label: '重排次数', value: '3' }, { label: '命中率', value: '89%' }] },
+  { id: 'resource-search', name: '资源检索智能体', en: 'Resource Search', role: 'RESOURCE-1', color: T.emerald, glyph: '◬',
+    angle: 30, orbitRx: 292, orbitRy: 220, orbitTilt: -14, planetSize: 23,
+    activity: { verb: '检索中', text: '从资源池筛出 18 个候选材料', detail: '视频 6 · 例题 5 · 图解卡片 7', ts: '6 秒前' },
     stats: [{ label: '资源池', value: '1.2k+' }, { label: '已完成', value: '47' }] },
-  { id: 'tutor', name: 'AI 辅导智能体', en: 'AI Tutor', role: 'TUTOR', color: T.amber, glyph: '◊',
-    angle: 90, orbitRx: 330, orbitRy: 235, orbitTilt: 5, planetSize: 32,
-    activity: { verb: '待命', text: '随时等你的下一个问题', detail: '支持概念讲解 · 代码辅导 · 错题诊断', ts: '刚刚' },
+  { id: 'resource-generate', name: '资源生成智能体', en: 'Resource Generator', role: 'RESOURCE-2', color: T.lime, glyph: '△',
+    angle: 60, orbitRx: 338, orbitRy: 238, orbitTilt: 13, planetSize: 22,
+    activity: { verb: '生成中', text: '将候选资源改写成个性化练习包', detail: '思维导图 1 · 专项练习 3 · 图解卡片 1', ts: '3 秒前' },
+    stats: [{ label: '生成项', value: '5' }, { label: '适配度', value: '92%' }] },
+  { id: 'tutor-explain', name: '讲解辅导智能体', en: 'Tutor Explainer', role: 'TUTOR-1', color: T.amber, glyph: '◊',
+    angle: 90, orbitRx: 272, orbitRy: 204, orbitTilt: 5, planetSize: 24,
+    activity: { verb: '待命', text: '准备把抽象概念讲成可操作步骤', detail: '支持概念讲解 · 代码辅导 · 错题诊断', ts: '刚刚' },
     stats: [{ label: '辅导模式', value: '10' }, { label: '准确率', value: '94%' }] },
-  { id: 'eval', name: '评估智能体', en: 'Evaluator', role: 'EVAL', color: T.rose, glyph: '◆',
-    angle: 150, orbitRx: 270, orbitRy: 200, orbitTilt: 12, planetSize: 30,
-    activity: { verb: '已完成', text: '阶段测评 82% · 发现 4 个盲点', detail: '二级指针 · BFS visited · 释放后悬空 · 队列空判', ts: '3 分钟前' },
+  { id: 'tutor-dialogue', name: '互动答疑智能体', en: 'Dialogue Tutor', role: 'TUTOR-2', color: T.orange, glyph: '□',
+    angle: 120, orbitRx: 348, orbitRy: 246, orbitTilt: -9, planetSize: 22,
+    activity: { verb: '追问中', text: '根据学生回答生成下一轮追问', detail: '已追问 2 次 · 几何直觉已建立', ts: '12 秒前' },
+    stats: [{ label: '追问轮次', value: '2' }, { label: '理解度', value: '76%' }] },
+  { id: 'eval-quiz', name: '评估出题智能体', en: 'Quiz Evaluator', role: 'EVAL-1', color: T.rose, glyph: '◆',
+    angle: 150, orbitRx: 286, orbitRy: 212, orbitTilt: 12, planetSize: 23,
+    activity: { verb: '出题中', text: '生成阶段测评题组', detail: '2 道针对性题目 · 覆盖薄弱前置概念', ts: '3 分钟前' },
     stats: [{ label: '平均正确率', value: '82%' }, { label: '知识掌握度', value: '68%' }] },
-  { id: 'feedback', name: '反馈智能体', en: 'Feedback Agent', role: 'FEEDBACK', color: T.blue, glyph: '◇',
-    angle: -150, orbitRx: 310, orbitRy: 225, orbitTilt: -10, planetSize: 28,
-    activity: { verb: '反向更新', text: '将测评结果反向写入画像', detail: '图结构 68%→42% · 指针 65%→42% · 新增偏好: 思维导图', ts: '1 分钟前' },
+  { id: 'eval-cause', name: '错因分析智能体', en: 'Mistake Analyzer', role: 'EVAL-2', color: T.pink, glyph: '◍',
+    angle: 180, orbitRx: 360, orbitRy: 238, orbitTilt: 2, planetSize: 22,
+    activity: { verb: '归因中', text: '把错误拆成概念、步骤和迁移三类原因', detail: '二级指针 · BFS visited · 队列空判', ts: '2 分钟前' },
+    stats: [{ label: '错因类', value: '3' }, { label: '盲点', value: '4' }] },
+  { id: 'feedback-write', name: '反馈回写智能体', en: 'Feedback Writer', role: 'FEEDBACK-1', color: T.blue, glyph: '◇',
+    angle: 210, orbitRx: 302, orbitRy: 226, orbitTilt: -10, planetSize: 23,
+    activity: { verb: '回写中', text: '将测评结果反向写入画像', detail: '图结构 68%→42% · 指针 65%→42% · 新增偏好: 思维导图', ts: '1 分钟前' },
     stats: [{ label: '本周更新', value: '5 次' }, { label: '触发路径修正', value: '3 次' }] },
+  { id: 'reflection', name: '成长复盘智能体', en: 'Reflection Agent', role: 'FEEDBACK-2', color: T.indigo, glyph: '✦',
+    angle: 240, orbitRx: 340, orbitRy: 244, orbitTilt: 8, planetSize: 22,
+    activity: { verb: '复盘中', text: '生成今日学习摘要与明日行动建议', detail: '成就 2 项 · 风险 1 项 · 下一步 3 条', ts: '30 秒前' },
+    stats: [{ label: '复盘项', value: '6' }, { label: '行动', value: '3' }] },
 ]
 
-const loopOrder = ['profile', 'path', 'resource', 'tutor', 'eval', 'feedback']
+const loopOrder = agents.map(agent => agent.id)
 
 /* ── Geometry ── */
 const VIZ_W = 880
@@ -150,8 +180,8 @@ const longitudes = [0, 30, 60, 90, 120, 150]
 
 /* ── Stats ── */
 const heroStats = [
-  { l: '活跃智能体', v: '6', sub: '协同中', c: T.cyan },
-  { l: '学习时长', v: '128', sub: 'h', c: T.purple },
+  { l: '活跃智能体', v: '12', sub: '协同中', c: T.cyan },
+  { l: '协同模块', v: '6', sub: '个', c: T.purple },
   { l: '正确率', v: '82', sub: '%', c: T.emerald },
   { l: '知识掌握度', v: '68', sub: '%', c: T.amber },
 ]
@@ -246,18 +276,44 @@ function initStarfield() {
           学习画像实时更新 · LIVE
         </div>
 
+        <div class="knowledge-transfer-scene" aria-hidden="true">
+          <div class="knowledge-glass-source">
+            <strong>课程知识源</strong>
+            <span>教材 · 代码 · 题目</span>
+            <div class="source-lines">
+              <span />
+              <span />
+              <span />
+            </div>
+          </div>
+          <div class="knowledge-stream">
+            <i v-for="glyph in ['知', '图', '码', '题', '练', '评', '路', 'AI']" :key="glyph">{{ glyph }}</i>
+          </div>
+          <div class="knowledge-ai-panel">
+            <strong>AI 学习面板</strong>
+            <span>画像诊断 → 路径规划</span>
+            <div class="panel-token">
+              <em />
+              <em />
+              <em />
+              <em />
+              <em />
+            </div>
+          </div>
+        </div>
+
         <h1 class="hero-title-hp">
           <span>EduMind</span>
           <span>
-            <em class="gradient-text">个性化学习</em>
+            <em class="gradient-text">知识转译</em>
             智能体系统
           </span>
         </h1>
 
         <p class="hero-desc">
-          画像驱动路径规划，资源匹配评估反馈 —
-          画像、路径、资源、辅导、评估、反馈 6 个智能体实时协同，
-          覆盖课前预习到成果沉淀的完整学习闭环，
+          像老师参考图那样，把课程教材、代码样例和练习题转成可交互的 AI 学习界面 —
+          6 个协同模块调度 12 个专业智能体，
+          从知识源解析、画像诊断到资源生成、路径编排和评估回写全程接力，
           <span style="color: #00d4ff;">每一次互动都反向更新画像</span>，让系统更懂你。
         </p>
 
@@ -442,9 +498,9 @@ function initStarfield() {
         <div class="sphere-label">
           <div class="sphere-eyebrow">STUDENT PROFILE</div>
           <div class="sphere-title">知识宇宙</div>
-          <div class="sphere-sub">学习者 · 画像驱动 · 个性化路径</div>
+          <div class="sphere-sub">学习者 · 12 智能体 · 6 模块协同</div>
           <div class="sphere-stats">
-            <div v-for="s in [{ l: '画像维度', v: '24' }, { l: '掌握度', v: '38%' }, { l: '连续', v: '5 天' }]" :key="s.l" class="sphere-stat">
+            <div v-for="s in [{ l: '智能体', v: '12' }, { l: '协同模块', v: '6' }, { l: '画像维度', v: '24' }]" :key="s.l" class="sphere-stat">
               <div class="sphere-stat-val">{{ s.v }}</div>
               <div class="sphere-stat-label">{{ s.l }}</div>
             </div>
@@ -454,11 +510,12 @@ function initStarfield() {
         <!-- Loop label -->
         <div class="loop-label">
           <span class="loop-label-dot">◉</span>
-          CLOSED LEARNING LOOP · 闭环
+          6 MODULES · 12 AGENTS
         </div>
 
         <!-- Activity chips (HTML overlay) -->
         <div v-for="(a, i) in agents" :key="`chip-${a.id}`"
+          v-show="activeIdx === i"
           class="activity-chip"
           :class="{
             'chip-hot': activeIdx === i,
@@ -551,6 +608,200 @@ function initStarfield() {
 .hero-copy {
   padding: 20px 0;
 }
+
+.knowledge-transfer-scene {
+  position: relative;
+  display: grid;
+  grid-template-columns: 188px minmax(120px, 1fr) 184px;
+  align-items: center;
+  gap: 12px;
+  width: min(100%, 620px);
+  min-height: 132px;
+  margin: 0 0 24px;
+  pointer-events: none;
+}
+
+.knowledge-transfer-scene::before {
+  content: '';
+  position: absolute;
+  left: 104px;
+  right: 132px;
+  top: 50%;
+  height: 3px;
+  background:
+    linear-gradient(90deg, transparent, rgba(238, 205, 142, 0.7), rgba(53, 224, 216, 0.9), transparent);
+  box-shadow:
+    0 0 20px rgba(53, 224, 216, 0.52),
+    0 0 42px rgba(238, 205, 142, 0.18);
+  transform: translateY(-50%);
+}
+
+.knowledge-glass-source {
+  position: relative;
+  overflow: hidden;
+  min-height: 118px;
+  border: 1px solid rgba(145, 223, 255, 0.24);
+  border-radius: 16px;
+  padding: 16px;
+  color: #eefaff;
+  background:
+    linear-gradient(135deg, rgba(53, 224, 216, 0.14), rgba(255, 255, 255, 0.035) 48%, rgba(240, 178, 74, 0.08)),
+    rgba(4, 12, 26, 0.42);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.12),
+    0 0 32px rgba(53, 224, 216, 0.12);
+  backdrop-filter: blur(12px) saturate(1.2);
+}
+
+.knowledge-glass-source::before {
+  content: '';
+  position: absolute;
+  inset: -40% 30% auto -20%;
+  height: 90px;
+  background: radial-gradient(circle, rgba(145, 223, 255, 0.22), transparent 62%);
+}
+
+.knowledge-glass-source strong,
+.knowledge-glass-source span,
+.source-lines {
+  position: relative;
+  z-index: 1;
+}
+
+.knowledge-glass-source strong {
+  display: block;
+  font-size: 16px;
+  letter-spacing: 0.02em;
+}
+
+.knowledge-glass-source span {
+  display: block;
+  margin-top: 8px;
+  color: #a9bdd6;
+  font-size: 12px;
+}
+
+.source-lines {
+  display: grid;
+  gap: 7px;
+  margin-top: 15px;
+}
+
+.source-lines span {
+  height: 6px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, rgba(240, 178, 74, 0.78), rgba(53, 224, 216, 0.42), transparent);
+}
+
+.source-lines span:nth-child(2) {
+  width: 82%;
+}
+
+.source-lines span:nth-child(3) {
+  width: 58%;
+}
+
+.knowledge-stream {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  gap: clamp(6px, 1vw, 13px);
+  min-width: 0;
+}
+
+.knowledge-stream i {
+  display: inline-grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  color: #dffbff;
+  background: rgba(53, 224, 216, 0.13);
+  box-shadow: 0 0 18px rgba(53, 224, 216, 0.42);
+  font-family: 'Noto Serif SC', serif;
+  font-size: 12px;
+  font-style: normal;
+  animation: stream-float 4s ease-in-out infinite;
+}
+
+.knowledge-stream i:nth-child(2n) {
+  color: #f6d68d;
+  background: rgba(240, 178, 74, 0.12);
+  box-shadow: 0 0 18px rgba(240, 178, 74, 0.34);
+  animation-delay: 0.45s;
+}
+
+.knowledge-stream i:nth-child(3n) {
+  transform: translateY(-18px);
+  animation-delay: 0.9s;
+}
+
+.knowledge-ai-panel {
+  position: relative;
+  overflow: hidden;
+  min-height: 126px;
+  border: 1px solid rgba(145, 223, 255, 0.34);
+  border-radius: 14px;
+  padding: 16px;
+  color: #e9f8ff;
+  background:
+    linear-gradient(90deg, rgba(53, 224, 216, 0.14), transparent 46%),
+    rgba(7, 13, 28, 0.62);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.12),
+    0 0 28px rgba(53, 224, 216, 0.16);
+  backdrop-filter: blur(10px);
+}
+
+.knowledge-ai-panel::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(120deg, transparent, rgba(255, 255, 255, 0.12), transparent);
+  transform: translateX(-100%);
+  animation: panel-scan 5.6s ease-in-out infinite;
+}
+
+.knowledge-ai-panel strong,
+.knowledge-ai-panel span {
+  position: relative;
+  z-index: 1;
+  display: block;
+}
+
+.knowledge-ai-panel strong {
+  font-size: 15px;
+  letter-spacing: 0.04em;
+}
+
+.knowledge-ai-panel span {
+  margin-top: 8px;
+  color: #91dfff;
+  font-size: 12px;
+}
+
+.panel-token {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: end;
+  gap: 5px;
+  height: 42px;
+  margin-top: 14px;
+}
+
+.panel-token em {
+  width: 100%;
+  border-radius: 999px 999px 0 0;
+  background: linear-gradient(180deg, #f0b24a, #35e0d8);
+  box-shadow: 0 0 12px rgba(53, 224, 216, 0.34);
+}
+
+.panel-token em:nth-child(1) { height: 34%; }
+.panel-token em:nth-child(2) { height: 52%; }
+.panel-token em:nth-child(3) { height: 78%; }
+.panel-token em:nth-child(4) { height: 46%; }
+.panel-token em:nth-child(5) { height: 66%; }
 
 .hero-badge-hp {
   display: inline-flex;
@@ -1041,6 +1292,16 @@ function initStarfield() {
   50% { background-position: 100% 50%; }
 }
 
+@keyframes stream-float {
+  0%, 100% { transform: translateY(0); opacity: 0.78; }
+  50% { transform: translateY(-14px); opacity: 1; }
+}
+
+@keyframes panel-scan {
+  0%, 55%, 100% { transform: translateX(-120%); }
+  72% { transform: translateX(120%); }
+}
+
 /* ── Reduced motion ── */
 @media (prefers-reduced-motion: reduce) {
   .badge-pulse,
@@ -1072,6 +1333,11 @@ function initStarfield() {
     animation: none !important;
     background-position: 0% 50%;
   }
+
+  .knowledge-stream i,
+  .knowledge-ai-panel::before {
+    animation: none !important;
+  }
 }
 
 /* ── Responsive ── */
@@ -1090,9 +1356,33 @@ function initStarfield() {
     padding: 60px 24px 40px;
     min-height: auto;
   }
+
+  .knowledge-transfer-scene {
+    grid-template-columns: 168px minmax(90px, 1fr) 164px;
+    min-height: 126px;
+  }
 }
 
 @media (max-width: 600px) {
+  .knowledge-transfer-scene {
+    grid-template-columns: 1fr;
+    gap: 10px;
+    max-width: 320px;
+  }
+
+  .knowledge-transfer-scene::before {
+    display: none;
+  }
+
+  .knowledge-stream {
+    justify-content: flex-start;
+    padding-left: 8px;
+  }
+
+  .knowledge-ai-panel {
+    min-height: 104px;
+  }
+
   .hero-stats-row {
     flex-wrap: wrap;
     gap: 16px;

@@ -1,12 +1,29 @@
 import { createRouter, createWebHistory } from 'vue-router'
+import { getAuthSession } from '@/lib/auth'
 
 const router = createRouter({
   history: createWebHistory(),
   routes: [
     {
       path: '/',
+      redirect: '/login',
+    },
+    {
+      path: '/login',
+      name: 'login',
+      component: () => import('@/views/Login.vue'),
+      meta: { public: true },
+    },
+    {
+      path: '/home',
       name: 'welcome',
       component: () => import('@/views/Welcome.vue'),
+    },
+    {
+      path: '/admin',
+      name: 'admin-dashboard',
+      component: () => import('@/views/AdminDashboard.vue'),
+      meta: { requiresAdmin: true },
     },
     {
       path: '/dialogue',
@@ -35,6 +52,10 @@ const router = createRouter({
       path: '/reverse-evaluation',
       name: 'reverse-evaluation',
       component: () => import('@/views/KnowledgeBase.vue'),
+    },
+    {
+      path: '/knowledge-base',
+      redirect: '/reverse-evaluation',
     },
     {
       path: '/tutoring',
@@ -66,6 +87,25 @@ const router = createRouter({
       component: () => import('@/views/TrainFlow.vue'),
     },
   ],
+})
+
+router.beforeEach((to) => {
+  const session = getAuthSession()
+
+  if (to.meta.public) {
+    if (!session) return true
+    return session.role === 'admin' ? '/admin' : '/home'
+  }
+
+  if (!session) {
+    return { path: '/login', query: { redirect: to.fullPath } }
+  }
+
+  if (to.meta.requiresAdmin && session.role !== 'admin') {
+    return '/home'
+  }
+
+  return true
 })
 
 export default router

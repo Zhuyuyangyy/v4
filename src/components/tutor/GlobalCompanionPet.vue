@@ -1,26 +1,21 @@
 <script setup lang="ts">
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
-import { resolveDesktopPetAnimation } from '@/config/desktopPet'
 import { useAppStore, type CompanionState } from '@/store'
 import { sendChatMessage } from '@/lib/api'
 import AiriLive2DRenderer from './live2d/AiriLive2DRenderer.vue'
 
 const appStore = useAppStore()
 
-const useLive2D = ref(true)
 const live2dReady = ref(false)
-const live2dError = ref<Error | null>(null)
 
-const frameIndex = ref(0)
 const position = ref({ x: 0, y: 0 })
 const isDragging = ref(false)
 const isSnapping = ref(false)
 const interactionState = ref<CompanionState | null>(null)
-const movementDirection = ref(1)
+const movementDirection = ref<1 | -1>(1)
 const targetLook = ref({ x: 0, y: 0 })
 const currentLook = ref({ x: 0, y: 0 })
 
-let frameTimer: ReturnType<typeof setInterval> | null = null
 let dragPointerId: number | null = null
 let dragOffsetX = 0
 let dragOffsetY = 0
@@ -70,7 +65,6 @@ async function sendChat() {
   chatInput.value = ''
   isChatSending.value = true
   interactionState.value = 'thinking'
-  playCurrentState()
 
   try {
     const reply = await sendChatMessage(text)
@@ -82,10 +76,8 @@ async function sendChat() {
     interactionState.value = 'error'
   } finally {
     isChatSending.value = false
-    playCurrentState()
     setTimeout(() => {
       interactionState.value = null
-      playCurrentState()
     }, 1200)
     nextTick(() => {
       if (chatPanelRef.value) chatPanelRef.value.scrollTop = chatPanelRef.value.scrollHeight
@@ -93,35 +85,7 @@ async function sendChat() {
   }
 }
 
-/* ── Pet animation state ── */
-const stateMap: Record<CompanionState, 'idle' | 'thinking' | 'typing' | 'cheer' | 'error'> = {
-  idle: 'idle',
-  thinking: 'thinking',
-  typing: 'typing',
-  cheer: 'cheer',
-  error: 'error',
-}
-
 const displayState = computed<CompanionState>(() => interactionState.value ?? appStore.companionState)
-const animationState = computed(() => {
-  if (isDragging.value || isSnapping.value) return 'walk'
-  return stateMap[displayState.value]
-})
-const activeAnimation = computed(() => resolveDesktopPetAnimation(animationState.value))
-
-const frameStyle = computed(() => {
-  const animation = activeAnimation.value
-  const col = frameIndex.value % animation.columns
-  const row = Math.floor(frameIndex.value / animation.columns)
-  const x = animation.columns === 1 ? 0 : (col / (animation.columns - 1)) * 100
-  const y = animation.rows === 1 ? 0 : (row / (animation.rows - 1)) * 100
-
-  return {
-    backgroundImage: `url(${animation.src})`,
-    backgroundSize: `${animation.columns * 100}% ${animation.rows * 100}%`,
-    backgroundPosition: `${x}% ${y}%`,
-  }
-})
 
 const petStyle = computed(() => ({
   left: `${position.value.x}px`,
@@ -132,21 +96,6 @@ const live2dFocus = computed(() => ({
   x: currentLook.value.x * getPetMetrics().width * 0.42,
   y: currentLook.value.y * getPetMetrics().height * 0.28,
 }))
-
-const spriteStyle = computed(() => {
-  const lookX = currentLook.value.x
-  const lookY = currentLook.value.y
-  const tilt = isDragging.value ? movementDirection.value * 6 : lookX * LOOK_ROTATION
-  const translateX = lookX * LOOK_OFFSET_X
-  const translateY = lookY * LOOK_OFFSET_Y
-  const scaleY = 1 - Math.abs(lookY) * 0.015
-
-  return {
-    ...frameStyle.value,
-    transform: `translate(${translateX}px, ${translateY}px) scaleX(${movementDirection.value}) scaleY(${scaleY}) rotate(${tilt}deg)`,
-    transformOrigin: 'center bottom',
-  }
-})
 
 /* Chat panel position: always above the pet */
 const chatPanelStyle = computed(() => {
@@ -159,12 +108,6 @@ const chatPanelStyle = computed(() => {
       : { right: `${window.innerWidth - position.value.x - metrics.width}px` }),
   }
 })
-
-function stopFrameTimer() {
-  if (!frameTimer) return
-  clearInterval(frameTimer)
-  frameTimer = null
-}
 
 function stopInteractionTimer() {
   if (!interactionTimer) return
@@ -182,27 +125,6 @@ function stopLookAnimation() {
   if (lookAnimationId === null) return
   cancelAnimationFrame(lookAnimationId)
   lookAnimationId = null
-}
-
-function playCurrentState() {
-  stopFrameTimer()
-  frameIndex.value = 0
-
-  const animation = activeAnimation.value
-
-  frameTimer = setInterval(() => {
-    if (animation.loop) {
-      frameIndex.value = (frameIndex.value + 1) % animation.frames
-      return
-    }
-
-    if (frameIndex.value >= animation.frames - 1) {
-      stopFrameTimer()
-      return
-    }
-
-    frameIndex.value += 1
-  }, Math.round(1000 / animation.fps))
 }
 
 function animateLook() {
@@ -308,7 +230,6 @@ function snapToEdge() {
   stopSnapTimer()
   snapTimer = window.setTimeout(() => {
     isSnapping.value = false
-    playCurrentState()
     snapTimer = null
   }, 220)
 }
@@ -316,10 +237,8 @@ function snapToEdge() {
 function triggerInteraction() {
   stopInteractionTimer()
   interactionState.value = 'cheer'
-  playCurrentState()
   interactionTimer = window.setTimeout(() => {
     interactionState.value = null
-    playCurrentState()
     interactionTimer = null
   }, 1200)
 }
@@ -337,7 +256,6 @@ function handlePointerMove(event: PointerEvent) {
     isDragging.value = true
     isSnapping.value = false
     stopSnapTimer()
-    playCurrentState()
   }
 
   if (!isDragging.value) return
@@ -357,7 +275,6 @@ function endDrag(event?: PointerEvent) {
 
   if (wasDragging) {
     snapToEdge()
-    playCurrentState()
   } else if (displayState.value === 'idle') {
     toggleChat()
   }
@@ -389,19 +306,10 @@ function handleResize() {
 
 function onLive2DError(error: Error) {
   console.warn('[GlobalCompanionPet] Live2D renderer failed:', error.message)
-  live2dError.value = error
 }
-
-watch(
-  () => animationState.value,
-  () => {
-    playCurrentState()
-  },
-)
 
 onMounted(() => {
   restorePosition()
-  playCurrentState()
   animateLook()
   window.addEventListener('pointermove', handlePointerMove)
   window.addEventListener('pointerup', endDrag)
@@ -409,7 +317,6 @@ onMounted(() => {
 })
 
 onBeforeUnmount(() => {
-  stopFrameTimer()
   stopInteractionTimer()
   stopSnapTimer()
   stopLookAnimation()
@@ -454,20 +361,17 @@ onBeforeUnmount(() => {
   </transition>
 
   <div class="global-pet" :class="{ dragging: isDragging, snapping: isSnapping }" :style="petStyle" @pointerdown="startDrag">
-    <div v-if="useLive2D" class="global-pet-live2d">
+    <div class="global-pet-live2d">
       <AiriLive2DRenderer
         :state="displayState"
         :width="220"
         :height="300"
         :focus-at="live2dFocus"
-        @ready="live2dReady = true; live2dError = null"
+        :facing="movementDirection"
+        @ready="live2dReady = true"
         @error="onLive2DError"
       />
     </div>
-    <template v-else-if="!live2dError">
-      <div class="global-pet-aura" />
-      <div class="global-pet-sprite" :style="spriteStyle" />
-    </template>
   </div>
 </template>
 
@@ -487,38 +391,10 @@ onBeforeUnmount(() => {
   width: 220px;
   height: 300px;
   pointer-events: auto;
-}
-
-.global-pet-aura {
-  position: absolute;
-  bottom: 12px;
-  width: 88px;
-  height: 22px;
-  border-radius: 999px;
-  background: radial-gradient(circle, rgba(251, 191, 36, 0.25), rgba(245, 158, 11, 0));
-  filter: blur(12px);
-  animation: aura-glow 3s ease-in-out infinite;
-}
-
-@keyframes aura-glow {
-  0%, 100% { opacity: 0.7; }
-  50% { opacity: 1; }
-}
-
-.global-pet-sprite {
-  position: relative;
-  z-index: 1;
-  width: 112px;
-  height: 112px;
-  background-repeat: no-repeat;
-  transition: transform 160ms ease-out;
-  filter:
-    drop-shadow(0 12px 22px rgba(251, 191, 36, 0.2))
-    drop-shadow(0 2px 8px rgba(255, 255, 255, 0.15));
   cursor: grab;
 }
 
-.global-pet.dragging .global-pet-sprite {
+.global-pet.dragging .global-pet-live2d {
   cursor: grabbing;
 }
 
@@ -744,15 +620,8 @@ onBeforeUnmount(() => {
 
 @media (max-width: 900px) {
   .global-pet-live2d {
-    width: 150px;
-    height: 210px;
-  }
-  .global-pet-sprite {
-    width: 92px;
-    height: 92px;
-  }
-  .global-pet-aura {
-    width: 72px;
+    width: 130px;
+    height: 180px;
   }
   .pet-chat-panel {
     width: 290px;

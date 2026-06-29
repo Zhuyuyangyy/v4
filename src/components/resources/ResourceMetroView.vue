@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted } from 'vue'
-import { BASE_KNOWLEDGE_ITEMS, buildMetroView } from './mapTransforms'
 import type { MetroLine, MetroStation } from './mapTypes'
 
 const emit = defineEmits<{ 'select-node': [nodeId: string] }>()
@@ -9,9 +8,75 @@ type Station = MetroStation & { lineId?: string; lineColor?: string }
 
 const KP = { bg: '#07070d', text: '#e8edf5', textSub: '#8892b0', emerald: '#06d6a0', cyan: '#00d4ff', purple: '#7c3aed', amber: '#f59e0b', rose: '#f43f5e', blue: '#3b82f6' }
 
-const allMetroLines = buildMetroView(BASE_KNOWLEDGE_ITEMS)
-const lines = ref<MetroLine[]>(allMetroLines.filter(l => l.id !== 'nlp'))
-const branches = ref<MetroLine[]>(allMetroLines.filter(l => l.id === 'nlp'))
+const allMetroLines: MetroLine[] = [
+  {
+    id: 'basic',
+    name: '图基础线',
+    color: '#00d4ff',
+    waypoints: [[120, 200], [1280, 200]],
+    stations: [
+      { id: 'g1', x: 140, y: 200, label: '顶点与边', mastery: 0.94, prerequisite: '集合基础', nextStation: '邻接表', estimatedTime: '1h' },
+      { id: 'g2', x: 320, y: 200, label: '邻接表', mastery: 0.84, prerequisite: '顶点与边', nextStation: '邻接矩阵', estimatedTime: '2h' },
+      { id: 'g3', x: 500, y: 200, label: '邻接矩阵', mastery: 0.72, interchange: ['search'], prerequisite: '二维数组', nextStation: '度与连通', estimatedTime: '2h' },
+      { id: 'g4', x: 700, y: 200, label: '度与连通', mastery: 0.66, prerequisite: '邻接结构', nextStation: '图遍历入口', estimatedTime: '2h' },
+      { id: 'g5', x: 900, y: 200, label: '图遍历入口', mastery: 0.58, interchange: ['search'], prerequisite: '连通分量', nextStation: '复杂度估算', estimatedTime: '2h' },
+      { id: 'g6', x: 1100, y: 200, label: '复杂度估算', mastery: 0.44, prerequisite: 'V/E 规模', nextStation: '专项练习', estimatedTime: '2h' },
+    ],
+  },
+  {
+    id: 'search',
+    name: '搜索遍历线',
+    color: '#06d6a0',
+    waypoints: [[120, 380], [1280, 380]],
+    stations: [
+      { id: 's1', x: 140, y: 380, label: '递归栈', mastery: 0.76, prerequisite: '函数调用', nextStation: 'DFS 模板', estimatedTime: '2h' },
+      { id: 's2', x: 320, y: 380, label: 'DFS 模板', mastery: 0.68, interchange: ['basic'], prerequisite: '递归栈', nextStation: '回溯边界', estimatedTime: '3h' },
+      { id: 's3', x: 500, y: 380, label: '回溯边界', mastery: 0.52, prerequisite: 'DFS 模板', nextStation: '队列推进', estimatedTime: '3h' },
+      { id: 's4', x: 700, y: 380, label: '队列推进', mastery: 0.46, prerequisite: 'FIFO 队列', nextStation: 'visited 标记', estimatedTime: '3h' },
+      { id: 's5', x: 900, y: 380, label: 'visited 标记', mastery: 0.32, interchange: ['basic', 'shortest'], recommended: true, youAreHere: true, isRemedial: true, prerequisite: '队列推进', nextStation: '层序距离', estimatedTime: '4h' },
+      { id: 's6', x: 1100, y: 380, label: '层序距离', mastery: 0.24, prerequisite: 'visited 标记', nextStation: '最短路入口', estimatedTime: '4h' },
+    ],
+  },
+  {
+    id: 'shortest',
+    name: '最短路线',
+    color: '#f59e0b',
+    waypoints: [[260, 560], [1280, 560]],
+    stations: [
+      { id: 'p1', x: 280, y: 560, label: '无权最短路', mastery: 0.42, interchange: ['search'], prerequisite: 'BFS 层序', nextStation: 'Dijkstra', estimatedTime: '3h' },
+      { id: 'p2', x: 500, y: 560, label: 'Dijkstra', mastery: 0.28, isRemedial: true, prerequisite: '优先队列', nextStation: '松弛操作', estimatedTime: '5h' },
+      { id: 'p3', x: 720, y: 560, label: '松弛操作', mastery: 0.24, recommended: true, prerequisite: 'Dijkstra', nextStation: '负权判断', estimatedTime: '4h' },
+      { id: 'p4', x: 940, y: 560, label: 'Bellman-Ford', mastery: 0.12, prerequisite: '松弛操作', nextStation: 'Floyd', estimatedTime: '5h' },
+      { id: 'p5', x: 1160, y: 560, label: 'Floyd', mastery: 0.08, prerequisite: '动态规划', nextStation: '路径恢复', estimatedTime: '5h' },
+    ],
+  },
+  {
+    id: 'mst',
+    name: '生成树线',
+    color: '#7c3aed',
+    waypoints: [[120, 740], [1020, 740]],
+    stations: [
+      { id: 't1', x: 140, y: 740, label: '切分性质', mastery: 0.40, prerequisite: '贪心思想', nextStation: 'Kruskal', estimatedTime: '3h' },
+      { id: 't2', x: 360, y: 740, label: 'Kruskal', mastery: 0.34, prerequisite: '排序', nextStation: '并查集', estimatedTime: '4h' },
+      { id: 't3', x: 580, y: 740, label: '并查集', mastery: 0.30, isRemedial: true, prerequisite: '树结构', nextStation: 'Prim', estimatedTime: '4h' },
+      { id: 't4', x: 800, y: 740, label: 'Prim', mastery: 0.18, prerequisite: '优先队列', nextStation: '综合题', estimatedTime: '5h' },
+    ],
+  },
+  {
+    id: 'exam',
+    name: '题型线',
+    color: '#f43f5e',
+    waypoints: [[700, 860], [1280, 860]],
+    stations: [
+      { id: 'e1', x: 720, y: 860, label: '连通块题', mastery: 0.48, prerequisite: 'DFS/BFS', nextStation: '迷宫题', estimatedTime: '2h' },
+      { id: 'e2', x: 900, y: 860, label: '迷宫题', mastery: 0.35, recommended: true, prerequisite: 'visited 标记', nextStation: '拓扑排序', estimatedTime: '3h' },
+      { id: 'e3', x: 1080, y: 860, label: '拓扑排序', mastery: 0.20, prerequisite: '入度队列', nextStation: '综合模拟', estimatedTime: '4h' },
+      { id: 'e4', x: 1240, y: 860, label: '综合模拟', mastery: 0.10, prerequisite: '多模板组合', nextStation: '复盘', estimatedTime: '4h' },
+    ],
+  },
+]
+const lines = ref<MetroLine[]>(allMetroLines.filter(l => l.id !== 'exam'))
+const branches = ref<MetroLine[]>(allMetroLines.filter(l => l.id === 'exam'))
 
 function buildPath(waypoints: [number, number][], radius = 14): string {
   if (waypoints.length < 2) return ''
@@ -84,7 +149,7 @@ onUnmounted(() => { styleEl?.remove() })
   <div class="metro-view">
     <div class="metro-banner">
       <span class="banner-dot" style="background:#06d6a0;box-shadow:0 0 10px #06d6a066"></span>
-      <span>每条线是一个学科，每站是一个知识点，换乘站是跨学科的桥接概念。空心站还没坐到过，半实是路过，实心是已抵达。</span>
+      <span>地铁图看的是学习顺序和路线换乘：先学什么、在哪补弱、何时跨到下一个方向，重点是路径规划，不是知识点关系图的重复版。</span>
     </div>
 
     <div class="metro-canvas">
@@ -178,7 +243,7 @@ onUnmounted(() => { styleEl?.remove() })
       <template v-for="line in branches" :key="'bl-'+line.id">
         <div v-for="(s, i) in line.stations" :key="'b-'+line.id+'-'+i" class="branch-label"
           :style="{ left: ((s.x + 22) / 1400 * 100) + '%', top: ((s.y - 8) / 900 * 100) + '%' }">
-          <span class="branch-tag" :style="{ color: line.color }">NLP</span>
+          <span class="branch-tag" :style="{ color: line.color }">题型</span>
           {{ s.label }}
         </div>
       </template>
@@ -223,12 +288,12 @@ onUnmounted(() => { styleEl?.remove() })
       <div class="metro-info-card">
         <div class="info-header">
           <span class="info-chip" style="background:rgba(245,158,11,0.12);border-color:#f59e0b33;color:#f59e0b">本月行程</span>
-          <span class="info-date">MAY · 2026</span>
+          <span class="info-date">GRAPH · 2026</span>
         </div>
         <div class="info-title">
-          再坐 4 站，<br />就能从<span style="color:#06d6a0">神经网络</span>到达<span style="color:#06d6a0">Transformer</span>
+          再坐 4 站，<br />就能从<span style="color:#06d6a0">队列推进</span>到达<span style="color:#06d6a0">BFS 最短路</span>
         </div>
-        <div class="info-desc">预计需 2 次换乘 · 经过 <span style="color:#00d4ff">凸优化</span> 与 <span style="color:#7c3aed">集成方法</span></div>
+        <div class="info-desc">预计需 2 次换乘 · 经过 <span style="color:#00d4ff">邻接结构</span> 与 <span style="color:#7c3aed">visited 标记</span></div>
         <div class="info-progress">
           <template v-for="(c, i) in ['#06d6a0','#06d6a0','#06d6a0','#00d4ff','#7c3aed','#06d6a0']" :key="i">
             <div class="prog-dot" :style="{ background: i <= 2 ? c : 'transparent', borderColor: c }"></div>

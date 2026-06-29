@@ -1,5 +1,5 @@
 import { ref, computed } from 'vue'
-import { analyzeProfile as analyzeProfileRequest, fetchLatestProfile, agentProfileAnalyze } from '@/lib/api'
+import { analyzeProfile as analyzeProfileRequest, fetchLatestProfile, agentProfileAnalyze, triggerKnowledgePath } from '@/lib/api'
 
 export interface SurveyAnswers {
   role: string
@@ -607,6 +607,9 @@ export function useProfileSurvey() {
       }
     }
     saveToStorage(result.value)
+    triggerKnowledgePath(result.value).catch((err) => {
+      console.warn('Failed to generate knowledge path from profile:', err)
+    })
     phase.value = 'results'
   }
 

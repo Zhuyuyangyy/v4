@@ -16,7 +16,7 @@ function tracesPath() {
   return path.join(tracesDir, 'traces.json')
 }
 
-function readTraces() {
+export function readTraces() {
   ensureDir()
   const fp = tracesPath()
   if (!fs.existsSync(fp)) return []
@@ -32,11 +32,24 @@ function writeTraces(traces) {
   fs.writeFileSync(tracesPath(), JSON.stringify(traces, null, 2), 'utf8')
 }
 
+let traceHook = null
+
+export function setTraceRecordedHook(hook) {
+  traceHook = hook
+}
+
 export function recordTrace(trace) {
   const traces = readTraces()
   traces.push(trace)
   const kept = traces.slice(-200)
   writeTraces(kept)
+  if (typeof traceHook === 'function') {
+    try {
+      traceHook(trace)
+    } catch (err) {
+      console.error('[traceHook] failed:', err)
+    }
+  }
   return trace
 }
 
@@ -52,6 +65,7 @@ export function getTraceSummary() {
   const riskFlagCount = traces.filter(t => t.riskFlags && t.riskFlags.length > 0).length
 
   const agentCounts = {}
+  const agentStats = {}
   let totalDurationMs = 0
   for (const t of traces) {
     if (t.agents) {
@@ -62,6 +76,29 @@ export function getTraceSummary() {
     if (t.durationMs) {
       totalDurationMs += t.durationMs
     }
+    if (!t.agents) continue
+    for (const agent of t.agents) {
+      if (!agentStats[agent.agentId]) {
+        agentStats[agent.agentId] = {
+          agentId: agent.agentId,
+          agentName: agent.agentName,
+          totalRuns: 0,
+          fallbackCount: 0,
+          avgConfidence: 0,
+          avgDurationMs: 0,
+        }
+      }
+      const s = agentStats[agent.agentId]
+      s.avgConfidence = (s.avgConfidence * s.totalRuns + (agent.confidence || 0)) / (s.totalRuns + 1)
+      s.avgDurationMs = (s.avgDurationMs * s.totalRuns + (agent.durationMs || 0)) / (s.totalRuns + 1)
+      s.totalRuns += 1
+      if (agent.fallbackUsed) s.fallbackCount += 1
+    }
+  }
+
+  const riskFlags = []
+  for (const trace of traces) {
+    if (trace.riskFlags) riskFlags.push(...trace.riskFlags)
   }
 
   return {
@@ -72,6 +109,12 @@ export function getTraceSummary() {
     riskRate: totalTraces > 0 ? Math.round((riskFlagCount / totalTraces) * 100) : 0,
     avgDurationMs: totalTraces > 0 ? Math.round(totalDurationMs / totalTraces) : 0,
     agentCounts,
+    agentStats: Object.values(agentStats).map(s => ({
+      ...s,
+      avgConfidence: Math.round(s.avgConfidence * 100) / 100,
+      avgDurationMs: Math.round(s.avgDurationMs),
+    })),
+    riskFlags: riskFlags.slice(-20),
     lastTraceAt: totalTraces > 0 ? traces[traces.length - 1].timestamp : null,
   }
 }

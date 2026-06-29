@@ -57,3 +57,71 @@ export function safeParseJson(text) {
     return null
   }
 }
+
+export async function generateStructuredJson({ systemPrompt, userPrompt, schema, fallback, taskType }) {
+  const start = Date.now()
+  const provider = LLM_API_URL || 'none'
+  const model = LLM_MODEL || 'none'
+
+  if (!isLlmAvailable()) {
+    return {
+      data: typeof fallback === 'function' ? fallback() : fallback,
+      provider: 'fallback',
+      model: 'fallback',
+      fallbackUsed: true,
+      durationMs: Date.now() - start,
+      rawTextPreview: '(no LLM configured; using fallback)',
+    }
+  }
+
+  try {
+    const result = await callLlm(systemPrompt, userPrompt)
+    const rawText = result.content || ''
+
+    if (result.fallbackUsed || result.error) {
+      const fallbackData = typeof fallback === 'function' ? fallback() : fallback
+      return {
+        data: fallbackData,
+        provider,
+        model,
+        fallbackUsed: true,
+        durationMs: Date.now() - start,
+        rawTextPreview: `(LLM error: ${result.error || 'no content'})`,
+      }
+    }
+
+    let parsed
+    try {
+      parsed = JSON.parse(rawText)
+    } catch {
+      parsed = typeof fallback === 'function' ? fallback() : fallback
+      return {
+        data: parsed,
+        provider,
+        model,
+        fallbackUsed: true,
+        durationMs: Date.now() - start,
+        rawTextPreview: rawText.slice(0, 300),
+      }
+    }
+
+    return {
+      data: parsed,
+      provider,
+      model,
+      fallbackUsed: false,
+      durationMs: Date.now() - start,
+      rawTextPreview: rawText.slice(0, 300),
+    }
+  } catch (error) {
+    const fallbackData = typeof fallback === 'function' ? fallback() : fallback
+    return {
+      data: fallbackData,
+      provider,
+      model,
+      fallbackUsed: true,
+      durationMs: Date.now() - start,
+      rawTextPreview: `(LLM error: ${error.message})`,
+    }
+  }
+}

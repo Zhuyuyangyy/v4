@@ -49,7 +49,7 @@ function readRendererStatus(): RendererStatus {
 
   return {
     ready: Boolean(document.querySelector('.airi-live2d-renderer.ready')),
-    live2dFailed: document.querySelector('.fallback-layered-pet') !== null,
+    live2dFailed: false,
     canvasCount: document.querySelectorAll('.airi-live2d-canvas canvas').length,
   }
 }

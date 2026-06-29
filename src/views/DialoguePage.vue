@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue'
+import { watch } from 'vue'
+import { useRoute } from 'vue-router'
 import CosmicBackground from '@/components/dialogue/CosmicBackground.vue'
 import ChatView from '@/components/dialogue/ChatView.vue'
 import XunfeiSidebar from '@/components/dialogue/XunfeiSidebar.vue'
@@ -11,6 +12,8 @@ import {
 } from '@/composables/dialogue/useAppState'
 import '@/assets/styles/dialogue.css'
 import { MessageSquare, GraduationCap, Compass, History } from 'lucide-vue-next'
+
+const route = useRoute()
 
 const navItems = [
   { id: 'chat' as const, title: '对话', icon: MessageSquare },
@@ -26,6 +29,13 @@ function isNavActive(id: string) {
 function handleNavClick(id: typeof activeMenu.value) {
   activeMenu.value = id
 }
+
+watch(() => route.query.tab, (tab) => {
+  const tabName = Array.isArray(tab) ? tab[0] : tab
+  if (tabName === 'portrait-report' || tabName === 'chat' || tabName === 'recommend' || tabName === 'history') {
+    activeMenu.value = tabName
+  }
+}, { immediate: true })
 </script>
 
 <template>

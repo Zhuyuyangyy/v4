@@ -8,9 +8,6 @@ export interface Slide {
   content: string
   icon?: string
   image?: string
-  keyPoints?: string[]
-  example?: string
-  tip?: string
 }
 
 export interface Resource {
@@ -30,12 +27,6 @@ export interface Resource {
   contentMarkdown?: string
   slides?: Slide[]
   color?: string
-  domain?: string
-  topic?: string
-  stage?: string
-  sourceType?: 'doc' | 'video' | 'exercise' | 'code'
-  bilibiliBvid?: string
-  bilibiliQuery?: string
 }
 
 export interface Recommendation {

@@ -224,7 +224,7 @@ onUnmounted(() => { styleEl?.remove() })
 .constellation-banner {
   display: flex; align-items: center; gap: 10px;
   padding: 14px 20px; border-radius: 14px;
-  background: rgba(12, 12, 30, 0.6); backdrop-filter: blur(20px);
+  background: rgba(12, 12, 30, 0.42); backdrop-filter: blur(20px);
   border: 1px solid rgba(255, 255, 255, 0.06);
   margin-bottom: 20px; font-size: 13px; color: #8892b0; line-height: 1.6;
 }
@@ -232,7 +232,7 @@ onUnmounted(() => { styleEl?.remove() })
 
 .constellation-canvas {
   position: relative; width: 100%; aspect-ratio: 1400 / 900;
-  border-radius: 18px; background: transparent;
+  border-radius: 18px; background: rgba(7, 7, 13, 0.62);
   border: 1px solid rgba(255, 255, 255, 0.06); overflow: hidden;
 }
 .constellation-svg { position: absolute; inset: 0; width: 100%; height: 100%; }
@@ -258,7 +258,7 @@ onUnmounted(() => { styleEl?.remove() })
   position: absolute; transform: translate(28px, -100%); z-index: 8;
 }
 .rec-pin-inner {
-  background: rgba(124, 58, 237, 0.18); border: 1px solid #7c3aed66;
+  background: rgba(124, 58, 237, 0.12); border: 1px solid #7c3aed66;
   border-radius: 10px; padding: 8px 12px; backdrop-filter: blur(12px);
   display: flex; align-items: center; gap: 8px; white-space: nowrap;
   font-size: 11px; color: #e8edf5; font-weight: 500;
@@ -272,7 +272,7 @@ onUnmounted(() => { styleEl?.remove() })
 /* Detail card */
 .detail-card {
   position: absolute; right: 24px; bottom: 24px; width: 320px;
-  background: rgba(12, 12, 30, 0.72); backdrop-filter: blur(20px);
+  background: rgba(12, 12, 30, 0.48); backdrop-filter: blur(20px);
   border: 1px solid rgba(255, 255, 255, 0.06); border-radius: 16px;
   padding: 20px; z-index: 10;
   box-shadow: 0 12px 40px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.04);
@@ -303,7 +303,7 @@ onUnmounted(() => { styleEl?.remove() })
 /* Legend */
 .legend-card {
   position: absolute; left: 24px; bottom: 24px;
-  background: rgba(12, 12, 30, 0.72); backdrop-filter: blur(20px);
+  background: rgba(12, 12, 30, 0.48); backdrop-filter: blur(20px);
   border: 1px solid rgba(255, 255, 255, 0.06); border-radius: 16px;
   padding: 16px 20px; z-index: 10;
   box-shadow: 0 12px 40px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.04);
@@ -323,7 +323,7 @@ onUnmounted(() => { styleEl?.remove() })
   display: flex; gap: 12px;
 }
 .stat-card {
-  background: rgba(12,12,30,0.6); border: 1px solid rgba(255,255,255,0.05);
+  background: rgba(12,12,30,0.42); border: 1px solid rgba(255,255,255,0.05);
   border-radius: 12px; padding: 10px 16px;
 }
 .stat-label { font-size: 9px; letter-spacing: 0.18em; color: #8892b0; font-family: var(--font-mono); margin-bottom: 4px; }

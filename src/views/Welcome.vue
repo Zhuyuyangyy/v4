@@ -7,6 +7,7 @@ import SectionSkyline from '@/components/homepage/SectionSkyline.vue'
 import SectionMissions from '@/components/homepage/SectionMissions.vue'
 import AgentHub from '@/components/homepage/AgentHub.vue'
 import TrainFlow from '@/views/TrainFlow.vue'
+import InkMouseBackground from '@/components/homepage/InkMouseBackground.vue'
 
 const loaded = ref(false)
 const activeHubBeatId = ref('profile')
@@ -14,12 +15,12 @@ const controlBeatId = ref('profile')
 const controlNonce = ref(0)
 
 const hubStages = [
-  { id: 'profile', role: 'PROFILE', name: '画像智能体', color: '#8FA7FF', note: '识别薄弱知识点、学习偏好和卡顿信号' },
-  { id: 'path', role: 'PATH', name: '路径规划智能体', color: '#35E0D8', note: '根据画像重排补弱路径和学习顺序' },
-  { id: 'resource', role: 'RESOURCE', name: '资源推荐智能体', color: '#45D483', note: '匹配视频、例题、练习和补充材料' },
-  { id: 'tutor', role: 'TUTOR', name: 'AI 辅导智能体', color: '#F0B24A', note: '把资源转成讲解、追问和辅导记录' },
-  { id: 'eval', role: 'EVAL', name: '评估智能体', color: '#F0586E', note: '生成诊断题并判断是否真正掌握' },
-  { id: 'loop', role: 'WRITE-BACK', name: '反馈回写', color: '#FFD78A', note: '把评估结果回写画像和下一轮路径' },
+  { id: 'profile', visualId: 'profile', role: 'PROFILE MODULE', name: '画像诊断模块', color: '#8FA7FF', note: '画像采集 + 薄弱诊断双智能体' },
+  { id: 'path', visualId: 'path', role: 'PATH MODULE', name: '路径编排模块', color: '#35E0D8', note: '路径规划 + 动态重规划双智能体' },
+  { id: 'resource', visualId: 'resource', role: 'RESOURCE MODULE', name: '资源生产模块', color: '#45D483', note: '资源检索 + 个性生成双智能体' },
+  { id: 'tutor', visualId: 'tutor', role: 'TUTOR MODULE', name: '辅导互动模块', color: '#F0B24A', note: '讲解辅导 + 互动答疑双智能体' },
+  { id: 'eval', visualId: 'eval', role: 'EVAL MODULE', name: '测评分析模块', color: '#F0586E', note: '评估出题 + 错因分析双智能体' },
+  { id: 'feedback', visualId: 'loop', role: 'FEEDBACK MODULE', name: '反馈复盘模块', color: '#7C8CFF', note: '反馈回写 + 成长复盘双智能体' },
 ]
 
 const currentHubStage = computed(() => (
@@ -28,12 +29,14 @@ const currentHubStage = computed(() => (
 
 function handleAgentHubBeat(event: MessageEvent) {
   if (event.data?.type !== 'agenthub:beat') return
-  activeHubBeatId.value = event.data.id
+  const nextStage = hubStages.find(stage => stage.visualId === event.data.id)
+  activeHubBeatId.value = nextStage?.id ?? event.data.id
 }
 
 function jumpToAgent(id: string) {
-  activeHubBeatId.value = id
-  controlBeatId.value = id
+  const nextStage = hubStages.find(stage => stage.id === id) ?? hubStages[0]
+  activeHubBeatId.value = nextStage.id
+  controlBeatId.value = nextStage.visualId
   controlNonce.value += 1
 }
 
@@ -49,6 +52,7 @@ onBeforeUnmount(() => {
 
 <template>
   <div class="welcome">
+    <InkMouseBackground />
     <div class="home-image-layer" aria-hidden="true">
       <img class="home-art home-art-hero" src="/homepage/agent-constellation-hero.png" alt="">
       <img class="home-art home-art-path" src="/homepage/learning-path-repair.png" alt="">
@@ -59,10 +63,10 @@ onBeforeUnmount(() => {
 
     <section class="hub-workbench">
       <aside class="hub-context-card" :style="{ '--stage-color': currentHubStage.color }">
-        <span class="hub-context-kicker">AGENT ROLES</span>
-        <h2>每个智能体负责什么</h2>
+        <span class="hub-context-kicker">6 MODULES · 12 AGENTS</span>
+        <h2>六个模块如何协同</h2>
 
-        <div class="hub-agent-list" aria-label="智能体职责说明">
+        <div class="hub-agent-list" aria-label="六个协同模块说明">
           <button
             v-for="stage in hubStages"
             :key="stage.id"
@@ -81,7 +85,7 @@ onBeforeUnmount(() => {
         <div class="hub-role-visual" aria-hidden="true">
           <img src="/homepage/agent-role-orbit-panel.png" alt="">
           <div class="hub-role-visual-copy">
-            <span>ROLE ORBIT</span>
+            <span>MODULE ORBIT</span>
             <strong>{{ currentHubStage.role }}</strong>
           </div>
         </div>
@@ -89,17 +93,19 @@ onBeforeUnmount(() => {
 
       <div class="hub-workbench-main">
         <AgentHub :control-beat-id="controlBeatId" :control-nonce="controlNonce" />
-        <TrainFlow embedded-stage-only :active-beat-id="activeHubBeatId" />
+        <TrainFlow embedded-stage-only :active-beat-id="currentHubStage.visualId" />
       </div>
     </section>
 
     <!-- Agent live ticker -->
     <AgentLiveTicker />
 
-    <!-- Collaboration telemetry -->
-    <SectionTelemetry />
+    <!-- Knowledge map & next step learning -->
     <SectionSkyline />
     <SectionMissions />
+
+    <!-- Collaboration telemetry -->
+    <SectionTelemetry />
 
     <footer class="footer" aria-hidden="true" />
   </div>
@@ -257,7 +263,7 @@ onBeforeUnmount(() => {
   align-items: stretch;
   max-width: 1760px;
   margin: 0 auto;
-  padding: 72px 36px 56px;
+  padding: 56px 36px 18px;
 }
 
 .hub-context-card {
@@ -275,6 +281,7 @@ onBeforeUnmount(() => {
     linear-gradient(145deg, rgba(7, 10, 24, 0.22), rgba(4, 7, 18, 0.08));
   backdrop-filter: blur(10px) saturate(1.2);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  animation: welcome-border-breathe 4.8s ease-in-out infinite;
 }
 
 .hub-context-kicker {
@@ -302,7 +309,7 @@ onBeforeUnmount(() => {
 .hub-agent-item {
   --stage-color: #00d4ff;
   display: grid;
-  grid-template-columns: 78px minmax(0, 1fr);
+  grid-template-columns: 104px minmax(0, 1fr);
   gap: 4px 12px;
   align-items: start;
   width: 100%;
@@ -318,6 +325,7 @@ onBeforeUnmount(() => {
     border-color 0.28s ease,
     background 0.28s ease,
     box-shadow 0.28s ease;
+  animation: welcome-soft-border-breathe 5.4s ease-in-out infinite;
 }
 
 .hub-agent-item:hover {
@@ -377,6 +385,7 @@ onBeforeUnmount(() => {
   background:
     radial-gradient(circle at 18% 18%, color-mix(in srgb, var(--stage-color) 12%, transparent), transparent 48%),
     rgba(8, 12, 30, 0.10);
+  animation: welcome-soft-border-breathe 5s ease-in-out infinite;
 }
 
 .hub-role-visual img {
@@ -507,6 +516,46 @@ onBeforeUnmount(() => {
   margin-top: 14px;
 }
 
+:deep(.hub-frame-shell),
+:deep(.agent-stage),
+:deep(.course-chip),
+:deep(.handoff-strip),
+:deep(.log-container) {
+  animation: welcome-border-breathe 4.8s ease-in-out infinite;
+}
+
+@keyframes welcome-border-breathe {
+  0%,
+  100% {
+    border-color: rgba(120, 160, 220, 0.18);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.06),
+      0 0 0 rgba(0, 212, 255, 0);
+  }
+
+  50% {
+    border-color: rgba(0, 212, 255, 0.46);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.1),
+      0 0 34px rgba(0, 212, 255, 0.18);
+  }
+}
+
+@keyframes welcome-soft-border-breathe {
+  0%,
+  100% {
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.04),
+      0 0 0 color-mix(in srgb, var(--stage-color) 0%, transparent);
+  }
+
+  50% {
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.08),
+      0 0 24px color-mix(in srgb, var(--stage-color) 20%, transparent);
+  }
+}
+
 /* ── Section headers ── */
 .section-header {
   text-align: center;
@@ -572,7 +621,7 @@ onBeforeUnmount(() => {
 
   .hub-workbench {
     grid-template-columns: 1fr;
-    padding: 48px 16px 36px;
+    padding: 40px 16px 18px;
   }
 
   .hub-context-card,
