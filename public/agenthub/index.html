@@ -3,181 +3,518 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>智能体枢纽 · 多智能体协同</title>
+  <title>Multi-Agent Orchestration Hub</title>
   <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    html, body { background: transparent; min-height: 100vh; }
-    body { font-family: 'Outfit', 'PingFang SC', sans-serif; -webkit-font-smoothing: antialiased; overflow-x: hidden; }
-    ::-webkit-scrollbar { width: 10px; height: 10px; }
-    ::-webkit-scrollbar-track { background: #070b18; }
-    ::-webkit-scrollbar-thumb { background: rgba(120,160,220,0.2); border-radius: 5px; }
-    ::-webkit-scrollbar-thumb:hover { background: rgba(120,160,220,0.35); }
-
-    @keyframes tf-pulse { 0%,100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.5; transform: scale(0.85); } }
-    @keyframes tf-spin { to { transform: rotate(360deg); } }
-    @keyframes tf-twinkle { 0%,100% { opacity: 0.25; } 50% { opacity: 1; } }
-    @keyframes tf-railflow { to { background-position: 22px 0; } }
-    @keyframes tf-standby { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
-    @keyframes tf-baton { 0% { transform: translateX(0); opacity: 1; } 80% { opacity: 1; } 100% { transform: translateX(26px); opacity: 0; } }
-    @keyframes wb-rise { 0% { opacity: 0; transform: translate(-50%,-36%); } 100% { opacity: 1; transform: translate(-50%,-50%); } }
-  </style>
-</head>
-<body>
-  <div id="root">
-    <section class="agenthub-embed">
-      <div id="hubwrap" class="agenthub-scene">
-        <div id="hud" class="agenthub-hud">
-          <div class="agenthub-hud-state">LEVEL 03 - RESOURCE 处理中</div>
-        </div>
-        <div id="loadtip" class="agenthub-loading">
-          <div class="agenthub-spinner"></div>
-          正在加载三维枢纽
-        </div>
-        <div class="agenthub-help">拖动旋转 - 滚轮缩放</div>
-      </div>
-    </section>
-  </div>
-
-  <style>
-    html, body, #root { width: 100%; height: 100%; min-height: 0; overflow: hidden; }
-    body { margin: 0; background: transparent; }
-    .agenthub-embed {
-      position: relative;
+    * { box-sizing: border-box; }
+    html, body, #root {
       width: 100%;
       height: 100%;
-      min-height: 0;
-      padding: 0;
+      margin: 0;
+      overflow: hidden;
+    }
+    body {
       background: transparent;
+      font-family: "Outfit", "PingFang SC", "Microsoft YaHei", sans-serif;
+      -webkit-font-smoothing: antialiased;
     }
     .agenthub-scene {
       position: relative;
       width: 100%;
       height: 100%;
-      min-height: 0;
       overflow: hidden;
-      border: 1px solid rgba(120,160,220,0.16);
+      border: 1px solid rgba(168, 226, 255, 0.18);
       border-radius: 18px;
-      background: rgba(5, 6, 16, 0.18);
+      background:
+        radial-gradient(circle at 50% 42%, rgba(0, 188, 255, 0.22), transparent 30%),
+        radial-gradient(circle at 18% 78%, rgba(58, 98, 255, 0.16), transparent 28%),
+        radial-gradient(circle at 83% 70%, rgba(255, 190, 84, 0.12), transparent 24%),
+        linear-gradient(155deg, #06142a 0%, #071a32 38%, #081426 70%, #030815 100%);
       touch-action: none;
     }
     .agenthub-scene canvas {
+      position: relative;
+      z-index: 2;
       display: block;
       width: 100%;
       height: 100%;
     }
-    .agenthub-hud {
+    .agenthub-vignette,
+    .agenthub-grid,
+    .agenthub-scan {
       position: absolute;
-      bottom: 18px;
-      left: 18px;
-      z-index: 2;
+      inset: 0;
       pointer-events: none;
-      text-shadow: 0 1px 6px rgba(0,0,0,0.9);
     }
-    .agenthub-hud-state {
-      display: inline-flex;
-      align-items: center;
-      min-height: 30px;
-      padding: 7px 12px;
-      border: 1px solid rgba(6, 214, 160, 0.28);
-      border-radius: 999px;
-      background: rgba(4, 8, 18, 0.58);
-      font-size: 14px;
-      letter-spacing: 0.1em;
-      color: #06d6a0;
-      font-family: 'JetBrains Mono', monospace;
-      backdrop-filter: blur(10px);
+    .agenthub-vignette {
+      z-index: 3;
+      background:
+        radial-gradient(ellipse at 50% 44%, transparent 54%, rgba(3, 14, 28, 0.2) 78%, rgba(1, 5, 13, 0.56) 100%),
+        linear-gradient(90deg, rgba(1, 8, 18, 0.28), transparent 24%, transparent 76%, rgba(1, 8, 18, 0.28));
+    }
+    .agenthub-grid {
+      z-index: 1;
+      opacity: 0.18;
+      background-image:
+        linear-gradient(rgba(154, 230, 255, 0.14) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(154, 230, 255, 0.14) 1px, transparent 1px);
+      background-size: 44px 44px;
+      transform: perspective(720px) rotateX(64deg) translateY(20%);
+      transform-origin: 50% 80%;
+      mask-image: linear-gradient(180deg, transparent, black 34%, transparent 88%);
+    }
+    .agenthub-scan {
+      z-index: 1;
+      opacity: 0.28;
+      mix-blend-mode: screen;
+      background: linear-gradient(180deg, transparent 0%, rgba(164, 236, 255, 0.12) 50%, transparent 58%);
+      animation: scan 5.6s linear infinite;
     }
     .agenthub-loading {
       position: absolute;
       inset: 0;
-      z-index: 3;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      gap: 12px;
-      color: #9fb6dc;
-      font-size: 13px;
-      background: rgba(5,6,16,0.35);
+      z-index: 5;
+      display: grid;
+      place-items: center;
+      background: rgba(15, 36, 56, 0.72);
+      transition: opacity 0.35s ease;
+    }
+    .agenthub-loading.hide {
+      opacity: 0;
+      pointer-events: none;
     }
     .agenthub-spinner {
-      width: 30px;
-      height: 30px;
+      width: 34px;
+      height: 34px;
+      border: 2px solid rgba(172, 232, 255, 0.24);
+      border-top-color: rgba(214, 250, 255, 0.96);
       border-radius: 50%;
-      border: 2px solid rgba(0,212,255,0.2);
-      border-top-color: #00d4ff;
-      animation: tf-spin 0.8s linear infinite;
+      animation: spin 0.85s linear infinite;
     }
-    .agenthub-help {
-      position: absolute;
-      right: 18px;
-      bottom: 16px;
-      z-index: 2;
-      pointer-events: none;
-      color: #8aa0c4;
-      font-size: 12px;
-      font-family: 'JetBrains Mono', monospace;
+    @keyframes spin { to { transform: rotate(360deg); } }
+    @keyframes scan {
+      0% { transform: translateY(-62%); }
+      100% { transform: translateY(62%); }
     }
   </style>
+</head>
+<body>
+  <div id="root">
+    <section id="hubwrap" class="agenthub-scene" aria-label="Multi-agent collaboration scene">
+      <div class="agenthub-grid" aria-hidden="true"></div>
+      <div class="agenthub-scan" aria-hidden="true"></div>
+      <div class="agenthub-vignette" aria-hidden="true"></div>
+      <div id="loadtip" class="agenthub-loading" aria-hidden="true">
+        <div class="agenthub-spinner"></div>
+      </div>
+    </section>
+  </div>
 
-  <!-- 3D hub — INLINED module (no separate cacheable file; exactly one evaluation, one HUB closure) -->
   <script type="module">
-  // ===== 智能体枢纽 3D · build HUB_BUILD = 20 =====
-  {
-    if (window.__hubRAF) { cancelAnimationFrame(window.__hubRAF); window.__hubRAF = null; }
-    const HUB_BUILD = 20;
-    const BEAT_LABELS = {
-      depart: 'LEVEL 00 - 系统待命',
-      profile: 'LEVEL 01 - PROFILE 画像识别',
-      path: 'LEVEL 02 - PATH 路径规划',
-      resource: 'LEVEL 03 - RESOURCE 资源匹配',
-      tutor: 'LEVEL 04 - TUTOR 辅导讲解',
-      eval: 'LEVEL 05 - EVAL 掌握评估',
-      loop: 'A1 - WRITE-BACK 反馈回写',
-    };
+    import * as THREE from 'https://esm.sh/three@0.160.0';
+    import { GLTFLoader } from 'https://esm.sh/three@0.160.0/examples/jsm/loaders/GLTFLoader.js';
+    import { OrbitControls } from 'https://esm.sh/three@0.160.0/examples/jsm/controls/OrbitControls.js';
+    import { RoomEnvironment } from 'https://esm.sh/three@0.160.0/examples/jsm/environments/RoomEnvironment.js';
+    import { EffectComposer } from 'https://esm.sh/three@0.160.0/examples/jsm/postprocessing/EffectComposer.js';
+    import { RenderPass } from 'https://esm.sh/three@0.160.0/examples/jsm/postprocessing/RenderPass.js';
+    import { UnrealBloomPass } from 'https://esm.sh/three@0.160.0/examples/jsm/postprocessing/UnrealBloomPass.js';
 
-    const HUB = {
-      state: { beat: 0, id: 'depart', ready: false },
-      _readyCbs: [],
-      setBeat(i, id) {
-        this.state.beat = i;
-        this.state.id = id;
-        const stateEl = document.querySelector('.agenthub-hud-state');
-        if (stateEl) stateEl.textContent = BEAT_LABELS[id] || BEAT_LABELS.depart;
-        window.parent?.postMessage({ type: 'agenthub:beat', beat: i, id }, '*');
-        if (this._apply) this._apply();
-      },
-      onReady(cb) { if (this.state.ready) cb(); else this._readyCbs.push(cb); },
-    };
-    window.AgentHub = HUB;
+    const MODEL_URLS = ['/agenthub/models/agent_hub_concept_refined_final.glb'];
+    const STATIONS = [
+      { id: 'profile', color: '#9B8CFF', pos: new THREE.Vector3(0, 1.05, -9.5) },
+      { id: 'path', color: '#35E0D8', pos: new THREE.Vector3(8.227, 1.05, -4.75) },
+      { id: 'resource', color: '#1ABF90', pos: new THREE.Vector3(8.227, 1.05, 4.75) },
+      { id: 'tutor', color: '#F0B24A', pos: new THREE.Vector3(0, 1.05, 9.5) },
+      { id: 'eval', color: '#F0586E', pos: new THREE.Vector3(-8.227, 1.05, 4.75) },
+      { id: 'loop', color: '#7C8CFF', pos: new THREE.Vector3(-8.227, 1.05, -4.75) },
+    ];
 
-    function startAgentHubCycle() {
-      const beats = [
-        [0, 'profile'],
-        [1, 'path'],
-        [2, 'resource'],
-        [3, 'tutor'],
-        [4, 'eval'],
-        [5, 'loop'],
-      ];
-      let index = 0;
-      const scheduleCycle = () => {
-        clearInterval(window.__agentHubCycle);
-        window.__agentHubCycle = setInterval(() => {
-          index = (index + 1) % beats.length;
-          HUB.setBeat(...beats[index]);
-        }, 5200);
-      };
-      const jumpToBeat = (id) => {
-        const next = beats.findIndex(([, beatId]) => beatId === id);
-        if (next < 0) return;
-        index = next;
-        HUB.setBeat(...beats[index]);
-        scheduleCycle();
-      };
-      window.__agentHubJumpToBeat = jumpToBeat;
-      HUB.setBeat(...beats[index]);
-      scheduleCycle();
+    const wrap = document.getElementById('hubwrap');
+    const loading = document.getElementById('loadtip');
+
+    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, preserveDrawingBuffer: true });
+    renderer.setPixelRatio(Math.min(devicePixelRatio, 1.75));
+    renderer.setSize(wrap.clientWidth, wrap.clientHeight);
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.0;
+    renderer.outputColorSpace = THREE.SRGBColorSpace;
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    wrap.appendChild(renderer.domElement);
+
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x06142a);
+    scene.fog = new THREE.FogExp2(0x06142a, 0.0065);
+
+    const pmrem = new THREE.PMREMGenerator(renderer);
+    scene.environment = pmrem.fromScene(new RoomEnvironment(renderer), 0.04).texture;
+
+    const camera = new THREE.PerspectiveCamera(32, wrap.clientWidth / wrap.clientHeight, 0.1, 500);
+    camera.position.set(14.2, 9.2, 17.4);
+
+    const controls = new OrbitControls(camera, renderer.domElement);
+    controls.target.set(0, 2.6, 0);
+    controls.enableDamping = true;
+    controls.dampingFactor = 0.055;
+    controls.enablePan = false;
+    controls.minDistance = 11.5;
+    controls.maxDistance = 32;
+    controls.maxPolarAngle = Math.PI / 2.06;
+    controls.autoRotate = true;
+    controls.autoRotateSpeed = 0.5;
+
+    let rotateTimer = 0;
+    controls.addEventListener('start', () => {
+      controls.autoRotate = false;
+      clearTimeout(rotateTimer);
+    });
+    controls.addEventListener('end', () => {
+      clearTimeout(rotateTimer);
+      rotateTimer = setTimeout(() => { controls.autoRotate = true; }, 2800);
+    });
+
+    scene.add(new THREE.HemisphereLight(0x9eeaff, 0x102032, 0.84));
+
+    const key = new THREE.DirectionalLight(0xf6fbff, 2.9);
+    key.position.set(-9, 18, 13);
+    key.castShadow = true;
+    key.shadow.mapSize.set(2048, 2048);
+    key.shadow.camera.near = 1;
+    key.shadow.camera.far = 80;
+    key.shadow.camera.left = -24;
+    key.shadow.camera.right = 24;
+    key.shadow.camera.top = 24;
+    key.shadow.camera.bottom = -24;
+    key.shadow.bias = -0.00035;
+    scene.add(key);
+
+    const fill = new THREE.DirectionalLight(0xb9cfff, 1.25);
+    fill.position.set(12, 7, -10);
+    scene.add(fill);
+
+    const coreLight = new THREE.PointLight(0x79e7ff, 3.8, 60, 1.6);
+    coreLight.position.set(0, 3.6, 0);
+    scene.add(coreLight);
+
+    const stationLights = STATIONS.map((station) => {
+      const light = new THREE.PointLight(station.color, 0.35, 14, 2.2);
+      light.position.copy(station.pos).add(new THREE.Vector3(0, 1.0, 0));
+      scene.add(light);
+      return light;
+    });
+
+    const composer = new EffectComposer(renderer);
+    composer.addPass(new RenderPass(scene, camera));
+    const bloom = new UnrealBloomPass(new THREE.Vector2(wrap.clientWidth, wrap.clientHeight), 0.34, 0.5, 0.92);
+    composer.addPass(bloom);
+
+    const refs = {
+      root: null,
+      mixer: null,
+      rings: [],
+      packets: [],
+      stationMeshes: new Map(),
+      emissiveMaterials: new Map(),
+      activeObjects: [],
+      flowPackets: [],
+      flowArcs: [],
+      pulseRings: [],
+      scanRings: [],
+      gltfAnimations: 0,
+      loadedModelUrl: null,
+    };
+    let activeIndex = 0;
+    let activeId = STATIONS[0].id;
+
+    function radialTexture(size, stops) {
+      const canvas = document.createElement('canvas');
+      canvas.width = canvas.height = size;
+      const ctx = canvas.getContext('2d');
+      const grad = ctx.createRadialGradient(size / 2, size / 2, 0, size / 2, size / 2, size / 2);
+      stops.forEach(([at, color]) => grad.addColorStop(at, color));
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, 0, size, size);
+      const texture = new THREE.CanvasTexture(canvas);
+      texture.colorSpace = THREE.SRGBColorSpace;
+      return texture;
+    }
+
+    function makeEnvironment() {
+      const floor = new THREE.Mesh(
+        new THREE.CircleGeometry(34, 192).rotateX(-Math.PI / 2),
+        new THREE.MeshStandardMaterial({
+          color: 0x06182f,
+          metalness: 0.46,
+          roughness: 0.38,
+          transparent: true,
+          opacity: 0.04,
+          envMapIntensity: 0.9,
+          depthWrite: false,
+        })
+      );
+      floor.position.y = -0.12;
+      floor.receiveShadow = true;
+      scene.add(floor);
+
+      const contact = new THREE.Mesh(
+        new THREE.CircleGeometry(25, 160).rotateX(-Math.PI / 2),
+        new THREE.MeshBasicMaterial({
+          map: radialTexture(512, [
+            [0, 'rgba(0,0,0,0.58)'],
+            [0.42, 'rgba(0,0,0,0.3)'],
+            [0.82, 'rgba(0,0,0,0.06)'],
+            [1, 'rgba(0,0,0,0)'],
+          ]),
+          transparent: true,
+          opacity: 0.45,
+          depthWrite: false,
+        })
+      );
+      contact.position.y = -0.08;
+      scene.add(contact);
+
+      const glow = new THREE.Mesh(
+        new THREE.CircleGeometry(46, 192).rotateX(-Math.PI / 2),
+        new THREE.MeshBasicMaterial({
+          map: radialTexture(512, [
+            [0, 'rgba(138,232,255,0.2)'],
+            [0.38, 'rgba(70,154,255,0.09)'],
+            [1, 'rgba(0,0,0,0)'],
+          ]),
+          transparent: true,
+          opacity: 0.16,
+          depthWrite: false,
+          blending: THREE.AdditiveBlending,
+        })
+      );
+      glow.position.y = -0.1;
+      scene.add(glow);
+
+      const starGeo = new THREE.BufferGeometry();
+      const count = 320;
+      const pos = new Float32Array(count * 3);
+      for (let i = 0; i < count; i++) {
+        const radius = 38 + Math.random() * 72;
+        const angle = Math.random() * Math.PI * 2;
+        pos[i * 3] = Math.cos(angle) * radius;
+        pos[i * 3 + 1] = Math.random() * 30 - 2;
+        pos[i * 3 + 2] = Math.sin(angle) * radius;
+      }
+      starGeo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+      scene.add(new THREE.Points(starGeo, new THREE.PointsMaterial({
+        color: 0xbdefff,
+        size: 0.18,
+        transparent: true,
+        opacity: 0.24,
+        depthWrite: false,
+        blending: THREE.AdditiveBlending,
+      })));
+    }
+
+    function curveBetween(a, b, lift = 2.4) {
+      const mid = a.clone().lerp(b, 0.5);
+      mid.y += lift;
+      mid.multiplyScalar(1.03);
+      return new THREE.QuadraticBezierCurve3(a.clone(), mid, b.clone());
+    }
+
+    function createFlowLayer() {
+      const core = new THREE.Vector3(0, 2.6, 0);
+      const coreMat = new THREE.MeshBasicMaterial({
+        color: 0xb8f6ff,
+        transparent: true,
+        opacity: 0.56,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false,
+      });
+
+      for (let i = 0; i < STATIONS.length; i++) {
+        const station = STATIONS[i];
+        const next = STATIONS[(i + 1) % STATIONS.length];
+        const ringCurve = curveBetween(station.pos, next.pos, 1.15);
+        const coreCurve = curveBetween(station.pos.clone().add(new THREE.Vector3(0, 0.4, 0)), core, 2.5);
+        const tubeMat = new THREE.MeshBasicMaterial({
+          color: station.color,
+          transparent: true,
+          opacity: 0.2,
+          blending: THREE.AdditiveBlending,
+          depthWrite: false,
+        });
+        const arc = new THREE.Mesh(new THREE.TubeGeometry(ringCurve, 48, 0.026, 8, false), tubeMat);
+        scene.add(arc);
+        refs.flowArcs.push({ mesh: arc, material: tubeMat, stationIndex: i, kind: 'handoff' });
+
+        const spokeMat = new THREE.MeshBasicMaterial({
+          color: station.color,
+          transparent: true,
+          opacity: 0.08,
+          blending: THREE.AdditiveBlending,
+          depthWrite: false,
+        });
+        const spoke = new THREE.Mesh(new THREE.TubeGeometry(coreCurve, 42, 0.018, 8, false), spokeMat);
+        scene.add(spoke);
+        refs.flowArcs.push({ mesh: spoke, material: spokeMat, stationIndex: i, kind: 'core' });
+
+        for (let j = 0; j < 3; j++) {
+          const material = new THREE.MeshBasicMaterial({
+            color: station.color,
+            transparent: true,
+            opacity: 0.95,
+            blending: THREE.AdditiveBlending,
+            depthWrite: false,
+          });
+          const packet = new THREE.Mesh(new THREE.SphereGeometry(0.095 + j * 0.018, 18, 18), material);
+          const halo = new THREE.Mesh(new THREE.SphereGeometry(0.24 + j * 0.05, 18, 18), new THREE.MeshBasicMaterial({
+            color: station.color,
+            transparent: true,
+            opacity: 0.14,
+            blending: THREE.AdditiveBlending,
+            depthWrite: false,
+          }));
+          const group = new THREE.Group();
+          group.add(packet, halo);
+          scene.add(group);
+          refs.flowPackets.push({
+            group,
+            packet,
+            halo,
+            material,
+            haloMaterial: halo.material,
+            curve: j === 2 ? coreCurve : ringCurve,
+            stationIndex: i,
+            offset: (j / 3) * 0.72,
+            speed: j === 2 ? 0.18 : 0.28,
+            corePacket: j === 2,
+          });
+        }
+      }
+
+      for (let i = 0; i < 4; i++) {
+        const torus = new THREE.Mesh(
+          new THREE.TorusGeometry(1.6 + i * 0.52, 0.012, 8, 128),
+          coreMat.clone()
+        );
+        torus.rotation.x = Math.PI / 2;
+        torus.position.y = 2.55 + i * 0.34;
+        torus.material.opacity = 0.35 - i * 0.055;
+        scene.add(torus);
+        refs.pulseRings.push(torus);
+      }
+
+      for (const station of STATIONS) {
+        const ring = new THREE.Mesh(
+          new THREE.TorusGeometry(0.92, 0.018, 8, 96),
+          new THREE.MeshBasicMaterial({
+            color: station.color,
+            transparent: true,
+            opacity: 0.36,
+            blending: THREE.AdditiveBlending,
+            depthWrite: false,
+          })
+        );
+        ring.rotation.x = Math.PI / 2;
+        ring.position.copy(station.pos).add(new THREE.Vector3(0, 0.18, 0));
+        scene.add(ring);
+        refs.scanRings.push(ring);
+      }
+    }
+
+    function stationIndexFromName(name) {
+      const match = name.match(/(?:station|agent)_(0[1-6])_/i) || name.match(/refined_station_(0[1-6])_/i);
+      return match ? Number(match[1]) - 1 : -1;
+    }
+
+    function applyMaterialTuning(object, name) {
+      const materials = Array.isArray(object.material) ? object.material : [object.material];
+      materials.forEach((material) => {
+        if (!material) return;
+        if ('envMapIntensity' in material) material.envMapIntensity = /holo|glass|wall/i.test(name) ? 2.25 : 1.18;
+        if ('roughness' in material && !/holo|beam|arc|ring|orbit|scan|packet/i.test(name)) {
+          material.roughness = Math.min(Math.max(material.roughness ?? 0.42, 0.24), 0.58);
+        }
+        if ('metalness' in material && /core|station|pedestal|deck|disc|graphite|metal/i.test(name)) {
+          material.metalness = Math.max(material.metalness ?? 0.2, 0.55);
+        }
+        if ('opacity' in material && /holo|glass|beam|arc|scan/i.test(name)) {
+          material.transparent = true;
+          material.opacity = Math.min(material.opacity ?? 1, /beam/i.test(name) ? 0.42 : 0.58);
+        }
+        if ('emissiveIntensity' in material && /beam|arc|ring|orbit|scan|packet|beacon|neon/i.test(name)) {
+          material.emissiveIntensity = Math.min(Math.max(material.emissiveIntensity ?? 1, 1.35), 2.8);
+        }
+        material.needsUpdate = true;
+      });
+    }
+
+    function indexModel(root) {
+      root.traverse((object) => {
+        const name = object.name || '';
+        if (!object.isMesh) return;
+        if (/label|title|board|concept|keyword|kicker|input|output|detail|handoff_note|backdrop|dark_cinematic|env_reflective/i.test(name)) {
+          object.visible = false;
+          return;
+        }
+        if (/floor_radial|background_light_slab/i.test(name)) {
+          object.visible = false;
+          return;
+        }
+        object.frustumCulled = false;
+        object.castShadow = !/holo|glass|wall|beam|arc|ring|orbit|scan|packet/i.test(name);
+        object.receiveShadow = /core|station|pedestal|deck|disc/i.test(name);
+        applyMaterialTuning(object, name);
+
+        if (/ring|orbit|arc|scan/i.test(name)) refs.rings.push(object);
+        if (/data_packet|refined_orbit_data_cube/i.test(name)) refs.packets.push({
+          object,
+          base: object.position.clone(),
+          radius: Math.max(0.5, Math.hypot(object.position.x, object.position.z)),
+          angle: Math.atan2(object.position.z, object.position.x),
+        });
+        const stationIndex = stationIndexFromName(name);
+        if (stationIndex >= 0) {
+          if (!refs.stationMeshes.has(stationIndex)) refs.stationMeshes.set(stationIndex, []);
+          refs.stationMeshes.get(stationIndex).push(object);
+        }
+        const materials = Array.isArray(object.material) ? object.material : [object.material];
+        materials.forEach((material) => {
+          if (!material || !('emissiveIntensity' in material)) return;
+          refs.emissiveMaterials.set(material.uuid, { material, base: material.emissiveIntensity || 0 });
+        });
+      });
+    }
+
+    function frameModel(root) {
+      const box = new THREE.Box3().setFromObject(root);
+      const center = box.getCenter(new THREE.Vector3());
+      const size = box.getSize(new THREE.Vector3());
+      root.position.sub(center);
+      root.position.y += 0.68;
+      root.scale.setScalar(1.28);
+      const maxDim = Math.max(size.x, size.z) * 1.28;
+      camera.position.set(maxDim * 0.5, maxDim * 0.34, maxDim * 0.66);
+      controls.target.set(0, 2.55, 0);
+      controls.minDistance = maxDim * 0.34;
+      controls.maxDistance = maxDim * 1.08;
+      camera.near = 0.1;
+      camera.far = maxDim * 12;
+      camera.updateProjectionMatrix();
+      controls.update();
+    }
+
+    function setBeat(id, notifyParent = false) {
+      const index = STATIONS.findIndex((station) => station.id === id);
+      activeIndex = index >= 0 ? index : 0;
+      activeId = STATIONS[activeIndex].id;
+      if (notifyParent) {
+        window.parent?.postMessage({ type: 'agenthub:beat', id: activeId, beat: activeIndex }, '*');
+      }
+    }
+
+    function cycleBeats() {
+      clearInterval(window.__agentHubCycle);
+      window.__agentHubCycle = setInterval(() => {
+        setBeat(STATIONS[(activeIndex + 1) % STATIONS.length].id, true);
+      }, 2600);
+      window.__agentHubJumpToBeat = (id) => setBeat(id, true);
     }
 
     window.addEventListener('message', (event) => {
@@ -185,1022 +522,157 @@
       window.__agentHubJumpToBeat?.(event.data.id);
     });
 
-    (async function () {
-      function waitFor(id) {
-        return new Promise((resolve) => {
-          const tryGet = () => {
-            const el = document.getElementById(id);
-            if (el && el.clientWidth > 0) return resolve(el);
-            setTimeout(tryGet, 60);
-          };
-          tryGet();
+    function loadModel(urls, index = 0) {
+      const url = urls[index];
+      new GLTFLoader().load(
+        url,
+        (gltf) => {
+          refs.root = gltf.scene;
+          refs.gltfAnimations = gltf.animations?.length || 0;
+          refs.loadedModelUrl = url;
+          scene.add(refs.root);
+          indexModel(refs.root);
+          frameModel(refs.root);
+          if (refs.gltfAnimations) {
+            refs.mixer = new THREE.AnimationMixer(refs.root);
+            gltf.animations.forEach((clip) => refs.mixer.clipAction(clip).play());
+          }
+          loading.classList.add('hide');
+          cycleBeats();
+        },
+        undefined,
+        () => {
+          if (index + 1 < urls.length) loadModel(urls, index + 1);
+          else loading.classList.add('hide');
+        }
+      );
+    }
+
+    makeEnvironment();
+    createFlowLayer();
+    setBeat('profile', true);
+    loadModel(MODEL_URLS);
+
+    const raycaster = new THREE.Raycaster();
+    const pointer = new THREE.Vector2();
+    wrap.addEventListener('pointerdown', (event) => {
+      const rect = renderer.domElement.getBoundingClientRect();
+      pointer.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+      pointer.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+      raycaster.setFromCamera(pointer, camera);
+      const hits = raycaster.intersectObjects(refs.root ? [refs.root] : [], true);
+      if (!hits.length) return;
+      let closest = 0;
+      let best = Infinity;
+      STATIONS.forEach((station, index) => {
+        const dist = hits[0].point.distanceTo(station.pos);
+        if (dist < best) {
+          best = dist;
+          closest = index;
+        }
+      });
+      setBeat(STATIONS[closest].id, true);
+    });
+
+    const clock = new THREE.Clock();
+    function animate() {
+      const delta = clock.getDelta();
+      const elapsed = clock.elapsedTime;
+      refs.mixer?.update(delta);
+      controls.update();
+
+      const activeStation = STATIONS[activeIndex];
+      coreLight.color.set(activeStation.color);
+      coreLight.intensity = 3.8 + Math.sin(elapsed * 3.2) * 0.55;
+
+      stationLights.forEach((light, index) => {
+        const active = index === activeIndex;
+        light.intensity = active ? 2.6 + Math.sin(elapsed * 4.8) * 0.55 : 0.32;
+      });
+
+      refs.rings.forEach((ring, index) => {
+        ring.rotation.z += (index % 2 ? -1 : 1) * (0.003 + (index % 5) * 0.00035);
+      });
+
+      refs.packets.forEach((packet, index) => {
+        const speed = 0.18 + (index % 7) * 0.012;
+        const angle = packet.angle + elapsed * speed;
+        packet.object.position.x = Math.cos(angle) * packet.radius;
+        packet.object.position.z = Math.sin(angle) * packet.radius;
+        packet.object.position.y = packet.base.y + Math.sin(elapsed * 2.4 + index) * 0.08;
+        packet.object.rotation.y += 0.018;
+      });
+
+      refs.flowPackets.forEach((packet) => {
+        const active = packet.stationIndex === activeIndex;
+        const t = (elapsed * packet.speed + packet.offset + packet.stationIndex * 0.04) % 1;
+        packet.group.position.copy(packet.curve.getPointAt(t));
+        const scale = active ? 1.35 + Math.sin(elapsed * 7.2) * 0.15 : 0.82;
+        packet.group.scale.setScalar(scale);
+        packet.material.opacity = active ? 1 : 0.52;
+        packet.haloMaterial.opacity = active ? 0.22 : 0.08;
+      });
+
+      refs.flowArcs.forEach((arc) => {
+        const active = arc.stationIndex === activeIndex;
+        const pulse = (Math.sin(elapsed * 4.2 + arc.stationIndex) + 1) * 0.5;
+        arc.material.opacity = active
+          ? (arc.kind === 'core' ? 0.36 : 0.54) + pulse * 0.12
+          : (arc.kind === 'core' ? 0.06 : 0.13);
+      });
+
+      refs.pulseRings.forEach((ring, index) => {
+        const wave = (elapsed * 0.9 + index * 0.28) % 1;
+        const scale = 0.88 + wave * 1.5;
+        ring.scale.setScalar(scale);
+        ring.material.opacity = Math.max(0, 0.42 * (1 - wave));
+        ring.rotation.z += 0.006 * (index % 2 ? -1 : 1);
+      });
+
+      refs.scanRings.forEach((ring, index) => {
+        const active = index === activeIndex;
+        const wave = (elapsed * 1.2 + index * 0.13) % 1;
+        ring.scale.setScalar(active ? 1.0 + wave * 0.75 : 0.82);
+        ring.material.opacity = active ? 0.56 * (1 - wave * 0.55) : 0.12;
+        ring.rotation.z += active ? 0.014 : 0.004;
+      });
+
+      refs.stationMeshes.forEach((objects, index) => {
+        const active = index === activeIndex;
+        const boost = active ? 1.0 + Math.sin(elapsed * 5.4) * 0.08 : 1;
+        objects.forEach((object) => {
+          object.scale.lerp(new THREE.Vector3(boost, boost, boost), 0.08);
         });
-      }
-      const wrap = await waitFor('hubwrap');
-      if (!wrap) return;
-      wrap.querySelectorAll('canvas').forEach(c => c.remove()); // 清除上一次加载的画布(防僵尸)
-      try {
-        const THREE = await import('/node_modules/three/build/three.module.js');
-        let composer = null, RenderPass, UnrealBloomPass, EffectComposer;
-        try {
-          ({ EffectComposer } = await import('/node_modules/three/examples/jsm/postprocessing/EffectComposer.js'));
-          ({ RenderPass } = await import('/node_modules/three/examples/jsm/postprocessing/RenderPass.js'));
-          ({ UnrealBloomPass } = await import('/node_modules/three/examples/jsm/postprocessing/UnrealBloomPass.js'));
-        } catch (e) { composer = 'fail'; }
+      });
 
-        const W = () => wrap.clientWidth, H = () => wrap.clientHeight || 520;
-        const scene = new THREE.Scene();
-        // 渐变天幕背景
-        const bgC = document.createElement('canvas'); bgC.width = 16; bgC.height = 256;
-        const bgx = bgC.getContext('2d');
-        const bgg = bgx.createLinearGradient(0, 0, 0, 256);
-        bgg.addColorStop(0, '#071832'); bgg.addColorStop(0.34, '#030712'); bgg.addColorStop(0.68, '#06101b'); bgg.addColorStop(1, '#020407');
-        bgx.fillStyle = bgg; bgx.fillRect(0, 0, 16, 256);
-        scene.background = new THREE.CanvasTexture(bgC);
-        scene.fog = new THREE.Fog(0x071827, 82, 168);
-        const camera = new THREE.PerspectiveCamera(40, W() / H(), 0.1, 220);
-        const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, preserveDrawingBuffer: true });
-        renderer.setPixelRatio(Math.min(devicePixelRatio, 1.7));
-        renderer.setSize(W(), H());
-        renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-        renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = 1.16;
-        renderer.outputColorSpace = THREE.SRGBColorSpace;
-        wrap.appendChild(renderer.domElement);
-        const tip = document.getElementById('loadtip'); if (tip) tip.remove();
-        const writebackDone = document.createElement('div');
-        writebackDone.id = 'writebackDone';
-        writebackDone.textContent = '\u56de\u5199\u5b8c\u6210';
-        writebackDone.style.cssText = [
-          'position:absolute',
-          'left:50%',
-          'top:18%',
-          'transform:translate(-50%,12px)',
-          'z-index:3',
-          'pointer-events:none',
-          'padding:10px 18px',
-          'border:1px solid rgba(255,215,138,0.45)',
-          'border-radius:999px',
-          'background:rgba(5,8,16,0.62)',
-          'box-shadow:0 0 30px rgba(255,215,138,0.22)',
-          'color:#ffe7b2',
-          'font-family:\"Noto Sans SC\",sans-serif',
-          'font-size:18px',
-          'letter-spacing:0.18em',
-          'opacity:0',
-          'transition:opacity 520ms cubic-bezier(0.32,0.72,0,1), transform 520ms cubic-bezier(0.32,0.72,0,1)'
-        ].join(';');
-        wrap.appendChild(writebackDone);
+      refs.emissiveMaterials.forEach(({ material, base }) => {
+        material.emissiveIntensity = Math.min(3.4, base + 0.12 + Math.sin(elapsed * 2.8) * 0.08);
+      });
 
-        scene.add(new THREE.HemisphereLight(0x78a9d6, 0x071524, 0.98));
-        // 远景星点
-        { const sg = new THREE.BufferGeometry(); const sn = 240; const sp = new Float32Array(sn * 3);
-          for (let i = 0; i < sn; i++) { const r = 62 + Math.random() * 38, th = Math.random() * Math.PI * 2, ph = Math.random() * Math.PI;
-            sp[i*3] = r*Math.sin(ph)*Math.cos(th); sp[i*3+1] = Math.abs(r*Math.cos(ph))*0.55 + 5; sp[i*3+2] = r*Math.sin(ph)*Math.sin(th); }
-          sg.setAttribute('position', new THREE.BufferAttribute(sp, 3));
-          scene.add(new THREE.Points(sg, new THREE.PointsMaterial({ color: 0xc4e5ff, size: 0.46, transparent: true, opacity: 0.74, blending: THREE.AdditiveBlending, depthWrite: false }))); }
-        const key = new THREE.DirectionalLight(0xe5f3ff, 1.64); key.position.set(16, 32, 14);
-        key.castShadow = true; key.shadow.mapSize.set(2048, 2048);
-        key.shadow.camera.near = 2; key.shadow.camera.far = 80;
-        key.shadow.camera.left = -22; key.shadow.camera.right = 22; key.shadow.camera.top = 22; key.shadow.camera.bottom = -22;
-        key.shadow.bias = -0.0004; scene.add(key);
-        const fill = new THREE.PointLight(0x74eaff, 0.95, 54); fill.position.set(0, 4, 0); scene.add(fill);
-        const rim = new THREE.PointLight(0x8c72ff, 0.72, 70, 2); rim.position.set(-19, 7, -16); scene.add(rim);
-        const meadowLight = new THREE.PointLight(0x57c6ff, 0.48, 72, 2); meadowLight.position.set(-16, -1, 11); scene.add(meadowLight);
-        const warmAccent = new THREE.PointLight(0xffd38f, 0.58, 42, 2); warmAccent.position.set(8, 1, -10); scene.add(warmAccent);
+      bloom.strength = 0.32 + Math.sin(elapsed * 1.15) * 0.03;
+      composer.render();
+      window.__agentHubState = {
+        ready: !!refs.root,
+        activeId,
+        activeIndex,
+        model: refs.root ? MODEL_URLS.find((url) => url) : null,
+        loadedModelUrl: refs.loadedModelUrl,
+        gltfAnimations: refs.gltfAnimations,
+        flowPackets: refs.flowPackets.length,
+      };
+      window.__hubRAF = requestAnimationFrame(animate);
+    }
+    animate();
 
-        const concrete = new THREE.MeshStandardMaterial({ color: 0x1d3043, roughness: 0.38, metalness: 0.46, envMapIntensity: 0.9 });
-        const concreteDark = new THREE.MeshStandardMaterial({ color: 0x0d1926, roughness: 0.54, metalness: 0.36 });
-        const warm = 0xDDFBFF;
-        const turf = new THREE.MeshStandardMaterial({ color: 0x102235, emissive: 0x020812, emissiveIntensity: 0.18, roughness: 0.86, metalness: 0.1 });
-        const turfDark = new THREE.MeshStandardMaterial({ color: 0x07111d, emissive: 0x01050a, emissiveIntensity: 0.16, roughness: 0.94, metalness: 0.08 });
-        const turfHi = new THREE.MeshStandardMaterial({ color: 0x1b3c52, emissive: 0x03131c, emissiveIntensity: 0.18, roughness: 0.82, metalness: 0.08 });
-        const stone = new THREE.MeshStandardMaterial({ color: 0x0b111a, roughness: 0.76, metalness: 0.22 });
-        const bladeMat = new THREE.MeshStandardMaterial({ color: 0x2b6471, emissive: 0x041923, emissiveIntensity: 0.14, roughness: 0.88, metalness: 0.06, side: THREE.DoubleSide });
-        function strip(rad, y, col, tube, inten) {
-          const m = new THREE.Mesh(new THREE.TorusGeometry(rad, tube || 0.045, 8, 140),
-            new THREE.MeshStandardMaterial({ color: col, emissive: col, emissiveIntensity: inten || 2.4, roughness: 0.4 }));
-          m.rotation.x = Math.PI / 2; m.position.y = y; return m;
-        }
-        function glowTex(rgba) {
-          const c = document.createElement('canvas'); c.width = c.height = 128;
-          const ctx = c.getContext('2d');
-          const g = ctx.createRadialGradient(64, 64, 0, 64, 64, 64);
-          g.addColorStop(0, rgba); g.addColorStop(.35, rgba); g.addColorStop(1, 'rgba(0,0,0,0)');
-          ctx.fillStyle = g; ctx.fillRect(0, 0, 128, 128); return new THREE.CanvasTexture(c);
-        }
-        function glowSprite(rgba, sz) {
-          const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: glowTex(rgba), blending: THREE.AdditiveBlending, transparent: true, depthWrite: false }));
-          s.scale.set(sz, sz, 1); return s;
-        }
-        function rgbStr(col, a) { return 'rgba(' + (col >> 16 & 255) + ',' + (col >> 8 & 255) + ',' + (col & 255) + ',' + a + ')'; }
-        function labelSprite(num, code, name, colHex) {
-          const c = document.createElement('canvas'); c.width = 320; c.height = 160; const x = c.getContext('2d');
-          x.fillStyle = colHex; x.font = 'bold 78px sans-serif'; x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillText(num, 160, 52);
-          x.fillStyle = '#cfe0f5'; x.font = '22px sans-serif'; x.fillText(code, 160, 104);
-          x.font = '28px sans-serif'; x.fillStyle = colHex; x.fillText(name, 160, 138);
-          const t = new THREE.CanvasTexture(c); t.anisotropy = 4;
-          const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: t, transparent: true, depthWrite: false, depthTest: false }));
-          s.scale.set(3.6, 1.8, 1); return s;
-        }
-
-        const deckW = 1.6, plazaR = 3.5, plazaY = -5.05;
-        const levels = [
-          { r: 11.0, y: 0.0, col: 0x9B8CFF, num: '01', code: 'PROFILE', name: '画像', ang: 1.7 },
-          { r: 8.9, y: -1.5, col: 0x35E0D8, num: '02', code: 'PATH', name: '路径', ang: 0.2 },
-          { r: 6.9, y: -2.9, col: 0x2BD66F, num: '03', code: 'RESOURCE', name: '资源', ang: -1.4 },
-          { r: 5.0, y: -4.1, col: 0xF0B24A, num: '04', code: 'TUTOR', name: '辅导', ang: -3.0 },
-        ];
-        const nodes = [];
-
-        function addTerrainRing(inner, outer, y, mat, opacity) {
-          const mesh = new THREE.Mesh(new THREE.RingGeometry(inner, outer, 150, 1), mat);
-          mesh.rotation.x = -Math.PI / 2;
-          mesh.position.y = y;
-          mesh.receiveShadow = true;
-          if (opacity !== undefined) {
-            mesh.material = mesh.material.clone();
-            mesh.material.transparent = true;
-            mesh.material.opacity = opacity;
-          }
-          scene.add(mesh);
-          return mesh;
-        }
-
-        levels.forEach((L) => {
-          addTerrainRing(L.r + 0.18, L.r + 2.8, L.y - 0.24, turf, 0.84);
-          addTerrainRing(Math.max(0.8, L.r - deckW - 2.2), L.r - deckW - 0.18, L.y - 0.2, turfDark, 0.72);
-          const deck = new THREE.Mesh(new THREE.RingGeometry(L.r - deckW, L.r, 120, 1), concrete);
-          deck.rotation.x = -Math.PI / 2; deck.position.y = L.y; deck.receiveShadow = true; deck.castShadow = true; scene.add(deck);
-          const wall = new THREE.Mesh(new THREE.CylinderGeometry(L.r, L.r, 0.55, 120, 1, true), concreteDark);
-          wall.position.y = L.y + 0.27; wall.castShadow = true; wall.receiveShadow = true; scene.add(wall);
-          const iwall = new THREE.Mesh(new THREE.CylinderGeometry(L.r - deckW, L.r - deckW, 0.32, 120, 1, true), concreteDark);
-          iwall.position.y = L.y + 0.16; iwall.castShadow = true; scene.add(iwall);
-          scene.add(strip(L.r - 0.02, L.y + 0.56, 0x9CF5FF, 0.036, 1.25));
-          scene.add(strip(L.r - deckW + 0.02, L.y + 0.33, 0xDDFBFF, 0.026, 1.05));
-          scene.add(strip(L.r - deckW * 0.5, L.y + 0.035, L.col, 0.012, 0.44));
-          const colHex = '#' + L.col.toString(16).padStart(6, '0');
-          const mx = Math.cos(L.ang) * (L.r - deckW * 0.5), mz = Math.sin(L.ang) * (L.r - deckW * 0.5);
-          const beacon = new THREE.Mesh(new THREE.RingGeometry(0.34, 0.5, 36, 1),
-            new THREE.MeshBasicMaterial({ color: L.col, transparent: true, opacity: 0.68, side: THREE.DoubleSide, depthWrite: false, blending: THREE.AdditiveBlending }));
-          beacon.rotation.x = -Math.PI / 2;
-          beacon.position.set(mx, L.y + 0.12, mz); scene.add(beacon);
-          const beam = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.08, 6, 10),
-            new THREE.MeshBasicMaterial({ color: L.col, transparent: true, opacity: 0.22, blending: THREE.AdditiveBlending }));
-          beam.position.set(mx, L.y + 3, mz); scene.add(beam);
-          const g = glowSprite(rgbStr(L.col, 0.16), 0.28); g.position.set(mx, L.y + 0.24, mz); g.material.opacity = 0.08; g.visible = false; scene.add(g);
-          const lab = labelSprite(L.num, L.code, L.name, colHex); lab.position.set(mx, L.y + 5.2, mz); scene.add(lab);
-          // 脉冲环: 当前 beat 节点上画一个持续脉动的 ground ring
-          const pulseRing = new THREE.Mesh(
-            new THREE.RingGeometry(0.6, 0.85, 32, 1),
-            new THREE.MeshBasicMaterial({ color: L.col, transparent: true, opacity: 0.0, side: THREE.DoubleSide, depthWrite: false, blending: THREE.AdditiveBlending })
-          );
-          pulseRing.rotation.x = -Math.PI / 2;
-          pulseRing.position.set(mx, L.y + 0.1, mz);
-          scene.add(pulseRing);
-          nodes.push({ beacon, beam, glow: g, lab, pulseRing, col: L.col, pos: { x: mx, y: L.y, z: mz }, baseGlow: 0.48 });
-        });
-
-        const plazaFloor = new THREE.Mesh(new THREE.CylinderGeometry(plazaR + 0.4, plazaR + 0.4, 0.25, 96),
-          new THREE.MeshStandardMaterial({ color: 0x1a2635, roughness: 0.45, metalness: 0.34 }));
-        plazaFloor.position.y = plazaY; plazaFloor.receiveShadow = true; scene.add(plazaFloor);
-        for (let k = 0; k < 4; k++) scene.add(strip(0.7 + k * 0.7, plazaY + 0.14, 0xBFF4FF, 0.022, 1.25));
-        const coreRing = strip(0.42, plazaY + 0.2, 0xCFF6FF, 0.052, 2.65); scene.add(coreRing);
-        const coreBall = new THREE.Mesh(new THREE.SphereGeometry(0.28, 20, 20),
-          new THREE.MeshStandardMaterial({ color: 0xEFFFFF, emissive: 0x9fe8ff, emissiveIntensity: 3.15, roughness: 0.18 }));
-        coreBall.position.y = plazaY + 0.3; scene.add(coreBall);
-        const coreGlow = glowSprite('rgba(150,235,255,0.42)', 3.1); coreGlow.position.y = plazaY + 0.4; coreGlow.material.opacity = 0.58; scene.add(coreGlow);
-        coreBall.visible = false;
-
-        // ====== 公路 ribbon · 沿 spiralAt 平铺的发光路面 ======
-        function buildRoadTexture() {
-          const c = document.createElement('canvas'); c.width = 128; c.height = 256;
-          const ctx = c.getContext('2d');
-          // 暗底
-          const grad = ctx.createLinearGradient(0, 0, 128, 0);
-          grad.addColorStop(0, '#061320');
-          grad.addColorStop(0.5, '#14263b');
-          grad.addColorStop(1, '#061320');
-          ctx.fillStyle = grad; ctx.fillRect(0, 0, 128, 256);
-          ctx.fillStyle = 'rgba(170,230,255,0.08)';
-          for (let y = 0; y < 256; y += 16) ctx.fillRect(16, y, 96, 1);
-          // 两侧白实线
-          ctx.strokeStyle = 'rgba(210,245,255,0.7)'; ctx.lineWidth = 1.3;
-          ctx.beginPath(); ctx.moveTo(8, 0); ctx.lineTo(8, 256); ctx.stroke();
-          ctx.beginPath(); ctx.moveTo(120, 0); ctx.lineTo(120, 256); ctx.stroke();
-          // 中央双黄虚线
-          ctx.strokeStyle = 'rgba(90,224,255,0.34)'; ctx.lineWidth = 1.1; ctx.setLineDash([4, 18]);
-          ctx.beginPath(); ctx.moveTo(64, 0); ctx.lineTo(64, 256); ctx.stroke();
-          ctx.setLineDash([]);
-          // 一侧方向箭头
-          ctx.fillStyle = 'rgba(110,245,255,0.62)';
-          for (let y = 24; y < 256; y += 56) {
-            ctx.beginPath();
-            ctx.moveTo(98, y); ctx.lineTo(108, y + 10); ctx.lineTo(98, y + 20); ctx.closePath();
-            ctx.fill();
-          }
-          ctx.fillStyle = 'rgba(255,255,255,0.08)';
-          for (let i = 0; i < 180; i++) ctx.fillRect(Math.random() * 128, Math.random() * 256, 1, 1);
-          const tex = new THREE.CanvasTexture(c);
-          tex.wrapS = THREE.RepeatWrapping; tex.wrapT = THREE.ClampToEdgeWrapping;
-          tex.repeat.set(12, 1);
-          tex.anisotropy = 4;
-          return tex;
-        }
-        const roadTex = buildRoadTexture();
-        const roadMat = new THREE.MeshStandardMaterial({
-          map: roadTex, color: 0x24384a,
-          emissive: 0x10344a, emissiveMap: roadTex, emissiveIntensity: 1.25,
-          roughness: 0.42, metalness: 0.48, side: THREE.DoubleSide,
-        });
-        const ROAD_SEG = 100;
-        const roadSegments = [];
-        function spiralUp(t) {
-          // 与 spiralAt 略不同:仅取 y+0.05 作为路面,使用 t∈[0,1]
-          const p = spiralAt(t);
-          // 切线近似 (差分)
-          const dt = 0.002;
-          const p2 = spiralAt((t + dt) % 1);
-          const tan = p2.clone().sub(p).normalize();
-          // 沿切线的"前进"方向放置 ribbon
-          return { p, tan };
-        }
-        for (let i = 0; i < ROAD_SEG; i++) {
-          const t0 = i / ROAD_SEG, t1 = (i + 1) / ROAD_SEG;
-          const a = spiralUp(t0), b = spiralUp(t1);
-          // ribbon 段:沿切线方向,横向 0.5 宽
-          const UP = new THREE.Vector3(0, 1, 0);
-          const rightA = a.tan.clone().cross(UP).normalize().multiplyScalar(0.28);
-          const rightB = b.tan.clone().cross(UP).normalize().multiplyScalar(0.28);
-          const v0 = a.p.clone().add(rightA).add(new THREE.Vector3(0, 0.05, 0));
-          const v1 = a.p.clone().sub(rightA).add(new THREE.Vector3(0, 0.05, 0));
-          const v2 = b.p.clone().sub(rightB).add(new THREE.Vector3(0, 0.05, 0));
-          const v3 = b.p.clone().add(rightB).add(new THREE.Vector3(0, 0.05, 0));
-          const g = new THREE.BufferGeometry();
-          const verts = new Float32Array([
-            v0.x, v0.y, v0.z, v1.x, v1.y, v1.z, v2.x, v2.y, v2.z,
-            v0.x, v0.y, v0.z, v2.x, v2.y, v2.z, v3.x, v3.y, v3.z,
-          ]);
-          const uvs = new Float32Array([0, t0 * 8, 1, t0 * 8, 1, t1 * 8, 0, t0 * 8, 1, t1 * 8, 0, t1 * 8]);
-          g.setAttribute('position', new THREE.Float32BufferAttribute(verts, 3));
-          g.setAttribute('uv', new THREE.Float32BufferAttribute(uvs, 2));
-          g.computeVertexNormals();
-          const seg = new THREE.Mesh(g, roadMat);
-          seg.receiveShadow = true;
-          roadSegments.push(seg);
-          scene.add(seg);
-        }
-        // 公路边缘灯带
-        function addRoadEdgeStrips() {
-          const edgeMat = new THREE.MeshBasicMaterial({ color: 0xc5f7ff, transparent: true, opacity: 0.96, blending: THREE.AdditiveBlending, depthWrite: false });
-          for (let side = -1; side <= 1; side += 2) {
-            const pts = [];
-            for (let i = 0; i <= ROAD_SEG; i++) {
-              const t = i / ROAD_SEG;
-              const s = spiralUp(t);
-              const UP = new THREE.Vector3(0, 1, 0);
-              const right = s.tan.clone().cross(UP).normalize().multiplyScalar(0.32 * side);
-              pts.push(s.p.clone().add(right).add(new THREE.Vector3(0, 0.06, 0)));
-            }
-            const curve = new THREE.CatmullRomCurve3(pts, false, 'catmullrom', 0.0);
-            const tube = new THREE.TubeGeometry(curve, ROAD_SEG, 0.032, 6, false);
-            const mesh = new THREE.Mesh(tube, edgeMat);
-            scene.add(mesh);
-          }
-        }
-        addRoadEdgeStrips();
-
-        // ====== 1 条干净的当前拍→下一拍弧线 · 飞机本身就是接力棒 ======
-        // 颜色用当前拍节点 col, 飞机沿弧线飞过
-        const linkMat = new THREE.LineDashedMaterial({
-          color: 0x9fd6ff, dashSize: 0.35, gapSize: 0.22,
-          transparent: true, opacity: 0.0, depthWrite: false,
-        });
-        const linkGeom = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(), new THREE.Vector3()]);
-        const linkLine = new THREE.Line(linkGeom, linkMat); linkLine.computeLineDistances();
-        linkLine.visible = false;
-        // Kept as a curve calculator only; the visible route is the short drone trail.
-        // 飞机尾迹已移除 (8 个 sprite + 每帧 position copy 造成卡顿)
-        // 改用 carGroup 自身作为"移动标记", 弧线 linkLine 视觉上就是"飞过轨迹"
-        let linkCurve = null; // 当前拍→下一拍 弧线 (供飞机位置参考)
-        const planeTrailHistory = []; // 飞机位置历史 (尾迹用)
-
-        class DroneTrail {
-          constructor(sceneRef) {
-            this.scene = sceneRef;
-            this.history = [];
-            this.mesh = null;
-            this.color = 0x8fefff;
-            this.frame = 0;
-          }
-          reset() {
-            this.history.length = 0;
-            this.dispose();
-          }
-          setColor(color) {
-            this.color = color || 0x8fefff;
-            if (this.mesh) this.mesh.material.color.setHex(this.color);
-          }
-          push(pos) {
-            this.frame++;
-            this.history.push(pos.clone());
-            if (this.history.length > 8) this.history.shift();
-            if (this.frame % 2 !== 0 || this.history.length < 4) return;
-            this.dispose();
-            const curve = new THREE.CatmullRomCurve3(this.history, false, 'centripetal');
-            const geom = new THREE.TubeGeometry(curve, Math.max(8, this.history.length * 2), 0.036, 6, false);
-            const mat = new THREE.MeshBasicMaterial({
-              color: this.color,
-              transparent: true,
-              opacity: 0.34,
-              blending: THREE.AdditiveBlending,
-              depthWrite: false,
-            });
-            this.mesh = new THREE.Mesh(geom, mat);
-            this.mesh.renderOrder = 12;
-            this.scene.add(this.mesh);
-          }
-          dispose() {
-            if (!this.mesh) return;
-            this.scene.remove(this.mesh);
-            this.mesh.geometry.dispose();
-            this.mesh.material.dispose();
-            this.mesh = null;
-          }
-        }
-
-        function bezier3(a, b, lift, curveOut) {
-          // 三点贝塞尔,控制点抬升
-          const mid = a.clone().add(b).multiplyScalar(0.5);
-          mid.y += lift;
-          if (curveOut) curveOut.current = new THREE.QuadraticBezierCurve3(a, mid, b);
-          return new THREE.BufferGeometry().setFromPoints(curveOut.current.getPoints(24));
-        }
-        function setLinkEndpoints(nodeA, nodeB, col) {
-          if (!nodeA || !nodeB) { linkLine.visible = false; linkCurve = null; return; }
-          // 弧线两端用 hoverY 高度 (飞机停的高度), 让"飞机沿弧线飞"看起来自然
-          const a = new THREE.Vector3(nodeA.pos.x, nodeA.pos.y + 2.0, nodeA.pos.z);
-          const b = new THREE.Vector3(nodeB.pos.x, nodeB.pos.y + 2.0, nodeB.pos.z);
-          const dist = a.distanceTo(b);
-          const lift = Math.min(2.5, 1.0 + dist * 0.2);
-          const curveRef = { current: null };
-          const g = bezier3(a, b, lift, curveRef);
-          linkLine.geometry.dispose(); linkLine.geometry = g;
-          linkLine.material.color.setHex(col || 0x9fd6ff);
-          linkLine.computeLineDistances();
-          linkCurve = curveRef.current;
-        }
-
-        // ====== 智能小飞机 · 程序化生成 (轻量版, 避免 chromium GPU 过载) ======
-        const carGroup = new THREE.Group();
-        carGroup.scale.setScalar(1.26);
-        carGroup.visible = false;
-        scene.add(carGroup);
-        let carT = 0;
-        let propeller = null;
-        let lastRouteKey = '';
-        let lastDroneT = 0;
-        let droneLaneT = 0.08;
-        let lastDroneLaneT = droneLaneT;
-        const droneTrail = new DroneTrail(scene);
-        const droneRotors = [];
-        const droneAccentMats = [];
-        function buildProceduralPlane() {
-          const g = new THREE.Group();
-          const body = new THREE.Mesh(
-            new THREE.BoxGeometry(1.2, 0.18, 0.18),
-            new THREE.MeshLambertMaterial({ color: 0xeef4ff, emissive: 0x2a4060, emissiveIntensity: 0.6 })
-          );
-          g.add(body);
-          const nose = new THREE.Mesh(
-            new THREE.ConeGeometry(0.11, 0.32, 8),
-            new THREE.MeshLambertMaterial({ color: 0xfff0a0, emissive: 0xff8a40, emissiveIntensity: 1.2 })
-          );
-          nose.rotation.z = -Math.PI / 2;
-          nose.position.set(0.76, 0, 0);
-          g.add(nose);
-          const wing = new THREE.Mesh(
-            new THREE.BoxGeometry(0.42, 0.04, 1.4),
-            new THREE.MeshLambertMaterial({ color: 0xff6e6e, emissive: 0x802020, emissiveIntensity: 0.6 })
-          );
-          wing.position.set(0.05, -0.02, 0);
-          g.add(wing);
-          const tailWing = new THREE.Mesh(
-            new THREE.BoxGeometry(0.28, 0.03, 0.5),
-            new THREE.MeshLambertMaterial({ color: 0xff6e6e, emissive: 0x802020, emissiveIntensity: 0.6 })
-          );
-          tailWing.position.set(-0.45, 0.0, 0);
-          g.add(tailWing);
-          const vTail = new THREE.Mesh(
-            new THREE.BoxGeometry(0.24, 0.24, 0.03),
-            new THREE.MeshLambertMaterial({ color: 0xeef4ff, emissive: 0x2a4060, emissiveIntensity: 0.5 })
-          );
-          vTail.position.set(-0.5, 0.16, 0);
-          g.add(vTail);
-          const cockpit = new THREE.Mesh(
-            new THREE.SphereGeometry(0.12, 8, 6),
-            new THREE.MeshLambertMaterial({ color: 0x6ad4ff, emissive: 0x4080c0, emissiveIntensity: 0.8 })
-          );
-          cockpit.position.set(0.1, 0.1, 0);
-          g.add(cockpit);
-          // 螺旋桨 (2 叶片, 简单 box)
-          propeller = new THREE.Group();
-          for (let i = 0; i < 2; i++) {
-            const blade = new THREE.Mesh(
-              new THREE.BoxGeometry(0.4, 0.02, 0.06),
-              new THREE.MeshLambertMaterial({ color: 0xcccccc, emissive: 0x444444, emissiveIntensity: 0.3 })
-            );
-            const wrap = new THREE.Group();
-            wrap.add(blade);
-            wrap.rotation.x = (i / 2) * Math.PI;
-            propeller.add(wrap);
-          }
-          propeller.position.set(0.92, 0, 0);
-          g.add(propeller);
-          return g;
-        }
-        function buildDataDrone() {
-          const g = new THREE.Group();
-          const graphite = new THREE.MeshStandardMaterial({ color: 0x121a22, emissive: 0x07131b, emissiveIntensity: 0.7, roughness: 0.24, metalness: 0.78 });
-          const graphiteDark = new THREE.MeshStandardMaterial({ color: 0x05090d, emissive: 0x041019, emissiveIntensity: 0.6, roughness: 0.3, metalness: 0.86 });
-          const glassMat = new THREE.MeshPhysicalMaterial({ color: 0x244660, emissive: 0x0b8fb6, emissiveIntensity: 0.75, roughness: 0.06, metalness: 0.1, transparent: true, opacity: 0.58, transmission: 0.2 });
-          const bladeMat = new THREE.MeshBasicMaterial({ color: 0xd9fbff, transparent: true, opacity: 0.96, blending: THREE.AdditiveBlending, depthWrite: false });
-          const progressMat = new THREE.MeshBasicMaterial({ color: 0x8fefff, transparent: true, opacity: 0.86, blending: THREE.AdditiveBlending, depthWrite: false });
-          droneAccentMats.push(bladeMat, progressMat);
-
-          const body = new THREE.Mesh(new THREE.SphereGeometry(0.55, 32, 16), graphite);
-          body.scale.set(1.34, 0.26, 0.58);
-          body.castShadow = true;
-          g.add(body);
-
-          const nose = new THREE.Mesh(new THREE.ConeGeometry(0.26, 0.44, 24), graphiteDark);
-          nose.rotation.z = -Math.PI / 2;
-          nose.position.set(0.76, 0, 0);
-          nose.scale.set(0.72, 0.64, 0.64);
-          nose.castShadow = true;
-          g.add(nose);
-
-          const canopy = new THREE.Mesh(new THREE.SphereGeometry(0.35, 24, 12), glassMat);
-          canopy.scale.set(1.05, 0.18, 0.52);
-          canopy.position.set(0.12, 0.15, 0);
-          g.add(canopy);
-
-          const wing = new THREE.Mesh(new THREE.BoxGeometry(0.9, 0.035, 1.55), graphiteDark);
-          wing.position.set(-0.04, -0.04, 0);
-          wing.castShadow = true;
-          g.add(wing);
-
-          const noseBlade = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.025, 0.62), bladeMat);
-          noseBlade.position.set(0.99, 0.03, 0);
-          g.add(noseBlade);
-
-          [-1, 1].forEach((side) => {
-            const stripMesh = new THREE.Mesh(new THREE.BoxGeometry(0.78, 0.025, 0.018), progressMat);
-            stripMesh.position.set(-0.08, 0.08, side * 0.52);
-            g.add(stripMesh);
-
-            const pod = new THREE.Mesh(new THREE.CylinderGeometry(0.16, 0.16, 0.09, 24), graphiteDark);
-            pod.rotation.x = Math.PI / 2;
-            pod.position.set(0.16, -0.03, side * 0.82);
-            pod.castShadow = true;
-            g.add(pod);
-
-            const rotor = new THREE.Mesh(
-              new THREE.TorusGeometry(0.18, 0.018, 8, 36),
-              new THREE.MeshBasicMaterial({ color: 0x8fefff, transparent: true, opacity: 0.42, blending: THREE.AdditiveBlending, depthWrite: false })
-            );
-            rotor.rotation.x = Math.PI / 2;
-            rotor.position.copy(pod.position);
-            g.add(rotor);
-            droneRotors.push(rotor);
-          });
-
-          const tailGlow = glowSprite('rgba(115,245,255,0.32)', 1.0);
-          tailGlow.position.set(-0.82, 0.02, 0);
-          tailGlow.scale.set(1.0, 0.45, 1);
-          g.add(tailGlow);
-
-          const underGlow = glowSprite('rgba(95,230,255,0.2)', 1.55);
-          underGlow.position.set(0, -0.28, 0);
-          underGlow.scale.set(1.55, 0.42, 1);
-          g.add(underGlow);
-          return g;
-        }
-        const plane = buildDataDrone();
-        carGroup.add(plane);
-        // 机头灯已移除 (1 个 additive sprite 减少 GPU 开销)
-        window.__hubDrone = { loaded: true, procedural: true };
-        async function loadCar() { carGroup.visible = true; }
-        loadCar();
-        const lab5 = labelSprite('05', 'EVAL', '评估', '#F0586E'); lab5.position.set(0, plazaY + 2.4, 0); scene.add(lab5);
-        const evalGlow = glowSprite(rgbStr(0xF0586E, 0.44), 2.0); evalGlow.position.set(0, plazaY + 0.6, 0); evalGlow.material.opacity = 0.5; scene.add(evalGlow);
-        nodes.push({ beacon: coreBall, beam: null, glow: evalGlow, lab: lab5, col: 0xF0586E, pos: { x: 0, y: plazaY, z: 0 }, baseGlow: 2.0, isEval: true });
-
-        const kioskMat = new THREE.MeshStandardMaterial({ color: 0x20303f, roughness: 0.5, metalness: 0.3 });
-        const screenMat = new THREE.MeshStandardMaterial({ color: 0x35E0D8, emissive: 0x2fbfd0, emissiveIntensity: 2.2, roughness: 0.4 });
-        for (let k = 0; k < 9; k++) {
-          const a = k / 9 * Math.PI * 2; const kx = Math.cos(a) * (plazaR - 0.6), kz = Math.sin(a) * (plazaR - 0.6);
-          const box = new THREE.Mesh(new THREE.BoxGeometry(0.32, 0.7, 0.18), kioskMat); box.position.set(kx, plazaY + 0.45, kz); box.lookAt(0, plazaY + 0.45, 0); box.castShadow = true; scene.add(box);
-          const scr = new THREE.Mesh(new THREE.PlaneGeometry(0.24, 0.4), screenMat); scr.position.set(kx * 0.93, plazaY + 0.5, kz * 0.93); scr.lookAt(0, plazaY + 0.5, 0); scene.add(scr);
-        }
-
-        const elevR = 1.45, elevTop = 2.6, elevBot = plazaY + 0.1;
-        const glass = new THREE.Mesh(new THREE.CylinderGeometry(elevR, elevR, elevTop - elevBot, 40, 1, true),
-          new THREE.MeshStandardMaterial({ color: 0x9ec4ec, transparent: true, opacity: 0.16, roughness: 0.08, metalness: 0.2, side: THREE.DoubleSide }));
-        glass.position.y = (elevTop + elevBot) / 2; scene.add(glass);
-        const innerGlow = new THREE.Mesh(new THREE.CylinderGeometry(elevR * 0.5, elevR * 0.5, elevTop - elevBot, 24, 1, true),
-          new THREE.MeshBasicMaterial({ color: 0xbfe0ff, transparent: true, opacity: 0.1, blending: THREE.AdditiveBlending }));
-        innerGlow.position.y = (elevTop + elevBot) / 2; scene.add(innerGlow);
-        const frameMat = new THREE.MeshStandardMaterial({ color: 0xcfe0f0, emissive: 0x3a5a7a, emissiveIntensity: 1.2, roughness: 0.3, metalness: 0.6 });
-        for (let yy = elevBot; yy <= elevTop + 0.01; yy += 1.1) { const ring = new THREE.Mesh(new THREE.TorusGeometry(elevR, 0.04, 8, 40), frameMat); ring.rotation.x = Math.PI / 2; ring.position.y = yy; scene.add(ring); }
-        for (let b = 0; b < 6; b++) { const a = b / 6 * Math.PI * 2; const bar = new THREE.Mesh(new THREE.CylinderGeometry(0.035, 0.035, elevTop - elevBot, 6), frameMat); bar.position.set(Math.cos(a) * elevR, (elevTop + elevBot) / 2, Math.sin(a) * elevR); scene.add(bar); }
-        scene.add(strip(elevR, elevTop + 0.15, warm, 0.038, 1.55)); // 井口开光环(不封顶,回写球可升出)
-        const capsule = new THREE.Mesh(new THREE.CylinderGeometry(0.44, 0.62, 1.2, 8, 1),
-          new THREE.MeshStandardMaterial({ color: 0xBFEAFF, emissive: 0x79DFFF, emissiveIntensity: 2.6, roughness: 0.16, metalness: 0.34, transparent: true, opacity: 0.86 }));
-        capsule.position.y = elevBot + 0.4; scene.add(capsule);
-        const capGlow = glowSprite('rgba(255,220,140,0.95)', 3.2); scene.add(capGlow);
-        // 回写球外层光环
-        const capHalo = new THREE.Mesh(new THREE.TorusGeometry(1.05, 0.05, 10, 60),
-          new THREE.MeshBasicMaterial({ color: 0xFFD27A, transparent: true, opacity: 0.5, blending: THREE.AdditiveBlending }));
-        capHalo.rotation.x = Math.PI / 2; scene.add(capHalo);
-        capsule.visible = false;
-        capGlow.visible = false;
-        capHalo.visible = false;
-        const a1 = labelSprite('A1', 'CORE ELEV', '回写', '#FFD78A'); a1.position.set(0, elevTop + 1.5, 0); a1.scale.set(3.4, 1.7, 1); scene.add(a1);
-
-        const ground = new THREE.Mesh(new THREE.CircleGeometry(54, 120), turfDark);
-        ground.rotation.x = -Math.PI / 2; ground.position.y = plazaY - 0.62; ground.receiveShadow = true; scene.add(ground);
-        const meadowDisc = new THREE.Mesh(new THREE.CircleGeometry(34, 120), turf);
-        meadowDisc.rotation.x = -Math.PI / 2; meadowDisc.position.y = plazaY - 0.58; meadowDisc.receiveShadow = true; scene.add(meadowDisc);
-        addTerrainRing(13.2, 28.0, plazaY - 0.54, turf, 0.58);
-        scene.add(strip(13.4, plazaY - 0.49, 0x1c5672, 0.026, 0.62));
-        scene.add(strip(22.6, plazaY - 0.5, 0x476a85, 0.018, 0.32));
-
-        let seed = 7; const rnd = () => { seed = (seed * 9301 + 49297) % 233280; return seed / 233280; };
-        function addGrassTuft(x, y, z, scale) {
-          const group = new THREE.Group();
-          const bladeCount = 3 + Math.floor(rnd() * 3);
-          for (let i = 0; i < bladeCount; i++) {
-            const blade = new THREE.Mesh(new THREE.ConeGeometry(0.035 * scale, (0.32 + rnd() * 0.28) * scale, 3), bladeMat);
-            const a = rnd() * Math.PI * 2;
-            blade.position.set(Math.cos(a) * 0.08 * scale, 0.14 * scale, Math.sin(a) * 0.08 * scale);
-            blade.rotation.z = (rnd() - 0.5) * 0.34;
-            blade.castShadow = true;
-            group.add(blade);
-          }
-          group.position.set(x, y, z);
-          group.rotation.y = rnd() * Math.PI * 2;
-          scene.add(group);
-          return group;
-        }
-
-        levels.forEach((L) => {
-          for (let g = 0; g < 10; g++) {
-            const a = rnd() * Math.PI * 2;
-            const rr = (rnd() < 0.58)
-              ? L.r + 0.55 + rnd() * 1.9
-              : Math.max(0.9, L.r - deckW - 1.7 - rnd() * 0.9);
-            addGrassTuft(Math.cos(a) * rr, L.y - 0.1, Math.sin(a) * rr, 0.55 + rnd() * 1.25);
-          }
-          for (let g = 0; g < 3; g++) {
-            const a = rnd() * Math.PI * 2;
-            const rr = L.r + 1.15 + rnd() * 1.8;
-            const bush = new THREE.Mesh(new THREE.IcosahedronGeometry(0.18 + rnd() * 0.22, 1), turfHi);
-            bush.position.set(Math.cos(a) * rr, L.y + 0.03, Math.sin(a) * rr);
-            bush.scale.y = 0.55 + rnd() * 0.38;
-            bush.castShadow = true;
-            scene.add(bush);
-          }
-        });
-
-        for (let c = 0; c < 18; c++) {
-          const a = rnd() * Math.PI * 2, d = 22 + rnd() * 23;
-          const h = 0.7 + rnd() * 3.2;
-          const bld = new THREE.Mesh(new THREE.BoxGeometry(0.8 + rnd() * 1.5, h, 0.8 + rnd() * 1.5), stone);
-          bld.position.set(Math.cos(a) * d, plazaY - 0.58 + h / 2, Math.sin(a) * d);
-          bld.castShadow = true;
-          bld.receiveShadow = true;
-          scene.add(bld);
-        }
-
-        // task packet
-        const packet = new THREE.Mesh(new THREE.OctahedronGeometry(0.34, 0),
-          new THREE.MeshStandardMaterial({ color: 0xffffff, emissive: 0xbfe8ff, emissiveIntensity: 3.2, roughness: 0.18, metalness: 0.28 }));
-        scene.add(packet);
-        const packetGlow = glowSprite('rgba(190,232,255,0.95)', 2.2); scene.add(packetGlow);
-        const packetGoal = new THREE.Vector3(0, 6, 0);
-        packet.position.set(0, 6, 0);
-        packet.visible = false;
-        packetGlow.visible = false;
-
-        // spiral flow particles
-        const flowCount = 70;
-        const flowGeo = new THREE.BufferGeometry();
-        const flowPos = new Float32Array(flowCount * 3);
-        const flowT = new Float32Array(flowCount);
-        for (let i = 0; i < flowCount; i++) { flowT[i] = i / flowCount; }
-        flowGeo.setAttribute('position', new THREE.BufferAttribute(flowPos, 3));
-        const flowMat = new THREE.PointsMaterial({ size: 0.16, color: 0xBFF4FF, transparent: true, opacity: 0.0, blending: THREE.AdditiveBlending, depthWrite: false });
-        const flow = new THREE.Points(flowGeo, flowMat); flow.visible = false; scene.add(flow);
-        function spiralAt(t) {
-          const span = t * (levels.length);
-          const i = Math.min(levels.length - 1, Math.floor(span));
-          const f = span - i;
-          const L = levels[i];
-          const Lr = L.r - deckW * 0.5, Ly = L.y;
-          const nextR = i < levels.length - 1 ? levels[i + 1].r - deckW * 0.5 : plazaR * 0.4;
-          const nextY = i < levels.length - 1 ? levels[i + 1].y : plazaY + 0.3;
-          const ang = L.ang + f * 2.4;
-          const r = Lr + (nextR - Lr) * f;
-          const y = Ly + (nextY - Ly) * f;
-          return new THREE.Vector3(Math.cos(ang) * r, y + 0.25, Math.sin(ang) * r);
-        }
-        function clamp01(v) { return Math.max(0, Math.min(1, v)); }
-        function airLaneAt(t) {
-          const p = spiralAt(clamp01(t));
-          const outward = new THREE.Vector3(p.x, 0, p.z);
-          if (outward.lengthSq() > 0.0001) p.add(outward.normalize().multiplyScalar(0.28));
-          p.y += 1.72;
-          return p;
-        }
-        function droneRoutePoint(routeIndex, progress) {
-          const p = clamp01(progress);
-          if (routeIndex < levels.length) return airLaneAt((routeIndex + p) / levels.length);
-          const start = new THREE.Vector3(nodes[4].pos.x, nodes[4].pos.y + 2.0, nodes[4].pos.z);
-          const end = airLaneAt(0);
-          const mid = start.clone().add(end).multiplyScalar(0.5);
-          mid.y += 4.4;
-          return new THREE.QuadraticBezierCurve3(start, mid, end).getPoint(p);
-        }
-        function droneContinuousRoutePoint(progress) {
-          const p = ((progress % 1) + 1) % 1;
-          const spiralPortion = 0.84;
-          if (p < spiralPortion) return airLaneAt(p / spiralPortion);
-          const q = (p - spiralPortion) / (1 - spiralPortion);
-          const start = airLaneAt(1);
-          const end = airLaneAt(0);
-          const mid = start.clone().add(end).multiplyScalar(0.5);
-          mid.y += 5.2;
-          return new THREE.QuadraticBezierCurve3(start, mid, end).getPoint(q);
-        }
-        function nodeAirPoint(index) {
-          const n = nodes[Math.max(0, Math.min(nodes.length - 1, index))];
-          return new THREE.Vector3(n.pos.x, n.pos.y + 2.05, n.pos.z);
-        }
-        function nodeFlightPoint(fromIndex, toIndex, progress) {
-          const p = clamp01(progress);
-          const start = nodeAirPoint(fromIndex);
-          const end = nodeAirPoint(toIndex);
-          if (fromIndex === toIndex) {
-            end.y += 0.16 * Math.sin(p * Math.PI * 2);
-          }
-          const mid = start.clone().add(end).multiplyScalar(0.5);
-          mid.y += Math.min(4.2, 1.8 + start.distanceTo(end) * 0.16);
-          return new THREE.QuadraticBezierCurve3(start, mid, end).getPoint(p);
-        }
-        function writebackFlightPoint(progress) {
-          const p = clamp01(progress);
-          const start = nodeAirPoint(4);
-          const top = new THREE.Vector3(start.x, elevTop + 4.85, start.z);
-          const ease = p * p * (3 - 2 * p);
-          return start.clone().lerp(top, ease);
-        }
-        function writebackRiseYaw() {
-          return 0;
-        }
-
-        if (composer !== 'fail' && EffectComposer) {
-          composer = new EffectComposer(renderer);
-          composer.addPass(new RenderPass(scene, camera));
-          const bloom = new UnrealBloomPass(new THREE.Vector2(W(), H()), 0.46, 0.38, 0.72);
-          composer.addPass(bloom);
-        }
-
-        // camera + choreography
-        let theta = 0.9, phi = 0.95, rad = 44, drag = false, px = 0, py = 0, userControl = false;
-        const tgt = new THREE.Vector3(0, -2.2, 0);
-        const goal = { theta: 0.9, phi: 0.95, rad: 44, ty: -2.2, tx: 0, tz: 0, auto: true, loop: false };
-        let loopT0 = 0, loopSphY = elevBot + 0.5, loopAngStart = 0.5;
-        let beatStartedAt = performance.now() / 1000;
-        const SEGMENT_SECONDS = 5.2;
-        const WRITEBACK_RISE_AT = 0;
-        const WRITEBACK_DONE_AT = 0.74;
-        const loopCamGoal = new THREE.Vector3(), loopLookGoal = new THREE.Vector3(), loopLookCur = new THREE.Vector3(0, plazaY, 0);
-        const dom = renderer.domElement;
-        dom.style.cursor = 'grab';
-        dom.addEventListener('pointerdown', e => { drag = true; userControl = true; px = e.clientX; py = e.clientY; dom.setPointerCapture(e.pointerId); dom.style.cursor = 'grabbing'; });
-        dom.addEventListener('pointerup', () => { drag = false; dom.style.cursor = 'grab'; });
-        dom.addEventListener('pointermove', e => { if (!drag) return; theta -= (e.clientX - px) * 0.005; phi = Math.max(0.2, Math.min(1.35, phi - (e.clientY - py) * 0.005)); px = e.clientX; py = e.clientY; });
-        dom.addEventListener('wheel', e => { e.preventDefault(); rad = Math.max(16, Math.min(64, rad * (1 + e.deltaY * 0.0009))); userControl = true; }, { passive: false });
-        addEventListener('resize', () => { camera.aspect = W() / H(); camera.updateProjectionMatrix(); renderer.setSize(W(), H()); if (composer && composer.setSize) composer.setSize(W(), H()); });
-
-        function applyBeat() {
-          const id = HUB.state.id;
-          beatStartedAt = performance.now() / 1000;
-          if (id === 'profile' || id === 'depart' || id === 'loop') droneTrail.reset();
-          lastDroneLaneT = 0;
-          writebackDone.style.opacity = '0';
-          writebackDone.style.transform = 'translate(-50%,12px)';
-          userControl = false;
-          const li = ['profile', 'path', 'resource', 'tutor', 'eval'].indexOf(id);
-          if (id === 'depart') {
-            Object.assign(goal, { theta: 0.7, phi: 1.0, rad: 46, tx: 0, ty: -2.0, tz: 0, auto: true, loop: false });
-            packetGoal.set(0, 6, 0);
-          } else if (id === 'loop') {
-            Object.assign(goal, { theta: 0.82, phi: 0.72, rad: 31, tx: 0, ty: plazaY + 2.6, tz: 0, loop: false, auto: true });
-            loopT0 = clock.getElapsedTime();
-            loopAngStart = Math.atan2(camera.position.z, camera.position.x); // 从当前方位起步,避免方位跳变
-            loopLookCur.set(0, plazaY + 0.6, 0);
-            packetGoal.set(0, elevTop, 0);
-          } else if (li >= 0) {
-            const n = nodes[li];
-            const beaconAng = Math.atan2(n.pos.z, n.pos.x);
-            const closeR = li === 4 ? 28 : 24 + (levels[Math.min(li, 3)].r) * 0.72;
-            Object.assign(goal, {
-              theta: beaconAng - 0.35,
-              phi: li === 4 ? 0.62 : 0.86,
-              rad: li === 4 ? 27 : closeR,
-              tx: n.pos.x * 0.4, ty: n.pos.y + (li === 4 ? 0.4 : 0.8), tz: n.pos.z * 0.4,
-              auto: true, loop: false,
-            });
-            packetGoal.set(n.pos.x, n.pos.y + 0.6, n.pos.z);
-          }
-
-          // ====== 2 智能体连线 · 当前 beat 节点 + 下一拍节点 ======
-          const beatIdx = ['profile', 'path', 'resource', 'tutor', 'eval', 'loop'].indexOf(id);
-          let a = null, b = null;
-          if (beatIdx >= 0 && beatIdx < 5) { a = nodes[beatIdx]; b = nodes[Math.min(beatIdx + 1, 4)]; }
-          else if (id === 'loop') { a = nodes[4]; b = nodes[0]; } // 回写: eval → profile 闭环
-          // 当前 beat 节点脉动环 (其他节点环淡化)
-          const pulseT = clock.getElapsedTime();
-          for (let i = 0; i < nodes.length; i++) {
-            const n = nodes[i];
-            if (!n.pulseRing) continue;
-            if (i === beatIdx) {
-              // 脉动用 scale (无 material 变更, 不触发 GPU upload)
-              const r = 0.6 + Math.sin(pulseT * 4) * 0.18;
-              n.pulseRing.scale.setScalar(r);
-              n.pulseRing.visible = true;
-            } else {
-              n.pulseRing.visible = false; // 用 visible=false 替代 opacity=0
-            }
-          }
-          if (a && b) {
-            // 颜色用当前拍节点 col (不透明度 0.55 避免和飞机争抢视线)
-            const colA = (a.col !== undefined) ? a.col : 0x9fd6ff;
-            setLinkEndpoints(a, b, colA);
-            // dashOffset 在 render loop 里更新, 不在 applyBeat 里 (避免频繁 material 变更)
-          } else {
-            linkLine.visible = false;
-            linkCurve = null;
-          }
-        }
-        HUB._apply = applyBeat;
-
-        function lerpAngle(a, b, t) { let d = ((b - a + Math.PI) % (Math.PI * 2)) - Math.PI; return a + d * t; }
-
-        const clock = new THREE.Clock();
-        function animate() {
-          window.__hubRAF = requestAnimationFrame(animate);
-          try {
-          const t = clock.getElapsedTime();
-          const id = HUB.state.id;
-          const li = ['profile', 'path', 'resource', 'tutor', 'eval'].indexOf(id);
-
-          if (goal.loop && !userControl) {
-            // 回写镜头 · 一镜到底升镜:相机始终在塔体最外圈(不穿模),随球一路升到高空俯瞰,单一缓动无跳变
-            const e = Math.min(1, (t - loopT0) / 10.0);
-            const k = e * e * (3 - 2 * e);                    // 单一缓动
-            loopSphY = (elevBot + 0.9) + k * ((elevTop + 8.0) - (elevBot + 0.9)); // 球从谷底一路升出井口到高空
-            const camR = 13 + k * 13;                         // 13 → 26,恒在最大平台半径(11.4)之外,杜绝穿模
-            const camH = (plazaY + 4.0) + k * 22.0;           // 由谷口一路单调升到高空俯瞰
-            const ang = loopAngStart + k * 0.8;               // 轻微转向,随 k 趋缓而停
-            loopCamGoal.set(Math.cos(ang) * camR, camH, Math.sin(ang) * camR);
-            camera.position.lerp(loopCamGoal, 0.05);
-            loopLookGoal.set(0, loopSphY - k * 2.5, 0);       // 始终望向上升的球
-            loopLookCur.lerp(loopLookGoal, 0.05);
-            camera.lookAt(loopLookCur);
-            theta = ang; phi = 1.0; rad = camR; tgt.copy(loopLookCur);
-            const lbl = document.getElementById('wb-label');
-            if (lbl) { const on = k > 0.82; lbl.style.opacity = on ? '1' : '0'; lbl.style.transform = on ? 'translate(-50%,-50%)' : 'translate(-50%,-42%)'; }
-          } else {
-            if (!userControl) {
-              theta = lerpAngle(theta, goal.theta, 0.045);
-              phi += (goal.phi - phi) * 0.045;
-              rad += (goal.rad - rad) * 0.045;
-              tgt.x += (goal.tx - tgt.x) * 0.05;
-              tgt.y += (goal.ty - tgt.y) * 0.05;
-              tgt.z += (goal.tz - tgt.z) * 0.05;
-              if (id === 'depart') theta += 0.0016;
-            }
-            camera.position.set(tgt.x + rad * Math.sin(phi) * Math.cos(theta), tgt.y + rad * Math.cos(phi), tgt.z + rad * Math.sin(phi) * Math.sin(theta));
-            camera.lookAt(tgt);
-          }
-
-          nodes.forEach((n, i) => {
-            const active = (i === li) || (id === 'loop');
-            const target = active ? (n.baseGlow * (1.25 + 0.25 * Math.sin(t * 3))) : n.baseGlow * 0.5;
-            n.glow.scale.x += (target - n.glow.scale.x) * 0.1; n.glow.scale.y = n.glow.scale.x;
-            if (n.beacon && n.beacon.material.emissiveIntensity !== undefined) {
-              const ei = active ? 3.4 + 0.6 * Math.sin(t * 4) : 1.4;
-              n.beacon.material.emissiveIntensity += (ei - n.beacon.material.emissiveIntensity) * 0.1;
-            }
-            if (n.beam) { const op = active ? 0.45 + 0.15 * Math.sin(t * 2 + i) : 0.12; n.beam.material.opacity += (op - n.beam.material.opacity) * 0.1; }
-          });
-
-          const pulse = 1 + 0.18 * Math.sin(t * 2.2); coreBall.scale.setScalar(pulse); coreGlow.scale.setScalar(3.1 * pulse);
-
-          if (id === 'loop') {
-            capsule.position.y = loopSphY;
-          } else {
-            const capGoalY = (id === 'eval') ? elevBot + 0.8 : elevBot + 0.4;
-            capsule.position.y += (capGoalY - capsule.position.y) * 0.06;
-          }
-          capGlow.position.set(0, capsule.position.y, 0);
-          capHalo.position.set(0, capsule.position.y, 0);
-          capHalo.rotation.z = t * 0.6;
-          capHalo.material.opacity = (id === 'loop') ? 0.6 : 0.22;
-          const capPulse = 1 + 0.08 * Math.sin(t * 3.5);
-          capsule.scale.setScalar((id === 'loop') ? capPulse * 1.05 : capPulse);
-          capsule.material.emissiveIntensity = (id === 'loop' || id === 'eval') ? 3.8 : 2.2;
-
-          packet.position.lerp(packetGoal, 0.07);
-          packet.scale.setScalar(1 + 0.15 * Math.sin(t * 5));
-          packetGlow.position.copy(packet.position);
-          packet.visible = false; packetGlow.visible = false; packetGlow.material.opacity = 0;
-
-          const flowSpeed = (id === 'depart') ? 0.04 : 0.12;
-          for (let i = 0; i < flowCount; i++) {
-            flowT[i] += flowSpeed * 0.016;
-            if (flowT[i] > 1) flowT[i] -= 1;
-            const p = spiralAt(flowT[i]);
-            flowPos[i * 3] = p.x; flowPos[i * 3 + 1] = p.y; flowPos[i * 3 + 2] = p.z;
-          }
-          flowGeo.attributes.position.needsUpdate = true;
-
-          // ====== 智能小飞机 · 沿节点间"起飞-弧飞-降落" ======
-          // 状态: 每拍从一个节点跳到下一个节点
-          //   takeoff 0..0.3: 抬升 (从节点 y 升到 y+4)
-          //   cruise  0.3..0.7: 沿贝塞尔弧线飞向下一节点
-          //   land    0.7..1.0: 下降到下一节点 y
-          // beatT 来自 setLinkEndpoints 上一帧计算
-          const curId = HUB.state.id;
-          const order = ['profile', 'path', 'resource', 'tutor', 'eval'];
-          let curIdx = order.indexOf(curId);
-          if (curId === 'loop') curIdx = 4; // 闭环回 profile
-          if (curIdx < 0) curIdx = 0; // depart/profile 取 0
-          const nextIdx = (curIdx + 1) % 5;
-          const aNode = nodes[curIdx];
-          const bNode = nodes[nextIdx];
-          // 用绝对时间驱动 (0..1 循环, 周期约 6.7 秒)
-          carT += 0.0025;
-          if (carT > 1) carT -= 1;
-          // 节点位置
-          const aPos = new THREE.Vector3(aNode.pos.x, aNode.pos.y, aNode.pos.z);
-          const bPos = new THREE.Vector3(bNode.pos.x, bNode.pos.y, bNode.pos.z);
-          // 弧线控制点: a→b 中点抬升 +4
-          const mid = aPos.clone().add(bPos).multiplyScalar(0.5);
-          mid.y += 4.0;
-          // t 分段映射 (4 段: 悬停 / 起飞 / 巡航 / 降落)
-          // 0.00..0.45 悬停 (飞机停在当前节点上方 2y, 微微上下浮动)
-          // 0.45..0.62 起飞 (抬升到中点)
-          // 0.62..0.85 巡航 (沿贝塞尔弧线)
-          // 0.85..1.00 降落 (下降到下一节点)
-          const tPhase = carT;
-          let carPos = new THREE.Vector3();
-          let pitch = 0; // 俯仰角
-          let yaw = 0;   // 偏航角
-          const hoverY = 2.0; // 悬停高度 (节点上方 2y)
-          if (tPhase < 0.45) {
-            // 悬停段: 飞机停在当前节点上方 hoverY, 微微浮动
-            const tt = tPhase / 0.45; // 0..1
-            const float = Math.sin(tt * Math.PI * 4) * 0.15; // 微微上下浮
-            carPos.set(aPos.x, aPos.y + hoverY + float, aPos.z);
-            // 朝向 aPos 附近任意方向 (保持原 yaw 不动, 让飞机像"驻停")
-            yaw = 0; pitch = 0;
-          } else if (tPhase < 0.62) {
-            // takeoff 0.45..0.62: 抬升 (从 aPos.y+hoverY 抬升到 mid.y - 1)
-            const tt = (tPhase - 0.45) / 0.17; // 0..1
-            const ease = 1 - Math.pow(1 - tt, 2); // ease-out
-            const start = new THREE.Vector3(aPos.x, aPos.y + hoverY, aPos.z);
-            carPos.lerpVectors(start, mid, ease);
-            // 飞机在抬升段, 朝向沿 aPos→mid 方向, 仰角 ~30°
-            const dir = mid.clone().sub(start).normalize();
-            yaw = Math.atan2(-dir.z, dir.x);
-            pitch = -0.5 * ease; // 抬头 (rotation.x 负值 = nose up)
-          } else if (tPhase < 0.85) {
-            // cruise 0.18..0.82: 沿贝塞尔弧线
-            const tt = (tPhase - 0.18) / 0.64; // 0..1
-            const t2 = 0.5 * (1 - Math.cos(Math.PI * tt)); // sin 半周期, 弧线更平顺
-            // 二次贝塞尔 a→mid→b
-            const oneMinus = 1 - t2;
-            carPos.x = oneMinus * oneMinus * aPos.x + 2 * oneMinus * t2 * mid.x + t2 * t2 * bPos.x;
-            carPos.y = oneMinus * oneMinus * aPos.y + 2 * oneMinus * t2 * mid.y + t2 * t2 * bPos.y;
-            carPos.z = oneMinus * oneMinus * aPos.z + 2 * oneMinus * t2 * mid.z + t2 * t2 * bPos.z;
-            // 朝向沿弧线切线: 差分
-            const dt = 0.01;
-            const t2p = Math.min(1, t2 + dt);
-            const oneMinusp = 1 - t2p;
-            const nextX = oneMinusp * oneMinusp * aPos.x + 2 * oneMinusp * t2p * mid.x + t2p * t2p * bPos.x;
-            const nextY = oneMinusp * oneMinusp * aPos.y + 2 * oneMinusp * t2p * mid.y + t2p * t2p * bPos.y;
-            const nextZ = oneMinusp * oneMinusp * aPos.z + 2 * oneMinusp * t2p * mid.z + t2p * t2p * bPos.z;
-            const tanX = nextX - carPos.x;
-            const tanY = nextY - carPos.y;
-            const tanZ = nextZ - carPos.z;
-            yaw = Math.atan2(-tanZ, tanX);
-            // 弧线向上时 nose up, 向下时 nose down
-            // 在 Three.js rotation.x 负值 = nose up (绕 -X 旋转)
-            pitch = -Math.atan2(tanY, Math.hypot(tanX, tanZ));
-          } else {
-            // land 0.85..1.0: 下降到 b 节点上方 hoverY (悬停位置)
-            const tt = (tPhase - 0.85) / 0.15; // 0..1
-            const ease = tt * tt; // ease-in
-            const end = new THREE.Vector3(bPos.x, bPos.y + hoverY, bPos.z);
-            carPos.lerpVectors(mid, end, ease);
-            // 朝向沿 mid→end 方向, 俯角 ~-30°
-            const dir = end.clone().sub(mid).normalize();
-            yaw = Math.atan2(-dir.z, dir.x);
-            pitch = 0.5 * ease; // 低头
-          }
-          carGroup.position.copy(carPos);
-          // 应用旋转: 模型默认沿 +X 飞行, 三维旋转: 偏航(y)、俯仰(x)
-          carGroup.rotation.set(pitch, yaw, 0);
-          // 螺旋桨持续转
-          if (propeller) propeller.rotation.x += 0.4;
-          {
-            const segmentElapsed = Math.max(0, performance.now() / 1000 - beatStartedAt);
-            const segmentProgress = clamp01(segmentElapsed / SEGMENT_SECONDS);
-            const eased = segmentProgress * segmentProgress * (3 - 2 * segmentProgress);
-            let fromIndex = 0;
-            let toIndex = 1;
-            if (curId === 'profile') { fromIndex = 0; toIndex = 1; }
-            else if (curId === 'path') { fromIndex = 1; toIndex = 2; }
-            else if (curId === 'resource') { fromIndex = 2; toIndex = 3; }
-            else if (curId === 'tutor') { fromIndex = 3; toIndex = 4; }
-            else if (curId === 'eval') { fromIndex = 4; toIndex = 4; }
-            const isWritebackFlight = curId === 'loop';
-            const dronePos = isWritebackFlight
-              ? writebackFlightPoint(eased)
-              : nodeFlightPoint(fromIndex, toIndex, eased);
-            const nextDronePos = isWritebackFlight
-              ? writebackFlightPoint(Math.min(1, eased + 0.018))
-              : nodeFlightPoint(fromIndex, toIndex, Math.min(1, eased + 0.018));
-            const tangent = nextDronePos.sub(dronePos).normalize();
-            let droneYaw = Math.atan2(-tangent.z, tangent.x);
-            let dronePitch = -Math.atan2(tangent.y, Math.hypot(tangent.x, tangent.z)) * 0.82;
-            let droneBank = Math.sin(eased * Math.PI * 2) * 0.08;
-            const levelWritebackRise = isWritebackFlight && eased >= WRITEBACK_RISE_AT;
-            if (levelWritebackRise) {
-              droneYaw = writebackRiseYaw();
-              dronePitch = 0;
-              droneBank = 0;
-            }
-            carGroup.position.copy(dronePos);
-            if (levelWritebackRise) {
-              carGroup.quaternion.setFromEuler(new THREE.Euler(0, droneYaw, 0, 'YXZ'));
-            } else {
-              carGroup.rotation.set(dronePitch, droneYaw, droneBank);
-            }
-            const activeColor = isWritebackFlight ? 0xffd78a : (nodes[fromIndex]?.col || 0x8fefff);
-            droneTrail.setColor(activeColor);
-            if (segmentProgress < lastDroneLaneT) droneTrail.reset();
-            lastDroneLaneT = segmentProgress;
-            if (!isWritebackFlight && segmentProgress < 0.985) droneTrail.push(dronePos);
-            const doneOn = isWritebackFlight && segmentProgress > WRITEBACK_DONE_AT;
-            writebackDone.style.opacity = doneOn ? '1' : '0';
-            writebackDone.style.transform = doneOn ? 'translate(-50%,0)' : 'translate(-50%,12px)';
-            droneAccentMats.forEach((mat) => {
-              if (mat.color) mat.color.setHex(activeColor);
-              mat.opacity = 0.72 + 0.2 * Math.sin(t * 6);
-            });
-            droneRotors.forEach((rotor, index) => {
-              rotor.rotation.z += 0.12 + index * 0.015;
-              rotor.material.color.setHex(activeColor);
-            });
-          }
-          // 路面纹理沿 U 平移 (视觉跑动)
-          roadTex.offset.x = (roadTex.offset.x - 0.012) % 1;
-
-          // 弧线 visibility: 悬停时隐藏, 起飞后显示 (避免每帧改 material.opacity)
-          if (linkCurve) {
-            linkLine.visible = false;
-          }
-
-          if (composer && composer.render) composer.render(); else renderer.render(scene, camera);
-          window.__hubdbg = { ver: HUB_BUILD, id: HUB.state.id, interior: !!goal.interior, uc: userControl, camR: Math.round(Math.hypot(camera.position.x, camera.position.z)), camY: Math.round(camera.position.y) };
-          } catch (e) { window.__hubErr = (window.__hubErr || 0) + 1; window.__hubErrMsg = String(e && e.stack || e); }
-        }
-        animate();
-
-        HUB.state.ready = true;
-        startAgentHubCycle();
-        HUB._readyCbs.forEach(cb => { try { cb(); } catch (e) {} });
-        HUB._readyCbs = [];
-      } catch (err) {
-        wrap.innerHTML = '<div style="padding:24px;color:#9FB6DC;font-family:sans-serif;font-size:14px">三维场景加载失败:' + (err && err.message ? err.message : err) + '</div>';
-      }
-    })();
-  }
+    function resize() {
+      const width = wrap.clientWidth || 1;
+      const height = wrap.clientHeight || 1;
+      camera.aspect = width / height;
+      camera.updateProjectionMatrix();
+      renderer.setSize(width, height);
+      composer.setSize(width, height);
+    }
+    window.addEventListener('resize', resize);
   </script>
-
 </body>
 </html>
