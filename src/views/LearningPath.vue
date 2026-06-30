@@ -65,7 +65,12 @@
           </div>
         </div>
         <div class="lp2-pane lp2-right">
-          <div class="level-card" :style="{ '--stage-color': currentStage.color }">
+          <Transition name="card-flip" mode="out-in">
+            <div
+              :key="selectedStageIdx"
+              class="level-card"
+              :style="{ '--stage-color': currentStage.color }"
+            >
             <span class="level-corner corner-tl" :style="{ borderColor: currentStage.color }" />
             <span class="level-corner corner-tr" :style="{ borderColor: currentStage.color }" />
             <span class="level-corner corner-bl" :style="{ borderColor: currentStage.color }" />
@@ -137,6 +142,7 @@
               <button class="start-btn" :style="{ background: `linear-gradient(135deg, ${currentStage.color}, ${currentStage.color}99)`, boxShadow: `0 0 16px ${currentStage.color}66` }">{{ selectedStageIdx === 4 ? '期末通关 →' : '开始本阶段 →' }}</button>
             </div>
           </div>
+          </Transition>
         </div>
       </div>
     </section>
@@ -512,6 +518,40 @@ onMounted(() => {
     0 0 32px rgba(0, 212, 255, 0.18),
     0 12px 40px rgba(0, 0, 0, 0.4);
   overflow: hidden;
+  transform-style: preserve-3d;
+  backface-visibility: hidden;
+  transition:
+    border-color 0.5s ease,
+    box-shadow 0.5s ease;
+}
+
+/* === 3D 翻转切换 (左栏点 stage 时右栏翻牌) === */
+.lp2-right {
+  perspective: 1200px;
+}
+.card-flip-enter-active,
+.card-flip-leave-active {
+  transition:
+    transform 0.55s cubic-bezier(0.4, 0, 0.2, 1),
+    opacity 0.4s ease;
+  transform-style: preserve-3d;
+  backface-visibility: hidden;
+}
+/* 旧卡片：0° → 90°(侧面) → 隐藏 */
+.card-flip-leave-active {
+  transform-origin: left center;
+}
+.card-flip-leave-to {
+  transform: rotateY(-90deg);
+  opacity: 0;
+}
+/* 新卡片：-90° → 0° 翻入 */
+.card-flip-enter-active {
+  transform-origin: right center;
+}
+.card-flip-enter-from {
+  transform: rotateY(90deg);
+  opacity: 0;
 }
 
 /* 角落装饰括号 */
