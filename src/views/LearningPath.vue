@@ -9,27 +9,6 @@
       <ResourceConstellationView @select-node="onSelectNode" />
     </section>
 
-    <section class="lp-section" v-if="selectedTopic">
-      <div class="lp-section-header">
-        <div class="lp-section-badge">◈ LEARNING PATH</div>
-        <h2 class="lp-section-title">{{ selectedTopic.label }} · 学习路径</h2>
-        <p class="lp-section-desc">「{{ selectedDomain!.name }}」领域 → {{ selectedTopic.label }} 的5阶段学习计划</p>
-      </div>
-      <ResourcePathLinkView :domain="selectedDomain!" :topic="selectedTopic" />
-    </section>
-
-    <section class="lp-section" v-else>
-      <div class="lp-section-header">
-        <div class="lp-section-badge">◈ LEARNING PATH</div>
-        <h2 class="lp-section-title">学习路径</h2>
-        <p class="lp-section-desc">点击上方星座中的任意一颗星星，查看该知识点的详细学习计划</p>
-      </div>
-      <div class="lp-empty-hint">
-        <span class="hint-icon">👆</span>
-        <span>请先点击知识星座中的任意一颗星</span>
-      </div>
-    </section>
-
     <section class="lp-section lp2-full">
       <div class="lp-section-header">
         <div class="lp-section-badge">◈ LEARNING PATH 2</div>
@@ -164,7 +143,6 @@ import { useRouter } from 'vue-router'
 import { useKnowledgeGraphData } from '../composables/useKnowledgeGraphData'
 import { LEARNING_STAGES, getStageContent } from '../components/resources/mapTransforms'
 import ResourceConstellationView from '../components/resources/ResourceConstellationView.vue'
-import ResourcePathLinkView from '../components/resources/ResourcePathLinkView.vue'
 import ResourceMatrixView from '../components/resources/ResourceMatrixView.vue'
 
 const router = useRouter()
@@ -688,7 +666,7 @@ onMounted(() => {
   background: rgba(0, 0, 0, 0.32);
   border-color: color-mix(in srgb, var(--stage-color, #00d4ff) 30%, transparent);
 }
-/* 圆点连接器（仿 ResourcePathLinkView 的 res-connector） */
+/* 圆点连接器 */
 .task-connector {
   width: 6px;
   height: 6px;
@@ -721,7 +699,7 @@ onMounted(() => {
   white-space: nowrap;
   line-height: 1.3;
 }
-/* 评估后新增标识（仿 ResourcePathLinkView 的 remedial-badge） */
+/* 评估后新增标识 */
 .remedial-badge {
   display: inline-block;
   font-size: 9px;

@@ -121,7 +121,7 @@ export function useKnowledgeGraphData() {
     loading.value = true
 
     try {
-      // 始终用 learning-path 数据（m1/m2/ml1 等 ID 命名空间跟星座 + ResourcePathLinkView.NODE_CONTENT 一致）
+      // 始终用 learning-path 数据（m1/m2/ml1 等 ID 命名空间跟星座 + mapTransforms.NODE_CONTENT 一致）
       // AI 知识路径用的是另一套 ID (f1/c1/d1/p1)，会让星座点击后无法匹配 topic
       const [pathData, evalData, profileData, topicsData] = await Promise.allSettled([
         fetchLearningPath().catch(() => null),
