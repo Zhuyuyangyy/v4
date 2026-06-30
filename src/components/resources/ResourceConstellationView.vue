@@ -232,7 +232,7 @@ onUnmounted(() => { styleEl?.remove() })
 
 .constellation-canvas {
   position: relative; width: 100%; aspect-ratio: 1400 / 900;
-  border-radius: 18px; background: rgba(7, 7, 13, 0.62);
+  border-radius: 18px; background: transparent;
   border: 1px solid rgba(255, 255, 255, 0.06); overflow: hidden;
 }
 .constellation-svg { position: absolute; inset: 0; width: 100%; height: 100%; }
