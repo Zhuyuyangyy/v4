@@ -2,10 +2,12 @@
   <aside
     class="bg-transparent flex flex-col h-full transition-all duration-300 overflow-hidden shrink-0"
     :class="[
-      side === 'right' ? 'border-l' : 'border-r',
       isXunfeiSidebarOpen ? 'w-[440px] opacity-100' : 'w-0 p-0 opacity-0 pointer-events-none'
     ]"
-    :style="{ borderColor: 'var(--border-subtle)' }"
+    :style="{
+      borderRight: side === 'left' ? '2px solid rgba(59, 130, 246, 0.55)' : undefined,
+      borderLeft: side === 'right' ? '2px solid rgba(59, 130, 246, 0.55)' : undefined,
+    }"
   >
     <!-- Header -->
     <div class="p-4 shrink-0 flex items-center justify-between" style="border-bottom: 1px solid var(--border-card)">
