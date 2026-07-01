@@ -8,7 +8,7 @@
     :style="{ borderColor: 'var(--border-subtle)' }"
   >
     <!-- Header -->
-    <div class="p-4 shrink-0 flex items-center justify-between" style="border-bottom: 1px solid var(--border-subtle)">
+    <div class="p-4 shrink-0 flex items-center justify-between" style="border-bottom: 1px solid var(--border-card)">
       <div class="flex items-center gap-2">
         <div class="relative">
           <Tv class="w-4 h-4" :class="statusIconClass" />
@@ -113,7 +113,7 @@
             {{ isRecording ? '● REC' : (avatarStatus === 'connected' ? 'READY' : 'OFFLINE') }}
           </span>
         </div>
-        <div class="h-7 rounded-lg border p-1.5 flex items-center justify-between overflow-hidden" style="background: rgba(22, 18, 32, 0.4); border-color: var(--border-subtle)">
+        <div class="h-7 rounded-lg border p-1.5 flex items-center justify-between overflow-hidden" style="background: rgba(22, 18, 32, 0.4); border-color: var(--border-card)">
           <div class="flex items-center gap-1">
             <Mic class="w-3 h-3" :class="isRecording ? 'text-rose-500 animate-pulse' : ''" style="color: isRecording ? undefined : 'var(--gold-400')" />
             <span class="text-[9px] font-medium" style="color: var(--text-muted)">
@@ -161,7 +161,7 @@
           <input v-model="textInput" @keyup.enter="handleSendText" :disabled="avatarStatus !== 'connected'"
             :placeholder="avatarStatus === 'connected' ? '输入文本让虚拟人播报...' : '请先连接虚拟人'"
             class="flex-1 text-[10px] rounded-lg px-2.5 py-2 outline-none transition-colors placeholder:font-medium disabled:opacity-40"
-            style="background: rgba(22, 18, 32, 0.5); border: 1px solid var(--border-subtle); color: var(--text-secondary)" />
+            style="background: rgba(22, 18, 32, 0.5); border: 1px solid var(--border-input); color: var(--text-secondary)" />
           <button @click="handleSendText" :disabled="avatarStatus !== 'connected' || !textInput.trim()"
             class="px-3 py-2 rounded-lg text-[10px] font-bold text-white transition-all cursor-pointer border-none shrink-0 disabled:opacity-30"
             :style="avatarStatus === 'connected' && textInput.trim() ? { background: 'linear-gradient(135deg, var(--gold-500), var(--gold-600))' } : { background: 'rgba(22, 18, 32, 0.8)' }">
@@ -171,7 +171,7 @@
         <div class="flex flex-wrap gap-1.5">
           <button v-for="q in quickTexts" :key="q.label" @click="textInput = q.text" :disabled="avatarStatus !== 'connected'"
             class="text-[8px] px-2 py-1 rounded-md transition-all cursor-pointer disabled:opacity-30"
-            style="background: rgba(22, 18, 32, 0.4); border: 1px solid var(--border-subtle); color: var(--text-muted)">
+            style="background: rgba(22, 18, 32, 0.4); border: 1px solid var(--border-card); color: var(--text-muted)">
             {{ q.label }}
           </button>
         </div>
@@ -203,7 +203,7 @@
           <input type="range" min="0" max="100" :value="xunfeiVolume" @input="handleVolumeChange"
             class="w-full h-1 rounded-lg appearance-none cursor-pointer accent-blue-500" style="background: rgba(22, 18, 32, 0.8)" />
         </div>
-        <div class="flex items-center justify-between pt-1" style="border-top: 1px solid var(--border-subtle)">
+        <div class="flex items-center justify-between pt-1" style="border-top: 1px solid var(--border-card)">
           <div class="flex items-center gap-1.5">
             <input type="checkbox" v-model="syncToMainChat" id="sync-chat" class="h-2.5 w-2.5 rounded accent-blue-500 cursor-pointer" />
             <label for="sync-chat" class="text-[9px] cursor-pointer select-none" style="color: var(--text-muted)">聊天区同步</label>
@@ -227,7 +227,7 @@
         <div class="grid grid-cols-3 gap-1.5">
           <button v-for="action in avatarActions" :key="action.id" @click="handleAction(action.id)" :disabled="avatarStatus !== 'connected'"
             class="py-2 rounded-lg text-[9px] font-medium transition-all cursor-pointer disabled:opacity-30 flex flex-col items-center gap-1"
-            style="background: rgba(22, 18, 32, 0.4); border: 1px solid var(--border-subtle); color: var(--text-muted)">
+            style="background: rgba(22, 18, 32, 0.4); border: 1px solid var(--border-card); color: var(--text-muted)">
             <span class="text-sm">{{ action.emoji }}</span>
             <span>{{ action.label }}</span>
           </button>

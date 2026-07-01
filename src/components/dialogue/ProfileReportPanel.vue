@@ -1,6 +1,6 @@
 <template>
   <section
-    class="h-full overflow-y-auto bg-transparent backdrop-blur-md border-l border-slate-900/20 flex flex-col transition-all duration-300 shrink-0"
+    class="h-full overflow-y-auto bg-transparent backdrop-blur-md flex flex-col transition-all duration-300 shrink-0" style="border-left: 2px solid var(--border-card) !important"
     :class="isRightSidebarCollapsed
       ? 'w-0 overflow-hidden border-l-0 opacity-0'
       : showReport
