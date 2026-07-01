@@ -33,9 +33,6 @@ const SYSTEM_PROMPT = `你是 EduMind 智能学习助手，专注于帮助学生
 4. 如果本轮没有新维度，也要追问缺失的维度
 5. 每次回复末尾给出 2-3 个建议追问短句（每条 10 字以内）
 
-## 你当前已知的画像信息
-{currentDimensions}
-
 ## 维度标签输出要求（非常重要！）
 **必须在回复的最后一行输出所有识别到的维度标签**，格式：
 [维度:identity=值] [维度:domain=值] [维度:level=值] ...
@@ -255,17 +252,10 @@ setAvatarAsrHandler((data: any) => {
 
 /** 将聊天记录转为 DeepSeek messages 格式 */
 function buildApiMessages(): { role: string; content: string }[] {
-  // 把当前已收集的维度注入系统提示
-  const dimEntries = Object.entries(dimensions.value)
-  const collected = dimEntries.filter(([, v]) => v !== null)
-  const missing = dimEntries.filter(([, v]) => v === null)
-  const dimSummary = collected.length > 0
-    ? `已收集：${collected.map(([k, v]) => `${k}=${v}`).join(' | ')}\n待收集：${missing.map(([k]) => k).join('、')}`
-    : '尚未收集任何维度，请从用户第一句话就开始提取。'
-
-  const systemContent = SYSTEM_PROMPT.replace('{currentDimensions}', dimSummary)
-
-  const msgs: { role: string; content: string }[] = [{ role: 'system', content: systemContent }]
+  // 纯静态 system prompt — 不动态注入维度，确保前缀缓存稳定
+  const msgs: { role: string; content: string; cache_control?: { type: string } }[] = [
+    { role: 'system', content: SYSTEM_PROMPT, cache_control: { type: 'ephemeral' } }
+  ]
   // 只取最近 20 条避免 token 过多
   const recent = chats.value.slice(-20)
   for (const c of recent) {
