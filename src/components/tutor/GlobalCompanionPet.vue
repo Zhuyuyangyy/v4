@@ -139,8 +139,8 @@ function animateLook() {
 function getPetMetrics() {
   const compact = window.innerWidth <= 900
   return {
-    width: compact ? 150 : 220,
-    height: compact ? 210 : 300,
+    width: compact ? 108 : 160,
+    height: compact ? 150 : 218,
   }
 }
 
@@ -364,8 +364,8 @@ onBeforeUnmount(() => {
     <div class="global-pet-live2d">
       <AiriLive2DRenderer
         :state="displayState"
-        :width="220"
-        :height="300"
+        :width="160"
+        :height="218"
         :focus-at="live2dFocus"
         :facing="movementDirection"
         @ready="live2dReady = true"
@@ -388,8 +388,8 @@ onBeforeUnmount(() => {
 
 .global-pet-live2d {
   position: relative;
-  width: 220px;
-  height: 300px;
+  width: 160px;
+  height: 218px;
   pointer-events: auto;
   cursor: grab;
 }
@@ -620,8 +620,8 @@ onBeforeUnmount(() => {
 
 @media (max-width: 900px) {
   .global-pet-live2d {
-    width: 130px;
-    height: 180px;
+    width: 108px;
+    height: 150px;
   }
   .pet-chat-panel {
     width: 290px;
