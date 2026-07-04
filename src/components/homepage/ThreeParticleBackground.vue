@@ -2,6 +2,12 @@
 import { onBeforeUnmount, onMounted, ref } from 'vue'
 import * as THREE from 'three'
 
+const props = withDefaults(defineProps<{
+  variant?: 'cosmic' | 'genre'
+}>(), {
+  variant: 'cosmic',
+})
+
 const canvasRef = ref<HTMLCanvasElement | null>(null)
 const ready = ref(false)
 
@@ -36,23 +42,27 @@ function createGlowTexture(size = 96) {
 }
 
 function createParticleField(texture: THREE.Texture) {
-  const count = 1650
+  const count = props.variant === 'genre' ? 1380 : 1650
   const positions = new Float32Array(count * 3)
   const colors = new Float32Array(count * 3)
   const color = new THREE.Color()
 
   for (let i = 0; i < count; i++) {
-    const radius = 18 + Math.pow(Math.random(), 0.58) * 60
+    const radius = 18 + Math.pow(Math.random(), props.variant === 'genre' ? 0.46 : 0.58) * 60
     const theta = Math.random() * Math.PI * 2
-    const band = (Math.random() - 0.5) * 0.52
+    const band = (Math.random() - 0.5) * (props.variant === 'genre' ? 0.42 : 0.52)
     const spiral = theta + radius * 0.038
 
     positions[i * 3] = Math.cos(spiral) * radius
-    positions[i * 3 + 1] = band * radius + (Math.random() - 0.5) * 8
+    positions[i * 3 + 1] = band * radius + (Math.random() - 0.5) * (props.variant === 'genre' ? 5 : 8)
     positions[i * 3 + 2] = Math.sin(spiral) * radius - 24 + (Math.random() - 0.5) * 18
 
     const mix = Math.random()
-    if (mix < 0.42) color.setHSL(0.56 + Math.random() * 0.05, 0.78, 0.62)
+    if (props.variant === 'genre') {
+      if (mix < 0.5) color.setHSL(0.56 + Math.random() * 0.04, 0.66, 0.68)
+      else if (mix < 0.78) color.setHSL(0.49 + Math.random() * 0.04, 0.58, 0.62)
+      else color.setHSL(0.08 + Math.random() * 0.04, 0.6, 0.58)
+    } else if (mix < 0.42) color.setHSL(0.56 + Math.random() * 0.05, 0.78, 0.62)
     else if (mix < 0.72) color.setHSL(0.78 + Math.random() * 0.06, 0.62, 0.58)
     else color.setHSL(0.09 + Math.random() * 0.05, 0.82, 0.62)
 
@@ -67,11 +77,11 @@ function createParticleField(texture: THREE.Texture) {
 
   const material = new THREE.PointsMaterial({
     map: texture,
-    size: 0.74,
+    size: props.variant === 'genre' ? 0.62 : 0.74,
     sizeAttenuation: true,
     vertexColors: true,
     transparent: true,
-    opacity: 0.62,
+    opacity: props.variant === 'genre' ? 0.44 : 0.62,
     depthWrite: false,
     blending: THREE.AdditiveBlending,
   })
@@ -80,7 +90,7 @@ function createParticleField(texture: THREE.Texture) {
 }
 
 function createEnergyRibbon(texture: THREE.Texture) {
-  const count = 460
+  const count = props.variant === 'genre' ? 380 : 460
   const positions = new Float32Array(count * 3)
   const colors = new Float32Array(count * 3)
   const color = new THREE.Color()
@@ -95,7 +105,8 @@ function createEnergyRibbon(texture: THREE.Texture) {
     positions[i * 3 + 1] = Math.sin(angle * 0.48) * 5 + wave
     positions[i * 3 + 2] = Math.sin(angle) * radius - 18
 
-    color.setHSL(0.52 + t * 0.18, 0.86, 0.58)
+    if (props.variant === 'genre') color.setHSL(0.51 + t * 0.1, 0.68, 0.6)
+    else color.setHSL(0.52 + t * 0.18, 0.86, 0.58)
     colors[i * 3] = color.r
     colors[i * 3 + 1] = color.g
     colors[i * 3 + 2] = color.b
@@ -107,11 +118,11 @@ function createEnergyRibbon(texture: THREE.Texture) {
 
   const material = new THREE.PointsMaterial({
     map: texture,
-    size: 1.2,
+    size: props.variant === 'genre' ? 0.95 : 1.2,
     sizeAttenuation: true,
     vertexColors: true,
     transparent: true,
-    opacity: 0.42,
+    opacity: props.variant === 'genre' ? 0.28 : 0.42,
     depthWrite: false,
     blending: THREE.AdditiveBlending,
   })
@@ -211,7 +222,7 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <div class="three-particle-bg" :class="{ ready }" aria-hidden="true">
+  <div class="three-particle-bg" :class="[{ ready }, `variant-${variant}`]" aria-hidden="true">
     <canvas ref="canvasRef" />
     <div class="particle-fallback" />
     <div class="particle-scan" />
@@ -227,6 +238,14 @@ onBeforeUnmount(() => {
     radial-gradient(ellipse 1100px 760px at 72% 42%, rgba(12, 180, 255, 0.12), transparent 58%),
     radial-gradient(ellipse 760px 520px at 22% 72%, rgba(247, 164, 58, 0.08), transparent 66%),
     linear-gradient(160deg, #02050e 0%, #07101f 42%, #04040b 100%);
+}
+
+.three-particle-bg.variant-genre {
+  background:
+    radial-gradient(ellipse 880px 420px at 20% 14%, rgba(84, 34, 12, 0.22), transparent 64%),
+    radial-gradient(ellipse 720px 520px at 73% 44%, rgba(20, 92, 142, 0.15), transparent 62%),
+    radial-gradient(ellipse 900px 460px at 36% 88%, rgba(112, 147, 178, 0.22), transparent 68%),
+    linear-gradient(180deg, #2a0f05 0%, #211317 15%, #101722 38%, #1c3354 68%, #6e8daa 100%);
 }
 
 .three-particle-bg canvas {
@@ -260,6 +279,16 @@ onBeforeUnmount(() => {
   opacity: 0.75;
 }
 
+.variant-genre .particle-fallback {
+  background:
+    radial-gradient(1px 1px at 12% 24%, rgba(255,255,255,0.46), transparent),
+    radial-gradient(1px 1px at 44% 18%, rgba(125,211,252,0.42), transparent),
+    radial-gradient(1.5px 1.5px at 70% 40%, rgba(245,198,139,0.32), transparent),
+    radial-gradient(1px 1px at 82% 72%, rgba(148,193,226,0.46), transparent),
+    radial-gradient(1px 1px at 28% 86%, rgba(255,255,255,0.34), transparent);
+  opacity: 0.5;
+}
+
 .particle-scan {
   background:
     linear-gradient(90deg, rgba(255,255,255,0.045) 1px, transparent 1px),
@@ -268,5 +297,13 @@ onBeforeUnmount(() => {
   mask-image: radial-gradient(ellipse at 56% 42%, black 0%, transparent 74%);
   -webkit-mask-image: radial-gradient(ellipse at 56% 42%, black 0%, transparent 74%);
   opacity: 0.28;
+}
+
+.variant-genre .particle-scan {
+  background:
+    linear-gradient(90deg, rgba(225,239,255,0.026) 1px, transparent 1px),
+    linear-gradient(rgba(225,239,255,0.018) 1px, transparent 1px);
+  background-size: 84px 84px;
+  opacity: 0.16;
 }
 </style>

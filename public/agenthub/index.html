@@ -1,678 +1,566 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Multi-Agent Orchestration Hub</title>
-  <style>
-    * { box-sizing: border-box; }
-    html, body, #root {
-      width: 100%;
-      height: 100%;
-      margin: 0;
-      overflow: hidden;
-    }
-    body {
-      background: transparent;
-      font-family: "Outfit", "PingFang SC", "Microsoft YaHei", sans-serif;
-      -webkit-font-smoothing: antialiased;
-    }
-    .agenthub-scene {
-      position: relative;
-      width: 100%;
-      height: 100%;
-      overflow: hidden;
-      border: 1px solid rgba(168, 226, 255, 0.18);
-      border-radius: 18px;
-      background:
-        radial-gradient(circle at 50% 42%, rgba(0, 188, 255, 0.22), transparent 30%),
-        radial-gradient(circle at 18% 78%, rgba(58, 98, 255, 0.16), transparent 28%),
-        radial-gradient(circle at 83% 70%, rgba(255, 190, 84, 0.12), transparent 24%),
-        linear-gradient(155deg, #06142a 0%, #071a32 38%, #081426 70%, #030815 100%);
-      touch-action: none;
-    }
-    .agenthub-scene canvas {
-      position: relative;
-      z-index: 2;
-      display: block;
-      width: 100%;
-      height: 100%;
-    }
-    .agenthub-vignette,
-    .agenthub-grid,
-    .agenthub-scan {
-      position: absolute;
-      inset: 0;
-      pointer-events: none;
-    }
-    .agenthub-vignette {
-      z-index: 3;
-      background:
-        radial-gradient(ellipse at 50% 44%, transparent 54%, rgba(3, 14, 28, 0.2) 78%, rgba(1, 5, 13, 0.56) 100%),
-        linear-gradient(90deg, rgba(1, 8, 18, 0.28), transparent 24%, transparent 76%, rgba(1, 8, 18, 0.28));
-    }
-    .agenthub-grid {
-      z-index: 1;
-      opacity: 0.18;
-      background-image:
-        linear-gradient(rgba(154, 230, 255, 0.14) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(154, 230, 255, 0.14) 1px, transparent 1px);
-      background-size: 44px 44px;
-      transform: perspective(720px) rotateX(64deg) translateY(20%);
-      transform-origin: 50% 80%;
-      mask-image: linear-gradient(180deg, transparent, black 34%, transparent 88%);
-    }
-    .agenthub-scan {
-      z-index: 1;
-      opacity: 0.28;
-      mix-blend-mode: screen;
-      background: linear-gradient(180deg, transparent 0%, rgba(164, 236, 255, 0.12) 50%, transparent 58%);
-      animation: scan 5.6s linear infinite;
-    }
-    .agenthub-loading {
-      position: absolute;
-      inset: 0;
-      z-index: 5;
-      display: grid;
-      place-items: center;
-      background: rgba(15, 36, 56, 0.72);
-      transition: opacity 0.35s ease;
-    }
-    .agenthub-loading.hide {
-      opacity: 0;
-      pointer-events: none;
-    }
-    .agenthub-spinner {
-      width: 34px;
-      height: 34px;
-      border: 2px solid rgba(172, 232, 255, 0.24);
-      border-top-color: rgba(214, 250, 255, 0.96);
-      border-radius: 50%;
-      animation: spin 0.85s linear infinite;
-    }
-    @keyframes spin { to { transform: rotate(360deg); } }
-    @keyframes scan {
-      0% { transform: translateY(-62%); }
-      100% { transform: translateY(62%); }
-    }
-  </style>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>多智能体编排枢纽 · 交互 3D</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link rel="stylesheet" media="print" onload="this.media='all'" href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Noto+Serif+SC:wght@500;600&family=Noto+Sans+SC:wght@300;400;500&display=swap" />
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  html,body{height:100%;background:#04060d;overflow:hidden;font-family:'Outfit','PingFang SC','Noto Sans SC',sans-serif;color:#eef3fb}
+  #c{display:block;cursor:grab} #c:active{cursor:grabbing}
+  .vig{position:fixed;inset:0;pointer-events:none;z-index:5;background:radial-gradient(ellipse 50% 54% at 50% 48%,transparent 32%,rgba(1,4,10,.46) 70%,rgba(0,2,6,.92) 100%)}
+
+  #title{position:fixed;top:50px;left:60px;z-index:10;max-width:460px;pointer-events:none}
+  #title .k{font-family:'JetBrains Mono',monospace;font-size:11.5px;letter-spacing:.38em;color:rgba(95,208,255,.85);margin-bottom:13px}
+  #title h1{font-family:'Instrument Serif','Noto Serif SC',serif;font-weight:600;font-size:40px;line-height:1.15;color:#fff}
+  #title p{margin-top:13px;font-size:13px;line-height:1.7;color:rgba(147,166,198,.82);max-width:360px}
+
+  /* floating station panels — 每模块专属样式 */
+  .lab{position:fixed;z-index:8;transform:translate(-50%,-100%) scale(.92);pointer-events:none;cursor:pointer;white-space:nowrap;opacity:0;filter:blur(8px) saturate(.7);transition:opacity .42s ease,filter .42s ease,transform .42s cubic-bezier(.2,.8,.2,1)}
+  .lab.revealed{opacity:.34;filter:blur(1px) saturate(.82);pointer-events:auto}
+  .lab.active{opacity:1;filter:blur(0) saturate(1.1);pointer-events:auto}
+  .lab.pending{opacity:0;filter:blur(10px) saturate(.55);pointer-events:none}
+  .lab .box{position:relative;width:166px;border-radius:13px;overflow:hidden;
+    background:linear-gradient(160deg,rgba(12,17,30,.86),rgba(6,10,20,.92));backdrop-filter:blur(12px);
+    border:1px solid color-mix(in srgb,var(--c) 55%,transparent);
+    box-shadow:0 14px 40px rgba(0,0,0,.55),0 0 22px color-mix(in srgb,var(--c) 26%,transparent),inset 0 1px 0 rgba(255,255,255,.06)}
+  .lab.revealed:not(.active) .box{border-color:color-mix(in srgb,var(--c) 28%,transparent);box-shadow:0 10px 28px rgba(0,0,0,.42),0 0 12px color-mix(in srgb,var(--c) 14%,transparent)}
+  .lab.active .box{box-shadow:0 18px 50px rgba(0,0,0,.62),0 0 34px color-mix(in srgb,var(--c) 48%,transparent),inset 0 1px 0 rgba(255,255,255,.08)}
+  .lab.active .box::after{content:'';position:absolute;inset:0;border-radius:inherit;border:1px solid color-mix(in srgb,var(--c) 88%,white);opacity:.7;pointer-events:none;animation:panel-arrive 1.2s ease-out}
+  @keyframes panel-arrive{0%{opacity:0;transform:scale(.92)}42%{opacity:1;transform:scale(1.02)}100%{opacity:.7;transform:scale(1)}}
+  /* color accent bar on top */
+  .lab .box::before{content:'';position:absolute;top:0;left:0;right:0;height:2.5px;background:linear-gradient(90deg,transparent,var(--c),transparent);opacity:.9}
+  .lab .hd{display:flex;align-items:center;gap:7px;padding:9px 12px 7px}
+  .lab .ic{width:21px;height:21px;border-radius:6px;display:flex;align-items:center;justify-content:center;flex-shrink:0;
+    background:color-mix(in srgb,var(--c) 20%,transparent);border:1px solid color-mix(in srgb,var(--c) 45%,transparent)}
+  .lab .ic svg{width:13px;height:13px;stroke:var(--c);fill:none;stroke-width:1.7}
+  .lab .no{font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:700;color:var(--c);letter-spacing:.05em}
+  .lab .nm{font-size:13.5px;font-weight:600;color:#fff;letter-spacing:.01em}
+  .lab .dot{margin-left:auto;width:6px;height:6px;border-radius:50%;background:var(--c);box-shadow:0 0 8px var(--c);animation:bp 1.6s ease-in-out infinite}
+  @keyframes bp{0%,100%{opacity:1}50%{opacity:.35}}
+  /* mini live viz */
+  .lab .viz{height:38px;margin:0 12px;border-radius:8px;background:rgba(255,255,255,.025);border:1px solid color-mix(in srgb,var(--c) 16%,transparent);position:relative;overflow:hidden}
+  .lab .viz svg{width:100%;height:100%;display:block}
+  /* stat readout */
+  .lab .stat{display:flex;align-items:baseline;justify-content:space-between;padding:7px 12px 4px}
+  .lab .stat .lbl{font-size:10px;color:#8ea0bf}
+  .lab .stat .v{font-family:'JetBrains Mono',monospace;font-size:15px;font-weight:700;color:var(--c)}
+  .lab .ag{display:flex;gap:5px;padding:2px 12px 11px}
+  .lab .ag span{flex:1;text-align:center;font-size:9.5px;color:#cdd9ee;padding:3px 4px;border-radius:5px;background:color-mix(in srgb,var(--c) 13%,transparent);border:1px solid color-mix(in srgb,var(--c) 28%,transparent)}
+  .lab .stem{position:absolute;left:50%;top:100%;width:1px;height:16px;background:linear-gradient(var(--c),transparent);transform:translateX(-50%)}
+  .lab .stem::after{content:'';position:absolute;left:50%;bottom:0;width:5px;height:5px;border-radius:50%;background:var(--c);box-shadow:0 0 8px var(--c);transform:translate(-50%,50%)}
+  .lab:hover{filter:brightness(1.12)}
+  .lab:hover .box{border-color:var(--c);box-shadow:0 18px 50px rgba(0,0,0,.6),0 0 34px color-mix(in srgb,var(--c) 45%,transparent)}
+
+  #corelab{position:fixed;z-index:9;transform:translate(-50%,-100%);text-align:center;white-space:nowrap;pointer-events:none}
+  #corelab .ck{font-family:'JetBrains Mono',monospace;font-size:10.5px;letter-spacing:.2em;color:#5fd0ff}
+  #corelab .cn{font-family:'Instrument Serif','Noto Serif SC',serif;font-size:23px;color:#fff;margin:2px 0}
+  #corelab .cs{font-size:11px;color:rgba(95,208,255,.9)}
+
+  #hint{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);z-index:10;font-family:'JetBrains Mono',monospace;font-size:11.5px;letter-spacing:.16em;color:rgba(120,150,190,.65);pointer-events:none}
+
+  /* modal */
+  #modal{position:fixed;inset:0;z-index:9999;display:none;align-items:center;justify-content:center}
+  #modal.open{display:flex}
+  #modal .scrim{position:absolute;inset:0;background:rgba(2,5,12,.6);backdrop-filter:blur(3px);opacity:0;transition:opacity .3s}
+  #modal.open .scrim{opacity:1}
+  #card{position:relative;width:520px;max-width:88%;border-radius:18px;padding:28px 30px;transform:translateY(14px) scale(.97);opacity:0;transition:all .34s cubic-bezier(.2,.7,.2,1);
+    background:linear-gradient(155deg,rgba(14,20,36,.95),rgba(8,12,24,.97));border:1px solid rgba(120,160,220,.22);box-shadow:0 40px 110px rgba(0,0,0,.6)}
+  #modal.open #card{transform:translateY(0) scale(1);opacity:1}
+  #card .c-no{font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:700;letter-spacing:.1em}
+  #card h2{font-size:27px;color:#fff;margin:5px 0 3px}
+  #card .c-en{font-family:'JetBrains Mono',monospace;font-size:11.5px;letter-spacing:.22em;color:#93a6c6;text-transform:uppercase}
+  #card .c-desc{font-size:14.5px;line-height:1.7;color:#c3d0e6;margin:16px 0}
+  #card .c-ag{display:flex;gap:10px;margin-top:14px}
+  #card .c-ag span{flex:1;text-align:center;font-size:13px;padding:9px;border-radius:9px;background:rgba(255,255,255,.04)}
+  #card .c-x{position:absolute;top:16px;right:18px;width:32px;height:32px;border-radius:8px;border:1px solid rgba(255,255,255,.16);background:rgba(255,255,255,.04);color:#cdd9ee;font-size:15px;cursor:pointer}
+  #card .c-x:hover{background:rgba(255,255,255,.1)}
+
+  #load{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:15px;z-index:60;background:#04060d;transition:opacity .6s}
+  #load.hide{opacity:0;pointer-events:none}
+  #load .ring{width:44px;height:44px;border:2px solid rgba(95,208,255,.2);border-top-color:#5fd0ff;border-radius:50%;animation:spin 1s linear infinite}
+  #load .txt{font-family:'JetBrains Mono',monospace;font-size:12px;letter-spacing:.2em;color:#5fd0ff}
+  @keyframes spin{to{transform:rotate(360deg)}}
+</style>
 </head>
 <body>
-  <div id="root">
-    <section id="hubwrap" class="agenthub-scene" aria-label="Multi-agent collaboration scene">
-      <div class="agenthub-grid" aria-hidden="true"></div>
-      <div class="agenthub-scan" aria-hidden="true"></div>
-      <div class="agenthub-vignette" aria-hidden="true"></div>
-      <div id="loadtip" class="agenthub-loading" aria-hidden="true">
-        <div class="agenthub-spinner"></div>
-      </div>
-    </section>
-  </div>
+<canvas id="c"></canvas>
+<div class="vig"></div>
+<div id="title">
+  <div class="k">MULTI-AGENT&nbsp;&nbsp;ORCHESTRATION&nbsp;&nbsp;HUB</div>
+  <h1>统筹编排的<br/>多智能体学习枢纽</h1>
+  <p>中央调度核心统一编排 · 6 大模块 12 个智能体协同 · 学习任务沿轨道在智能体间实时流转。</p>
+</div>
+<div id="corelab"><div class="ck">06 · CORE</div><div class="cn">编排中枢</div><div class="cs">中央调度核心</div></div>
+<div id="hint">拖拽旋转 · 滚轮缩放 · 点击节点查看详情</div>
+<div id="modal"><div class="scrim"></div>
+  <div id="card"><button class="c-x">✕</button><div class="c-no"></div><div class="c-en"></div><h2></h2><div class="c-desc"></div><div class="c-ag"></div></div>
+</div>
+<div id="load"><div class="ring"></div><div class="txt" id="ltxt">LOADING MODEL…</div></div>
 
-  <script type="module">
-    import * as THREE from 'https://esm.sh/three@0.160.0';
-    import { GLTFLoader } from 'https://esm.sh/three@0.160.0/examples/jsm/loaders/GLTFLoader.js';
-    import { OrbitControls } from 'https://esm.sh/three@0.160.0/examples/jsm/controls/OrbitControls.js';
-    import { RoomEnvironment } from 'https://esm.sh/three@0.160.0/examples/jsm/environments/RoomEnvironment.js';
-    import { EffectComposer } from 'https://esm.sh/three@0.160.0/examples/jsm/postprocessing/EffectComposer.js';
-    import { RenderPass } from 'https://esm.sh/three@0.160.0/examples/jsm/postprocessing/RenderPass.js';
-    import { UnrealBloomPass } from 'https://esm.sh/three@0.160.0/examples/jsm/postprocessing/UnrealBloomPass.js';
+<script type="module">
+import * as THREE from 'https://esm.sh/three@0.160.0';
+import { GLTFLoader } from 'https://esm.sh/three@0.160.0/examples/jsm/loaders/GLTFLoader.js';
+import { OrbitControls } from 'https://esm.sh/three@0.160.0/examples/jsm/controls/OrbitControls.js';
+import { RoomEnvironment } from 'https://esm.sh/three@0.160.0/examples/jsm/environments/RoomEnvironment.js';
+import { EffectComposer } from 'https://esm.sh/three@0.160.0/examples/jsm/postprocessing/EffectComposer.js';
+import { RenderPass } from 'https://esm.sh/three@0.160.0/examples/jsm/postprocessing/RenderPass.js';
+import { UnrealBloomPass } from 'https://esm.sh/three@0.160.0/examples/jsm/postprocessing/UnrealBloomPass.js';
 
-    const MODEL_URLS = ['/agenthub/models/agent_hub_concept_refined_final.glb'];
-    const STATIONS = [
-      { id: 'profile', color: '#9B8CFF', pos: new THREE.Vector3(0, 1.05, -9.5) },
-      { id: 'path', color: '#35E0D8', pos: new THREE.Vector3(8.227, 1.05, -4.75) },
-      { id: 'resource', color: '#1ABF90', pos: new THREE.Vector3(8.227, 1.05, 4.75) },
-      { id: 'tutor', color: '#F0B24A', pos: new THREE.Vector3(0, 1.05, 9.5) },
-      { id: 'eval', color: '#F0586E', pos: new THREE.Vector3(-8.227, 1.05, 4.75) },
-      { id: 'loop', color: '#7C8CFF', pos: new THREE.Vector3(-8.227, 1.05, -4.75) },
-    ];
+const STATIONS = [
+  { key:'profile',  no:'01', name:'画像诊断', en:'DIAGNOSE', c:'#8b7ff5', ui:'radar',   stat:'掌握度', val:'32%', agents:['画像采集','薄弱诊断'], desc:'采集学习行为与作答数据，构建多维学情画像，定位知识薄弱点与风险标签，为后续编排提供诊断依据。' },
+  { key:'path',     no:'02', name:'路径编排', en:'PLAN',     c:'#27c0e6', ui:'network', stat:'补救节点', val:'+3', agents:['路径规划','动态重排'], desc:'依据诊断画像规划个性化学习路径，插入补救节点，并随学习进展动态重排，保证路径始终贴合学情。' },
+  { key:'resource', no:'03', name:'资源生成', en:'PRODUCE',  c:'#1abf90', ui:'cards',   stat:'已匹配', val:'10', agents:['资源检索','个性生成'], desc:'按路径匹配讲解视频、例题与专项练习，并按学习者特征个性化生成与优化学习素材。' },
+  { key:'tutor',    no:'04', name:'辅导互动', en:'TUTOR',    c:'#e0a23a', ui:'chat',    stat:'答疑轮次', val:'3', agents:['讲解辅导','互动答疑'], desc:'提供分步讲解与实时答疑，主动追问与互动激励，完成针对薄弱点的个性化教学。' },
+  { key:'eval',     no:'05', name:'测评分析', en:'ASSESS',   c:'#e0556e', ui:'bars',    stat:'晨测得分', val:'82', agents:['评估出题','错因分析'], desc:'生成诊断题与测评，分析错因与掌握度变化，形成评估证据链。' },
+  { key:'feedback', no:'06', name:'反馈复盘', en:'FEEDBACK', c:'#5b8cff', ui:'loop',    stat:'掌握度', val:'61%', agents:['反馈回写','成长复盘'], desc:'将评估证据回写学习画像，更新明日学习路径，推送成长报告，驱动闭环持续优化。' },
+];
 
-    const wrap = document.getElementById('hubwrap');
-    const loading = document.getElementById('loadtip');
+const STATION_KEYS = STATIONS.map(s => s.key);
+const externalBeatToStation = { loop: 'feedback' };
+const stationToExternalBeat = { feedback: 'loop' };
+const revealedStations = new Set();
+let activeStationKey = STATIONS[0].key;
+let progressTimer = null;
 
-    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, preserveDrawingBuffer: true });
-    renderer.setPixelRatio(Math.min(devicePixelRatio, 1.75));
-    renderer.setSize(wrap.clientWidth, wrap.clientHeight);
-    renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    renderer.toneMappingExposure = 1.0;
-    renderer.outputColorSpace = THREE.SRGBColorSpace;
-    renderer.shadowMap.enabled = true;
-    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-    wrap.appendChild(renderer.domElement);
+function normalizeStationKey(id) {
+  const key = externalBeatToStation[id] || id;
+  return STATION_KEYS.includes(key) ? key : STATIONS[0].key;
+}
 
-    const scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x06142a);
-    scene.fog = new THREE.FogExp2(0x06142a, 0.0065);
+function externalBeatId(key) {
+  return stationToExternalBeat[key] || key;
+}
 
-    const pmrem = new THREE.PMREMGenerator(renderer);
-    scene.environment = pmrem.fromScene(new RoomEnvironment(renderer), 0.04).texture;
+function revealThroughStation(key) {
+  const targetIndex = STATION_KEYS.indexOf(key);
+  revealedStations.clear();
+  STATION_KEYS.forEach((stationKey, index) => {
+    if (index <= targetIndex) revealedStations.add(stationKey);
+  });
+}
 
-    const camera = new THREE.PerspectiveCamera(32, wrap.clientWidth / wrap.clientHeight, 0.1, 500);
-    camera.position.set(14.2, 9.2, 17.4);
+function updateLabelStates() {
+  STATIONS.forEach((s) => {
+    const el = labels[s.key];
+    if (!el) return;
+    el.classList.toggle('active', s.key === activeStationKey);
+    el.classList.toggle('revealed', revealedStations.has(s.key));
+    el.classList.toggle('pending', !revealedStations.has(s.key));
+  });
+}
 
-    const controls = new OrbitControls(camera, renderer.domElement);
-    controls.target.set(0, 2.6, 0);
-    controls.enableDamping = true;
-    controls.dampingFactor = 0.055;
-    controls.enablePan = false;
-    controls.minDistance = 11.5;
-    controls.maxDistance = 32;
-    controls.maxPolarAngle = Math.PI / 2.06;
-    controls.autoRotate = true;
-    controls.autoRotateSpeed = 0.5;
+function setActiveStation(id, options = {}) {
+  const key = normalizeStationKey(id);
+  activeStationKey = key;
+  revealThroughStation(key);
+  updateLabelStates();
+  if (options.notify !== false) {
+    window.parent?.postMessage({ type: 'agenthub:beat', id: externalBeatId(key) }, '*');
+  }
+  if (options.restart !== false) restartProgressTimer();
+}
 
-    let rotateTimer = 0;
-    controls.addEventListener('start', () => {
-      controls.autoRotate = false;
-      clearTimeout(rotateTimer);
+function advanceStation() {
+  const idx = STATION_KEYS.indexOf(activeStationKey);
+  const nextKey = STATION_KEYS[(idx + 1) % STATION_KEYS.length];
+  if (idx === STATION_KEYS.length - 1) revealedStations.clear();
+  setActiveStation(nextKey, { restart: false });
+}
+
+function restartProgressTimer() {
+  if (progressTimer) clearInterval(progressTimer);
+  progressTimer = setInterval(advanceStation, 3600);
+}
+
+const cvs = document.getElementById('c');
+const renderer = new THREE.WebGLRenderer({ canvas: cvs, antialias: true });
+renderer.setSize(innerWidth, innerHeight);
+renderer.setPixelRatio(Math.min(devicePixelRatio, 1.75));
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 0.76;
+renderer.outputColorSpace = THREE.SRGBColorSpace;
+
+const scene = new THREE.Scene();
+scene.fog = new THREE.FogExp2(0x040c18, 0.0036);
+const pmrem = new THREE.PMREMGenerator(renderer);
+scene.environment = pmrem.fromScene(new RoomEnvironment(renderer), 0.02).texture;
+scene.add(new THREE.HemisphereLight(0x24405f, 0x05080f, 0.26));
+const key = new THREE.DirectionalLight(0xdfeaff, 1.12); key.position.set(-12, 22, 14); scene.add(key);
+const rim = new THREE.DirectionalLight(0x3f72ff, 0.48); rim.position.set(16, 8, -14); scene.add(rim);
+
+const camera = new THREE.PerspectiveCamera(42, innerWidth/innerHeight, 0.1, 2000);
+
+// ===== 深蓝黑数字中控空间 =====
+const ENV = { grid:null, particles:null, scanRings:[], glowDisc:null };
+function buildEnvironment() {
+  // 1) 深蓝黑渐变天幕 — 整体压暗，顶部暗海军蓝 → 地平线近黑
+  const skyGeo = new THREE.SphereGeometry(440, 48, 32);
+  const skyMat = new THREE.ShaderMaterial({
+    side: THREE.BackSide, depthWrite: false,
+    uniforms: { top:{value:new THREE.Color(0x040d1a)}, mid:{value:new THREE.Color(0x020810)}, bot:{value:new THREE.Color(0x010407)} },
+    vertexShader: `varying vec3 vP; void main(){ vP=position; gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0); }`,
+    fragmentShader: `varying vec3 vP; uniform vec3 top,mid,bot; void main(){ float h=normalize(vP).y; vec3 c = h>0.0 ? mix(mid,top,pow(h,0.85)) : mix(mid,bot,pow(-h,0.45)); gl_FragColor=vec4(c,1.0);} `
+  });
+  scene.add(new THREE.Mesh(skyGeo, skyMat));
+
+  // 2) 深色玻璃地台 — 近黑，仅中心一点冷光晕，边界柔化消失（非亮圆盘）
+  const discGeo = new THREE.CircleGeometry(150, 96).rotateX(-Math.PI/2);
+  const discMat = new THREE.ShaderMaterial({
+    transparent:true, depthWrite:false,
+    uniforms:{ col:{value:new THREE.Color(0x0ccfff)} },
+    vertexShader:`varying vec2 vUv; void main(){ vUv=uv; gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0);} `,
+    // 只在很靠中心处给极弱蓝光晕，向外迅速消失 → 没有硬边、没有大面积亮蓝
+    fragmentShader:`varying vec2 vUv; uniform vec3 col; void main(){ float d=distance(vUv,vec2(0.5)); float a=smoothstep(0.22,0.0,d)*0.07; gl_FragColor=vec4(col,a);} `
+  });
+  const disc = new THREE.Mesh(discGeo, discMat); disc.position.y = -0.015; scene.add(disc); ENV.glowDisc = disc;
+
+  // 2b) 近黑实体地台（接住模型与阴影，暗金属/玻璃感）
+  const floorMat = new THREE.MeshStandardMaterial({ color:0x02060d, roughness:0.5, metalness:0.55, envMapIntensity:0.28 });
+  const floor = new THREE.Mesh(new THREE.CircleGeometry(150,96).rotateX(-Math.PI/2), floorMat);
+  floor.position.y = -0.03; scene.add(floor);
+
+  // 3) 极弱 HUD 网格 — 只同心圆，暗蓝灰，透明度 6–11%，远处渐隐；不放射、不黑线
+  const gridG = new THREE.Group();
+  function ringLine(r, op){ const pts=[]; for(let i=0;i<=140;i++){const a=i/140*Math.PI*2; pts.push(new THREE.Vector3(r*Math.cos(a),0,r*Math.sin(a)));}
+    return new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts), new THREE.LineBasicMaterial({ color:0x1c3a5a, transparent:true, opacity:op })); }
+  for (let r=8; r<=120; r+=8){ const fade = 0.11 * (1 - r/150); gridG.add(ringLine(r, Math.max(0.05, fade))); }
+  // 仅极少数极淡的方位刻度（短线，不贯穿），透明度很低
+  for (let k=0;k<24;k++){ const a=k/24*Math.PI*2; const r0=9,r1=11; const pts=[new THREE.Vector3(r0*Math.cos(a),0,r0*Math.sin(a)), new THREE.Vector3(r1*Math.cos(a),0,r1*Math.sin(a))];
+    gridG.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts), new THREE.LineBasicMaterial({ color:0x244568, transparent:true, opacity:0.18 }))); }
+  gridG.position.y = -0.005; scene.add(gridG); ENV.grid = gridG;
+
+  // 4) 扩散扫描环 — 更细更淡，作为氛围微光
+  for (let i=0;i<2;i++){
+    const g = new THREE.RingGeometry(1,1.025,120).rotateX(-Math.PI/2);
+    const m = new THREE.MeshBasicMaterial({ color:0x2f86d6, transparent:true, opacity:0.16, side:THREE.DoubleSide, depthWrite:false, blending:THREE.AdditiveBlending });
+    const ring = new THREE.Mesh(g,m); ring.position.y=0.01; scene.add(ring); ENV.scanRings.push(ring);
+  }
+
+  // ===== 核心同心数据环（对标概念图：发光多层环 + 流动光弧）=====
+  const FX = { rings:[], arcs:[], beam:null, beamCore:null, baseGlow:null };
+  const ringRadii = [3.6, 4.7, 5.9, 7.2];
+  ringRadii.forEach((r,i)=>{
+    // 稳定底环（细，青蓝，加性发光）
+    const tg = new THREE.TorusGeometry(r, 0.022+ (i%2)*0.01, 8, 160).rotateX(Math.PI/2);
+    const tm = new THREE.MeshBasicMaterial({ color: i%2? 0x3f9ee0 : 0x5fd0ff, transparent:true, opacity:0.42, blending:THREE.AdditiveBlending, depthWrite:false });
+    const ring = new THREE.Mesh(tg, tm); ring.position.y = 0.16 + i*0.015; scene.add(ring); FX.rings.push(ring);
+    // 流动亮弧（短 thetaLength，绕圈旋转）
+    const ag = new THREE.TorusGeometry(r, 0.05, 10, 64, Math.PI*0.5).rotateX(Math.PI/2);
+    const am = new THREE.MeshBasicMaterial({ color:0xbfeaff, transparent:true, opacity:0.64, blending:THREE.AdditiveBlending, depthWrite:false });
+    const arc = new THREE.Mesh(ag, am); arc.position.y = 0.165 + i*0.015; scene.add(arc);
+    FX.arcs.push({ mesh:arc, sp: (i%2?-1:1)*(0.25+i*0.06), off:i*1.3 });
+  });
+  // 核心底座辉光盘
+  const bgGeo = new THREE.CircleGeometry(8, 64).rotateX(-Math.PI/2);
+  const bgMat = new THREE.ShaderMaterial({ transparent:true, depthWrite:false, blending:THREE.AdditiveBlending,
+    uniforms:{ col:{value:new THREE.Color(0x2f9fe0)} },
+    vertexShader:`varying vec2 vU; void main(){ vU=uv; gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0);} `,
+    fragmentShader:`varying vec2 vU; uniform vec3 col; void main(){ float d=distance(vU,vec2(0.5)); float a=smoothstep(0.5,0.06,d)*0.18; gl_FragColor=vec4(col,a);} ` });
+  FX.baseGlow = new THREE.Mesh(bgGeo, bgMat); FX.baseGlow.position.y=0.05; scene.add(FX.baseGlow);
+
+  // ===== 中央垂直能量光柱（对标概念图蓝色光柱）=====
+  const beamMat = new THREE.ShaderMaterial({ transparent:true, depthWrite:false, blending:THREE.AdditiveBlending, side:THREE.DoubleSide,
+    uniforms:{ col:{value:new THREE.Color(0x6fc4ff)}, t:{value:0} },
+    vertexShader:`varying float vY; void main(){ vY=uv.y; gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0);} `,
+    fragmentShader:`varying float vY; uniform vec3 col; uniform float t; void main(){ float edge=smoothstep(0.0,0.5,1.0-abs(vY-0.0)); float fade=pow(1.0-vY,1.3); float pulse=0.8+0.2*sin(t*3.0 - vY*10.0); gl_FragColor=vec4(col, fade*0.26*pulse);} ` });
+  const beam = new THREE.Mesh(new THREE.CylinderGeometry(0.5, 0.16, 26, 24, 1, true), beamMat);
+  beam.position.y = 13.5; scene.add(beam); FX.beam = beam; FX.beamMat = beamMat;
+  // 光柱亮芯
+  const coreLine = new THREE.Mesh(new THREE.CylinderGeometry(0.07,0.04,26,8), new THREE.MeshBasicMaterial({ color:0xeafaff, transparent:true, opacity:0.64, blending:THREE.AdditiveBlending, depthWrite:false }));
+  coreLine.position.y = 13.5; scene.add(coreLine); FX.beamCore = coreLine;
+  // 光柱底部起点光球
+  const beamOrb = new THREE.Mesh(new THREE.SphereGeometry(0.5,24,24), new THREE.MeshBasicMaterial({ color:0xbfeaff, transparent:true, opacity:0.46, blending:THREE.AdditiveBlending, depthWrite:false }));
+  beamOrb.position.y = 1.2; scene.add(beamOrb); FX.beamOrb = beamOrb;
+  ENV.FX = FX;
+
+  // 5) 漂浮光尘 — 存基础极坐标，做"对冲呼吸"(周期性朝中心汇聚再扩散)
+  const N=560;
+  const dust = { pos:new Float32Array(N*3), base:[] };
+  const dcA=new THREE.Color(0x4f8fc4), dcB=new THREE.Color(0x84b6e0), dcW=new THREE.Color(0xd8b890);
+  const dcol=new Float32Array(N*3);
+  for(let i=0;i<N;i++){
+    const r=22+Math.random()*150, a=Math.random()*Math.PI*2, y=Math.random()*64-3;
+    dust.base.push({ r, a, y, sp:0.02+Math.random()*0.05, ph:Math.random()*6.28, amp:0.5+Math.random()*0.6 });
+    dust.pos[i*3]=r*Math.cos(a); dust.pos[i*3+1]=y; dust.pos[i*3+2]=r*Math.sin(a);
+    const c = Math.random()<0.06 ? dcW : (Math.random()<0.5?dcA:dcB);
+    dcol[i*3]=c.r; dcol[i*3+1]=c.g; dcol[i*3+2]=c.b;
+  }
+  const pg=new THREE.BufferGeometry();
+  pg.setAttribute('position', new THREE.BufferAttribute(dust.pos,3).setUsage(THREE.DynamicDrawUsage));
+  pg.setAttribute('color', new THREE.BufferAttribute(dcol,3));
+  const pm=new THREE.PointsMaterial({ size:0.42, vertexColors:true, transparent:true, opacity:0.5, depthWrite:false, blending:THREE.AdditiveBlending, sizeAttenuation:true });
+  ENV.particles = new THREE.Points(pg,pm); scene.add(ENV.particles);
+  ENV.dust = dust; ENV.dustGeo = pg;
+
+  // 5b) 能量上升微粒 — 从地面缓缓升起并被中枢吸入(吐纳感)
+  const K=140;
+  const motes = { pos:new Float32Array(K*3), data:[] };
+  for(let i=0;i<K;i++){
+    const r=6+Math.random()*46, a=Math.random()*Math.PI*2;
+    motes.data.push({ r, a, y:Math.random()*30, vy:1.2+Math.random()*2.4, inward:0.05+Math.random()*0.12 });
+    motes.pos[i*3]=r*Math.cos(a); motes.pos[i*3+1]=Math.random()*30; motes.pos[i*3+2]=r*Math.sin(a);
+  }
+  const mg=new THREE.BufferGeometry();
+  mg.setAttribute('position', new THREE.BufferAttribute(motes.pos,3).setUsage(THREE.DynamicDrawUsage));
+  const mm=new THREE.PointsMaterial({ color:0x5fd0ff, size:0.34, transparent:true, opacity:0.65, depthWrite:false, blending:THREE.AdditiveBlending, sizeAttenuation:true });
+  ENV.motes = new THREE.Points(mg,mm); scene.add(ENV.motes);
+  ENV.motesData = motes; ENV.motesGeo = mg;
+
+
+  // 6) 远景城市/数据灯光 — 很远、很暗、很虚，只提供地平线纵深
+  const M=200, hp=new Float32Array(M*3);
+  for(let i=0;i<M;i++){ const a=Math.random()*Math.PI*2, r=180+Math.random()*140; hp[i*3]=r*Math.cos(a); hp[i*3+1]=Math.random()*5-1; hp[i*3+2]=r*Math.sin(a); }
+  const hg=new THREE.BufferGeometry(); hg.setAttribute('position', new THREE.BufferAttribute(hp,3));
+  scene.add(new THREE.Points(hg, new THREE.PointsMaterial({ color:0x5a86b0, size:0.9, transparent:true, opacity:0.4, depthWrite:false, blending:THREE.AdditiveBlending })));
+
+  // 7) 几条极远的暗蓝光带（数字穹顶氛围）
+  for (let i=0;i<4;i++){
+    const a=i/4*Math.PI*2 + 0.4, r=170;
+    const band = new THREE.Mesh(new THREE.PlaneGeometry(60,0.5), new THREE.MeshBasicMaterial({ color:0x1a4a72, transparent:true, opacity:0.12, blending:THREE.AdditiveBlending, depthWrite:false }));
+    band.position.set(r*Math.cos(a), 8+Math.random()*20, r*Math.sin(a)); band.lookAt(0, band.position.y, 0); scene.add(band);
+  }
+}
+buildEnvironment();
+
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true; controls.dampingFactor = 0.06; controls.enablePan = false;
+controls.autoRotate = false; controls.autoRotateSpeed = 0.55;
+let rt; controls.addEventListener('start', ()=>{ clearTimeout(rt); });
+controls.addEventListener('end', ()=>{ clearTimeout(rt); });
+
+const composer = new EffectComposer(renderer);
+composer.addPass(new RenderPass(scene, camera));
+const bloom = new UnrealBloomPass(new THREE.Vector2(innerWidth, innerHeight), 0.38, 0.62, 0.9);
+composer.addPass(bloom);
+
+// runtime refs
+const refs = { packets:[], rings:[], coreEmis:[], beacons:[], stationAnchors:{}, coreSignal:null, coreGroup:null };
+const v = new THREE.Vector3();
+const ltxt = document.getElementById('ltxt');
+
+new GLTFLoader().load('models/agent_hub_concept_refined_final.glb', (gltf) => {
+  const root = gltf.scene; scene.add(root); refs.root = root;
+
+  root.traverse(o => {
+    if (!o.name) return;
+    const n = o.name;
+    if (/^data_packet_0\d/.test(n)) {
+      const p = o.getWorldPosition(new THREE.Vector3());
+      refs.packets.push({ mesh:o, angle: Math.atan2(p.z, p.x), r: Math.hypot(p.x, p.z), y: p.y });
+    } else if (/^core_data_ring/.test(n)) {
+      refs.rings.push({ mesh:o, dir: n.includes('upper') ? -1 : 1 });
+    } else if (n === 'core_learning_profile_signal') {
+      refs.coreSignal = o;
+    } else if (/^core_emissive_window/.test(n) || n === 'core_learning_profile_signal') {
+      if (o.isMesh && o.material) refs.coreEmis.push({ m:o.material, base:o.material.emissiveIntensity||1 });
+    } else if (/_beacon$/.test(n) && o.isMesh && o.material) {
+      refs.beacons.push({ m:o.material, base:o.material.emissiveIntensity||1, ph: Math.random()*6.28 });
+    }
+  });
+  if (refs.coreSignal && refs.coreSignal.material) refs.coreEmis.push({ m: refs.coreSignal.material, base: refs.coreSignal.material.emissiveIntensity||5 });
+
+  // station HTML anchors
+  STATIONS.forEach(s => {
+    const node = root.getObjectByName(`station_${s.no}_${s.key}_hologram_panel`);
+    if (node) { refs.stationAnchors[s.key] = node.getWorldPosition(new THREE.Vector3()).clone(); refs.stationAnchors[s.key].y += 0.55; }
+  });
+
+  // frame camera
+  const box = new THREE.Box3().setFromObject(root);
+  const size = box.getSize(new THREE.Vector3()), center = box.getCenter(new THREE.Vector3());
+  const maxDim = Math.max(size.x, size.z);
+  controls.target.set(0, 2.65, 0);
+  const d = maxDim * 0.92;
+  camera.position.set(d*0.72, maxDim*0.48, d*0.88);
+  camera.near = maxDim/500; camera.far = maxDim*60; camera.updateProjectionMatrix();
+  controls.minDistance = maxDim*0.55; controls.maxDistance = maxDim*2.2; controls.maxPolarAngle = Math.PI/2.06;
+  controls.update();
+
+  buildLabels();
+  setActiveStation(activeStationKey);
+  document.getElementById('load').classList.add('hide');
+}, (p)=>{ if(p.loaded) ltxt.textContent='LOADING MODEL… '+(p.loaded/1048576).toFixed(1)+' MB'; },
+   (e)=>{ ltxt.textContent='LOAD ERROR'; console.error(e); });
+
+// ---- HTML labels ----
+const labels = {};
+function moduleIcon(ui){
+  const I={
+    radar:'<circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3.5"/><line x1="12" y1="12" x2="19" y2="7"/>',
+    network:'<circle cx="6" cy="7" r="2"/><circle cx="18" cy="6" r="2"/><circle cx="13" cy="17" r="2"/><line x1="7.6" y1="8.2" x2="11.5" y2="15.5"/><line x1="16.4" y1="7.4" x2="13.6" y2="15.2"/>',
+    cards:'<rect x="4" y="6" width="6" height="12" rx="1"/><rect x="14" y="6" width="6" height="12" rx="1"/>',
+    chat:'<rect x="3" y="5" width="12" height="9" rx="2"/><path d="M9 18l3-4"/><rect x="13" y="13" width="8" height="6" rx="2"/>',
+    bars:'<line x1="5" y1="20" x2="5" y2="13"/><line x1="10" y1="20" x2="10" y2="8"/><line x1="15" y1="20" x2="15" y2="11"/><line x1="20" y1="20" x2="20" y2="5"/>',
+    loop:'<path d="M19 9a7 7 0 1 0 1.5 6"/><polyline points="19 4 19 9 14 9"/>'
+  };
+  return `<svg viewBox="0 0 24 24">${I[ui]||I.radar}</svg>`;
+}
+function buildLabels() {
+  STATIONS.forEach(s => {
+    const el = document.createElement('div'); el.className = 'lab'; el.style.setProperty('--c', s.c);
+    el.innerHTML = `<div class="box">
+      <div class="hd"><span class="ic">${moduleIcon(s.ui)}</span><span class="no">${s.no}</span><span class="nm">${s.name}</span><span class="dot"></span></div>
+      <div class="viz" data-ui="${s.ui}"></div>
+      <div class="stat"><span class="lbl">${s.stat}</span><span class="v">${s.val}</span></div>
+      <div class="ag">${s.agents.map(a=>`<span>${a}</span>`).join('')}</div>
+    </div><div class="stem"></div>`;
+    el.dataset.stationKey = s.key;
+    el.addEventListener('click', ()=>{
+      setActiveStation(s.key);
+      openModal(s);
     });
-    controls.addEventListener('end', () => {
-      clearTimeout(rotateTimer);
-      rotateTimer = setTimeout(() => { controls.autoRotate = true; }, 2800);
-    });
+    document.body.appendChild(el); labels[s.key] = el;
+    buildViz(el.querySelector('.viz'), s);
+  });
+  updateLabelStates();
+}
+// per-module live mini-visualization (animated via CSS where possible)
+function buildViz(host, s){
+  const c = s.c, ns='http://www.w3.org/2000/svg';
+  const svg=document.createElementNS(ns,'svg'); svg.setAttribute('viewBox','0 0 150 38'); host.appendChild(svg);
+  const mk=(t,a)=>{const e=document.createElementNS(ns,t);for(const k in a)e.setAttribute(k,a[k]);return e;};
+  if(s.ui==='radar'){
+    [6,11,16].forEach(r=>svg.appendChild(mk('ellipse',{cx:75,cy:19,rx:r*1.4,ry:r,fill:'none',stroke:c,'stroke-opacity':.35,'stroke-width':1})));
+    const sweep=mk('line',{x1:75,y1:19,x2:97,y2:19,stroke:c,'stroke-width':1.6});
+    const an=mk('animateTransform',{attributeName:'transform',type:'rotate',from:'0 75 19',to:'360 75 19',dur:'3.6s',repeatCount:'indefinite'});
+    sweep.appendChild(an); svg.appendChild(sweep);
+    [[88,12],[64,26],[92,24]].forEach(p=>svg.appendChild(mk('circle',{cx:p[0],cy:p[1],r:2,fill:c})));
+  } else if(s.ui==='network'){
+    const nodes=[[28,12],[58,9],[88,20],[48,30],[112,16],[130,28]];
+    [[0,1],[1,2],[2,3],[1,4],[4,5]].forEach(e=>svg.appendChild(mk('line',{x1:nodes[e[0]][0],y1:nodes[e[0]][1],x2:nodes[e[1]][0],y2:nodes[e[1]][1],stroke:c,'stroke-opacity':.4,'stroke-width':1})));
+    nodes.forEach((n,i)=>{const o=mk('circle',{cx:n[0],cy:n[1],r:2.6,fill:c});const a=mk('animate',{attributeName:'opacity',values:'.4;1;.4',dur:'2s',begin:(i*0.3)+'s',repeatCount:'indefinite'});o.appendChild(a);svg.appendChild(o);});
+  } else if(s.ui==='cards'){
+    for(let i=0;i<4;i++){const x=14+i*33;const r=mk('rect',{x:x,y:9,width:24,height:20,rx:3,fill:'none',stroke:c,'stroke-opacity':.6,'stroke-width':1.1});const a=mk('animate',{attributeName:'opacity',values:'0;1',dur:'0.5s',begin:(i*0.4)+'s',fill:'freeze',repeatCount:'1'});r.appendChild(a);svg.appendChild(r);
+      const b=mk('rect',{x:x+4,y:22,width:16,height:2.5,rx:1,fill:c,opacity:.7});svg.appendChild(b);}
+  } else if(s.ui==='chat'){
+    const rows=[[10,7,52,'l'],[60,18,60,'r'],[10,29,40,'l']];
+    rows.forEach((rw,i)=>{const b=mk('rect',{x:rw[0],y:rw[1],width:rw[2],height:9,rx:4.5,fill:rw[3]==='r'?c:'rgba(255,255,255,.8)','fill-opacity':rw[3]==='r'?.85:.6});const a=mk('animate',{attributeName:'opacity',values:'0;1',dur:'.4s',begin:(i*0.7)+'s',fill:'freeze',repeatCount:'1'});b.appendChild(a);svg.appendChild(b);});
+  } else if(s.ui==='bars'){
+    const hs=[12,22,16,28,20];
+    hs.forEach((h,i)=>{const x=20+i*24;const r=mk('rect',{x:x,y:34-h,width:12,height:h,rx:1.5,fill:c,'fill-opacity':.85});const a=mk('animate',{attributeName:'height',values:`0;${h}`,dur:'.6s',begin:(i*0.15)+'s',fill:'freeze',repeatCount:'1'});const a2=mk('animate',{attributeName:'y',values:`34;${34-h}`,dur:'.6s',begin:(i*0.15)+'s',fill:'freeze',repeatCount:'1'});r.appendChild(a);r.appendChild(a2);svg.appendChild(r);});
+  } else { // loop
+    const p=mk('path',{d:'M40 19 a35 14 0 1 1 70 0 a35 14 0 1 1 -70 0',fill:'none',stroke:c,'stroke-opacity':.4,'stroke-width':1.4,'stroke-dasharray':'4 6'});
+    const an=mk('animate',{attributeName:'stroke-dashoffset',values:'40;0',dur:'1.4s',repeatCount:'indefinite'});p.appendChild(an);svg.appendChild(p);
+    const dot=mk('circle',{r:3,fill:c});const mp=mk('animateMotion',{dur:'3s',repeatCount:'indefinite',path:'M40 19 a35 14 0 1 1 70 0 a35 14 0 1 1 -70 0'});dot.appendChild(mp);svg.appendChild(dot);
+    svg.appendChild(mk('text',{x:75,y:23,'text-anchor':'middle','font-size':9,fill:c,'font-family':'monospace'}));
+    svg.lastChild.textContent='32→61';
+  }
+}
+const corelab = document.getElementById('corelab');
+function project(vec) { const p = vec.clone().project(camera); return { x:(p.x*.5+.5)*innerWidth, y:(-p.y*.5+.5)*innerHeight, vis:p.z<1 }; }
+function clamp(v, min, max) { return Math.max(min, Math.min(max, v)); }
 
-    scene.add(new THREE.HemisphereLight(0x9eeaff, 0x102032, 0.84));
+// ---- modal ----
+const modal = document.getElementById('modal'), cardEl = document.getElementById('card');
+function openModal(s){
+  cardEl.querySelector('.c-no').textContent = s.no+' · AGENT MODULE'; cardEl.querySelector('.c-no').style.color = s.c;
+  cardEl.querySelector('.c-en').textContent = s.en; cardEl.querySelector('h2').textContent = s.name;
+  cardEl.querySelector('.c-desc').textContent = s.desc;
+  const ag = cardEl.querySelector('.c-ag'); ag.innerHTML='';
+  s.agents.forEach(x=>{ const sp=document.createElement('span'); sp.textContent=x; sp.style.border=`1px solid ${s.c}55`; sp.style.color=s.c; ag.appendChild(sp); });
+  cardEl.style.borderColor = s.c+'40'; modal.classList.add('open');
+}
+function closeModal(){ modal.classList.remove('open'); }
+modal.querySelector('.scrim').addEventListener('click', closeModal);
+cardEl.querySelector('.c-x').addEventListener('click', closeModal);
+addEventListener('keydown', e=>{ if(e.key==='Escape') closeModal(); });
+addEventListener('message', e => {
+  if (e.data?.type !== 'agenthub:setBeat') return;
+  setActiveStation(e.data.id, { notify: false });
+});
 
-    const key = new THREE.DirectionalLight(0xf6fbff, 2.9);
-    key.position.set(-9, 18, 13);
-    key.castShadow = true;
-    key.shadow.mapSize.set(2048, 2048);
-    key.shadow.camera.near = 1;
-    key.shadow.camera.far = 80;
-    key.shadow.camera.left = -24;
-    key.shadow.camera.right = 24;
-    key.shadow.camera.top = 24;
-    key.shadow.camera.bottom = -24;
-    key.shadow.bias = -0.00035;
-    scene.add(key);
+// ---- loop ----
+let t0 = performance.now();
+function loop(now){
+  const t = (now - t0)/1000;
+  controls.update();
 
-    const fill = new THREE.DirectionalLight(0xb9cfff, 1.25);
-    fill.position.set(12, 7, -10);
-    scene.add(fill);
+  // data packets flow along orbit
+  refs.packets.forEach(pk => { pk.angle += 0.32 * (1/60); const a = pk.angle; pk.mesh.position.set(pk.r*Math.cos(a), pk.y + Math.sin(t*2.4 + a*3)*0.04, pk.r*Math.sin(a)); });
+  // core data rings spin
+  refs.rings.forEach(r => { r.mesh.rotation.y += 0.01 * r.dir; });
+  // core breathing
+  const cb = 0.5 + 0.5*Math.sin(t*1.5);
+  refs.coreEmis.forEach(e => { e.m.emissiveIntensity = e.base * (0.48 + cb*0.52); });
+  if (refs.coreSignal) refs.coreSignal.scale.setScalar(1 + cb*0.08);
+  refs.beacons.forEach(b => { b.m.emissiveIntensity = b.base * (0.5 + 0.45*(0.5+0.5*Math.sin(t*2 + b.ph))); });
 
-    const coreLight = new THREE.PointLight(0x79e7ff, 3.8, 60, 1.6);
-    coreLight.position.set(0, 3.6, 0);
-    scene.add(coreLight);
-
-    const stationLights = STATIONS.map((station) => {
-      const light = new THREE.PointLight(station.color, 0.35, 14, 2.2);
-      light.position.copy(station.pos).add(new THREE.Vector3(0, 1.0, 0));
-      scene.add(light);
-      return light;
-    });
-
-    const composer = new EffectComposer(renderer);
-    composer.addPass(new RenderPass(scene, camera));
-    const bloom = new UnrealBloomPass(new THREE.Vector2(wrap.clientWidth, wrap.clientHeight), 0.34, 0.5, 0.92);
-    composer.addPass(bloom);
-
-    const refs = {
-      root: null,
-      mixer: null,
-      rings: [],
-      packets: [],
-      stationMeshes: new Map(),
-      emissiveMaterials: new Map(),
-      activeObjects: [],
-      flowPackets: [],
-      flowArcs: [],
-      pulseRings: [],
-      scanRings: [],
-      gltfAnimations: 0,
-      loadedModelUrl: null,
-    };
-    let activeIndex = 0;
-    let activeId = STATIONS[0].id;
-
-    function radialTexture(size, stops) {
-      const canvas = document.createElement('canvas');
-      canvas.width = canvas.height = size;
-      const ctx = canvas.getContext('2d');
-      const grad = ctx.createRadialGradient(size / 2, size / 2, 0, size / 2, size / 2, size / 2);
-      stops.forEach(([at, color]) => grad.addColorStop(at, color));
-      ctx.fillStyle = grad;
-      ctx.fillRect(0, 0, size, size);
-      const texture = new THREE.CanvasTexture(canvas);
-      texture.colorSpace = THREE.SRGBColorSpace;
-      return texture;
+  // 深蓝黑空间动效 — 对冲呼吸 + 吐纳
+  const breathe = Math.sin(t*0.6);              // 全场呼吸相位 (-1..1)
+  if (ENV.dust && ENV.dustGeo) {
+    const D = ENV.dust, arr = ENV.dustGeo.attributes.position.array;
+    for (let i=0;i<D.base.length;i++){
+      const b = D.base[i];
+      // 半径随呼吸朝中心汇聚(breathe<0)再扩散(breathe>0)，叠加个体微抖
+      const r = b.r * (1 + breathe*0.07*b.amp) + Math.sin(t*b.sp*6 + b.ph)*0.6;
+      const a = b.a + t*0.02 + Math.sin(t*0.1+b.ph)*0.02;
+      arr[i*3] = r*Math.cos(a);
+      arr[i*3+1] = b.y + Math.sin(t*b.sp*4 + b.ph)*0.8;
+      arr[i*3+2] = r*Math.sin(a);
     }
-
-    function makeEnvironment() {
-      const floor = new THREE.Mesh(
-        new THREE.CircleGeometry(34, 192).rotateX(-Math.PI / 2),
-        new THREE.MeshStandardMaterial({
-          color: 0x06182f,
-          metalness: 0.46,
-          roughness: 0.38,
-          transparent: true,
-          opacity: 0.04,
-          envMapIntensity: 0.9,
-          depthWrite: false,
-        })
-      );
-      floor.position.y = -0.12;
-      floor.receiveShadow = true;
-      scene.add(floor);
-
-      const contact = new THREE.Mesh(
-        new THREE.CircleGeometry(25, 160).rotateX(-Math.PI / 2),
-        new THREE.MeshBasicMaterial({
-          map: radialTexture(512, [
-            [0, 'rgba(0,0,0,0.58)'],
-            [0.42, 'rgba(0,0,0,0.3)'],
-            [0.82, 'rgba(0,0,0,0.06)'],
-            [1, 'rgba(0,0,0,0)'],
-          ]),
-          transparent: true,
-          opacity: 0.45,
-          depthWrite: false,
-        })
-      );
-      contact.position.y = -0.08;
-      scene.add(contact);
-
-      const glow = new THREE.Mesh(
-        new THREE.CircleGeometry(46, 192).rotateX(-Math.PI / 2),
-        new THREE.MeshBasicMaterial({
-          map: radialTexture(512, [
-            [0, 'rgba(138,232,255,0.2)'],
-            [0.38, 'rgba(70,154,255,0.09)'],
-            [1, 'rgba(0,0,0,0)'],
-          ]),
-          transparent: true,
-          opacity: 0.16,
-          depthWrite: false,
-          blending: THREE.AdditiveBlending,
-        })
-      );
-      glow.position.y = -0.1;
-      scene.add(glow);
-
-      const starGeo = new THREE.BufferGeometry();
-      const count = 320;
-      const pos = new Float32Array(count * 3);
-      for (let i = 0; i < count; i++) {
-        const radius = 38 + Math.random() * 72;
-        const angle = Math.random() * Math.PI * 2;
-        pos[i * 3] = Math.cos(angle) * radius;
-        pos[i * 3 + 1] = Math.random() * 30 - 2;
-        pos[i * 3 + 2] = Math.sin(angle) * radius;
-      }
-      starGeo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
-      scene.add(new THREE.Points(starGeo, new THREE.PointsMaterial({
-        color: 0xbdefff,
-        size: 0.18,
-        transparent: true,
-        opacity: 0.24,
-        depthWrite: false,
-        blending: THREE.AdditiveBlending,
-      })));
+    ENV.dustGeo.attributes.position.needsUpdate = true;
+    ENV.particles.material.opacity = 0.28 + (breathe*0.5+0.5)*0.14; // 呼吸明暗
+  }
+  if (ENV.motesData && ENV.motesGeo) {
+    const Mt = ENV.motesData, arr = ENV.motesGeo.attributes.position.array, dtl = 1/60;
+    for (let i=0;i<Mt.data.length;i++){
+      const m = Mt.data[i];
+      m.y += m.vy*dtl;
+      m.r -= m.inward*(m.y*0.04);         // 越升越被吸向中心
+      if (m.y > 30 || m.r < 1.5){ m.y = 0; m.r = 6+Math.random()*46; m.a = Math.random()*Math.PI*2; }
+      arr[i*3] = m.r*Math.cos(m.a);
+      arr[i*3+1] = m.y;
+      arr[i*3+2] = m.r*Math.sin(m.a);
     }
+    ENV.motesGeo.attributes.position.needsUpdate = true;
+    ENV.motes.material.opacity = 0.28 + (breathe*0.5+0.5)*0.16;
+  }
+  if (ENV.grid) ENV.grid.rotation.y = -t*0.004;
+    ENV.scanRings.forEach((ring,i)=>{ const ph=(t*0.1 + i/2)%1; const rr=5+ph*120; ring.scale.set(rr,1,rr); ring.material.opacity=0.11*(1-ph); });
 
-    function curveBetween(a, b, lift = 2.4) {
-      const mid = a.clone().lerp(b, 0.5);
-      mid.y += lift;
-      mid.multiplyScalar(1.03);
-      return new THREE.QuadraticBezierCurve3(a.clone(), mid, b.clone());
-    }
+  // 核心数据环 + 光柱动效（对标概念图）
+  if (ENV.FX){
+    const F = ENV.FX;
+    F.arcs.forEach(a=>{ a.mesh.rotation.y = t*a.sp + a.off; });
+    F.rings.forEach((r,i)=>{ r.material.opacity = 0.22 + 0.09*Math.sin(t*1.4 + i*0.7); });
+    if (F.beamMat) F.beamMat.uniforms.t.value = t;
+    if (F.beamCore) F.beamCore.material.opacity = 0.38 + 0.12*Math.sin(t*3.2);
+    if (F.beamOrb){ const s=1+0.1*Math.sin(t*2.4); F.beamOrb.scale.setScalar(s); F.beamOrb.material.opacity=0.36+0.1*Math.sin(t*2.4); }
+    if (F.baseGlow) F.baseGlow.material.uniforms.col.value.setHSL(0.56, 0.62, 0.26+0.03*Math.sin(t*1.2));
+  }
 
-    function createFlowLayer() {
-      const core = new THREE.Vector3(0, 2.6, 0);
-      const coreMat = new THREE.MeshBasicMaterial({
-        color: 0xb8f6ff,
-        transparent: true,
-        opacity: 0.56,
-        blending: THREE.AdditiveBlending,
-        depthWrite: false,
-      });
+  composer.render();
 
-      for (let i = 0; i < STATIONS.length; i++) {
-        const station = STATIONS[i];
-        const next = STATIONS[(i + 1) % STATIONS.length];
-        const ringCurve = curveBetween(station.pos, next.pos, 1.15);
-        const coreCurve = curveBetween(station.pos.clone().add(new THREE.Vector3(0, 0.4, 0)), core, 2.5);
-        const tubeMat = new THREE.MeshBasicMaterial({
-          color: station.color,
-          transparent: true,
-          opacity: 0.2,
-          blending: THREE.AdditiveBlending,
-          depthWrite: false,
-        });
-        const arc = new THREE.Mesh(new THREE.TubeGeometry(ringCurve, 48, 0.026, 8, false), tubeMat);
-        scene.add(arc);
-        refs.flowArcs.push({ mesh: arc, material: tubeMat, stationIndex: i, kind: 'handoff' });
+  // overlay labels
+  STATIONS.forEach(s => { const el = labels[s.key], anc = refs.stationAnchors[s.key]; if(!el||!anc) return;
+    const pr = project(anc);
+    const dist = camera.position.distanceTo(anc); const k = Math.max(.7, Math.min(1.12, 1.5-(dist-14)*0.03));
+    const active = s.key === activeStationKey;
+    const revealed = revealedStations.has(s.key);
+    const x = active ? clamp(pr.x, 110, innerWidth - 110) : pr.x;
+    const y = active ? clamp(pr.y, 142, innerHeight - 42) : pr.y;
+    el.style.left = x+'px'; el.style.top = y+'px';
+    const stateScale = active ? 1.08 : 0.9;
+    el.style.transform = `translate(-50%,-100%) scale(${(k * stateScale).toFixed(3)})`;
+    el.style.opacity = (active || pr.vis) && revealed ? (active ? 1 : 0.24) : 0;
+    el.style.zIndex = active ? 900 : Math.round(420 - dist*8);
+  });
+  if (refs.coreSignal) { const pr = project(v.set(0,5.4,0)); corelab.style.left=pr.x+'px'; corelab.style.top=pr.y+'px'; corelab.style.opacity=pr.vis?1:0; }
 
-        const spokeMat = new THREE.MeshBasicMaterial({
-          color: station.color,
-          transparent: true,
-          opacity: 0.08,
-          blending: THREE.AdditiveBlending,
-          depthWrite: false,
-        });
-        const spoke = new THREE.Mesh(new THREE.TubeGeometry(coreCurve, 42, 0.018, 8, false), spokeMat);
-        scene.add(spoke);
-        refs.flowArcs.push({ mesh: spoke, material: spokeMat, stationIndex: i, kind: 'core' });
+  requestAnimationFrame(loop);
+}
+addEventListener('resize', ()=>{ camera.aspect=innerWidth/innerHeight; camera.updateProjectionMatrix(); renderer.setSize(innerWidth,innerHeight); composer.setSize(innerWidth,innerHeight); });
+requestAnimationFrame(loop);
 
-        for (let j = 0; j < 3; j++) {
-          const material = new THREE.MeshBasicMaterial({
-            color: station.color,
-            transparent: true,
-            opacity: 0.95,
-            blending: THREE.AdditiveBlending,
-            depthWrite: false,
-          });
-          const packet = new THREE.Mesh(new THREE.SphereGeometry(0.095 + j * 0.018, 18, 18), material);
-          const halo = new THREE.Mesh(new THREE.SphereGeometry(0.24 + j * 0.05, 18, 18), new THREE.MeshBasicMaterial({
-            color: station.color,
-            transparent: true,
-            opacity: 0.14,
-            blending: THREE.AdditiveBlending,
-            depthWrite: false,
-          }));
-          const group = new THREE.Group();
-          group.add(packet, halo);
-          scene.add(group);
-          refs.flowPackets.push({
-            group,
-            packet,
-            halo,
-            material,
-            haloMaterial: halo.material,
-            curve: j === 2 ? coreCurve : ringCurve,
-            stationIndex: i,
-            offset: (j / 3) * 0.72,
-            speed: j === 2 ? 0.18 : 0.28,
-            corePacket: j === 2,
-          });
-        }
-      }
-
-      for (let i = 0; i < 4; i++) {
-        const torus = new THREE.Mesh(
-          new THREE.TorusGeometry(1.6 + i * 0.52, 0.012, 8, 128),
-          coreMat.clone()
-        );
-        torus.rotation.x = Math.PI / 2;
-        torus.position.y = 2.55 + i * 0.34;
-        torus.material.opacity = 0.35 - i * 0.055;
-        scene.add(torus);
-        refs.pulseRings.push(torus);
-      }
-
-      for (const station of STATIONS) {
-        const ring = new THREE.Mesh(
-          new THREE.TorusGeometry(0.92, 0.018, 8, 96),
-          new THREE.MeshBasicMaterial({
-            color: station.color,
-            transparent: true,
-            opacity: 0.36,
-            blending: THREE.AdditiveBlending,
-            depthWrite: false,
-          })
-        );
-        ring.rotation.x = Math.PI / 2;
-        ring.position.copy(station.pos).add(new THREE.Vector3(0, 0.18, 0));
-        scene.add(ring);
-        refs.scanRings.push(ring);
-      }
-    }
-
-    function stationIndexFromName(name) {
-      const match = name.match(/(?:station|agent)_(0[1-6])_/i) || name.match(/refined_station_(0[1-6])_/i);
-      return match ? Number(match[1]) - 1 : -1;
-    }
-
-    function applyMaterialTuning(object, name) {
-      const materials = Array.isArray(object.material) ? object.material : [object.material];
-      materials.forEach((material) => {
-        if (!material) return;
-        if ('envMapIntensity' in material) material.envMapIntensity = /holo|glass|wall/i.test(name) ? 2.25 : 1.18;
-        if ('roughness' in material && !/holo|beam|arc|ring|orbit|scan|packet/i.test(name)) {
-          material.roughness = Math.min(Math.max(material.roughness ?? 0.42, 0.24), 0.58);
-        }
-        if ('metalness' in material && /core|station|pedestal|deck|disc|graphite|metal/i.test(name)) {
-          material.metalness = Math.max(material.metalness ?? 0.2, 0.55);
-        }
-        if ('opacity' in material && /holo|glass|beam|arc|scan/i.test(name)) {
-          material.transparent = true;
-          material.opacity = Math.min(material.opacity ?? 1, /beam/i.test(name) ? 0.42 : 0.58);
-        }
-        if ('emissiveIntensity' in material && /beam|arc|ring|orbit|scan|packet|beacon|neon/i.test(name)) {
-          material.emissiveIntensity = Math.min(Math.max(material.emissiveIntensity ?? 1, 1.35), 2.8);
-        }
-        material.needsUpdate = true;
-      });
-    }
-
-    function indexModel(root) {
-      root.traverse((object) => {
-        const name = object.name || '';
-        if (!object.isMesh) return;
-        if (/label|title|board|concept|keyword|kicker|input|output|detail|handoff_note|backdrop|dark_cinematic|env_reflective/i.test(name)) {
-          object.visible = false;
-          return;
-        }
-        if (/floor_radial|background_light_slab/i.test(name)) {
-          object.visible = false;
-          return;
-        }
-        object.frustumCulled = false;
-        object.castShadow = !/holo|glass|wall|beam|arc|ring|orbit|scan|packet/i.test(name);
-        object.receiveShadow = /core|station|pedestal|deck|disc/i.test(name);
-        applyMaterialTuning(object, name);
-
-        if (/ring|orbit|arc|scan/i.test(name)) refs.rings.push(object);
-        if (/data_packet|refined_orbit_data_cube/i.test(name)) refs.packets.push({
-          object,
-          base: object.position.clone(),
-          radius: Math.max(0.5, Math.hypot(object.position.x, object.position.z)),
-          angle: Math.atan2(object.position.z, object.position.x),
-        });
-        const stationIndex = stationIndexFromName(name);
-        if (stationIndex >= 0) {
-          if (!refs.stationMeshes.has(stationIndex)) refs.stationMeshes.set(stationIndex, []);
-          refs.stationMeshes.get(stationIndex).push(object);
-        }
-        const materials = Array.isArray(object.material) ? object.material : [object.material];
-        materials.forEach((material) => {
-          if (!material || !('emissiveIntensity' in material)) return;
-          refs.emissiveMaterials.set(material.uuid, { material, base: material.emissiveIntensity || 0 });
-        });
-      });
-    }
-
-    function frameModel(root) {
-      const box = new THREE.Box3().setFromObject(root);
-      const center = box.getCenter(new THREE.Vector3());
-      const size = box.getSize(new THREE.Vector3());
-      root.position.sub(center);
-      root.position.y += 0.68;
-      root.scale.setScalar(1.28);
-      const maxDim = Math.max(size.x, size.z) * 1.28;
-      camera.position.set(maxDim * 0.5, maxDim * 0.34, maxDim * 0.66);
-      controls.target.set(0, 2.55, 0);
-      controls.minDistance = maxDim * 0.34;
-      controls.maxDistance = maxDim * 1.08;
-      camera.near = 0.1;
-      camera.far = maxDim * 12;
-      camera.updateProjectionMatrix();
-      controls.update();
-    }
-
-    function setBeat(id, notifyParent = false) {
-      const index = STATIONS.findIndex((station) => station.id === id);
-      activeIndex = index >= 0 ? index : 0;
-      activeId = STATIONS[activeIndex].id;
-      if (notifyParent) {
-        window.parent?.postMessage({ type: 'agenthub:beat', id: activeId, beat: activeIndex }, '*');
-      }
-    }
-
-    function cycleBeats() {
-      clearInterval(window.__agentHubCycle);
-      window.__agentHubCycle = setInterval(() => {
-        setBeat(STATIONS[(activeIndex + 1) % STATIONS.length].id, true);
-      }, 2600);
-      window.__agentHubJumpToBeat = (id) => setBeat(id, true);
-    }
-
-    window.addEventListener('message', (event) => {
-      if (event.data?.type !== 'agenthub:setBeat') return;
-      window.__agentHubJumpToBeat?.(event.data.id);
-    });
-
-    function loadModel(urls, index = 0) {
-      const url = urls[index];
-      new GLTFLoader().load(
-        url,
-        (gltf) => {
-          refs.root = gltf.scene;
-          refs.gltfAnimations = gltf.animations?.length || 0;
-          refs.loadedModelUrl = url;
-          scene.add(refs.root);
-          indexModel(refs.root);
-          frameModel(refs.root);
-          if (refs.gltfAnimations) {
-            refs.mixer = new THREE.AnimationMixer(refs.root);
-            gltf.animations.forEach((clip) => refs.mixer.clipAction(clip).play());
-          }
-          loading.classList.add('hide');
-          cycleBeats();
-        },
-        undefined,
-        () => {
-          if (index + 1 < urls.length) loadModel(urls, index + 1);
-          else loading.classList.add('hide');
-        }
-      );
-    }
-
-    makeEnvironment();
-    createFlowLayer();
-    setBeat('profile', true);
-    loadModel(MODEL_URLS);
-
-    const raycaster = new THREE.Raycaster();
-    const pointer = new THREE.Vector2();
-    wrap.addEventListener('pointerdown', (event) => {
-      const rect = renderer.domElement.getBoundingClientRect();
-      pointer.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
-      pointer.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
-      raycaster.setFromCamera(pointer, camera);
-      const hits = raycaster.intersectObjects(refs.root ? [refs.root] : [], true);
-      if (!hits.length) return;
-      let closest = 0;
-      let best = Infinity;
-      STATIONS.forEach((station, index) => {
-        const dist = hits[0].point.distanceTo(station.pos);
-        if (dist < best) {
-          best = dist;
-          closest = index;
-        }
-      });
-      setBeat(STATIONS[closest].id, true);
-    });
-
-    const clock = new THREE.Clock();
-    function animate() {
-      const delta = clock.getDelta();
-      const elapsed = clock.elapsedTime;
-      refs.mixer?.update(delta);
-      controls.update();
-
-      const activeStation = STATIONS[activeIndex];
-      coreLight.color.set(activeStation.color);
-      coreLight.intensity = 3.8 + Math.sin(elapsed * 3.2) * 0.55;
-
-      stationLights.forEach((light, index) => {
-        const active = index === activeIndex;
-        light.intensity = active ? 2.6 + Math.sin(elapsed * 4.8) * 0.55 : 0.32;
-      });
-
-      refs.rings.forEach((ring, index) => {
-        ring.rotation.z += (index % 2 ? -1 : 1) * (0.003 + (index % 5) * 0.00035);
-      });
-
-      refs.packets.forEach((packet, index) => {
-        const speed = 0.18 + (index % 7) * 0.012;
-        const angle = packet.angle + elapsed * speed;
-        packet.object.position.x = Math.cos(angle) * packet.radius;
-        packet.object.position.z = Math.sin(angle) * packet.radius;
-        packet.object.position.y = packet.base.y + Math.sin(elapsed * 2.4 + index) * 0.08;
-        packet.object.rotation.y += 0.018;
-      });
-
-      refs.flowPackets.forEach((packet) => {
-        const active = packet.stationIndex === activeIndex;
-        const t = (elapsed * packet.speed + packet.offset + packet.stationIndex * 0.04) % 1;
-        packet.group.position.copy(packet.curve.getPointAt(t));
-        const scale = active ? 1.35 + Math.sin(elapsed * 7.2) * 0.15 : 0.82;
-        packet.group.scale.setScalar(scale);
-        packet.material.opacity = active ? 1 : 0.52;
-        packet.haloMaterial.opacity = active ? 0.22 : 0.08;
-      });
-
-      refs.flowArcs.forEach((arc) => {
-        const active = arc.stationIndex === activeIndex;
-        const pulse = (Math.sin(elapsed * 4.2 + arc.stationIndex) + 1) * 0.5;
-        arc.material.opacity = active
-          ? (arc.kind === 'core' ? 0.36 : 0.54) + pulse * 0.12
-          : (arc.kind === 'core' ? 0.06 : 0.13);
-      });
-
-      refs.pulseRings.forEach((ring, index) => {
-        const wave = (elapsed * 0.9 + index * 0.28) % 1;
-        const scale = 0.88 + wave * 1.5;
-        ring.scale.setScalar(scale);
-        ring.material.opacity = Math.max(0, 0.42 * (1 - wave));
-        ring.rotation.z += 0.006 * (index % 2 ? -1 : 1);
-      });
-
-      refs.scanRings.forEach((ring, index) => {
-        const active = index === activeIndex;
-        const wave = (elapsed * 1.2 + index * 0.13) % 1;
-        ring.scale.setScalar(active ? 1.0 + wave * 0.75 : 0.82);
-        ring.material.opacity = active ? 0.56 * (1 - wave * 0.55) : 0.12;
-        ring.rotation.z += active ? 0.014 : 0.004;
-      });
-
-      refs.stationMeshes.forEach((objects, index) => {
-        const active = index === activeIndex;
-        const boost = active ? 1.0 + Math.sin(elapsed * 5.4) * 0.08 : 1;
-        objects.forEach((object) => {
-          object.scale.lerp(new THREE.Vector3(boost, boost, boost), 0.08);
-        });
-      });
-
-      refs.emissiveMaterials.forEach(({ material, base }) => {
-        material.emissiveIntensity = Math.min(3.4, base + 0.12 + Math.sin(elapsed * 2.8) * 0.08);
-      });
-
-      bloom.strength = 0.32 + Math.sin(elapsed * 1.15) * 0.03;
-      composer.render();
-      window.__agentHubState = {
-        ready: !!refs.root,
-        activeId,
-        activeIndex,
-        model: refs.root ? MODEL_URLS.find((url) => url) : null,
-        loadedModelUrl: refs.loadedModelUrl,
-        gltfAnimations: refs.gltfAnimations,
-        flowPackets: refs.flowPackets.length,
-      };
-      window.__hubRAF = requestAnimationFrame(animate);
-    }
-    animate();
-
-    function resize() {
-      const width = wrap.clientWidth || 1;
-      const height = wrap.clientHeight || 1;
-      camera.aspect = width / height;
-      camera.updateProjectionMatrix();
-      renderer.setSize(width, height);
-      composer.setSize(width, height);
-    }
-    window.addEventListener('resize', resize);
-  </script>
+// capture helper for offline verification
+window.__renderer = renderer;
+window.__capBlit = function(){ composer.render(); const gl=renderer.getContext(),w=gl.drawingBufferWidth,h=gl.drawingBufferHeight,px=new Uint8Array(w*h*4); gl.readPixels(0,0,w,h,gl.RGBA,gl.UNSIGNED_BYTE,px);
+  const sc=document.getElementById('snap')||document.createElement('canvas'); sc.id='snap'; sc.width=w; sc.height=h; sc.style.cssText='position:fixed;inset:0;width:100vw;height:100vh;z-index:9999';
+  const ctx=sc.getContext('2d'),img=ctx.createImageData(w,h); for(let y=0;y<h;y++){const sY=h-1-y;for(let x=0;x<w;x++){const s=(sY*w+x)*4,d=(y*w+x)*4;img.data[d]=px[s];img.data[d+1]=px[s+1];img.data[d+2]=px[s+2];img.data[d+3]=255;}} ctx.putImageData(img,0,0); document.body.appendChild(sc); return w+'x'+h; };
+</script>
 </body>
 </html>

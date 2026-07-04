@@ -155,9 +155,9 @@ watch(
 .brand-text {
   font-family: var(--font-display);
   font-size: 18px;
-  font-weight: 600;
+  font-weight: 700;
   color: #fff;
-  letter-spacing: 0.5px;
+  letter-spacing: 0;
 }
 
 /* === Nav === */
@@ -217,7 +217,7 @@ watch(
 }
 
 .nav-label {
-  letter-spacing: 0.3px;
+  letter-spacing: 0;
 }
 
 .nav-indicator {

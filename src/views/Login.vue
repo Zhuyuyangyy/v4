@@ -1,441 +1,560 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { onBeforeUnmount, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
-import {
-  BarChart3,
-  BrainCircuit,
-  GraduationCap,
-  LockKeyhole,
-  ShieldCheck,
-  Sparkles,
-  UserRound,
-} from 'lucide-vue-next'
+import AgentGeometryScene from '@/components/login/AgentGeometryScene.vue'
+import InkFieldBackground from '@/components/login/InkFieldBackground.vue'
+import LoginPanel from '@/components/login/LoginPanel.vue'
 import { setAuthSession, type AuthRole } from '@/lib/auth'
 
 const router = useRouter()
-const activeRole = ref<AuthRole>('student')
-const account = ref('student')
-const password = ref('123456')
-const errorText = ref('')
+const rootRef = ref<HTMLElement | null>(null)
+const compactScene = ref(false)
+const authOpen = ref(false)
+let mediaQuery: MediaQueryList | null = null
+let loginTimer = 0
 
-const roleMeta = computed(() => activeRole.value === 'admin'
-  ? {
-      title: '管理员数据中心',
-      desc: '进入智能体调用量、学生学习情况、Token 消耗、错题整理与用户权限管理。',
-      account: 'admin',
-      password: 'admin123',
-      submit: '进入管理大屏',
-    }
-  : {
-      title: '学生学习入口',
-      desc: '进入画像生成、学习路径、学习资源、智能评估与错题反馈等学习功能。',
-      account: 'student',
-      password: '123456',
-      submit: '进入学习系统',
+function updateCompact(event?: MediaQueryListEvent | MediaQueryList) {
+  compactScene.value = Boolean(event?.matches ?? mediaQuery?.matches)
+}
+
+function resolveLoginRole(payload: { account: string, role: AuthRole }) {
+  const normalizedAccount = payload.account.trim().toLowerCase()
+  return payload.role === 'admin' || normalizedAccount === 'admin' ? 'admin' : 'student'
+}
+
+function handleLogin(payload: { account: string, password: string, remember: boolean, role: AuthRole }) {
+  window.clearTimeout(loginTimer)
+
+  loginTimer = window.setTimeout(() => {
+    const role = resolveLoginRole(payload)
+    setAuthSession({
+      role,
+      name: role === 'admin' ? '管理员' : (payload.account || '学习用户'),
+      account: payload.account || (role === 'admin' ? 'admin' : 'student'),
+      loginAt: new Date().toISOString(),
     })
-
-function switchRole(role: AuthRole) {
-  activeRole.value = role
-  account.value = role === 'admin' ? 'admin' : 'student'
-  password.value = role === 'admin' ? 'admin123' : '123456'
-  errorText.value = ''
+    router.replace(role === 'admin' ? '/admin' : '/home')
+  }, 1000)
 }
 
-function handleLogin() {
-  if (!account.value.trim() || !password.value.trim()) {
-    errorText.value = '请输入账号和密码'
-    return
-  }
-
-  setAuthSession({
-    role: activeRole.value,
-    name: activeRole.value === 'admin' ? '管理员' : '学生用户',
-    account: account.value.trim(),
-    loginAt: new Date().toISOString(),
-  })
-
-  router.replace(activeRole.value === 'admin' ? '/admin' : '/home')
+function openAuth() {
+  authOpen.value = true
 }
+
+function closeAuth() {
+  authOpen.value = false
+}
+
+function handlePointerMove(event: PointerEvent) {
+  rootRef.value?.style.setProperty('--cursor-x', `${event.clientX}px`)
+  rootRef.value?.style.setProperty('--cursor-y', `${event.clientY}px`)
+}
+
+onMounted(() => {
+  mediaQuery = window.matchMedia('(max-width: 900px)')
+  updateCompact(mediaQuery)
+  mediaQuery.addEventListener('change', updateCompact)
+})
+
+onBeforeUnmount(() => {
+  window.clearTimeout(loginTimer)
+  mediaQuery?.removeEventListener('change', updateCompact)
+})
 </script>
 
 <template>
-  <main class="login-page">
-    <div class="login-bg-grid" aria-hidden="true" />
-    <div class="login-stream" aria-hidden="true">
-      <span v-for="item in ['AI', 'Token', '错题', '路径', '评估', '资源', '画像', '反馈']" :key="item">
-        {{ item }}
-      </span>
-    </div>
+  <main ref="rootRef" class="login-view" @pointermove="handlePointerMove">
+    <InkFieldBackground :compact="compactScene" />
+    <div class="ink-veil" aria-hidden="true" />
+    <div class="grain-layer" aria-hidden="true" />
+    <div class="login-grid" aria-hidden="true" />
+    <div class="cursor-core" aria-hidden="true" />
+    <div class="cursor-ring" aria-hidden="true" />
 
-    <section class="login-stage" aria-label="EduMind 登录">
-      <div class="login-copy">
-        <div class="brand-mark">
-          <span><Sparkles :size="18" /></span>
-          EduMind
+    <section class="visual-pane" aria-label="EduMind 系统入口主页">
+      <AgentGeometryScene :compact="compactScene" :show-copy="false" />
+
+      <header class="landing-topbar">
+        <div class="brand-block">
+          <strong>EduMind</strong>
+          <span>A3-TRACE Learning Intelligence</span>
         </div>
-
-        <div class="flow-visual" aria-hidden="true">
-          <div class="glass-node source-node">
-            <strong>学习行为数据</strong>
-            <small>课程  错题  画像  资源</small>
-          </div>
-          <div class="flow-lines">
-            <i />
-            <i />
-            <i />
-          </div>
-          <div class="glass-node insight-node">
-            <strong>1,000,000</strong>
-            <small>Tokens Processed</small>
-            <div class="mini-chart">
-              <em v-for="n in 20" :key="n" :style="{ height: `${24 + ((n * 17) % 60)}%` }" />
-            </div>
-          </div>
+        <div class="connection-pill">
+          <i />
+          Agent Orchestrator Online
         </div>
+      </header>
 
-        <h1>一个入口进入学习与管理系统</h1>
-        <p>
-          用户登录后进入学习功能，管理员登录后进入透明数据大屏、用户管理、角色管理和用户信息修改。
-        </p>
+      <section class="landing-copy">
+        <p>Multi-Agent Personalized Learning OS</p>
+        <h1>
+          <span>进入</span>
+          <span>AI 学习宇宙</span>
+        </h1>
+        <span>
+          学习画像、资源生成、路径规划、智能辅导、效果评估与反馈重规划在同一个智能体核心中持续协作。
+        </span>
+      </section>
+
+      <button class="enter-system" type="button" @click="openAuth">
+        <span>进入系统</span>
+        <i />
+      </button>
+
+      <div class="landing-metrics" aria-hidden="true">
+        <span>ProfileAgent</span>
+        <span>ResourceAgent</span>
+        <span>PathAgent</span>
+        <span>TutorAgent</span>
+        <span>EvaluationAgent</span>
+        <span>ReflectionAgent</span>
       </div>
-
-      <form class="login-card" @submit.prevent="handleLogin">
-        <div class="role-switch" role="tablist" aria-label="选择登录角色">
-          <button type="button" :class="{ active: activeRole === 'student' }" @click="switchRole('student')">
-            <GraduationCap :size="18" />
-            <span>用户</span>
-          </button>
-          <button type="button" :class="{ active: activeRole === 'admin' }" @click="switchRole('admin')">
-            <ShieldCheck :size="18" />
-            <span>管理员</span>
-          </button>
-        </div>
-
-        <div class="login-card-head">
-          <span class="login-card-icon">
-            <BrainCircuit v-if="activeRole === 'student'" :size="24" />
-            <BarChart3 v-else :size="24" />
-          </span>
-          <div>
-            <h2>{{ roleMeta.title }}</h2>
-            <p>{{ roleMeta.desc }}</p>
-          </div>
-        </div>
-
-        <label class="login-field">
-          <span><UserRound :size="16" />账号</span>
-          <input v-model="account" autocomplete="username" placeholder="请输入账号" />
-        </label>
-
-        <label class="login-field">
-          <span><LockKeyhole :size="16" />密码</span>
-          <input v-model="password" type="password" autocomplete="current-password" placeholder="请输入密码" />
-        </label>
-
-        <p v-if="errorText" class="login-error">{{ errorText }}</p>
-
-        <button class="login-submit" type="submit">
-          {{ roleMeta.submit }}
-        </button>
-
-        <div class="login-hints">
-          <span>演示账号：{{ roleMeta.account }}</span>
-          <span>密码：{{ roleMeta.password }}</span>
-        </div>
-      </form>
     </section>
+
+    <Transition name="auth-modal">
+      <section v-if="authOpen" class="auth-layer" aria-label="登录窗口">
+        <button class="auth-backdrop" type="button" aria-label="关闭登录窗口" @click="closeAuth" />
+        <div class="auth-dialog">
+          <button class="auth-close" type="button" aria-label="关闭登录窗口" @click="closeAuth">×</button>
+          <LoginPanel @submit="handleLogin" />
+        </div>
+      </section>
+    </Transition>
   </main>
 </template>
 
 <style scoped>
-.login-page {
+.login-view {
+  --cursor-x: 50vw;
+  --cursor-y: 50vh;
   position: relative;
   min-height: 100vh;
   overflow: hidden;
-  color: #eff8ff;
-  background:
-    radial-gradient(circle at 20% 22%, rgba(0, 212, 255, 0.18), transparent 30%),
-    radial-gradient(circle at 82% 42%, rgba(240, 178, 74, 0.13), transparent 28%),
-    linear-gradient(135deg, #040813 0%, #071526 50%, #030611 100%);
+  color: #e8f7ff;
+  background: #02040f;
+  font-family: 'Avenir Next', 'Avenir', 'Microsoft YaHei UI', 'PingFang SC', sans-serif;
+  isolation: isolate;
 }
 
-.login-bg-grid {
-  position: absolute;
-  inset: 0;
-  opacity: 0.34;
-  background-image:
-    linear-gradient(rgba(145, 223, 255, 0.07) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(145, 223, 255, 0.07) 1px, transparent 1px);
-  background-size: 54px 54px;
-  mask-image: radial-gradient(ellipse at center, #000 22%, transparent 82%);
-}
-
-.login-stream {
-  position: absolute;
+.ink-veil,
+.grain-layer,
+.login-grid {
+  position: fixed;
   inset: 0;
   pointer-events: none;
 }
 
-.login-stream span {
-  position: absolute;
-  color: rgba(164, 239, 255, 0.34);
-  font-size: 13px;
-  text-shadow: 0 0 18px rgba(0, 212, 255, 0.72);
-}
-
-.login-stream span:nth-child(1) { left: 12%; top: 16%; }
-.login-stream span:nth-child(2) { left: 30%; top: 38%; }
-.login-stream span:nth-child(3) { left: 58%; top: 20%; }
-.login-stream span:nth-child(4) { left: 76%; top: 70%; }
-.login-stream span:nth-child(5) { left: 18%; top: 78%; }
-.login-stream span:nth-child(6) { left: 66%; top: 45%; }
-.login-stream span:nth-child(7) { left: 82%; top: 24%; }
-.login-stream span:nth-child(8) { left: 44%; top: 72%; }
-
-.login-stage {
-  position: relative;
+.ink-veil {
   z-index: 1;
-  display: grid;
-  grid-template-columns: minmax(320px, 1fr) minmax(360px, 460px);
-  gap: 56px;
-  align-items: center;
-  min-height: 100vh;
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 48px;
+  background:
+    linear-gradient(90deg, rgba(1, 5, 17, 0.66), rgba(2, 8, 23, 0.08) 42%, rgba(2, 8, 23, 0.54)),
+    radial-gradient(circle at 51% 49%, transparent 0 30%, rgba(2, 6, 23, 0.16) 54%, rgba(1, 5, 17, 0.76) 100%),
+    linear-gradient(180deg, rgba(2, 4, 15, 0.62), transparent 18%, transparent 72%, rgba(2, 4, 15, 0.78));
 }
 
-.brand-mark {
+.grain-layer {
+  z-index: 3;
+  inset: -45%;
+  opacity: 0.26;
+  mix-blend-mode: screen;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.82' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.5'/%3E%3C/svg%3E");
+  animation: grain-shift 7s steps(6) infinite;
+}
+
+.login-grid {
+  z-index: 2;
+  opacity: 0.2;
+  background-image:
+    linear-gradient(rgba(125, 211, 252, 0.08) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(125, 211, 252, 0.07) 1px, transparent 1px),
+    repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.035) 0 1px, transparent 1px 4px);
+  background-size: 96px 96px, 96px 96px, 100% 4px;
+  mask-image: radial-gradient(circle at 50% 50%, #000 0 42%, transparent 79%);
+}
+
+.cursor-core,
+.cursor-ring {
+  position: fixed;
+  top: var(--cursor-y);
+  left: var(--cursor-x);
+  z-index: 25;
+  border-radius: 999px;
+  pointer-events: none;
+  transform: translate(-50%, -50%);
+  mix-blend-mode: screen;
+}
+
+.cursor-core {
+  width: 6px;
+  height: 6px;
+  background: rgba(226, 245, 255, 0.96);
+  box-shadow: 0 0 18px rgba(34, 211, 238, 0.9);
+}
+
+.cursor-ring {
+  width: 46px;
+  height: 46px;
+  border: 1px solid rgba(180, 240, 255, 0.42);
+  background: rgba(34, 211, 238, 0.035);
+  transition:
+    width 420ms cubic-bezier(0.16, 1, 0.3, 1),
+    height 420ms cubic-bezier(0.16, 1, 0.3, 1),
+    background 420ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.visual-pane,
+.auth-layer {
+  position: relative;
+  z-index: 4;
+  min-width: 0;
+}
+
+.visual-pane {
+  min-height: 100vh;
+}
+
+.landing-topbar {
+  position: fixed;
+  top: clamp(24px, 4vw, 48px);
+  left: clamp(24px, 5vw, 72px);
+  right: clamp(24px, 5vw, 72px);
+  z-index: 7;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  pointer-events: none;
+  animation: text-reveal 1100ms cubic-bezier(0.16, 1, 0.3, 1) 180ms both;
+}
+
+.brand-block {
+  display: grid;
+  gap: 6px;
+}
+
+.brand-block strong {
+  color: #f7fbff;
+  font-size: clamp(28px, 4vw, 52px);
+  line-height: 0.9;
+  letter-spacing: 0.08em;
+  text-shadow: 0 0 28px rgba(103, 232, 249, 0.16);
+}
+
+.brand-block span,
+.connection-pill,
+.landing-copy p,
+.landing-metrics,
+.enter-system {
+  font-family: 'Microsoft YaHei UI', 'PingFang SC', sans-serif;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.brand-block span {
+  color: rgba(125, 211, 252, 0.72);
+  font-size: 11px;
+}
+
+.connection-pill {
   display: inline-flex;
   align-items: center;
   gap: 10px;
-  color: #91dfff;
-  font-size: 18px;
-  font-weight: 700;
-}
-
-.brand-mark span {
-  display: grid;
-  place-items: center;
-  width: 36px;
-  height: 36px;
-  border: 1px solid rgba(145, 223, 255, 0.26);
-  border-radius: 10px;
-  background: rgba(4, 15, 30, 0.5);
-}
-
-.flow-visual {
-  display: grid;
-  grid-template-columns: 180px minmax(120px, 1fr) 220px;
-  align-items: center;
-  gap: 16px;
-  max-width: 720px;
-  margin: 44px 0 36px;
-}
-
-.glass-node,
-.login-card {
-  border: 1px solid rgba(145, 223, 255, 0.22);
-  border-radius: 18px;
-  background:
-    linear-gradient(135deg, rgba(53, 224, 216, 0.13), rgba(255, 255, 255, 0.04)),
-    rgba(5, 14, 29, 0.56);
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.1),
-    0 24px 70px rgba(0, 0, 0, 0.28);
-  backdrop-filter: blur(16px) saturate(1.2);
-}
-
-.glass-node {
-  padding: 18px;
-}
-
-.glass-node strong {
-  display: block;
-  color: #fff;
-}
-
-.glass-node small {
-  display: block;
-  margin-top: 8px;
-  color: #9bb1ce;
-}
-
-.flow-lines {
-  display: grid;
-  gap: 10px;
-}
-
-.flow-lines i {
-  height: 3px;
+  min-height: 42px;
+  border: 1px solid rgba(125, 211, 252, 0.26);
   border-radius: 999px;
-  background: linear-gradient(90deg, transparent, #35e0d8, #f0b24a, transparent);
-  box-shadow: 0 0 22px rgba(53, 224, 216, 0.58);
+  padding: 0 16px;
+  color: rgba(226, 245, 255, 0.8);
+  background: rgba(2, 8, 23, 0.24);
+  font-size: 10px;
+  backdrop-filter: blur(16px);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
 }
 
-.insight-node strong {
-  font-size: 32px;
+.connection-pill i {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #2dd4bf;
+  box-shadow: 0 0 18px rgba(45, 212, 191, 0.9);
 }
 
-.mini-chart {
-  display: flex;
-  align-items: end;
-  gap: 4px;
-  height: 54px;
-  margin-top: 14px;
+.landing-copy {
+  position: fixed;
+  left: clamp(24px, 5vw, 72px);
+  bottom: clamp(142px, 18vh, 210px);
+  z-index: 7;
+  max-width: min(620px, calc(100vw - 48px));
+  pointer-events: none;
 }
 
-.mini-chart em {
-  width: 100%;
-  border-radius: 999px 999px 0 0;
-  background: linear-gradient(180deg, #f0b24a, #35e0d8);
+.landing-copy p {
+  margin: 0 0 16px;
+  color: #67e8f9;
+  font-size: 11px;
+  animation: text-reveal 1000ms cubic-bezier(0.16, 1, 0.3, 1) 360ms both;
 }
 
-.login-copy h1 {
-  max-width: 680px;
+.landing-copy h1 {
   margin: 0;
-  color: #fff;
-  font-size: clamp(42px, 5vw, 76px);
-  line-height: 1.03;
+  color: #f8fbff;
+  font-size: clamp(46px, 6.2vw, 92px);
+  line-height: 0.96;
   letter-spacing: 0;
+  text-shadow: 0 10px 55px rgba(0, 0, 0, 0.48), 0 0 35px rgba(34, 211, 238, 0.14);
 }
 
-.login-copy p {
-  max-width: 640px;
-  margin: 24px 0 0;
-  color: #b5c7df;
-  font-size: 18px;
-  line-height: 1.8;
+.landing-copy h1 span {
+  display: block;
+  overflow: hidden;
+  animation: text-reveal 1100ms cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
-.login-card {
-  padding: 24px;
+.landing-copy h1 span:nth-child(2) {
+  background: linear-gradient(94deg, #f8fbff 0%, #9cecff 42%, #7c8cff 78%, #f8fbff 100%);
+  background-clip: text;
+  color: transparent;
+  animation-delay: 120ms;
 }
 
-.role-switch {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 10px;
-  margin-bottom: 22px;
+.landing-copy > span {
+  display: block;
+  max-width: 460px;
+  margin-top: 20px;
+  color: rgba(201, 222, 237, 0.74);
+  font-size: 15px;
+  line-height: 1.9;
+  animation: text-reveal 1100ms cubic-bezier(0.16, 1, 0.3, 1) 520ms both;
 }
 
-.role-switch button,
-.login-submit {
+.enter-system {
+  position: fixed;
+  left: clamp(24px, 5vw, 72px);
+  bottom: clamp(48px, 8vh, 86px);
+  z-index: 8;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
-  min-height: 44px;
-  border: 1px solid rgba(145, 223, 255, 0.14);
-  border-radius: 12px;
-  color: #adc0dc;
-  background: rgba(7, 15, 32, 0.48);
+  gap: 16px;
+  width: min(260px, calc(100vw - 48px));
+  min-height: 58px;
+  overflow: hidden;
+  border: 1px solid rgba(190, 241, 255, 0.72);
+  color: #f8fbff;
+  background:
+    linear-gradient(120deg, rgba(255, 255, 255, 0.08), rgba(14, 165, 233, 0.04) 44%, rgba(139, 92, 246, 0.08)),
+    rgba(2, 8, 23, 0.24);
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.42), inset 0 1px 0 rgba(255, 255, 255, 0.12);
+  font-size: 13px;
+  font-weight: 800;
   cursor: pointer;
-  transition: transform 180ms ease, border-color 180ms ease, background 180ms ease;
+  backdrop-filter: blur(16px);
+  animation: text-reveal 1100ms cubic-bezier(0.16, 1, 0.3, 1) 720ms both;
+  transition: transform 520ms cubic-bezier(0.16, 1, 0.3, 1), border-color 520ms cubic-bezier(0.16, 1, 0.3, 1), box-shadow 520ms cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.role-switch button:hover,
-.login-submit:hover {
-  transform: translateY(-1px);
+.enter-system::before {
+  content: '';
+  position: absolute;
+  top: -80px;
+  left: -90px;
+  width: 58px;
+  height: 220px;
+  transform: rotate(34deg);
+  background: rgba(255, 255, 255, 0.45);
+  transition: left 760ms cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.role-switch button.active {
-  color: #fff;
-  border-color: rgba(53, 224, 216, 0.44);
-  background: rgba(53, 224, 216, 0.14);
-  box-shadow: 0 0 24px rgba(53, 224, 216, 0.14);
+.enter-system:hover {
+  transform: translateY(-3px);
+  border-color: rgba(103, 232, 249, 0.9);
+  box-shadow: 0 24px 78px rgba(14, 165, 233, 0.18), inset 0 1px 0 rgba(255, 255, 255, 0.14);
 }
 
-.login-card-head {
+.enter-system:hover ~ .cursor-ring,
+.login-view:has(.enter-system:hover) .cursor-ring,
+.login-view:has(.auth-close:hover) .cursor-ring {
+  width: 68px;
+  height: 68px;
+  background: rgba(125, 211, 252, 0.08);
+}
+
+.enter-system:hover::before {
+  left: 120%;
+}
+
+.enter-system span,
+.enter-system i {
+  position: relative;
+  z-index: 1;
+}
+
+.enter-system i {
+  width: 34px;
+  height: 1px;
+  background: currentColor;
+}
+
+.enter-system i::after {
+  content: '';
+  position: absolute;
+  right: -1px;
+  top: -4px;
+  width: 9px;
+  height: 9px;
+  border-top: 1px solid currentColor;
+  border-right: 1px solid currentColor;
+  transform: rotate(45deg);
+}
+
+.landing-metrics {
+  position: fixed;
+  right: clamp(24px, 5vw, 72px);
+  bottom: clamp(48px, 8vh, 86px);
+  z-index: 7;
   display: grid;
-  grid-template-columns: 50px minmax(0, 1fr);
-  gap: 14px;
-  align-items: center;
-  margin-bottom: 22px;
+  gap: 10px;
+  color: rgba(226, 245, 255, 0.48);
+  font-size: 10px;
+  text-align: right;
+  pointer-events: none;
 }
 
-.login-card-icon {
+.auth-layer {
+  position: fixed;
+  inset: 0;
+  z-index: 30;
   display: grid;
   place-items: center;
-  width: 50px;
-  height: 50px;
-  border-radius: 14px;
-  color: #35e0d8;
-  background: rgba(53, 224, 216, 0.12);
+  padding: 24px;
 }
 
-.login-card h2 {
-  margin: 0;
-  color: #fff;
-  font-size: 24px;
-}
-
-.login-card p {
-  margin: 6px 0 0;
-  color: #91a7c6;
-  line-height: 1.6;
-}
-
-.login-field {
-  display: grid;
-  gap: 8px;
-  margin-top: 14px;
-}
-
-.login-field span {
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
-  color: #bdd0e8;
-  font-size: 13px;
-}
-
-.login-field input {
-  height: 46px;
-  border: 1px solid rgba(145, 223, 255, 0.16);
-  border-radius: 12px;
-  padding: 0 14px;
-  color: #fff;
-  background: rgba(3, 9, 20, 0.5);
-  outline: none;
-}
-
-.login-field input:focus {
-  border-color: rgba(53, 224, 216, 0.5);
-  box-shadow: 0 0 0 3px rgba(53, 224, 216, 0.1);
-}
-
-.login-error {
-  margin: 12px 0 0;
-  color: #ff8d8d;
-}
-
-.login-submit {
-  width: 100%;
-  margin-top: 20px;
-  color: #06101c;
+.auth-backdrop {
+  position: absolute;
+  inset: 0;
   border: 0;
-  background: linear-gradient(135deg, #35e0d8, #f0b24a);
-  font-weight: 800;
+  background:
+    radial-gradient(circle at var(--cursor-x) var(--cursor-y), rgba(34, 211, 238, 0.12), transparent 24%),
+    rgba(1, 5, 16, 0.42);
+  backdrop-filter: blur(18px) saturate(1.14);
+  cursor: pointer;
 }
 
-.login-hints {
-  display: flex;
-  justify-content: space-between;
-  gap: 10px;
-  margin-top: 14px;
-  color: #7f94b4;
-  font-size: 12px;
+.auth-dialog {
+  position: relative;
+  z-index: 1;
+  width: min(450px, 100%);
 }
 
-@media (max-width: 960px) {
-  .login-stage,
-  .flow-visual {
-    grid-template-columns: 1fr;
+.auth-close {
+  position: absolute;
+  top: -14px;
+  right: -14px;
+  z-index: 3;
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  border: 1px solid rgba(125, 211, 252, 0.28);
+  border-radius: 50%;
+  color: #e8f7ff;
+  background: rgba(2, 8, 23, 0.76);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.4);
+  font-size: 25px;
+  line-height: 1;
+  cursor: pointer;
+  backdrop-filter: blur(12px);
+}
+
+.auth-modal-enter-active,
+.auth-modal-leave-active {
+  transition: opacity 420ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.auth-modal-enter-active .auth-dialog,
+.auth-modal-leave-active .auth-dialog {
+  transition: transform 620ms cubic-bezier(0.16, 1, 0.3, 1), filter 620ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.auth-modal-enter-from,
+.auth-modal-leave-to {
+  opacity: 0;
+}
+
+.auth-modal-enter-from .auth-dialog,
+.auth-modal-leave-to .auth-dialog {
+  transform: translateY(24px) scale(0.96);
+  filter: blur(10px);
+}
+
+@keyframes text-reveal {
+  from {
+    opacity: 0;
+    transform: translateY(28px);
+    filter: blur(12px);
   }
 
-  .login-stage {
-    padding: 28px;
+  to {
+    opacity: 1;
+    transform: translateY(0);
+    filter: blur(0);
+  }
+}
+
+@keyframes grain-shift {
+  0%, 100% {
+    transform: translate(0, 0);
+  }
+
+  25% {
+    transform: translate(-3%, 2%);
+  }
+
+  50% {
+    transform: translate(2%, -3%);
+  }
+
+  75% {
+    transform: translate(-2%, 2%);
+  }
+}
+
+@media (max-width: 900px) {
+  .login-view {
+    min-height: 100svh;
+  }
+
+  .visual-pane {
+    min-height: 100svh;
+  }
+
+  .landing-topbar {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .landing-copy {
+    right: 24px;
+    bottom: 154px;
+  }
+
+  .landing-copy h1 {
+    font-size: clamp(40px, 12vw, 54px);
+  }
+
+  .landing-metrics {
+    display: none;
+  }
+
+  .enter-system {
+    right: 24px;
+  }
+}
+
+@media (pointer: coarse) {
+  .cursor-core,
+  .cursor-ring {
+    display: none;
   }
 }
 </style>
