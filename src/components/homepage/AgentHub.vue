@@ -47,7 +47,7 @@ watch(
 .agent-hub-section {
   position: relative;
   z-index: 1;
-  padding: 72px 36px 52px;
+  padding: 58px 36px 42px;
   max-width: 1520px;
   margin: 0 auto;
 }
@@ -84,7 +84,7 @@ watch(
 .agent-hub-frame {
   display: block;
   width: 100%;
-  height: 600px;
+  height: clamp(460px, 37vw, 540px);
   min-height: 0;
   border: 0;
   background: transparent;
@@ -92,11 +92,11 @@ watch(
 
 @media (max-width: 720px) {
   .agent-hub-section {
-    padding: 48px 16px 36px;
+    padding: 40px 16px 30px;
   }
 
   .agent-hub-frame {
-    height: 460px;
+    height: 420px;
   }
 
   .hub-head,

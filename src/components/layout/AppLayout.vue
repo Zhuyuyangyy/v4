@@ -104,11 +104,13 @@ watch(
   left: 0;
   right: 0;
   height: var(--header-height);
-  background: rgba(7, 7, 13, 0.46);
-  backdrop-filter: blur(30px) saturate(1.3);
-  -webkit-backdrop-filter: blur(30px) saturate(1.3);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  background:
+    linear-gradient(180deg, rgba(3, 8, 18, 0.28), rgba(3, 8, 18, 0.06)),
+    rgba(3, 8, 18, 0.08);
+  backdrop-filter: blur(18px) saturate(1.25);
+  -webkit-backdrop-filter: blur(18px) saturate(1.25);
+  border-bottom: 1px solid rgba(116, 207, 255, 0.08);
+  box-shadow: inset 0 -1px 0 rgba(255, 255, 255, 0.025);
   z-index: var(--z-dropdown);
 }
 
@@ -153,9 +155,9 @@ watch(
 .brand-text {
   font-family: var(--font-display);
   font-size: 18px;
-  font-weight: 600;
+  font-weight: 700;
   color: #fff;
-  letter-spacing: 0.5px;
+  letter-spacing: 0;
 }
 
 /* === Nav === */
@@ -196,12 +198,13 @@ watch(
 
 .nav-item:hover {
   color: var(--color-text-primary);
-  background: rgba(0, 212, 255, 0.06);
+  background: rgba(0, 212, 255, 0.08);
 }
 
 .nav-item.active {
   color: var(--color-accent-cyan);
-  background: rgba(0, 212, 255, 0.1);
+  background: rgba(0, 212, 255, 0.14);
+  box-shadow: inset 0 0 0 1px rgba(0, 212, 255, 0.14), 0 0 26px rgba(0, 212, 255, 0.08);
 }
 
 .nav-icon-svg {
@@ -214,7 +217,7 @@ watch(
 }
 
 .nav-label {
-  letter-spacing: 0.3px;
+  letter-spacing: 0;
 }
 
 .nav-indicator {

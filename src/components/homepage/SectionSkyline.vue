@@ -25,9 +25,6 @@ interface SceneNode {
   root: THREE.Group
   hitTarget: THREE.Mesh
   basePosition: THREE.Vector3
-  shellMaterial: THREE.MeshPhysicalMaterial
-  auraMaterial: THREE.MeshBasicMaterial
-  ring: THREE.Mesh
 }
 
 interface LabelPosition {
@@ -70,8 +67,6 @@ interface WeakPoint {
   last: string
   route: string
 }
-
-
 
 interface MapNode {
   domain: Domain
@@ -374,6 +369,18 @@ function openWeakPoint(item: WeakPoint) {
   goTo(item.route, { source: 'home-knowledge-map', domain: item.domainId, focus: item.name })
 }
 
+function openDomainResource(domain: Domain) {
+  selectedId.value = domain.id
+  goTo('/resources', {
+    source: 'home-knowledge-map',
+    tab: 'resources',
+    domain: domain.id,
+    module: domain.name,
+    topic: domain.name,
+    unit: domain.next,
+  })
+}
+
 const distribution = computed<DistributionSegment[]>(() => {
   const total = domains.reduce((sum, domain) => sum + domain.concepts, 0)
   const mastered = domains.reduce((sum, domain) => {
@@ -416,7 +423,8 @@ const cameraBaseY = 0
 const cameraBaseZ = 42
 const WORLD_SCALE = 0.04
 const CSS_CENTER_X = 500
-const CSS_CENTER_Y = 330
+const CSS_CENTER_Y = 410
+const GRAPH_GROUP_Y_OFFSET = 1.1
 
 const loader = new GLTFLoader()
 const raycaster = new THREE.Raycaster()
@@ -439,8 +447,8 @@ function getSceneFrame(width: number, height: number) {
   const wideRatio = Math.max(0, Math.min((width - 620) / 420, 1))
 
   return {
-    cameraZ: cameraBaseZ + tallRatio * 3.2 + wideRatio * 1.6,
-    graphScale: 0.78 - tallRatio * 0.04,
+    cameraZ: cameraBaseZ + tallRatio * 2.4 + wideRatio * 1.2,
+    graphScale: 0.84 - tallRatio * 0.03,
   }
 }
 
@@ -493,7 +501,7 @@ function createStarfield(target: THREE.Scene) {
   geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3))
   target.add(new THREE.Points(
     geometry,
-    new THREE.PointsMaterial({ color: 0xffffff, size: 0.22, transparent: true, opacity: 0.55, depthWrite: false }),
+    new THREE.PointsMaterial({ color: 0xffffff, size: 0.18, transparent: true, opacity: 0.38, depthWrite: false }),
   ))
 }
 
@@ -547,9 +555,9 @@ async function addPlanetModel(root: THREE.Group, url: string, radius: number, co
     new THREE.MeshStandardMaterial({
       color: colorHex(color),
       emissive: colorHex(color),
-      emissiveIntensity: 0.18,
-      roughness: 0.42,
-      metalness: 0.08,
+      emissiveIntensity: 0.28,
+      roughness: 0.34,
+      metalness: 0.04,
     }),
   )
   placeholder.name = 'PlanetLoadingPlaceholder'
@@ -565,13 +573,7 @@ async function addPlanetModel(root: THREE.Group, url: string, radius: number, co
     model.traverse(child => {
       const mesh = child as THREE.Mesh
       if (!mesh.isMesh) return
-      const material = mesh.material as THREE.MeshStandardMaterial | undefined
-      if (!material) return
-      material.needsUpdate = true
-      if ('emissive' in material) {
-        material.emissive = new THREE.Color(color).multiplyScalar(0.08)
-      }
-      material.roughness = Math.min(material.roughness ?? 0.5, 0.62)
+      tunePlanetMesh(mesh, color)
     })
     root.remove(placeholder)
     disposeObject(placeholder)
@@ -579,6 +581,61 @@ async function addPlanetModel(root: THREE.Group, url: string, radius: number, co
   } catch (error) {
     console.warn(`Failed to load planet model ${url}:`, error)
   }
+}
+
+function isFlatAuxiliaryMesh(mesh: THREE.Mesh) {
+  mesh.geometry.computeBoundingBox()
+  const box = mesh.geometry.boundingBox
+  if (!box) return false
+  const size = new THREE.Vector3()
+  box.getSize(size)
+  const dims = [size.x, size.y, size.z].sort((a, b) => a - b)
+  return dims[2] > 0 && dims[0] / dims[2] < 0.035
+}
+
+function tunePlanetMesh(mesh: THREE.Mesh, color: string) {
+  const materials = Array.isArray(mesh.material) ? mesh.material : [mesh.material]
+  const flatAuxiliary = isFlatAuxiliaryMesh(mesh)
+
+  materials.forEach(material => {
+    if (!(material instanceof THREE.MeshStandardMaterial) && !(material instanceof THREE.MeshPhysicalMaterial)) return
+    material.needsUpdate = true
+    material.color.lerp(new THREE.Color(0xffffff), 0.08)
+    if (material.map) material.map.colorSpace = THREE.SRGBColorSpace
+    if ('emissive' in material) {
+      material.emissive = new THREE.Color(color).multiplyScalar(0.16)
+      material.emissiveIntensity = Math.max(material.emissiveIntensity ?? 0, 0.28)
+    }
+    material.roughness = Math.min(material.roughness ?? 0.5, 0.42)
+    material.metalness = Math.min(material.metalness ?? 0.05, 0.06)
+    material.envMapIntensity = Math.max(material.envMapIntensity ?? 0, 1.35)
+
+    if (flatAuxiliary) {
+      material.transparent = true
+      material.opacity = Math.min(material.opacity ?? 1, 0.72)
+      material.alphaTest = 0.22
+      material.depthWrite = false
+      material.side = THREE.DoubleSide
+    } else {
+      material.opacity = 1
+      material.alphaTest = 0
+      material.transparent = false
+      material.depthWrite = true
+      material.side = THREE.FrontSide
+    }
+  })
+}
+
+function createRaycastMaterial(color: THREE.ColorRepresentation) {
+  const material = new THREE.MeshBasicMaterial({
+    color,
+    transparent: true,
+    opacity: 0,
+    depthWrite: false,
+    depthTest: false,
+  })
+  material.colorWrite = false
+  return material
 }
 
 function createCenterPlanet() {
@@ -590,22 +647,9 @@ function createCenterPlanet() {
   root.position.set(0, 0, 0)
 
   const centerRadius = 128 * WORLD_SCALE / 2
-  const aura = new THREE.Mesh(
-    new THREE.SphereGeometry(centerRadius * 1.6, 48, 48),
-    new THREE.MeshBasicMaterial({ color: 0x22d3ee, transparent: true, opacity: 0.055, blending: THREE.AdditiveBlending, depthWrite: false }),
-  )
-  root.add(aura)
-
-  const ring = new THREE.Mesh(
-    new THREE.TorusGeometry(centerRadius * 1.75, centerRadius * 0.018, 16, 128),
-    new THREE.MeshBasicMaterial({ color: 0x22d3ee, transparent: true, opacity: 0.2, blending: THREE.AdditiveBlending }),
-  )
-  ring.rotation.x = Math.PI / 2
-  root.add(ring)
-
   const hitTarget = new THREE.Mesh(
     new THREE.SphereGeometry(centerRadius * 1.6, 32, 32),
-    new THREE.MeshBasicMaterial({ color: 0x22d3ee, transparent: true, opacity: 0 }),
+    createRaycastMaterial(0x22d3ee),
   )
   hitTarget.userData.id = 'core'
   root.add(hitTarget)
@@ -621,8 +665,6 @@ function createDomainNode(domain: Domain, position: THREE.Vector3, index: number
 
   const cssNode = mapNodes.value.find(n => n.domain.id === domain.id)
   const cssSize = cssNode?.size ?? 90
-  const cssTilt = (cssNode?.orbitTilt ?? 65) * (Math.PI / 180)
-  const cssOrbitScale = cssNode?.orbitScale ?? 1
 
   const root = new THREE.Group()
   root.position.copy(position)
@@ -632,44 +674,13 @@ function createDomainNode(domain: Domain, position: THREE.Vector3, index: number
   const radius = (cssSize * WORLD_SCALE / 2) * visualScale
   const hitRadius = Math.max(radius * 1.45, 1.2)
 
-  const shellMaterial = new THREE.MeshPhysicalMaterial({
-    color: 0xffffff,
-    emissive: color,
-    emissiveIntensity: 0,
-    roughness: 0.14,
-    metalness: 0.1,
-    transmission: 1,
-    thickness: 0.72,
-    transparent: true,
-    opacity: 0.02,
-    clearcoat: 1,
-    clearcoatRoughness: 0.06,
-    depthWrite: false,
-  })
-  const hitTarget = new THREE.Mesh(new THREE.SphereGeometry(hitRadius, 36, 36), shellMaterial)
+  const hitTarget = new THREE.Mesh(new THREE.SphereGeometry(hitRadius, 36, 36), createRaycastMaterial(color))
   hitTarget.userData.id = domain.id
   root.add(hitTarget)
 
-  const auraMaterial = new THREE.MeshBasicMaterial({
-    color,
-    transparent: true,
-    opacity: 0.075,
-    blending: THREE.AdditiveBlending,
-    depthWrite: false,
-  })
-  root.add(new THREE.Mesh(new THREE.SphereGeometry(radius * 1.8, 32, 32), auraMaterial))
-
-  const ring = new THREE.Mesh(
-    new THREE.TorusGeometry(radius * 1.55, radius * 0.025, 12, 96),
-    new THREE.MeshBasicMaterial({ color, transparent: true, opacity: 0.22, blending: THREE.AdditiveBlending }),
-  )
-  ring.rotation.set(Math.PI / 2.2 + (cssTilt - Math.PI / 2.8) * 0.5, index * 0.28, index * 0.2)
-  ring.scale.set(1, cssOrbitScale, 1)
-  root.add(ring)
-
   graphGroup.add(root)
   interactables.push(hitTarget)
-  sceneNodes.push({ id: domain.id, domain, root, hitTarget, basePosition: position, shellMaterial, auraMaterial, ring })
+  sceneNodes.push({ id: domain.id, domain, root, hitTarget, basePosition: position })
   addLink(position, domain.color, index)
   addPlanetModel(root, domain.modelUrl, radius * 0.95, domain.color)
 }
@@ -695,7 +706,8 @@ function handleClick(event: MouseEvent) {
   if (hoverId.value === 'core') {
     openDiagnosticReport()
   } else if (hoverId.value) {
-    selectDomain(hoverId.value)
+    const domain = domains.find(item => item.id === hoverId.value)
+    if (domain) openDomainResource(domain)
   }
 }
 
@@ -772,7 +784,7 @@ async function initKnowledgeScene() {
     const height = Math.max(graphShellRef.value.clientHeight, 280)
 
     scene = new THREE.Scene()
-    scene.fog = new THREE.FogExp2(0x020712, 0.008)
+    scene.fog = new THREE.FogExp2(0x020712, 0.004)
 
     camera = new THREE.PerspectiveCamera(40, width / height, 0.1, 300)
     camera.position.set(0, cameraBaseY, getSceneFrame(width, height).cameraZ)
@@ -782,16 +794,23 @@ async function initKnowledgeScene() {
     renderer.setSize(width, height, false)
     renderer.outputColorSpace = THREE.SRGBColorSpace
     renderer.toneMapping = THREE.ACESFilmicToneMapping
-    renderer.toneMappingExposure = 0.96
+    renderer.toneMappingExposure = 1.24
 
-    scene.add(new THREE.AmbientLight(0xffffff, 0.45))
-    const white = new THREE.PointLight(0xffffff, 2.4)
+    scene.add(new THREE.AmbientLight(0xffffff, 0.72))
+    scene.add(new THREE.HemisphereLight(0xc7f9ff, 0x07111f, 0.72))
+    const white = new THREE.PointLight(0xffffff, 3.6)
     white.position.set(18, 28, 22)
     scene.add(white)
-    const cyan = new THREE.PointLight(0x22d3ee, 2.0)
+    const key = new THREE.DirectionalLight(0xffffff, 2.1)
+    key.position.set(-12, 18, 24)
+    scene.add(key)
+    const rim = new THREE.DirectionalLight(0x93c5fd, 1.7)
+    rim.position.set(18, 8, -20)
+    scene.add(rim)
+    const cyan = new THREE.PointLight(0x22d3ee, 2.7)
     cyan.position.set(-22, -18, 16)
     scene.add(cyan)
-    const violet = new THREE.PointLight(0x8b5cf6, 1.6)
+    const violet = new THREE.PointLight(0x8b5cf6, 2.0)
     violet.position.set(14, 4, -18)
     scene.add(violet)
 
@@ -799,18 +818,10 @@ async function initKnowledgeScene() {
 
     orbitBackdrop = new THREE.Group()
     scene.add(orbitBackdrop)
-    ;[18, 30, 42].forEach((radius, index) => {
-      const ring = new THREE.Mesh(
-        new THREE.TorusGeometry(radius, 0.06, 12, 128),
-        new THREE.MeshBasicMaterial({ color: index % 2 === 0 ? 0x22d3ee : 0x7c8cff, transparent: true, opacity: 0.045, blending: THREE.AdditiveBlending }),
-      )
-      ring.rotation.x = Math.PI / 2
-      orbitBackdrop?.add(ring)
-    })
 
     graphGroup = new THREE.Group()
     graphGroup.scale.setScalar(getSceneFrame(width, height).graphScale)
-    graphGroup.position.y = 0
+    graphGroup.position.y = GRAPH_GROUP_Y_OFFSET
     scene.add(graphGroup)
 
     const pmrem = new THREE.PMREMGenerator(renderer)
@@ -866,9 +877,6 @@ function animateScene() {
       const pulse = motion ? 1 + Math.sin(elapsed * 2.4 + index) * 0.035 : 1
       node.root.position.y = node.basePosition.y + (motion ? Math.sin(elapsed * 1.35 + index) * 0.18 : 0)
       node.hitTarget.scale.setScalar(active ? pulse * 1.04 : pulse)
-      node.shellMaterial.emissiveIntensity = active ? 0.24 : 0.05
-      node.auraMaterial.opacity = active ? 0.15 : 0.075
-      if (motion) node.ring.rotation.z += active ? 0.012 : 0.006
     })
 
     if (motion) {
@@ -1144,11 +1152,10 @@ onBeforeUnmount(() => {
                   class="knowledge-orb"
                   @mouseenter="hoverId = node.domain.id"
                   @mouseleave="hoverId = null"
-                  @click="selectDomain(node.domain.id)"
+                  @click="openDomainResource(node.domain)"
                 >
                   <span class="orb-far-glow" />
                   <span class="orb-near-glow" />
-                  <span class="orb-orbit" />
                   <span class="orb-shell" />
                   <span class="orb-inner-glow" />
                   <span class="orb-core">
@@ -1220,6 +1227,66 @@ onBeforeUnmount(() => {
                 </div>
               </div>
             </Transition>
+          </div>
+
+          <div class="map-action-panel">
+            <div class="map-action-head">
+              <span>LEARNING ROUTE</span>
+              <strong>今日补强动线</strong>
+              <em>点击任一节点继续学习</em>
+            </div>
+            <button
+              v-if="weakPoints[0]"
+              type="button"
+              class="map-primary-action"
+              :style="{ '--action-color': weakPoints[0].color }"
+              @click="openWeakPoint(weakPoints[0])"
+            >
+              <span class="action-orb" />
+              <span>
+                <em>优先处理</em>
+                <strong>{{ weakPoints[0].name }}</strong>
+                <b>{{ weakPoints[0].cause }}</b>
+              </span>
+              <i>掌握 {{ weakPoints[0].mastery }}%</i>
+            </button>
+            <div class="map-action-grid">
+              <button type="button" class="map-action-link" @click="openDomainResource(activeDomain)">
+                <span>当前领域</span>
+                <strong>{{ activeDomain.next }}</strong>
+              </button>
+              <button type="button" class="map-action-link" @click="openDiagnosticReport">
+                <span>诊断报告</span>
+                <strong>{{ diagnosticWindow.evidence }} 条证据待回看</strong>
+              </button>
+            </div>
+            <div class="map-route-lane" aria-label="今日学习动线">
+              <button type="button" @click="openDiagnosticReport">
+                <i>01</i>
+                <span>确认薄弱证据</span>
+              </button>
+              <button type="button" @click="openDomainResource(activeDomain)">
+                <i>02</i>
+                <span>进入专项资源</span>
+              </button>
+              <button type="button" @click="openRadarReport">
+                <i>03</i>
+                <span>刷新能力雷达</span>
+              </button>
+            </div>
+            <div class="map-mini-queue">
+              <button
+                v-for="item in weakPoints.slice(1, 4)"
+                :key="item.name"
+                type="button"
+                :style="{ '--queue-color': item.color }"
+                @click="openWeakPoint(item)"
+              >
+                <i />
+                <span>{{ item.name }}</span>
+                <b>{{ item.mastery }}%</b>
+              </button>
+            </div>
           </div>
         </div>
 
@@ -1487,7 +1554,11 @@ onBeforeUnmount(() => {
 .view-chip:focus-visible,
 .dist-row:focus-visible,
 .radar-stat:focus-visible,
-.weak-item:focus-visible {
+.weak-item:focus-visible,
+.map-primary-action:focus-visible,
+.map-action-link:focus-visible,
+.map-mini-queue button:focus-visible,
+.map-route-lane button:focus-visible {
   outline: 2px solid rgba(34, 211, 238, 0.72);
   outline-offset: 2px;
 }
@@ -1502,7 +1573,8 @@ onBeforeUnmount(() => {
 .graph-panel {
   display: flex;
   flex-direction: column;
-  min-height: 360px;
+  min-height: 342px;
+  height: auto;
 }
 
 .graph-header {
@@ -1546,17 +1618,266 @@ onBeforeUnmount(() => {
 
 .graph-shell {
   position: relative;
-  flex: 1 1 auto;
-  min-height: 340px;
+  flex: 0 0 clamp(360px, 33vw, 470px);
+  min-height: 0;
   cursor: default;
   overflow: hidden;
   border-radius: 12px;
   perspective: 900px;
   perspective-origin: 50% 50%;
   background:
-    radial-gradient(ellipse at 50% 55%, rgba(34, 211, 238, 0.06) 0%, transparent 55%),
-    radial-gradient(ellipse at 30% 30%, rgba(167, 139, 250, 0.04) 0%, transparent 45%),
-    radial-gradient(ellipse at 75% 70%, rgba(79, 212, 131, 0.03) 0%, transparent 40%);
+    radial-gradient(ellipse at 50% 46%, rgba(34, 211, 238, 0.075) 0%, transparent 54%),
+    radial-gradient(ellipse at 32% 22%, rgba(167, 139, 250, 0.05) 0%, transparent 43%),
+    radial-gradient(ellipse at 75% 64%, rgba(79, 212, 131, 0.035) 0%, transparent 38%),
+    linear-gradient(180deg, #061426 0%, #020817 100%);
+  box-shadow: inset 0 0 0 1px rgba(120, 154, 205, 0.06);
+}
+
+.map-action-panel {
+  position: relative;
+  flex: 1 1 auto;
+  min-height: 258px;
+  margin-top: 12px;
+  padding: 14px;
+  border-radius: 12px;
+  overflow: hidden;
+  background:
+    radial-gradient(ellipse at 18% 18%, rgba(34, 211, 238, 0.11), transparent 42%),
+    radial-gradient(ellipse at 78% 72%, rgba(167, 139, 250, 0.10), transparent 44%),
+    linear-gradient(180deg, rgba(8, 16, 32, 0.62), rgba(3, 8, 19, 0.36));
+  border: 1px solid rgba(120, 154, 205, 0.08);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.map-action-panel::before {
+  content: '';
+  position: absolute;
+  inset: auto -12% 14px -8%;
+  height: 120px;
+  border-radius: 50%;
+  border: 1px dashed rgba(96, 165, 250, 0.18);
+  transform: rotate(-8deg);
+  pointer-events: none;
+}
+
+.map-action-head {
+  position: relative;
+  display: grid;
+  gap: 3px;
+}
+
+.map-action-head span {
+  color: #22d3ee;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.18em;
+}
+
+.map-action-head strong {
+  color: #f7fbff;
+  font-size: 17px;
+  font-weight: 760;
+}
+
+.map-action-head em {
+  color: #7f93ba;
+  font-size: 11px;
+  font-style: normal;
+}
+
+.map-primary-action,
+.map-action-link,
+.map-mini-queue button,
+.map-route-lane button {
+  position: relative;
+  border: 1px solid rgba(150, 175, 220, 0.10);
+  background: rgba(255, 255, 255, 0.035);
+  color: inherit;
+  cursor: pointer;
+  text-align: left;
+  transition: transform 0.18s ease, border-color 0.18s ease, background 0.18s ease, box-shadow 0.18s ease;
+}
+
+.map-primary-action:hover,
+.map-action-link:hover,
+.map-mini-queue button:hover,
+.map-route-lane button:hover {
+  transform: translateY(-1px);
+  border-color: color-mix(in srgb, var(--action-color, var(--queue-color, #22d3ee)) 34%, rgba(150, 175, 220, 0.14));
+  background: color-mix(in srgb, var(--action-color, var(--queue-color, #22d3ee)) 9%, rgba(255, 255, 255, 0.045));
+  box-shadow: 0 12px 26px color-mix(in srgb, var(--action-color, var(--queue-color, #22d3ee)) 10%, transparent);
+}
+
+.map-primary-action {
+  --action-color: #22d3ee;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  min-height: 92px;
+  padding: 14px;
+  border-radius: 12px;
+}
+
+.action-orb {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at 38% 30%, rgba(255, 255, 255, 0.9), transparent 18%),
+    radial-gradient(circle, var(--action-color), color-mix(in srgb, var(--action-color) 34%, #020617));
+  box-shadow: 0 0 22px color-mix(in srgb, var(--action-color) 48%, transparent);
+}
+
+.map-primary-action span:not(.action-orb) {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+}
+
+.map-primary-action em,
+.map-action-link span {
+  color: #8ea2c7;
+  font-size: 10px;
+  font-style: normal;
+}
+
+.map-primary-action strong {
+  color: #fff;
+  font-size: 16px;
+  font-weight: 760;
+}
+
+.map-primary-action b {
+  color: #9fb2d3;
+  font-size: 11px;
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.map-primary-action i {
+  color: color-mix(in srgb, var(--action-color) 76%, #fff);
+  font-style: normal;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.map-action-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.map-action-link {
+  min-height: 70px;
+  padding: 12px;
+  border-radius: 10px;
+}
+
+.map-action-link strong {
+  display: block;
+  margin-top: 5px;
+  color: #dce8ff;
+  font-size: 12px;
+  font-weight: 650;
+  line-height: 1.35;
+}
+
+.map-route-lane {
+  position: relative;
+  flex: 1 1 auto;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  padding: 10px 0 2px;
+  align-items: stretch;
+}
+
+.map-route-lane::before {
+  content: '';
+  position: absolute;
+  left: 12%;
+  right: 12%;
+  top: 24px;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(34, 211, 238, 0.28), rgba(167, 139, 250, 0.22), transparent);
+}
+
+.map-route-lane button {
+  display: grid;
+  justify-items: center;
+  align-content: center;
+  gap: 7px;
+  min-height: 76px;
+  padding: 10px 8px;
+  border-radius: 10px;
+  text-align: center;
+  --action-color: #22d3ee;
+}
+
+.map-route-lane i {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: rgba(34, 211, 238, 0.11);
+  border: 1px solid rgba(34, 211, 238, 0.28);
+  color: #67e8f9;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  font-style: normal;
+  box-shadow: 0 0 16px rgba(34, 211, 238, 0.12);
+}
+
+.map-route-lane span {
+  color: #aebfe0;
+  font-size: 11px;
+  line-height: 1.3;
+}
+
+.map-mini-queue {
+  position: relative;
+  display: grid;
+  gap: 8px;
+}
+
+.map-mini-queue button {
+  --queue-color: #22d3ee;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 8px;
+  min-height: 36px;
+  padding: 8px 10px;
+  border-radius: 9px;
+}
+
+.map-mini-queue i {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--queue-color);
+  box-shadow: 0 0 10px color-mix(in srgb, var(--queue-color) 70%, transparent);
+}
+
+.map-mini-queue span {
+  color: #c8d6f0;
+  font-size: 12px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.map-mini-queue b {
+  color: color-mix(in srgb, var(--queue-color) 70%, #fff);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
 }
 
 .knowledge-canvas {
@@ -1568,6 +1889,7 @@ onBeforeUnmount(() => {
   display: block;
   pointer-events: auto;
   opacity: 1;
+  filter: saturate(1.08) contrast(1.06);
 }
 
 .scene-3d-container {
@@ -1633,9 +1955,15 @@ onBeforeUnmount(() => {
   transition: transform 0.22s ease;
 }
 
+.map-svg .map-backdrop {
+  display: none;
+}
+
 .map-svg .map-backdrop ellipse {
   animation: backdrop-spin 60s linear infinite;
   transform-origin: 500px 330px;
+  fill: none;
+  stroke-opacity: 0.58;
 }
 
 .map-svg .map-backdrop ellipse:nth-child(2) {
@@ -1822,7 +2150,6 @@ onBeforeUnmount(() => {
 }
 
 .orb-wrapper.active .knowledge-orb .orb-shell {
-  border-color: color-mix(in srgb, var(--node-color) 70%, rgba(255,255,255,0.4));
   box-shadow:
     inset 0 0 25px color-mix(in srgb, var(--node-color) 25%, transparent),
     0 0 30px color-mix(in srgb, var(--node-color) 40%, transparent);
@@ -1882,34 +2209,6 @@ onBeforeUnmount(() => {
   50% { opacity: 1; transform: scale(1.08); }
 }
 
-.orb-orbit {
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  width: 145%;
-  height: 145%;
-  border-radius: 50%;
-  border: 1.5px solid color-mix(in srgb, var(--node-color) 35%, transparent);
-  transform: translate(-50%, -50%) rotateX(var(--orbit-tilt)) scaleY(var(--orbit-scale));
-  transform-style: preserve-3d;
-  pointer-events: none;
-  animation: orbit-spin 10s linear infinite;
-}
-
-.orb-orbit::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  border-radius: 50%;
-  border: 1px solid color-mix(in srgb, var(--node-color) 15%, transparent);
-  transform: scale(1.18) rotateZ(15deg);
-}
-
-@keyframes orbit-spin {
-  from { transform: translate(-50%, -50%) rotateX(var(--orbit-tilt)) scaleY(var(--orbit-scale)) rotateZ(0deg); }
-  to { transform: translate(-50%, -50%) rotateX(var(--orbit-tilt)) scaleY(var(--orbit-scale)) rotateZ(360deg); }
-}
-
 .orb-shell {
   position: absolute;
   inset: 6%;
@@ -1919,7 +2218,7 @@ onBeforeUnmount(() => {
       color-mix(in srgb, var(--node-color) 12%, rgba(255,255,255,0.08)) 0%,
       color-mix(in srgb, var(--node-color) 6%, rgba(255,255,255,0.02)) 40%,
       color-mix(in srgb, var(--node-color) 18%, rgba(0,0,0,0.1)) 100%);
-  border: 1.5px solid color-mix(in srgb, var(--node-color) 35%, rgba(255,255,255,0.15));
+  border: 0;
   box-shadow:
     inset 0 2px 6px rgba(255, 255, 255, 0.15),
     inset 0 -4px 12px rgba(0, 0, 0, 0.15),
@@ -1927,7 +2226,7 @@ onBeforeUnmount(() => {
     0 4px 20px rgba(0, 0, 0, 0.2);
   backdrop-filter: blur(4px);
   pointer-events: none;
-  transition: box-shadow 0.3s ease, border-color 0.3s ease;
+  transition: box-shadow 0.3s ease;
 }
 
 .orb-shell::before {
@@ -2489,12 +2788,16 @@ onBeforeUnmount(() => {
   }
 
   .graph-panel {
-    min-height: 340px;
+    min-height: 324px;
+    height: auto;
+  }
+
+  .graph-shell {
+    flex-basis: clamp(340px, 52vw, 460px);
   }
 
   .graph-shell {
     perspective: 700px;
-    min-height: 320px;
   }
 
   .central-hub {
@@ -2540,7 +2843,38 @@ onBeforeUnmount(() => {
 
   .graph-shell {
     perspective: 600px;
-    min-height: 300px;
+    flex-basis: 330px;
+  }
+
+  .map-action-panel {
+    min-height: 0;
+  }
+
+  .map-primary-action,
+  .map-action-grid,
+  .map-route-lane {
+    grid-template-columns: 1fr;
+  }
+
+  .map-route-lane::before {
+    left: 22px;
+    right: auto;
+    top: 16px;
+    bottom: 16px;
+    width: 1px;
+    height: auto;
+    background: linear-gradient(180deg, transparent, rgba(34, 211, 238, 0.28), rgba(167, 139, 250, 0.22), transparent);
+  }
+
+  .map-route-lane button {
+    grid-template-columns: auto minmax(0, 1fr);
+    justify-items: start;
+    min-height: 48px;
+    text-align: left;
+  }
+
+  .map-primary-action i {
+    justify-self: start;
   }
 
   .central-hub {

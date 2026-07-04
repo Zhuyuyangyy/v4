@@ -19,11 +19,18 @@
   #title p{margin-top:13px;font-size:13px;line-height:1.7;color:rgba(147,166,198,.82);max-width:360px}
 
   /* floating station panels — 每模块专属样式 */
-  .lab{position:fixed;z-index:8;transform:translate(-50%,-100%);pointer-events:auto;cursor:pointer;white-space:nowrap;transition:opacity .3s,filter .25s}
+  .lab{position:fixed;z-index:8;transform:translate(-50%,-100%) scale(.92);pointer-events:none;cursor:pointer;white-space:nowrap;opacity:0;filter:blur(8px) saturate(.7);transition:opacity .42s ease,filter .42s ease,transform .42s cubic-bezier(.2,.8,.2,1)}
+  .lab.revealed{opacity:.34;filter:blur(1px) saturate(.82);pointer-events:auto}
+  .lab.active{opacity:1;filter:blur(0) saturate(1.1);pointer-events:auto}
+  .lab.pending{opacity:0;filter:blur(10px) saturate(.55);pointer-events:none}
   .lab .box{position:relative;width:166px;border-radius:13px;overflow:hidden;
     background:linear-gradient(160deg,rgba(12,17,30,.86),rgba(6,10,20,.92));backdrop-filter:blur(12px);
     border:1px solid color-mix(in srgb,var(--c) 55%,transparent);
     box-shadow:0 14px 40px rgba(0,0,0,.55),0 0 22px color-mix(in srgb,var(--c) 26%,transparent),inset 0 1px 0 rgba(255,255,255,.06)}
+  .lab.revealed:not(.active) .box{border-color:color-mix(in srgb,var(--c) 28%,transparent);box-shadow:0 10px 28px rgba(0,0,0,.42),0 0 12px color-mix(in srgb,var(--c) 14%,transparent)}
+  .lab.active .box{box-shadow:0 18px 50px rgba(0,0,0,.62),0 0 34px color-mix(in srgb,var(--c) 48%,transparent),inset 0 1px 0 rgba(255,255,255,.08)}
+  .lab.active .box::after{content:'';position:absolute;inset:0;border-radius:inherit;border:1px solid color-mix(in srgb,var(--c) 88%,white);opacity:.7;pointer-events:none;animation:panel-arrive 1.2s ease-out}
+  @keyframes panel-arrive{0%{opacity:0;transform:scale(.92)}42%{opacity:1;transform:scale(1.02)}100%{opacity:.7;transform:scale(1)}}
   /* color accent bar on top */
   .lab .box::before{content:'';position:absolute;top:0;left:0;right:0;height:2.5px;background:linear-gradient(90deg,transparent,var(--c),transparent);opacity:.9}
   .lab .hd{display:flex;align-items:center;gap:7px;padding:9px 12px 7px}
@@ -53,7 +60,7 @@
   #corelab .cn{font-family:'Instrument Serif','Noto Serif SC',serif;font-size:23px;color:#fff;margin:2px 0}
   #corelab .cs{font-size:11px;color:rgba(95,208,255,.9)}
 
-  #hint{position:fixed;bottom:26px;left:50%;transform:translateX(-50%);z-index:10;font-family:'JetBrains Mono',monospace;font-size:11.5px;letter-spacing:.16em;color:rgba(120,150,190,.65);pointer-events:none}
+  #hint{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);z-index:10;font-family:'JetBrains Mono',monospace;font-size:11.5px;letter-spacing:.16em;color:rgba(120,150,190,.65);pointer-events:none}
 
   /* modal */
   #modal{position:fixed;inset:0;z-index:9999;display:none;align-items:center;justify-content:center}
@@ -111,6 +118,63 @@ const STATIONS = [
   { key:'eval',     no:'05', name:'测评分析', en:'ASSESS',   c:'#e0556e', ui:'bars',    stat:'晨测得分', val:'82', agents:['评估出题','错因分析'], desc:'生成诊断题与测评，分析错因与掌握度变化，形成评估证据链。' },
   { key:'feedback', no:'06', name:'反馈复盘', en:'FEEDBACK', c:'#5b8cff', ui:'loop',    stat:'掌握度', val:'61%', agents:['反馈回写','成长复盘'], desc:'将评估证据回写学习画像，更新明日学习路径，推送成长报告，驱动闭环持续优化。' },
 ];
+
+const STATION_KEYS = STATIONS.map(s => s.key);
+const externalBeatToStation = { loop: 'feedback' };
+const stationToExternalBeat = { feedback: 'loop' };
+const revealedStations = new Set();
+let activeStationKey = STATIONS[0].key;
+let progressTimer = null;
+
+function normalizeStationKey(id) {
+  const key = externalBeatToStation[id] || id;
+  return STATION_KEYS.includes(key) ? key : STATIONS[0].key;
+}
+
+function externalBeatId(key) {
+  return stationToExternalBeat[key] || key;
+}
+
+function revealThroughStation(key) {
+  const targetIndex = STATION_KEYS.indexOf(key);
+  revealedStations.clear();
+  STATION_KEYS.forEach((stationKey, index) => {
+    if (index <= targetIndex) revealedStations.add(stationKey);
+  });
+}
+
+function updateLabelStates() {
+  STATIONS.forEach((s) => {
+    const el = labels[s.key];
+    if (!el) return;
+    el.classList.toggle('active', s.key === activeStationKey);
+    el.classList.toggle('revealed', revealedStations.has(s.key));
+    el.classList.toggle('pending', !revealedStations.has(s.key));
+  });
+}
+
+function setActiveStation(id, options = {}) {
+  const key = normalizeStationKey(id);
+  activeStationKey = key;
+  revealThroughStation(key);
+  updateLabelStates();
+  if (options.notify !== false) {
+    window.parent?.postMessage({ type: 'agenthub:beat', id: externalBeatId(key) }, '*');
+  }
+  if (options.restart !== false) restartProgressTimer();
+}
+
+function advanceStation() {
+  const idx = STATION_KEYS.indexOf(activeStationKey);
+  const nextKey = STATION_KEYS[(idx + 1) % STATION_KEYS.length];
+  if (idx === STATION_KEYS.length - 1) revealedStations.clear();
+  setActiveStation(nextKey, { restart: false });
+}
+
+function restartProgressTimer() {
+  if (progressTimer) clearInterval(progressTimer);
+  progressTimer = setInterval(advanceStation, 3600);
+}
 
 const cvs = document.getElementById('c');
 const renderer = new THREE.WebGLRenderer({ canvas: cvs, antialias: true });
@@ -309,14 +373,15 @@ new GLTFLoader().load('models/agent_hub_concept_refined_final.glb', (gltf) => {
   const box = new THREE.Box3().setFromObject(root);
   const size = box.getSize(new THREE.Vector3()), center = box.getCenter(new THREE.Vector3());
   const maxDim = Math.max(size.x, size.z);
-  controls.target.set(0, 1.4, 0);
-  const d = maxDim * 0.86;
-  camera.position.set(d*0.78, maxDim*0.55, d*0.92);
+  controls.target.set(0, 2.65, 0);
+  const d = maxDim * 0.92;
+  camera.position.set(d*0.72, maxDim*0.48, d*0.88);
   camera.near = maxDim/500; camera.far = maxDim*60; camera.updateProjectionMatrix();
   controls.minDistance = maxDim*0.55; controls.maxDistance = maxDim*2.2; controls.maxPolarAngle = Math.PI/2.06;
   controls.update();
 
   buildLabels();
+  setActiveStation(activeStationKey);
   document.getElementById('load').classList.add('hide');
 }, (p)=>{ if(p.loaded) ltxt.textContent='LOADING MODEL… '+(p.loaded/1048576).toFixed(1)+' MB'; },
    (e)=>{ ltxt.textContent='LOAD ERROR'; console.error(e); });
@@ -343,10 +408,15 @@ function buildLabels() {
       <div class="stat"><span class="lbl">${s.stat}</span><span class="v">${s.val}</span></div>
       <div class="ag">${s.agents.map(a=>`<span>${a}</span>`).join('')}</div>
     </div><div class="stem"></div>`;
-    el.addEventListener('click', ()=>openModal(s));
+    el.dataset.stationKey = s.key;
+    el.addEventListener('click', ()=>{
+      setActiveStation(s.key);
+      openModal(s);
+    });
     document.body.appendChild(el); labels[s.key] = el;
     buildViz(el.querySelector('.viz'), s);
   });
+  updateLabelStates();
 }
 // per-module live mini-visualization (animated via CSS where possible)
 function buildViz(host, s){
@@ -382,6 +452,7 @@ function buildViz(host, s){
 }
 const corelab = document.getElementById('corelab');
 function project(vec) { const p = vec.clone().project(camera); return { x:(p.x*.5+.5)*innerWidth, y:(-p.y*.5+.5)*innerHeight, vis:p.z<1 }; }
+function clamp(v, min, max) { return Math.max(min, Math.min(max, v)); }
 
 // ---- modal ----
 const modal = document.getElementById('modal'), cardEl = document.getElementById('card');
@@ -397,6 +468,10 @@ function closeModal(){ modal.classList.remove('open'); }
 modal.querySelector('.scrim').addEventListener('click', closeModal);
 cardEl.querySelector('.c-x').addEventListener('click', closeModal);
 addEventListener('keydown', e=>{ if(e.key==='Escape') closeModal(); });
+addEventListener('message', e => {
+  if (e.data?.type !== 'agenthub:setBeat') return;
+  setActiveStation(e.data.id, { notify: false });
+});
 
 // ---- loop ----
 let t0 = performance.now();
@@ -462,10 +537,17 @@ function loop(now){
 
   // overlay labels
   STATIONS.forEach(s => { const el = labels[s.key], anc = refs.stationAnchors[s.key]; if(!el||!anc) return;
-    const pr = project(anc); el.style.left = pr.x+'px'; el.style.top = pr.y+'px';
+    const pr = project(anc);
     const dist = camera.position.distanceTo(anc); const k = Math.max(.7, Math.min(1.12, 1.5-(dist-14)*0.03));
-    el.style.transform = `translate(-50%,-100%) scale(${k.toFixed(3)})`;
-    el.style.opacity = pr.vis ? 1 : 0; el.style.zIndex = Math.round(500 - dist*8);
+    const active = s.key === activeStationKey;
+    const revealed = revealedStations.has(s.key);
+    const x = active ? clamp(pr.x, 110, innerWidth - 110) : pr.x;
+    const y = active ? clamp(pr.y, 142, innerHeight - 42) : pr.y;
+    el.style.left = x+'px'; el.style.top = y+'px';
+    const stateScale = active ? 1.08 : 0.9;
+    el.style.transform = `translate(-50%,-100%) scale(${(k * stateScale).toFixed(3)})`;
+    el.style.opacity = (active || pr.vis) && revealed ? (active ? 1 : 0.24) : 0;
+    el.style.zIndex = active ? 900 : Math.round(420 - dist*8);
   });
   if (refs.coreSignal) { const pr = project(v.set(0,5.4,0)); corelab.style.left=pr.x+'px'; corelab.style.top=pr.y+'px'; corelab.style.opacity=pr.vis?1:0; }
 

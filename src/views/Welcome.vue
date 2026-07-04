@@ -15,16 +15,24 @@ const controlBeatId = ref('profile')
 const controlNonce = ref(0)
 
 const hubStages = [
-  { id: 'profile', visualId: 'profile', role: 'PROFILE MODULE', name: '画像诊断模块', color: '#8FA7FF', note: '画像采集 + 薄弱诊断双智能体' },
-  { id: 'path', visualId: 'path', role: 'PATH MODULE', name: '路径编排模块', color: '#35E0D8', note: '路径规划 + 动态重规划双智能体' },
-  { id: 'resource', visualId: 'resource', role: 'RESOURCE MODULE', name: '资源生产模块', color: '#45D483', note: '资源检索 + 个性生成双智能体' },
-  { id: 'tutor', visualId: 'tutor', role: 'TUTOR MODULE', name: '辅导互动模块', color: '#F0B24A', note: '讲解辅导 + 互动答疑双智能体' },
-  { id: 'eval', visualId: 'eval', role: 'EVAL MODULE', name: '测评分析模块', color: '#F0586E', note: '评估出题 + 错因分析双智能体' },
-  { id: 'feedback', visualId: 'loop', role: 'FEEDBACK MODULE', name: '反馈复盘模块', color: '#7C8CFF', note: '反馈回写 + 成长复盘双智能体' },
+  { id: 'profile', visualId: 'profile', step: '01', role: 'PROFILE MODULE', name: '画像诊断模块', color: '#8FA7FF', signal: '学情画像', output: '薄弱点定位', agents: ['画像采集', '薄弱诊断'], note: '把测验、行为和偏好压成可用画像' },
+  { id: 'path', visualId: 'path', step: '02', role: 'PATH MODULE', name: '路径编排模块', color: '#35E0D8', signal: '路径编排', output: '个性化路径', agents: ['路径规划', '动态重规划'], note: '按画像生成路线，并随反馈实时改道' },
+  { id: 'resource', visualId: 'resource', step: '03', role: 'RESOURCE MODULE', name: '资源生产模块', color: '#45D483', signal: '资源生产', output: '适配材料', agents: ['资源检索', '个性生成'], note: '检索可信资源，再生成适合当前学生的材料' },
+  { id: 'tutor', visualId: 'tutor', step: '04', role: 'TUTOR MODULE', name: '辅导互动模块', color: '#F0B24A', signal: '实时辅导', output: '讲解答疑', agents: ['讲解辅导', '互动答疑'], note: '把学习卡点拆成讲解、追问和即时提示' },
+  { id: 'eval', visualId: 'eval', step: '05', role: 'EVAL MODULE', name: '测评分析模块', color: '#F0586E', signal: '测评归因', output: '错因证据', agents: ['评估出题', '错因分析'], note: '自动出题验证掌握度，并追溯错误原因' },
+  { id: 'feedback', visualId: 'loop', step: '06', role: 'FEEDBACK MODULE', name: '反馈复盘模块', color: '#7C8CFF', signal: '反馈回写', output: '闭环更新', agents: ['反馈回写', '成长复盘'], note: '把结果写回画像，驱动下一轮学习决策' },
 ]
 
 const currentHubStage = computed(() => (
   hubStages.find(stage => stage.id === activeHubBeatId.value) ?? hubStages[0]
+))
+
+const currentHubStep = computed(() => (
+  Math.max(0, hubStages.findIndex(stage => stage.id === currentHubStage.value.id))
+))
+
+const hubProgress = computed(() => (
+  `${((currentHubStep.value + 1) / hubStages.length) * 100}%`
 ))
 
 function handleAgentHubBeat(event: MessageEvent) {
@@ -63,30 +71,55 @@ onBeforeUnmount(() => {
 
     <section class="hub-workbench">
       <aside class="hub-context-card" :style="{ '--stage-color': currentHubStage.color }">
-        <span class="hub-context-kicker">6 MODULES · 12 AGENTS</span>
+        <div class="hub-context-topline">
+          <span class="hub-context-kicker">6 MODULES · 12 AGENTS</span>
+          <span class="hub-live-pill"><i /> LIVE HANDOFF</span>
+        </div>
         <h2>六个模块如何协同</h2>
+        <p class="hub-context-summary">
+          一次学习卡顿会被 12 个智能体拆解：诊断画像、规划路径、生产资源、实时辅导、测评归因，最后写回反馈形成闭环。
+        </p>
+
+        <div class="hub-current-strip" aria-live="polite">
+          <span>当前接力</span>
+          <strong>{{ currentHubStage.name }}</strong>
+          <small>{{ currentHubStage.signal }} → {{ currentHubStage.output }}</small>
+          <div class="hub-progress-track" aria-hidden="true">
+            <i :style="{ width: hubProgress }" />
+          </div>
+        </div>
 
         <div class="hub-agent-list" aria-label="六个协同模块说明">
           <button
-            v-for="stage in hubStages"
+            v-for="(stage, index) in hubStages"
             :key="stage.id"
             type="button"
             class="hub-agent-item"
             :class="{ active: stage.id === activeHubBeatId }"
-            :style="{ '--stage-color': stage.color }"
+            :style="{ '--stage-color': stage.color, '--stage-index': index }"
             @click="jumpToAgent(stage.id)"
           >
-            <span class="hub-agent-role">{{ stage.role }}</span>
-            <strong>{{ stage.name }}</strong>
-            <small>{{ stage.note }}</small>
+            <span class="hub-agent-index">{{ stage.step }}</span>
+            <span class="hub-agent-copy">
+              <span class="hub-agent-role">{{ stage.role }}</span>
+              <strong>{{ stage.name }}</strong>
+              <small>{{ stage.note }}</small>
+              <span class="hub-agent-pair">
+                <i v-for="agent in stage.agents" :key="agent">{{ agent }}</i>
+              </span>
+            </span>
+            <span class="hub-agent-status">
+              <b>{{ stage.signal }}</b>
+              <em>2 AGENTS</em>
+            </span>
           </button>
         </div>
 
         <div class="hub-role-visual" aria-hidden="true">
           <img src="/homepage/agent-role-orbit-panel.png" alt="">
           <div class="hub-role-visual-copy">
-            <span>MODULE ORBIT</span>
-            <strong>{{ currentHubStage.role }}</strong>
+            <span>COLLABORATION OUTPUT</span>
+            <strong>{{ currentHubStage.output }}</strong>
           </div>
         </div>
       </aside>
@@ -185,13 +218,13 @@ onBeforeUnmount(() => {
 :deep(.agent-hub-section) {
   position: relative;
   z-index: 1;
-  padding: 72px 36px 52px;
+  padding: 58px 36px 42px;
 }
 
 :deep(.agent-hub-frame) {
   display: block;
   width: 100%;
-  height: 560px;
+  height: clamp(460px, 37vw, 540px);
   min-height: 0;
   border: 0;
   border-radius: 18px;
@@ -257,69 +290,201 @@ onBeforeUnmount(() => {
 .hub-workbench {
   position: relative;
   z-index: 1;
+  scroll-margin-top: 92px;
   display: grid;
-  grid-template-columns: minmax(260px, 0.34fr) minmax(0, 1fr);
-  gap: 18px;
+  grid-template-columns: minmax(390px, 430px) minmax(0, 1fr);
+  gap: 22px;
   align-items: stretch;
-  max-width: 1760px;
+  max-width: 1880px;
   margin: 0 auto;
-  padding: 56px 36px 18px;
+  padding: 32px 32px 18px;
 }
 
 .hub-context-card {
   --stage-color: #00d4ff;
-  min-height: 640px;
+  position: relative;
+  min-height: 740px;
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 16px;
   padding: 24px;
-  border: 1px solid color-mix(in srgb, var(--stage-color) 32%, rgba(120, 160, 220, 0.14));
-  border-radius: 18px;
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--stage-color) 34%, rgba(116, 154, 210, 0.18));
+  border-radius: 16px;
   background:
-    linear-gradient(90deg, color-mix(in srgb, var(--stage-color) 36%, transparent), transparent 1px) 0 0 / 100% 52px,
-    radial-gradient(circle at 0% 0%, color-mix(in srgb, var(--stage-color) 12%, transparent), transparent 52%),
-    linear-gradient(145deg, rgba(7, 10, 24, 0.22), rgba(4, 7, 18, 0.08));
-  backdrop-filter: blur(10px) saturate(1.2);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+    linear-gradient(90deg, color-mix(in srgb, var(--stage-color) 42%, transparent), transparent 1px) 0 0 / 100% 64px,
+    radial-gradient(circle at 8% 2%, color-mix(in srgb, var(--stage-color) 18%, transparent), transparent 36%),
+    radial-gradient(circle at 94% 12%, rgba(116, 154, 210, 0.1), transparent 34%),
+    linear-gradient(155deg, rgba(7, 13, 28, 0.86), rgba(4, 8, 18, 0.72));
+  backdrop-filter: blur(18px) saturate(1.18);
+  box-shadow:
+    0 26px 80px rgba(0, 0, 0, 0.42),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
   animation: welcome-border-breathe 4.8s ease-in-out infinite;
+}
+
+.hub-context-card::before,
+.hub-context-card::after {
+  content: '';
+  position: absolute;
+  pointer-events: none;
+}
+
+.hub-context-card::before {
+  inset: 0;
+  opacity: 0.34;
+  background:
+    linear-gradient(rgba(116, 154, 210, 0.08) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(116, 154, 210, 0.06) 1px, transparent 1px);
+  background-size: 38px 38px;
+  mask-image: linear-gradient(180deg, #000 0%, transparent 76%);
+}
+
+.hub-context-card::after {
+  left: 24px;
+  right: 24px;
+  top: 64px;
+  height: 1px;
+  background: linear-gradient(90deg, var(--stage-color), transparent);
+  opacity: 0.58;
+}
+
+.hub-context-topline {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
 }
 
 .hub-context-kicker {
   color: var(--stage-color);
   font-family: var(--font-mono);
   font-size: 10px;
-  letter-spacing: 0.18em;
+  letter-spacing: 0.16em;
+}
+
+.hub-live-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  color: #dbeafe;
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 0.12em;
+  padding: 6px 8px;
+  border: 1px solid rgba(180, 203, 236, 0.14);
+  border-radius: 7px;
+  background: rgba(9, 18, 34, 0.58);
+}
+
+.hub-live-pill i {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--stage-color);
+  box-shadow: 0 0 14px var(--stage-color);
+  animation: welcome-status-pulse 1.5s ease-in-out infinite;
 }
 
 .hub-context-card h2 {
+  position: relative;
+  z-index: 1;
   margin: 0;
   color: #fff;
   font-family: var(--font-display);
-  font-size: clamp(28px, 2.4vw, 38px);
-  font-weight: 500;
-  line-height: 1.06;
+  font-size: clamp(26px, 2.15vw, 34px);
+  font-weight: 600;
+  line-height: 1.12;
+}
+
+.hub-context-summary {
+  position: relative;
+  z-index: 1;
+  max-width: 36em;
+  margin: -4px 0 0;
+  color: rgba(207, 221, 244, 0.76);
+  font-size: 13px;
+  line-height: 1.75;
+}
+
+.hub-current-strip {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  gap: 5px;
+  padding: 14px;
+  border: 1px solid color-mix(in srgb, var(--stage-color) 30%, rgba(116, 154, 210, 0.13));
+  border-radius: 12px;
+  background:
+    radial-gradient(circle at 0% 0%, color-mix(in srgb, var(--stage-color) 13%, transparent), transparent 48%),
+    rgba(8, 16, 32, 0.62);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.055);
+}
+
+.hub-current-strip span {
+  color: rgba(169, 187, 216, 0.74);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.12em;
+}
+
+.hub-current-strip strong {
+  color: #f7fbff;
+  font-size: 18px;
+  line-height: 1.25;
+}
+
+.hub-current-strip small {
+  color: var(--stage-color);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.03em;
+}
+
+.hub-progress-track {
+  height: 4px;
+  margin-top: 6px;
+  overflow: hidden;
+  border-radius: 99px;
+  background: rgba(116, 154, 210, 0.12);
+}
+
+.hub-progress-track i {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--stage-color), rgba(219, 234, 254, 0.8));
+  box-shadow: 0 0 18px color-mix(in srgb, var(--stage-color) 60%, transparent);
+  transition: width 0.32s ease;
 }
 
 .hub-agent-list {
+  position: relative;
+  z-index: 1;
   display: grid;
-  gap: 9px;
-  margin-top: 2px;
+  gap: 10px;
+  margin-top: 0;
 }
 
 .hub-agent-item {
   --stage-color: #00d4ff;
   display: grid;
-  grid-template-columns: 104px minmax(0, 1fr);
-  gap: 4px 12px;
-  align-items: start;
+  grid-template-columns: 36px minmax(0, 1fr) auto;
+  gap: 10px;
+  align-items: center;
   width: 100%;
   appearance: none;
   text-align: left;
   cursor: pointer;
   padding: 12px;
-  border: 1px solid color-mix(in srgb, var(--stage-color) 18%, rgba(120, 160, 220, 0.12));
-  border-radius: 13px;
-  background: rgba(8, 12, 30, 0.14);
+  border: 1px solid color-mix(in srgb, var(--stage-color) 20%, rgba(116, 154, 210, 0.14));
+  border-radius: 12px;
+  background:
+    linear-gradient(90deg, color-mix(in srgb, var(--stage-color) 18%, transparent), transparent 3px),
+    rgba(7, 14, 28, 0.56);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.045);
   transition:
     transform 0.24s cubic-bezier(0.16, 1, 0.3, 1),
     border-color 0.28s ease,
@@ -329,13 +494,15 @@ onBeforeUnmount(() => {
 }
 
 .hub-agent-item:hover {
-  transform: translateX(3px);
-  border-color: color-mix(in srgb, var(--stage-color) 44%, rgba(120, 160, 220, 0.16));
-  background: color-mix(in srgb, var(--stage-color) 7%, rgba(8, 12, 30, 0.18));
+  transform: translateX(4px);
+  border-color: color-mix(in srgb, var(--stage-color) 50%, rgba(116, 154, 210, 0.16));
+  background:
+    linear-gradient(90deg, color-mix(in srgb, var(--stage-color) 30%, transparent), transparent 4px),
+    color-mix(in srgb, var(--stage-color) 8%, rgba(7, 14, 28, 0.68));
 }
 
 .hub-agent-item:active {
-  transform: translateX(3px) scale(0.985);
+  transform: translateX(4px) scale(0.985);
 }
 
 .hub-agent-item:focus-visible {
@@ -343,48 +510,118 @@ onBeforeUnmount(() => {
   outline-offset: 3px;
 }
 
+.hub-agent-index {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 9px;
+  color: var(--stage-color);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 700;
+  background: color-mix(in srgb, var(--stage-color) 12%, rgba(7, 14, 28, 0.74));
+  border: 1px solid color-mix(in srgb, var(--stage-color) 28%, transparent);
+}
+
+.hub-agent-copy {
+  min-width: 0;
+  display: grid;
+  gap: 2px;
+}
+
 .hub-agent-role {
-  grid-row: span 2;
   color: var(--stage-color);
   font-family: var(--font-mono);
   font-size: 9px;
-  letter-spacing: 0.12em;
+  letter-spacing: 0.1em;
   line-height: 1.4;
 }
 
 .hub-agent-item strong {
   color: #f7fbff;
-  font-size: 14px;
+  font-size: 15px;
   line-height: 1.3;
 }
 
 .hub-agent-item small {
-  color: #8da3c8;
+  color: #a0b4d6;
   font-size: 12px;
-  line-height: 1.5;
+  line-height: 1.45;
+}
+
+.hub-agent-pair {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin-top: 5px;
+}
+
+.hub-agent-pair i {
+  color: rgba(226, 236, 252, 0.72);
+  font-style: normal;
+  font-size: 11px;
+  line-height: 1;
+  padding: 5px 7px;
+  border: 1px solid rgba(180, 203, 236, 0.12);
+  border-radius: 6px;
+  background: rgba(180, 203, 236, 0.055);
+}
+
+.hub-agent-status {
+  display: grid;
+  justify-items: end;
+  gap: 5px;
+  min-width: 74px;
+}
+
+.hub-agent-status b,
+.hub-agent-status em {
+  font-family: var(--font-mono);
+  font-style: normal;
+  line-height: 1;
+}
+
+.hub-agent-status b {
+  color: rgba(238, 246, 255, 0.86);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.hub-agent-status em {
+  color: var(--stage-color);
+  font-size: 9px;
+  letter-spacing: 0.08em;
 }
 
 .hub-agent-item.active {
   border-color: color-mix(in srgb, var(--stage-color) 58%, transparent);
   background:
-    linear-gradient(90deg, color-mix(in srgb, var(--stage-color) 42%, transparent), transparent 4px),
-    radial-gradient(circle at 0% 0%, color-mix(in srgb, var(--stage-color) 14%, transparent), transparent 60%),
-    rgba(8, 12, 30, 0.20);
+    linear-gradient(90deg, color-mix(in srgb, var(--stage-color) 48%, transparent), transparent 5px),
+    radial-gradient(circle at 0% 0%, color-mix(in srgb, var(--stage-color) 17%, transparent), transparent 58%),
+    rgba(9, 18, 35, 0.72);
   box-shadow:
     inset 0 1px 0 rgba(255,255,255,0.08),
-    0 10px 28px color-mix(in srgb, var(--stage-color) 12%, transparent);
+    0 12px 34px color-mix(in srgb, var(--stage-color) 18%, transparent);
+}
+
+.hub-agent-item.active .hub-agent-index {
+  color: #05111c;
+  background: var(--stage-color);
+  box-shadow: 0 0 22px color-mix(in srgb, var(--stage-color) 40%, transparent);
 }
 
 .hub-role-visual {
   position: relative;
-  min-height: 156px;
+  z-index: 1;
+  min-height: 132px;
   margin-top: auto;
   overflow: hidden;
-  border: 1px solid color-mix(in srgb, var(--stage-color) 18%, rgba(120, 160, 220, 0.12));
-  border-radius: 16px;
+  border: 1px solid color-mix(in srgb, var(--stage-color) 22%, rgba(116, 154, 210, 0.12));
+  border-radius: 14px;
   background:
-    radial-gradient(circle at 18% 18%, color-mix(in srgb, var(--stage-color) 12%, transparent), transparent 48%),
-    rgba(8, 12, 30, 0.10);
+    radial-gradient(circle at 18% 18%, color-mix(in srgb, var(--stage-color) 14%, transparent), transparent 48%),
+    rgba(7, 14, 28, 0.52);
   animation: welcome-soft-border-breathe 5s ease-in-out infinite;
 }
 
@@ -394,7 +631,7 @@ onBeforeUnmount(() => {
   width: 130%;
   height: 136%;
   object-fit: cover;
-  opacity: 0.48;
+  opacity: 0.4;
   mix-blend-mode: screen;
   filter: saturate(0.96) contrast(1.04);
   mask-image: radial-gradient(ellipse at 58% 52%, #000 0%, rgba(0, 0, 0, 0.82) 52%, transparent 90%);
@@ -430,29 +667,55 @@ onBeforeUnmount(() => {
 .hub-role-visual-copy strong {
   color: var(--stage-color);
   font-family: var(--font-mono);
-  font-size: 13px;
-  letter-spacing: 0.12em;
+  font-size: 14px;
+  letter-spacing: 0.06em;
 }
 
 .hub-workbench-main {
   min-width: 0;
+  display: grid;
+  gap: 14px;
+  align-items: start;
+  align-content: start;
+  justify-items: stretch;
 }
 
 .hub-workbench-main :deep(.agent-hub-section) {
+  width: 100%;
+  min-width: 0;
+  justify-self: stretch;
   max-width: none;
   padding: 0;
+  height: auto;
+}
+
+.hub-workbench-main :deep(.hub-body),
+.hub-workbench-main :deep(.hub-frame-shell) {
+  width: 100%;
+  min-width: 0;
+  height: auto;
+}
+
+.hub-workbench-main :deep(.hub-frame-shell) {
+  border-radius: 18px;
+  border-color: rgba(116, 198, 236, 0.2);
+  background:
+    radial-gradient(ellipse at 52% 40%, rgba(52, 211, 235, 0.12), transparent 52%),
+    radial-gradient(circle at 78% 20%, rgba(139, 167, 255, 0.08), transparent 32%),
+    linear-gradient(150deg, rgba(5, 10, 22, 0.88), rgba(2, 5, 14, 0.68));
+  box-shadow:
+    0 30px 90px rgba(0, 0, 0, 0.44),
+    0 0 44px rgba(52, 211, 235, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
 }
 
 .hub-workbench-main :deep(.agent-hub-frame) {
-  height: 560px;
+  width: 100%;
+  height: clamp(500px, 60vh, 620px);
 }
 
 .hub-workbench-main :deep(.hub-head) {
-  margin-top: 14px;
-}
-
-.hub-workbench-main :deep(.hub-head h2) {
-  font-size: clamp(24px, 2vw, 32px);
+  display: none;
 }
 
 .hub-workbench-main :deep(.trainflow-page) {
@@ -556,6 +819,19 @@ onBeforeUnmount(() => {
   }
 }
 
+@keyframes welcome-status-pulse {
+  0%,
+  100% {
+    opacity: 0.62;
+    transform: scale(0.86);
+  }
+
+  50% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
 /* ── Section headers ── */
 .section-header {
   text-align: center;
@@ -621,12 +897,39 @@ onBeforeUnmount(() => {
 
   .hub-workbench {
     grid-template-columns: 1fr;
-    padding: 40px 16px 18px;
+    padding: 28px 14px 18px;
+    max-width: 100%;
+  }
+
+  .hub-workbench :deep(.agent-hub-frame) {
+    height: min(64dvh, 560px);
+    min-height: 460px;
   }
 
   .hub-context-card,
   .hub-workbench-main :deep(.agent-stage) {
     min-height: auto;
+  }
+
+  .hub-context-card {
+    padding: 18px;
+  }
+
+  .hub-context-topline {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .hub-agent-item {
+    grid-template-columns: 34px minmax(0, 1fr);
+  }
+
+  .hub-agent-status {
+    grid-column: 2;
+    justify-items: start;
+    grid-auto-flow: column;
+    justify-content: start;
+    align-items: center;
   }
 
   .hub-role-visual {
@@ -643,6 +946,9 @@ onBeforeUnmount(() => {
     height: 460px;
     min-height: 0;
   }
+  .hub-workbench-main :deep(.agent-hub-frame) {
+    height: min(68vh, 520px);
+  }
   .footer {
     padding: 32px 24px;
   }
@@ -651,10 +957,21 @@ onBeforeUnmount(() => {
 @media (min-width: 901px) and (max-width: 1320px) {
   .hub-workbench {
     grid-template-columns: 1fr;
+    padding-top: 36px;
+    max-width: calc(100vw - 32px);
+  }
+
+  .hub-workbench :deep(.agent-hub-frame) {
+    height: min(820px, calc(100dvh - 112px));
+    min-height: 660px;
   }
 
   .hub-context-card {
     min-height: auto;
+  }
+
+  .hub-workbench-main :deep(.agent-hub-frame) {
+    height: 600px;
   }
 
   .hub-workbench-main :deep(.stage-grid-2) {
