@@ -28,9 +28,14 @@
   --text-muted: #6b7fa8;
   --text-dim: #3d4f78;
 
-  --border-subtle: rgba(59, 130, 246, 0.1);
-  --border-medium: rgba(59, 130, 246, 0.2);
-  --border-strong: rgba(59, 130, 246, 0.35);
+  /* 分隔线 / 装饰用：略高于氛围线，兼顾区隔与透气感 */
+  --border-subtle: rgba(59, 130, 246, 0.18);
+  --border-medium: rgba(59, 130, 246, 0.55);
+  --border-strong: rgba(59, 130, 246, 0.55);
+
+  /* 块级容器专用：让消息气泡 / 输入框 / 面板 / 按钮边界清晰 */
+  --border-card:  rgba(147, 197, 253, 0.75);
+  --border-input: rgba(147, 197, 253, 0.95);
 }
 
 .dialogue-root h1,

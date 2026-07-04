@@ -49,12 +49,11 @@ watch(() => route.query.tab, (tab) => {
     </div>
 
     <!-- Left Navigation Sidebar -->
-    <aside class="flex flex-col items-center transition-all duration-300 relative select-none shrink-0 border-r"
+    <aside class="dialogue-navbar flex flex-col items-center transition-all duration-300 relative select-none shrink-0"
       :class="[
         isSidebarCollapsed
-          ? 'w-0 overflow-hidden opacity-0 p-0 pointer-events-none border-transparent'
-          : 'w-[76px] py-8 opacity-100',
-        'border-[var(--border-subtle)]'
+          ? 'w-0 overflow-hidden opacity-0 p-0 pointer-events-none'
+          : 'w-[76px] py-8 opacity-100'
       ]"
     >
       <nav class="flex-1 w-full space-y-4 px-2">
@@ -89,3 +88,9 @@ watch(() => route.query.tab, (tab) => {
     </main>
   </div>
 </template>
+
+<style scoped>
+.dialogue-navbar {
+  border-right: 2px solid rgba(59, 130, 246, 0.55) !important;
+}
+</style>

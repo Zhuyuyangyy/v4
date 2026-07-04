@@ -1,9 +1,9 @@
 <template>
   <section class="flex-1 flex flex-col xl:flex-row h-full overflow-hidden bg-transparent relative animate-fade-in">
     <!-- COLUMN 1: Chat Pane -->
-    <div class="flex-1 flex flex-col h-full bg-transparent" style="border-right: 1px solid var(--border-subtle)">
+    <div class="flex-1 flex flex-col h-full bg-transparent" style="border-right: 2px solid var(--border-card)">
       <!-- Header -->
-      <header class="px-6 py-4 flex items-center justify-between bg-transparent shrink-0" style="border-bottom: 1px solid var(--border-subtle)">
+      <header class="px-6 py-4 flex items-center justify-between bg-transparent shrink-0" style="border-bottom: 1px solid var(--border-card)">
         <div class="flex items-center gap-3">
           <div class="w-12 h-12 rounded-full flex items-center justify-center border" style="background: rgba(59, 130, 246, 0.1); border-color: rgba(59, 130, 246, 0.2)">
             <span class="w-6 h-6 block rounded-full" style="background: radial-gradient(circle at 30% 30%, #93c5fd, #3b82f6)" />
@@ -14,7 +14,7 @@
           </div>
         </div>
         <div class="flex items-center gap-2">
-          <button @click="isSidebarCollapsed = !isSidebarCollapsed" class="text-sm font-semibold px-3 py-2 rounded-xl transition-all cursor-pointer flex items-center gap-1 shrink-0" style="color: var(--gold-400); border: 1px solid var(--border-subtle); background: rgba(59, 130, 246, 0.06)">
+          <button @click="isSidebarCollapsed = !isSidebarCollapsed" class="text-sm font-semibold px-3 py-2 rounded-xl transition-all cursor-pointer flex items-center gap-1 shrink-0" style="color: var(--gold-400); border: 1px solid var(--border-card); background: rgba(59, 130, 246, 0.06)">
             <span>{{ isSidebarCollapsed ? '展开 ➔' : '⮨ 收入' }}</span>
           </button>
           <button @click="isXunfeiSidebarOpen = !isXunfeiSidebarOpen" class="text-sm font-semibold px-3 py-2 rounded-xl transition-all cursor-pointer flex items-center gap-1 shrink-0" style="color: var(--teal-400); border: 1px solid rgba(45, 212, 184, 0.2); background: rgba(45, 212, 184, 0.06)">
@@ -78,7 +78,7 @@
                 : 'rounded-tl-none'"
               :style="chat.sender === 'user'
                 ? { background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.25), rgba(37, 99, 235, 0.2))', border: '1px solid rgba(59, 130, 246, 0.2)' }
-                : { background: 'rgba(22, 18, 32, 0.5)', border: '1px solid var(--border-subtle)', backdropFilter: 'blur(8px)' }">
+                : { background: 'rgba(22, 18, 32, 0.5)', border: '1px solid var(--border-card)', backdropFilter: 'blur(8px)' }">
               {{ chat.text }}
             </div>
 
@@ -97,10 +97,10 @@
         </div>
 
         <div v-if="isAiLoading" class="flex gap-4">
-          <div class="w-10 h-10 rounded-xl flex items-center justify-center border" style="background: rgba(22, 18, 32, 0.8); border-color: var(--border-subtle)">
+          <div class="w-10 h-10 rounded-xl flex items-center justify-center border" style="background: rgba(22, 18, 32, 0.8); border-color: var(--border-card)">
             <span class="w-4 h-4 rounded-full animate-pulse" style="background: var(--gold-500)" />
           </div>
-          <div class="text-sm px-5 py-3 rounded-2xl flex items-center gap-2 shadow-md" style="background: rgba(22, 18, 32, 0.5); color: var(--text-secondary); border: 1px solid var(--border-subtle)">
+          <div class="text-sm px-5 py-3 rounded-2xl flex items-center gap-2 shadow-md" style="background: rgba(22, 18, 32, 0.5); color: var(--text-secondary); border: 1px solid var(--border-card)">
             <span class="relative flex h-2 w-2">
               <span class="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75" style="background: var(--gold-400)" />
               <span class="relative inline-flex rounded-full h-2 w-2" style="background: var(--gold-500)" />
@@ -112,20 +112,20 @@
       </div>
 
       <!-- Starfield Scanner -->
-      <div class="py-2.5 px-4 shrink-0" style="border-top: 1px solid var(--border-subtle)">
+      <div class="py-2.5 px-4 shrink-0" style="border-top: 1px solid var(--border-card)">
         <StarfieldScanner :dimensions="dimensions" :canUnlockReport="canUnlockReport" @selectNode="selectNodeDetail" @triggerReport="triggerReport" />
       </div>
 
       <!-- Input Area -->
-      <footer class="p-4 bg-transparent shrink-0 space-y-2" style="border-top: 1px solid var(--border-subtle)">
+      <footer class="p-4 bg-transparent shrink-0 space-y-2" style="border-top: 1px solid var(--border-card)">
         <div class="flex flex-wrap gap-1.5 items-center justify-start text-sm" style="color: var(--text-muted)">
           <span class="font-semibold mr-1.5" style="font-family: var(--font-sans)">快捷提问:</span>
-          <button v-for="(act, idx) in quickActions" :key="idx" @click="handleChipClick(act)" class="font-medium py-1.5 px-3.5 rounded-lg border transition-all cursor-pointer" style="background: rgba(22, 18, 32, 0.5); color: var(--text-secondary); border-color: var(--border-subtle)">
+          <button v-for="(act, idx) in quickActions" :key="idx" @click="handleChipClick(act)" class="font-medium py-1.5 px-3.5 rounded-lg border transition-all cursor-pointer" style="background: rgba(22, 18, 32, 0.5); color: var(--text-secondary); border-color: var(--border-card)">
             {{ act }}
           </button>
         </div>
 
-        <div class="flex items-center gap-2 rounded-2xl p-2 border transition-all" style="background: rgba(22, 18, 32, 0.4); border-color: var(--border-subtle)">
+        <div class="flex items-center gap-2 rounded-2xl p-2 border transition-all" style="background: rgba(22, 18, 32, 0.4); border-color: var(--border-input)">
           <div class="flex items-center gap-1 pl-1.5" style="color: var(--text-muted)">
             <button class="p-1.5 rounded-lg transition-colors cursor-pointer hover:bg-[var(--bg-hover)]" style="color: var(--text-muted)"><Paperclip class="w-4 h-4" /></button>
             <button class="p-1.5 rounded-lg transition-colors cursor-pointer hover:bg-[var(--bg-hover)]" style="color: var(--text-muted)"><Smile class="w-4 h-4" /></button>
@@ -146,7 +146,7 @@
             class="p-2.5 rounded-xl transition-all shadow-md focus:outline-none flex items-center justify-center shrink-0 cursor-pointer"
             :style="inputText.trim() && !isAiLoading
               ? { background: 'linear-gradient(135deg, var(--gold-500), var(--gold-600))', color: '#fff', boxShadow: '0 4px 12px rgba(59, 130, 246, 0.25)' }
-              : { background: 'rgba(22, 18, 32, 0.8)', color: 'var(--text-dim)', border: '1px solid var(--border-subtle)' }"
+              : { background: 'rgba(22, 18, 32, 0.8)', color: 'var(--text-dim)', border: '1px solid var(--border-card)' }"
           >
             <Send class="w-4 h-4" />
           </button>
@@ -163,11 +163,11 @@
     <MetricPanel />
 
     <!-- Separator -->
-    <div class="hidden xl:flex flex-col items-center justify-center w-[1px] relative z-30 shrink-0" style="background: var(--border-subtle)">
+    <div class="hidden xl:flex flex-col items-center justify-center w-[2px] relative z-30 shrink-0" style="background: var(--border-card)">
       <button
         @click="isRightSidebarCollapsed = !isRightSidebarCollapsed"
         class="absolute flex items-center justify-center rounded-full w-5.5 h-12 shadow-md hover:shadow-lg focus:outline-none cursor-pointer transition-all group"
-        style="left: -11px; background: var(--bg-surface); border: 1px solid var(--border-subtle)"
+        style="left: -11px; background: var(--bg-surface); border: 1px solid var(--border-card)"
         :title="isRightSidebarCollapsed ? '展开完整学习画像报告' : '收起完整学习画像报告'"
       >
         <div class="flex flex-col items-center justify-center gap-0.5">

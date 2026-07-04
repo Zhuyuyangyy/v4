@@ -41,17 +41,6 @@ function handleNodeClick(node: ConstellationNode) {
   emit('select-node', node.id)
 }
 
-// Cluster halos
-const clusterHalos = computed(() => {
-  return domainLabels.map(dl => {
-    const cluster = nodes.value.filter(n => n.domain === dl.domain)
-    const cx = cluster.reduce((s, n) => s + n.x, 0) / cluster.length
-    const cy = cluster.reduce((s, n) => s + n.y, 0) / cluster.length
-    const r = Math.max(...cluster.map(n => Math.hypot(n.x - cx, n.y - cy))) + 60
-    return { domain: dl.domain, cx, cy, r, color: getDomainMeta(dl.domain).color }
-  })
-})
-
 // Inject keyframes
 let styleEl: HTMLStyleElement | null = null
 onMounted(() => {
@@ -97,10 +86,6 @@ onUnmounted(() => { styleEl?.remove() })
         <circle v-for="(s, i) in bgStars" :key="'s'+i"
           :cx="s.x" :cy="s.y" :r="s.r" fill="#fff" :opacity="s.o"
           :style="s.tw ? { animation: `constellation-twinkle ${2 + (i % 5)}s ease-in-out ${i * 0.13}s infinite` } : undefined" />
-
-        <!-- Cluster halos -->
-        <circle v-for="h in clusterHalos" :key="h.domain"
-          :cx="h.cx" :cy="h.cy" :r="h.r" :fill="h.color" opacity="0.04" />
 
         <!-- Edges -->
         <line v-for="(e, i) in edges" :key="'e'+i"
@@ -232,7 +217,7 @@ onUnmounted(() => { styleEl?.remove() })
 
 .constellation-canvas {
   position: relative; width: 100%; aspect-ratio: 1400 / 900;
-  border-radius: 18px; background: rgba(7, 7, 13, 0.62);
+  border-radius: 18px; background: transparent;
   border: 1px solid rgba(255, 255, 255, 0.06); overflow: hidden;
 }
 .constellation-svg { position: absolute; inset: 0; width: 100%; height: 100%; }
