@@ -12,42 +12,42 @@
     <section class="lp-section lp2-full">
       <div class="lp-section-header">
         <div class="lp-section-badge">◈ LEARNING PATH 2</div>
-        <h2 class="lp-section-title">学习路径2</h2>
-        <p class="lp-section-desc">两栏布局占位（60 / 40）</p>
+        <h2 class="lp-section-title">{{ selectedTopic ? selectedTopic.label + '—学习路径' : '学习路径' }}</h2>
+        <p class="lp-section-desc">{{ selectedTopic ? selectedTopic.label + '的详细学习路径，包含 5 个学习阶段' : '请先在上方知识星座中点击一个知识点' }}</p>
       </div>
-      <div class="lp2-grid">
-        <div class="lp2-pane lp2-left">
-          <!-- 悬浮航点卡片叠层 -->
-          <div class="lp2-overlay">
-            <div
-              v-for="(s, idx) in [
-                { idx: 0, label: '课前预习', meta: '前置知识 · 基础铺垫', color: '#00d4ff', cls: 'card-1' },
-                { idx: 1, label: '课中答疑', meta: '实时互动 · 即时反馈', color: '#22d3ee', cls: 'card-2' },
-                { idx: 2, label: '课后巩固', meta: '练习强化 · 薄弱回补', color: '#a78bfa', cls: 'card-3' },
-                { idx: 3, label: '阶段测评', meta: '诊断考核 · 画像更新', color: '#f59e0b', cls: 'card-4' },
-                { idx: 4, label: '期末辅导', meta: '综合复盘 · 终极通关', color: '#facc15', cls: 'card-5' },
-              ]"
-              :key="s.idx"
-              :class="['floating-card', s.cls, { active: selectedStageIdx === s.idx }]"
-              :style="{ '--line-color': s.color, '--line-glow': s.color + '99' }"
-              @click="onSelectStage(s.idx)"
-            >
-              <span class="fc-corner fc-tl" /><span class="fc-corner fc-tr" />
-              <span class="fc-corner fc-bl" /><span class="fc-corner fc-br" />
-              <div class="fc-head">
-                <span class="fc-pulse" :style="{ background: s.color, boxShadow: `0 0 6px ${s.color}, 0 0 12px ${s.color}` }" />
-                <span class="fc-tag" :style="{ color: s.color, textShadow: `0 0 6px ${s.color}66` }">STAGE · {{ s.idx + 1 }}</span>
+        <div class="lp2-grid">
+          <div class="lp2-pane lp2-left">
+            <!-- 悬浮航点卡片叠层 -->
+            <div class="lp2-overlay">
+              <div
+                v-for="(s, idx) in [
+                  { idx: 0, label: '课前预习', meta: '前置知识 · 基础铺垫', color: '#00d4ff', cls: 'card-1' },
+                  { idx: 1, label: '课中答疑', meta: '实时互动 · 即时反馈', color: '#22d3ee', cls: 'card-2' },
+                  { idx: 2, label: '课后巩固', meta: '练习强化 · 薄弱回补', color: '#a78bfa', cls: 'card-3' },
+                  { idx: 3, label: '阶段测评', meta: '诊断考核 · 画像更新', color: '#f59e0b', cls: 'card-4' },
+                  { idx: 4, label: '期末辅导', meta: '综合复盘 · 终极通关', color: '#facc15', cls: 'card-5' },
+                ]"
+                :key="s.idx"
+                :class="['floating-card', s.cls, { active: selectedStageIdx === s.idx }]"
+                :style="{ '--line-color': s.color, '--line-glow': s.color + '99' }"
+                @click="onSelectStage(s.idx)"
+              >
+                <span class="fc-corner fc-tl" /><span class="fc-corner fc-tr" />
+                <span class="fc-corner fc-bl" /><span class="fc-corner fc-br" />
+                <div class="fc-head">
+                  <span class="fc-pulse" :style="{ background: s.color, boxShadow: `0 0 6px ${s.color}, 0 0 12px ${s.color}` }" />
+                  <span class="fc-tag" :style="{ color: s.color, textShadow: `0 0 6px ${s.color}66` }">STAGE · {{ s.idx + 1 }}</span>
+                </div>
+                <div class="fc-title">{{ s.label }}</div>
+                <div class="fc-meta">{{ s.meta }}</div>
               </div>
-              <div class="fc-title">{{ s.label }}</div>
-              <div class="fc-meta">{{ s.meta }}</div>
             </div>
           </div>
-        </div>
-        <div class="lp2-pane lp2-right">
-          <Transition name="card-flip" mode="out-in">
-            <div
-              :key="selectedStageIdx"
-              class="level-card"
+          <div class="lp2-pane lp2-right">
+            <Transition name="card-flip" mode="out-in">
+              <div
+                :key="selectedStageIdx"
+                class="level-card"
               :style="{ '--stage-color': currentStage.color }"
             >
             <span class="level-corner corner-tl" :style="{ borderColor: currentStage.color }" />
@@ -232,7 +232,17 @@ onMounted(() => {
   padding: 24px 200px 0;
   max-width: none;
 }
-.lp-section-header { padding: 0 0 16px; }
+.lp-section-header {
+  padding: 0 0 16px;
+  margin: 0;
+  background: transparent;
+  border: none;
+}
+.lp-section:first-child .lp-section-header,
+.lp2-full .lp-section-header {
+  margin: 0;
+  padding: 0 0 16px;
+}
 .lp-section-badge {
   font-size: 12px; font-weight: 700; letter-spacing: 0.16em;
   color: rgba(0, 212, 255, 0.6);
@@ -298,9 +308,9 @@ onMounted(() => {
 .floating-card {
   position: absolute;
   pointer-events: auto;
-  min-width: 152px;
-  padding: 12px 14px 11px;
-  background: linear-gradient(135deg, rgba(7, 11, 24, 0.78), rgba(7, 11, 24, 0.55));
+  min-width: 200px;
+  padding: 16px 20px 14px;
+  background: linear-gradient(135deg, rgba(7, 11, 24, 0.82), rgba(7, 11, 24, 0.58));
   backdrop-filter: blur(16px) saturate(1.2);
   -webkit-backdrop-filter: blur(16px) saturate(1.2);
   border: 1px solid rgba(0, 212, 255, 0.45);
@@ -446,16 +456,16 @@ onMounted(() => {
 
 .fc-title {
   font-family: 'Outfit', 'PingFang SC', sans-serif;
-  font-size: 16px;
+  font-size: 17px;
   font-weight: 700;
   color: #ffffff;
   line-height: 1.1;
-  margin-bottom: 4px;
+  margin-bottom: 6px;
   text-shadow: 0 0 10px rgba(0, 212, 255, 0.3);
 }
 .fc-meta {
   font-family: 'JetBrains Mono', monospace;
-  font-size: 12px;
+  font-size: 13px;
   color: #8da3c8;
   letter-spacing: 0.06em;
 }
@@ -467,12 +477,11 @@ onMounted(() => {
 .card-4 { top: 23%;  left: 38%;  animation-delay: 1.5s; --line-color: #f59e0b; --line-glow: rgba(245, 158, 11, 0.6);  }
 .card-5 { top: 19%;  right: 82%;  animation-delay: 2.0s; --line-color: #facc15; --line-glow: rgba(250, 204, 21, 0.6);  }
 .lp2-right {
-  /* 不设 aspect-ratio,跟随 grid stretch 自动与左栏等高 */
-  min-height: 100%;
+  /* 与左栏等高 — grid row 自动拉伸，内部卡片填充 */
   background: transparent;
   border: none;
   display: flex;
-  align-items: center;
+  align-items: stretch;
   justify-content: center;
   padding: 12px;
 }
@@ -484,7 +493,7 @@ onMounted(() => {
   height: 100%;
   display: flex;
   flex-direction: column;
-  padding: 26px 28px 22px;
+  padding: 32px 36px 26px;
   border-radius: 16px;
   background:
     linear-gradient(135deg, rgba(0, 212, 255, 0.06) 0%, rgba(0, 212, 255, 0.02) 50%, rgba(124, 58, 237, 0.05) 100%);
@@ -585,7 +594,7 @@ onMounted(() => {
 
 .level-card-title {
   font-family: 'Outfit', 'PingFang SC', sans-serif;
-  font-size: 26px;
+  font-size: 28px;
   font-weight: 700;
   color: #ffffff;
   margin: 0 0 18px;

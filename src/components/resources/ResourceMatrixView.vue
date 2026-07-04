@@ -236,7 +236,7 @@ onUnmounted(() => { styleEl?.remove() })
 <style scoped>
 @keyframes mx-float-up { 0% { transform: translateY(10px); opacity: 0; } 100% { transform: translateY(0); opacity: 1; } }
 
-.matrix-view { padding: 0 40px 40px; animation: mx-float-up 0.5s ease both; }
+.matrix-view { padding: 0 0 40px; animation: mx-float-up 0.5s ease both; }
 .matrix-banner {
   display: flex; align-items: center; gap: 10px;
   padding: 14px 20px; border-radius: 14px;
@@ -269,7 +269,7 @@ onUnmounted(() => { styleEl?.remove() })
   display: flex; gap: 8px; margin-bottom: 8px; padding-left: 220px;
 }
 .col-header {
-  width: 156px; padding: 10px 14px; border-radius: 10px;
+  flex: 1; min-width: 120px; padding: 10px 14px; border-radius: 10px;
   border: 1px solid transparent;
 }
 .col-header.rec {
@@ -299,10 +299,10 @@ onUnmounted(() => { styleEl?.remove() })
 .domain-avg-track { width: 50px; height: 2px; background: rgba(255,255,255,0.08); border-radius: 1px; overflow: hidden; }
 .domain-avg-fill { height: 100%; }
 
-.cells-col { display: flex; flex-direction: column; gap: 8px; }
+.cells-col { display: flex; flex-direction: column; gap: 8px; flex: 1; min-width: 0; }
 .cell-row { display: flex; gap: 8px; }
 .cell {
-  position: relative; width: 156px; height: 90px;
+  position: relative; flex: 1; min-width: 120px; height: 90px;
   border: 1px solid; border-radius: 8px; padding: 10px 14px;
   display: flex; flex-direction: column; justify-content: space-between;
   overflow: hidden; cursor: pointer;

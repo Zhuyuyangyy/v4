@@ -1357,6 +1357,9 @@ html.dark #edu-mind-app .bg-slate-900\/60 { background-color: rgba(0, 0, 0, 0.35
 .edu-main-stage {
   background: transparent;
 }
+.edu-main-stage:has(> div > #ideal-ide-workspace-box) {
+  padding: 0 !important;
+}
 
 
 
