@@ -28,14 +28,14 @@ withDefaults(defineProps<{
   position: absolute;
   inset: 0;
   background:
-    linear-gradient(90deg, rgba(2, 4, 12, 0.28) 0%, transparent 34%, rgba(2, 4, 12, 0.08) 100%),
-    radial-gradient(ellipse at center, transparent 40%, rgba(3, 4, 12, 0.34) 100%);
+    linear-gradient(90deg, rgba(10, 15, 30, 0.12) 0%, transparent 34%, rgba(10, 15, 30, 0.03) 100%),
+    radial-gradient(ellipse at center, transparent 55%, rgba(10, 18, 35, 0.12) 100%);
 }
 
 .variant-genre .cosmos-vignette {
   background:
-    linear-gradient(180deg, rgba(42, 14, 5, 0.18) 0%, transparent 24%, rgba(2, 6, 14, 0.18) 100%),
-    radial-gradient(ellipse 1100px 620px at 58% 44%, transparent 0 42%, rgba(0, 4, 12, 0.24) 84%),
-    linear-gradient(90deg, rgba(0, 0, 0, 0.22), transparent 30%, transparent 70%, rgba(0, 0, 0, 0.16));
+    linear-gradient(180deg, rgba(10, 18, 35, 0.1) 0%, transparent 24%, rgba(200, 220, 245, 0.05) 100%),
+    radial-gradient(ellipse 1100px 620px at 58% 44%, transparent 0 42%, rgba(10, 25, 50, 0.1) 84%),
+    linear-gradient(90deg, rgba(10, 18, 35, 0.1), transparent 30%, transparent 70%, rgba(170, 200, 235, 0.05));
 }
 </style>
