@@ -3,55 +3,57 @@
     "dimensions": [
       {
         "label": "知识基础",
-        "value": 50,
-        "color": "#00d4ff"
+        "value": 60,
+        "color": "#3b82f6"
       },
       {
         "label": "学习速度",
-        "value": 52,
+        "value": 70,
         "color": "#3b82f6"
       },
       {
         "label": "逻辑思维",
-        "value": 50,
-        "color": "#7c3aed"
+        "value": 75,
+        "color": "#3b82f6"
       },
       {
         "label": "创造力",
         "value": 50,
-        "color": "#06d6a0"
+        "color": "#3b82f6"
       },
       {
         "label": "专注力",
-        "value": 50,
-        "color": "#f59e0b"
+        "value": 65,
+        "color": "#3b82f6"
       },
       {
-        "label": "自律性",
-        "value": 50,
-        "color": "#f43f5e"
+        "label": "自律力",
+        "value": 80,
+        "color": "#3b82f6"
       }
     ],
-    "totalScore": 50,
+    "totalScore": 72,
     "weaknesses": [
       {
-        "tag": "知识基础提升",
-        "count": 8
+        "tag": "学习方式单一，仅依赖视频，缺乏动手实践",
+        "count": 1
       },
       {
-        "tag": "逻辑思维提升",
-        "count": 6
+        "tag": "创造力不足，难以解决非结构化问题",
+        "count": 1
       },
       {
-        "tag": "创造力提升",
-        "count": 4
+        "tag": "项目经验浅，未形成完整的数据处理闭环",
+        "count": 1
       }
     ],
     "recommendations": [
-      "优先巩固 知识基础，每天安排 20 分钟专项训练。",
-      "继续发挥 学习速度 优势。",
-      "建议每两周复盘一次学习进度，动态调整资源和节奏。"
-    ]
+      "增加编程实战，如用Python完成数据清洗与分析项目",
+      "参与Kaggle竞赛或开源项目，提升解决复杂问题的能力",
+      "系统学习机器学习算法，并尝试从业务角度设计数据方案"
+    ],
+    "source": "dialogue",
+    "savedAt": "2026-07-04T12:03:20.678Z"
   },
   "knowledgePathResult": {
     "phases": [
@@ -64,20 +66,20 @@
           {
             "id": "f1",
             "name": "编程基础与语法",
-            "mastery": 0.5,
+            "mastery": 0.6,
             "importance": 1,
             "recommended": true
           },
           {
             "id": "f2",
             "name": "数据结构入门",
-            "mastery": 0.4,
+            "mastery": 0.48,
             "importance": 0.8
           },
           {
             "id": "f3",
             "name": "算法思维培养",
-            "mastery": 0.35,
+            "mastery": 0.5249999999999999,
             "importance": 0.7
           }
         ]
@@ -159,7 +161,7 @@
           {
             "id": "p2",
             "name": "代码规范与工程化",
-            "mastery": 0.5,
+            "mastery": 0.4,
             "importance": 0.6
           },
           {

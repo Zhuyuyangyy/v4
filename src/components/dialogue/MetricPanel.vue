@@ -1,5 +1,5 @@
 <template>
-  <div class="bg-transparent backdrop-blur-md flex flex-col h-full overflow-y-auto shrink-0 transition-all duration-300" style="border-right: 2px solid var(--border-card) !important"
+  <div class="bg-transparent backdrop-blur-md flex flex-col h-full overflow-y-auto shrink-0 transition-all duration-300" style="border-right: 1px solid var(--border-subtle) !important"
     :class="isMetricCollapsed ? 'w-[64px] p-2 bg-transparent' : 'w-full md:w-[400px] p-5 space-y-5'">
     <!-- Collapsed State -->
     <template v-if="isMetricCollapsed">

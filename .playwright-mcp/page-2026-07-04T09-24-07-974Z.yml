@@ -1,0 +1,295 @@
+- generic [ref=f14e4]:
+  - banner [ref=f14e5]:
+    - generic [ref=f14e6]:
+      - link "EduMind 首页" [ref=f14e7] [cursor=pointer]:
+        - /url: /home
+        - img [ref=f14e9]
+        - generic [ref=f14e12]: EduMind
+      - navigation "主导航" [ref=f14e13]:
+        - link "首页" [ref=f14e14] [cursor=pointer]:
+          - /url: /home
+          - img [ref=f14e15]
+          - generic [ref=f14e18]: 首页
+        - link "画像生成" [ref=f14e19] [cursor=pointer]:
+          - /url: /dialogue
+          - img [ref=f14e20]
+          - generic [ref=f14e22]: 画像生成
+        - link "学习路径" [ref=f14e23] [cursor=pointer]:
+          - /url: /learning-path
+          - img [ref=f14e24]
+          - generic [ref=f14e26]: 学习路径
+        - link "学习资源" [ref=f14e27] [cursor=pointer]:
+          - /url: /edu-mind
+          - img [ref=f14e28]
+          - generic [ref=f14e30]: 学习资源
+        - link "智能评估" [ref=f14e31] [cursor=pointer]:
+          - /url: /evaluation
+          - img [ref=f14e32]
+          - generic [ref=f14e34]: 智能评估
+        - link "反向更新" [ref=f14e35] [cursor=pointer]:
+          - /url: /reverse-evaluation
+          - img [ref=f14e36]
+          - generic [ref=f14e40]: 反向更新
+        - link "设置" [ref=f14e41] [cursor=pointer]:
+          - /url: /settings
+          - img [ref=f14e42]
+          - generic [ref=f14e45]: 设置
+  - main [ref=f14e46]:
+    - generic [ref=f14e48]:
+      - complementary [ref=f14e49]:
+        - navigation [ref=f14e50]:
+          - button "对话" [ref=f14e51] [cursor=pointer]:
+            - img [ref=f14e53]
+            - generic [ref=f14e55]: 对话
+          - button "课程" [ref=f14e56] [cursor=pointer]:
+            - img [ref=f14e57]
+            - generic [ref=f14e60]: 课程
+          - button "画像报告" [ref=f14e61] [cursor=pointer]:
+            - img [ref=f14e62]
+            - generic [ref=f14e65]: 画像报告
+          - button "历史" [ref=f14e66] [cursor=pointer]:
+            - img [ref=f14e67]
+            - generic [ref=f14e71]: 历史
+      - main [ref=f14e72]:
+        - complementary [ref=f14e73]:
+          - generic [ref=f14e74]:
+            - generic [ref=f14e75]:
+              - img [ref=f14e77]
+              - generic [ref=f14e83]:
+                - heading "讯飞虚拟互动舱" [level=3] [ref=f14e84]
+                - generic [ref=f14e85]: Xunfei Virtual Human Pro
+            - button "隐藏互动舱" [ref=f14e86] [cursor=pointer]:
+              - img [ref=f14e87]
+          - generic [ref=f14e90]:
+            - generic [ref=f14e91]:
+              - generic [ref=f14e92]:
+                - generic [ref=f14e93]: ● STANDBY
+                - generic [ref=f14e94]: "SYS: STANDBY"
+              - generic [ref=f14e95] [cursor=pointer]:
+                - generic:
+                  - generic:
+                    - img
+                  - generic:
+                    - paragraph: AI VIRTUAL TUTOR
+                    - paragraph: 3D 虚拟导师待机中
+                  - generic:
+                    - generic: STANDBY
+              - paragraph [ref=f14e98]: 你好！我是科大讯飞智能虚拟导师。点击下方连麦，开启高阶语音会话。
+            - generic [ref=f14e99]:
+              - generic [ref=f14e100]:
+                - generic [ref=f14e101]:
+                  - img [ref=f14e102]
+                  - text: 语音交互
+                - generic [ref=f14e105]: OFFLINE
+              - generic [ref=f14e107]:
+                - img [ref=f14e108]
+                - generic [ref=f14e111]: 虚拟人未连接
+              - generic [ref=f14e121]:
+                - button "全双工对话" [disabled] [ref=f14e122] [cursor=pointer]:
+                  - img [ref=f14e123]
+                  - text: 全双工对话
+                - button "短语音 10s" [disabled] [ref=f14e126] [cursor=pointer]:
+                  - img [ref=f14e127]
+                  - text: 短语音 10s
+            - generic [ref=f14e128]:
+              - generic [ref=f14e129]:
+                - generic [ref=f14e130]:
+                  - img [ref=f14e131]
+                  - text: 文本驱动
+                - generic [ref=f14e133]:
+                  - generic [ref=f14e134] [cursor=pointer]: 语义理解
+                  - checkbox "语义理解" [checked] [ref=f14e135] [cursor=pointer]
+              - generic [ref=f14e136]:
+                - textbox "请先连接虚拟人" [disabled] [ref=f14e137]
+                - button "发送" [disabled] [ref=f14e138] [cursor=pointer]
+              - generic [ref=f14e139]:
+                - button "自我介绍" [disabled] [ref=f14e140] [cursor=pointer]
+                - button "学习规划" [disabled] [ref=f14e141] [cursor=pointer]
+                - button "大模型算法" [disabled] [ref=f14e142] [cursor=pointer]
+                - button "零基础起步" [disabled] [ref=f14e143] [cursor=pointer]
+            - generic [ref=f14e144]:
+              - generic [ref=f14e145]:
+                - generic [ref=f14e146]:
+                  - img [ref=f14e147]
+                  - text: 播报控制
+                - button "打断播报" [disabled] [ref=f14e148] [cursor=pointer]
+              - generic [ref=f14e149]:
+                - generic [ref=f14e150]:
+                  - generic [ref=f14e151]:
+                    - img [ref=f14e152]
+                    - text: 音量 80%
+                  - button "静音" [ref=f14e155] [cursor=pointer]
+                - slider [ref=f14e156] [cursor=pointer]: "80"
+              - generic [ref=f14e157]:
+                - generic [ref=f14e158]:
+                  - checkbox "聊天区同步" [checked] [ref=f14e159] [cursor=pointer]
+                  - generic [ref=f14e160] [cursor=pointer]: 聊天区同步
+                - button "刷新画面" [disabled] [ref=f14e161] [cursor=pointer]
+            - generic [ref=f14e162]:
+              - generic [ref=f14e163]:
+                - generic [ref=f14e164]:
+                  - img [ref=f14e165]
+                  - text: 动作驱动
+                - generic [ref=f14e169]: ACTION
+              - generic [ref=f14e170]:
+                - button "👋 打招呼" [disabled] [ref=f14e171] [cursor=pointer]:
+                  - generic [ref=f14e172]: 👋
+                  - generic [ref=f14e173]: 打招呼
+                - button "👍 点头" [disabled] [ref=f14e174] [cursor=pointer]:
+                  - generic [ref=f14e175]: 👍
+                  - generic [ref=f14e176]: 点头
+                - button "🤚 挥手" [disabled] [ref=f14e177] [cursor=pointer]:
+                  - generic [ref=f14e178]: 🤚
+                  - generic [ref=f14e179]: 挥手
+                - button "🤔 思考" [disabled] [ref=f14e180] [cursor=pointer]:
+                  - generic [ref=f14e181]: 🤔
+                  - generic [ref=f14e182]: 思考
+                - button "👏 鼓掌" [disabled] [ref=f14e183] [cursor=pointer]:
+                  - generic [ref=f14e184]: 👏
+                  - generic [ref=f14e185]: 鼓掌
+                - button "🙇 鞠躬" [disabled] [ref=f14e186] [cursor=pointer]:
+                  - generic [ref=f14e187]: 🙇
+                  - generic [ref=f14e188]: 鞠躬
+            - generic [ref=f14e189]:
+              - generic [ref=f14e190]:
+                - generic [ref=f14e191]:
+                  - img [ref=f14e192]
+                  - text: 连接管理
+                - generic [ref=f14e196]: STANDBY
+              - generic [ref=f14e197]:
+                - button "启动虚拟人" [ref=f14e198] [cursor=pointer]
+                - button "查看报告" [ref=f14e199] [cursor=pointer]
+        - generic [ref=f14e200]:
+          - generic [ref=f14e201]:
+            - generic [ref=f14e202]:
+              - generic [ref=f14e206]:
+                - heading "AI 学习导师" [level=1] [ref=f14e207]
+                - paragraph [ref=f14e208]: 像朋友一样聊天，AI 帮你绘制专属学习画像
+              - generic [ref=f14e209]:
+                - button "⮨ 收入" [ref=f14e210] [cursor=pointer]:
+                  - generic [ref=f14e211]: ⮨ 收入
+                - button "收起虚拟人" [ref=f14e212] [cursor=pointer]:
+                  - generic [ref=f14e213]: 收起虚拟人
+                - button "展开报告 ➔" [ref=f14e214] [cursor=pointer]:
+                  - generic [ref=f14e215]: 展开报告 ➔
+            - generic [ref=f14e217]:
+              - img [ref=f14e222]
+              - generic [ref=f14e230]:
+                - generic [ref=f14e232]: 17:24
+                - generic [ref=f14e233]: 你好呀！我是你的 AI 学习导师 我会通过和你聊天，帮你绘制专属的学习星图。 先从简单的问题开始吧~
+                - generic [ref=f14e234]:
+                  - button "我是在校学生，学计算机的" [ref=f14e235] [cursor=pointer]
+                  - button "我是程序员，工作3年了" [ref=f14e236] [cursor=pointer]
+                  - button "我刚开始学AI，想转行" [ref=f14e237] [cursor=pointer]
+            - generic [ref=f14e241]:
+              - generic [ref=f14e242]:
+                - img [ref=f14e243]
+                - heading "星场扫描 · 学习画像采集进度" [level=3] [ref=f14e246]
+              - generic [ref=f14e247]:
+                - generic [ref=f14e248]: 已采集 0 / 9
+                - button [ref=f14e249] [cursor=pointer]:
+                  - img [ref=f14e250]
+            - generic [ref=f14e253]:
+              - generic [ref=f14e254]:
+                - generic [ref=f14e255]: "快捷提问:"
+                - button "继续聊聊我的学习情况" [ref=f14e256] [cursor=pointer]
+                - button "换个话题吧" [ref=f14e257] [cursor=pointer]
+                - button "我该如何安排学习时间？" [ref=f14e258] [cursor=pointer]
+              - generic [ref=f14e259]:
+                - generic [ref=f14e260]:
+                  - button [ref=f14e261] [cursor=pointer]:
+                    - img [ref=f14e262]
+                  - button [ref=f14e264] [cursor=pointer]:
+                    - img [ref=f14e265]
+                - textbox "继续聊聊你的学习情况吧..." [ref=f14e268]
+                - button [disabled] [ref=f14e269] [cursor=pointer]:
+                  - img [ref=f14e270]
+              - generic [ref=f14e273]:
+                - generic [ref=f14e274]: 按 Enter 发送, Shift + Enter 换行
+                - generic [ref=f14e275]:
+                  - text: "对话状态:"
+                  - strong [ref=f14e276]: listening
+          - generic [ref=f14e277]:
+            - generic [ref=f14e278]:
+              - generic [ref=f14e279]:
+                - heading "采集进度" [level=2] [ref=f14e280]
+                - button "折叠指标日志" [ref=f14e281] [cursor=pointer]:
+                  - img [ref=f14e282]
+              - generic [ref=f14e284]:
+                - img [ref=f14e285]
+                - generic [ref=f14e288]:
+                  - generic [ref=f14e289]: 0%
+                  - generic [ref=f14e290]: 已采集 0/9
+              - paragraph [ref=f14e291]: 继续聊聊，完善你的学习画像吧~
+            - generic [ref=f14e292]:
+              - heading "维度日志" [level=2] [ref=f14e294]
+              - generic [ref=f14e295]:
+                - generic [ref=f14e296] [cursor=pointer]:
+                  - generic [ref=f14e297]: 1 身份
+                  - generic [ref=f14e299]: 待捕获
+                - generic [ref=f14e301] [cursor=pointer]:
+                  - generic [ref=f14e302]: 2 领域
+                  - generic [ref=f14e304]: 待捕获
+                - generic [ref=f14e306] [cursor=pointer]:
+                  - generic [ref=f14e307]: 3 水平
+                  - generic [ref=f14e309]: 待捕获
+                - generic [ref=f14e311] [cursor=pointer]:
+                  - generic [ref=f14e312]: 4 经验
+                  - generic [ref=f14e314]: 待捕获
+                - generic [ref=f14e316] [cursor=pointer]:
+                  - generic [ref=f14e317]: 5 短期目标
+                  - generic [ref=f14e319]: 待捕获
+                - generic [ref=f14e321] [cursor=pointer]:
+                  - generic [ref=f14e322]: 6 动机
+                  - generic [ref=f14e324]: 待捕获
+                - generic [ref=f14e326] [cursor=pointer]:
+                  - generic [ref=f14e327]: 7 学习时段
+                  - generic [ref=f14e329]: 待捕获
+                - generic [ref=f14e331] [cursor=pointer]:
+                  - generic [ref=f14e332]: 8 每周时长
+                  - generic [ref=f14e334]: 待捕获
+                - generic [ref=f14e336] [cursor=pointer]:
+                  - generic [ref=f14e337]: 9 学习方式
+                  - generic [ref=f14e339]: 待捕获
+            - generic [ref=f14e341]:
+              - button "开始学习画像" [disabled] [ref=f14e342] [cursor=pointer]:
+                - img [ref=f14e343]
+                - generic [ref=f14e346]: 开始学习画像
+              - button "重置对话" [ref=f14e347] [cursor=pointer]:
+                - img [ref=f14e348]
+                - generic [ref=f14e353]: 重置对话
+            - generic [ref=f14e354]:
+              - generic [ref=f14e355]:
+                - generic [ref=f14e356]: 画像评分 (示例)
+                - generic [ref=f14e357]: "87"
+              - generic [ref=f14e358]:
+                - img [ref=f14e359]
+                - img [ref=f14e362]
+                - img [ref=f14e365]
+                - img [ref=f14e368]
+                - img [ref=f14e371]
+              - generic [ref=f14e374]:
+                - generic [ref=f14e375]:
+                  - generic [ref=f14e376]: 知识基础
+                  - generic [ref=f14e379]: "85"
+                - generic [ref=f14e380]:
+                  - generic [ref=f14e381]: 学习速度
+                  - generic [ref=f14e384]: "90"
+                - generic [ref=f14e385]:
+                  - generic [ref=f14e386]: 逻辑思维
+                  - generic [ref=f14e389]: "88"
+                - generic [ref=f14e390]:
+                  - generic [ref=f14e391]: 创造力
+                  - generic [ref=f14e394]: "82"
+              - button "查看完整画像" [disabled] [ref=f14e395] [cursor=pointer]
+          - button "展开完整学习画像报告" [ref=f14e397] [cursor=pointer]:
+            - img [ref=f14e400]
+          - generic [ref=f14e404]:
+            - img [ref=f14e406]
+            - generic [ref=f14e409]:
+              - heading "完整学习画像暂未点亮" [level=3] [ref=f14e410]
+              - paragraph [ref=f14e411]:
+                - text: 通过和 AI 导师聊天，注入您的背景或动机特征，收集
+                - strong [ref=f14e412]: ≥ 4 个维度
+                - text: 的特征日志，即可启动智能算力引擎绘制您的专属学习画像和高度定制的路线图。
+              - generic [ref=f14e414]: "目前进度: 0/4 维度"

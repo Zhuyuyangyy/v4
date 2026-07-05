@@ -61,6 +61,7 @@ onBeforeUnmount(() => {
 <template>
   <div class="welcome">
     <InkMouseBackground />
+    <div class="welcome-starfield" aria-hidden="true" />
     <div class="home-image-layer" aria-hidden="true">
       <img class="home-art home-art-hero" src="/homepage/agent-constellation-hero.png" alt="">
       <img class="home-art home-art-path" src="/homepage/learning-path-repair.png" alt="">
@@ -148,9 +149,66 @@ onBeforeUnmount(() => {
 .welcome {
   position: relative;
   min-height: 100vh;
-  background: transparent;
+  background:
+    radial-gradient(ellipse at 20% 0%, rgba(59, 130, 246, 0.10), transparent 55%),
+    radial-gradient(ellipse at 80% 30%, rgba(6, 182, 212, 0.06), transparent 50%),
+    radial-gradient(ellipse at 50% 100%, rgba(59, 130, 246, 0.08), transparent 60%);
   isolation: isolate;
   overflow: hidden;
+}
+
+.welcome::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background-image:
+    radial-gradient(circle, rgba(59, 130, 246, 0.12) 0 1px, transparent 1.5px),
+    linear-gradient(rgba(59, 130, 246, 0.02) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(59, 130, 246, 0.015) 1px, transparent 1px);
+  background-size: 120px 120px, 56px 56px, 56px 56px;
+  opacity: 0.5;
+}
+
+.welcome-starfield {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+  background-image:
+    radial-gradient(1px 1px at 10% 15%, rgba(147, 197, 253, 0.85) 50%, transparent 50%),
+    radial-gradient(1px 1px at 25% 8%, rgba(96, 165, 250, 0.75) 50%, transparent 50%),
+    radial-gradient(1.5px 1.5px at 42% 22%, rgba(191, 219, 254, 0.9) 50%, transparent 50%),
+    radial-gradient(1px 1px at 58% 12%, rgba(56, 189, 248, 0.8) 50%, transparent 50%),
+    radial-gradient(1px 1px at 75% 18%, rgba(147, 197, 253, 0.7) 50%, transparent 50%),
+    radial-gradient(1.5px 1.5px at 88% 25%, rgba(96, 165, 250, 0.85) 50%, transparent 50%),
+    radial-gradient(1px 1px at 15% 35%, rgba(147, 197, 253, 0.75) 50%, transparent 50%),
+    radial-gradient(1px 1px at 35% 42%, rgba(56, 189, 248, 0.8) 50%, transparent 50%),
+    radial-gradient(1.5px 1.5px at 55% 38%, rgba(191, 219, 254, 0.85) 50%, transparent 50%),
+    radial-gradient(1px 1px at 72% 32%, rgba(96, 165, 250, 0.75) 50%, transparent 50%),
+    radial-gradient(1px 1px at 92% 45%, rgba(147, 197, 253, 0.85) 50%, transparent 50%),
+    radial-gradient(1.5px 1.5px at 8% 55%, rgba(56, 189, 248, 0.85) 50%, transparent 50%),
+    radial-gradient(1px 1px at 22% 62%, rgba(147, 197, 253, 0.75) 50%, transparent 50%),
+    radial-gradient(1px 1px at 45% 52%, rgba(96, 165, 250, 0.8) 50%, transparent 50%),
+    radial-gradient(1.5px 1.5px at 65% 58%, rgba(191, 219, 254, 0.9) 50%, transparent 50%),
+    radial-gradient(1px 1px at 82% 65%, rgba(56, 189, 248, 0.75) 50%, transparent 50%),
+    radial-gradient(1px 1px at 5% 75%, rgba(147, 197, 253, 0.8) 50%, transparent 50%),
+    radial-gradient(1.5px 1.5px at 30% 72%, rgba(96, 165, 250, 0.85) 50%, transparent 50%),
+    radial-gradient(1px 1px at 50% 78%, rgba(147, 197, 253, 0.7) 50%, transparent 50%),
+    radial-gradient(1px 1px at 68% 82%, rgba(56, 189, 248, 0.8) 50%, transparent 50%),
+    radial-gradient(1.5px 1.5px at 85% 88%, rgba(191, 219, 254, 0.85) 50%, transparent 50%),
+    radial-gradient(1px 1px at 18% 92%, rgba(96, 165, 250, 0.75) 50%, transparent 50%),
+    radial-gradient(1px 1px at 40% 95%, rgba(147, 197, 253, 0.8) 50%, transparent 50%),
+    radial-gradient(1.5px 1.5px at 62% 90%, rgba(56, 189, 248, 0.9) 50%, transparent 50%);
+  animation: starfield-twinkle 6s ease-in-out infinite alternate;
+}
+
+@keyframes starfield-twinkle {
+  0% { opacity: 0.35; }
+  50% { opacity: 0.5; }
+  100% { opacity: 0.4; }
 }
 
 .home-image-layer {
@@ -167,16 +225,17 @@ onBeforeUnmount(() => {
   object-fit: cover;
   user-select: none;
   mix-blend-mode: screen;
-  filter: saturate(0.88) contrast(1.03);
+  filter: brightness(2.0) saturate(0.5) contrast(1.1);
 }
 
 .home-art-hero {
   top: 72px;
   right: -12vw;
   width: min(1120px, 64vw);
-  opacity: 0.68;
+  opacity: 0.45;
   transform: rotate(-1.5deg);
-  mask-image: radial-gradient(ellipse at 62% 48%, #000 0%, rgba(0, 0, 0, 0.9) 58%, transparent 92%);
+  mask-image: radial-gradient(ellipse at 62% 48%, rgba(0, 0, 0, 0.7) 0%, rgba(0, 0, 0, 0.4) 40%, transparent 75%);
+  -webkit-mask-image: radial-gradient(ellipse at 62% 48%, rgba(0, 0, 0, 0.7) 0%, rgba(0, 0, 0, 0.4) 40%, transparent 75%);
 }
 
 .home-art-path {
@@ -233,7 +292,7 @@ onBeforeUnmount(() => {
 
 :deep(.hero-grid),
 :deep(.hero-starfield) {
-  opacity: 0.46;
+  opacity: 0.92;
 }
 
 :deep(.sky-canvas),
@@ -252,9 +311,10 @@ onBeforeUnmount(() => {
 :deep(.hero-card),
 :deep(.hero-side-panel) {
   background:
-    radial-gradient(ellipse at 62% 20%, rgba(0, 212, 255, 0.08), transparent 58%),
-    linear-gradient(145deg, rgba(7, 10, 24, 0.30), rgba(4, 7, 18, 0.12)) !important;
-  backdrop-filter: blur(8px) saturate(1.18);
+    radial-gradient(ellipse at 62% 20%, rgba(59, 130, 246, 0.18), transparent 58%),
+    linear-gradient(145deg, rgba(16, 30, 58, 0.55), rgba(8, 16, 34, 0.35)) !important;
+  backdrop-filter: blur(10px) saturate(1.24);
+  border: 1px solid rgba(100, 140, 220, 0.14) !important;
 }
 
 :deep(.sky-callout),
@@ -275,8 +335,9 @@ onBeforeUnmount(() => {
 :deep(.domain-card),
 :deep(.activity-chip),
 :deep(.chip-card) {
-  background: rgba(8, 12, 30, 0.26) !important;
-  backdrop-filter: blur(10px) saturate(1.2);
+  background: rgba(16, 30, 58, 0.42) !important;
+  backdrop-filter: blur(12px) saturate(1.28);
+  border: 1px solid rgba(100, 140, 220, 0.12) !important;
 }
 
 :deep(.agent-stage) {
@@ -678,6 +739,31 @@ onBeforeUnmount(() => {
   align-items: start;
   align-content: start;
   justify-items: stretch;
+  position: relative;
+}
+
+.hub-workbench-main::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 16px;
+  pointer-events: none;
+  z-index: 0;
+  background:
+    radial-gradient(ellipse 800px 500px at 40% 30%, rgba(14, 42, 78, 0.18), transparent 60%),
+    radial-gradient(ellipse 600px 400px at 70% 70%, rgba(42, 24, 82, 0.12), transparent 55%),
+    radial-gradient(ellipse 400px 300px at 20% 80%, rgba(0, 60, 100, 0.1), transparent 50%);
+  animation: hub-nebula-drift 18s ease-in-out infinite alternate;
+}
+
+.hub-workbench-main > * {
+  position: relative;
+  z-index: 1;
+}
+
+@keyframes hub-nebula-drift {
+  0% { opacity: 0.6; transform: translateY(0); }
+  100% { opacity: 1; transform: translateY(-8px); }
 }
 
 .hub-workbench-main :deep(.agent-hub-section) {

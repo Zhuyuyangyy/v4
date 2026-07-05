@@ -311,14 +311,14 @@ function initStarfield() {
         <svg :viewBox="`0 0 ${VIZ_W} ${VIZ_H}`" class="hero-svg">
           <defs>
             <radialGradient id="hp-sphere-outer" cx="50%" cy="50%" r="50%">
-              <stop offset="0%" :stop-color="T.cyan" stop-opacity="0.4" />
-              <stop offset="45%" :stop-color="T.purple" stop-opacity="0.18" />
+              <stop offset="0%" :stop-color="T.cyan" stop-opacity="0.25" />
+              <stop offset="45%" :stop-color="T.purple" stop-opacity="0.12" />
               <stop offset="100%" :stop-color="T.purple" stop-opacity="0" />
             </radialGradient>
             <radialGradient id="hp-sphere-body" cx="35%" cy="35%" r="65%">
-              <stop offset="0%" stop-color="#3a8fff" stop-opacity="0.4" />
-              <stop offset="40%" stop-color="#1e3a8a" stop-opacity="0.65" />
-              <stop offset="100%" stop-color="#0a1230" stop-opacity="0.95" />
+              <stop offset="0%" stop-color="#ffffff" stop-opacity="0.18" />
+              <stop offset="40%" stop-color="#a0c8ff" stop-opacity="0.10" />
+              <stop offset="100%" stop-color="#70a8e8" stop-opacity="0.06" />
             </radialGradient>
             <radialGradient id="hp-sphere-hi" cx="50%" cy="50%" r="50%">
               <stop offset="0%" stop-color="#fff" stop-opacity="0.3" />
@@ -525,20 +525,14 @@ function initStarfield() {
   min-height: 100vh;
   padding: 32px 56px 60px;
   overflow: hidden;
-  background:
-    radial-gradient(ellipse 900px 500px at 75% 50%, rgba(0, 212, 255, 0.08), transparent 60%),
-    radial-gradient(ellipse 700px 500px at 80% 35%, rgba(124, 58, 237, 0.07), transparent 65%),
-    radial-gradient(ellipse 600px 400px at 90% 90%, rgba(245, 158, 11, 0.04), transparent 70%),
-    radial-gradient(ellipse 800px 600px at 20% 60%, rgba(0, 212, 255, 0.05), transparent 70%),
-    radial-gradient(ellipse 600px 400px at 10% 30%, rgba(124, 58, 237, 0.04), transparent 70%),
-    linear-gradient(160deg, #0a0e24 0%, #070b1a 40%, #050610 100%);
+  background: transparent;
   z-index: 1;
 }
 
 .hero-grid {
   position: absolute;
   inset: 0;
-  opacity: 0.4;
+  opacity: 0.15;
   pointer-events: none;
   background-image:
     linear-gradient(rgba(0,212,255,0.04) 1px, transparent 1px),
@@ -553,6 +547,7 @@ function initStarfield() {
   inset: 0;
   pointer-events: none;
   z-index: 0;
+  opacity: 0.4;
 }
 
 .hero-layout {

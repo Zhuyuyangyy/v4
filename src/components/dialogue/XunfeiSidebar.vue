@@ -5,8 +5,8 @@
       isXunfeiSidebarOpen ? 'w-[440px] opacity-100' : 'w-0 p-0 opacity-0 pointer-events-none'
     ]"
     :style="{
-      borderRight: side === 'left' ? '2px solid rgba(59, 130, 246, 0.55)' : undefined,
-      borderLeft: side === 'right' ? '2px solid rgba(59, 130, 246, 0.55)' : undefined,
+      borderRight: side === 'left' ? '1px solid var(--border-subtle)' : undefined,
+      borderLeft: side === 'right' ? '1px solid var(--border-subtle)' : undefined,
     }"
   >
     <!-- Header -->

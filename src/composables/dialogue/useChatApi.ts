@@ -3,6 +3,7 @@ import {
   recommendQaInput, recommendQaMessages, isRecommendQaLoading,
   isXunfeiConnecting, isXunfeiListening, isXunfeiSpeaking,
   xunfeiSubtitle, isVirtualMuted, xunfeiLanguage, xunfeiVolume, syncToMainChat,
+  hasGeneratedReport, saveProfileToHistory, matchRecommendedCourses,
 } from './useAppState'
 import { avatarStatus, avatarWriteText, setAvatarNlpHandler, setAvatarAsrHandler, getAvatarInstance } from './useAvatarSdk'
 import type { ChatMessage, StudyReport, DimensionMap } from '@/types/dialogue'
@@ -320,6 +321,18 @@ export async function sendMessage() {
   }
 }
 
+function appendRecommendCoursesMsg(parsed: StudyReport) {
+  const recommended = matchRecommendedCourses(parsed)
+  const completionMsg: ChatMessage = {
+    id: `msg-${Date.now()}-report-done`, sender: 'ai',
+    text: `🎉 画像生成完成！综合评分 ${parsed.score} 分 — ${parsed.evaluation}\n\n根据你的学情画像，我为你精选了以下 3 门推荐课程，点击卡片即可跳转到学习资源页面开始学习：`,
+    time: getTime(),
+    source: 'chat',
+    recommendedCourses: recommended,
+  }
+  chats.value = [...chats.value, completionMsg]
+}
+
 export async function triggerReport() {
   if (!canUnlockReport.value) return
   try {
@@ -336,15 +349,16 @@ export async function triggerReport() {
     ]
 
     const replyText = await callDeepSeek(apiMessages)
-    // 提取 JSON
     const jsonMatch = replyText.match(/\{[\s\S]*\}/)
     if (jsonMatch) {
       const parsed = JSON.parse(jsonMatch[0]) as StudyReport
       report.value = parsed
       showReport.value = true
-      activeMenu.value = 'portrait-report'
+      hasGeneratedReport.value = true
+      saveProfileToHistory(parsed)
 
-      // 将画像数据保存到后端，并触发AI生成个性化知识路径
+      appendRecommendCoursesMsg(parsed)
+
       try {
         const { saveProfile, triggerKnowledgePath } = await import('@/lib/api')
         await saveProfile({
@@ -353,7 +367,6 @@ export async function triggerReport() {
           weaknesses: parsed.weaknesses,
           suggestions: parsed.suggestions,
         })
-        // 异步触发AI生成知识路径（不阻塞UI）
         triggerKnowledgePath().catch(() => {})
       } catch (e) {
         console.warn('Failed to save profile to backend:', e)
@@ -363,27 +376,27 @@ export async function triggerReport() {
     }
   } catch (err) {
     console.error('Report generation error:', err)
-    // fallback
     const fallback: StudyReport = {
-      score: 87, evaluation: '优秀',
+      score: 75, evaluation: '良好',
       radarPoints: [
-        { dimension: '知识基础', score: 85 }, { dimension: '学习速度', score: 90 },
-        { dimension: '逻辑思维', score: 88 }, { dimension: '创造力', score: 82 },
-        { dimension: '专注力', score: 80 }, { dimension: '自律力', score: 86 },
+        { dimension: '知识基础', score: 72 }, { dimension: '学习速度', score: 80 },
+        { dimension: '逻辑思维', score: 78 }, { dimension: '创造力', score: 75 },
+        { dimension: '专注力', score: 70 }, { dimension: '自律力', score: 73 },
       ],
-      weaknesses: ['数学基础需要加强', '项目实战经验较少', '学习时长可以适当增加'],
-      suggestions: ['从小项目入手，边学边做', '系统补充数学基础', '保持当前学习节奏，逐步提升深度'],
-      skills: { core: ['Python', '机器学习', '深度学习', '数据分析'], foundation: ['算法基础', '数学基础', '项目实战'], additional: ['工程化部署', '强化学习', '计算机视觉'] },
+      weaknesses: ['基础知识需要系统梳理', '实战经验有待积累', '建议制定规律的学习计划'],
+      suggestions: ['从基础课程开始循序渐进', '配合小项目巩固所学', '保持每日固定学习时间'],
+      skills: { core: ['Python', '数据结构', '人工智能导论'], foundation: ['编程基础', '数学基础'], additional: ['机器学习入门'] },
       recommendedPath: [
-        { step: 1, title: '巩固优势', description: '夯实基础知识' }, { step: 2, title: '补齐短板', description: '强化薄弱环节' },
-        { step: 3, title: '实战跃迁', description: '完成项目实践' }, { step: 4, title: '周期校准', description: '定期复盘优化' },
+        { step: 1, title: '基础入门', description: '掌握编程基础' }, { step: 2, title: '知识体系', description: '建立系统认知' },
+        { step: 3, title: '实战练习', description: '动手做项目' }, { step: 4, title: '持续提升', description: '定期复盘优化' },
       ],
     }
     report.value = fallback
     showReport.value = true
-    activeMenu.value = 'portrait-report'
+    hasGeneratedReport.value = true
+    saveProfileToHistory(fallback)
+    appendRecommendCoursesMsg(fallback)
 
-    // fallback 也保存到后端并触发AI生成
     try {
       const { saveProfile, triggerKnowledgePath } = await import('@/lib/api')
       await saveProfile({
@@ -395,6 +408,7 @@ export async function triggerReport() {
       triggerKnowledgePath().catch(() => {})
     } catch { /* ignore */ }
   }
+  activeMenu.value = 'portrait-report'
 }
 
 export function handleSendRecommendQa(customText?: string) {

@@ -1,220 +1,428 @@
 <template>
   <div class="lp-page">
-    <section class="lp-section">
+    <section class="lp-section lp-section--constellation">
       <div class="lp-section-header">
-        <div class="lp-section-badge">✦ KNOWLEDGE CONSTELLATION</div>
+        <div class="lp-section-badge">KNOWLEDGE CONSTELLATION</div>
         <h2 class="lp-section-title">知识星座</h2>
-        <p class="lp-section-desc">对话分析后自动生成，智能体持续更新知识点掌握状态。点击星星查看该知识点的学习路径。</p>
+        <p class="lp-section-desc">
+          对话分析后自动生成知识点画像，点击任意星点即可同步更新下方学习路径。
+        </p>
       </div>
       <ResourceConstellationView @select-node="onSelectNode" />
     </section>
 
-    <section class="lp-section lp2-full">
-      <div class="lp-section-header">
-        <div class="lp-section-badge">◈ LEARNING PATH 2</div>
-        <h2 class="lp-section-title">{{ selectedTopic ? selectedTopic.label + '—学习路径' : '学习路径' }}</h2>
-        <p class="lp-section-desc">{{ selectedTopic ? selectedTopic.label + '的详细学习路径，包含 5 个学习阶段' : '请先在上方知识星座中点击一个知识点' }}</p>
-      </div>
-        <div class="lp2-grid">
-          <div class="lp2-pane lp2-left">
-            <!-- 悬浮航点卡片叠层 -->
-            <div class="lp2-overlay">
-              <div
-                v-for="(s, idx) in [
-                  { idx: 0, label: '课前预习', meta: '前置知识 · 基础铺垫', color: '#00d4ff', cls: 'card-1' },
-                  { idx: 1, label: '课中答疑', meta: '实时互动 · 即时反馈', color: '#22d3ee', cls: 'card-2' },
-                  { idx: 2, label: '课后巩固', meta: '练习强化 · 薄弱回补', color: '#a78bfa', cls: 'card-3' },
-                  { idx: 3, label: '阶段测评', meta: '诊断考核 · 画像更新', color: '#f59e0b', cls: 'card-4' },
-                  { idx: 4, label: '期末辅导', meta: '综合复盘 · 终极通关', color: '#facc15', cls: 'card-5' },
-                ]"
-                :key="s.idx"
-                :class="['floating-card', s.cls, { active: selectedStageIdx === s.idx }]"
-                :style="{ '--line-color': s.color, '--line-glow': s.color + '99' }"
-                @click="onSelectStage(s.idx)"
-              >
-                <span class="fc-corner fc-tl" /><span class="fc-corner fc-tr" />
-                <span class="fc-corner fc-bl" /><span class="fc-corner fc-br" />
-                <div class="fc-head">
-                  <span class="fc-pulse" :style="{ background: s.color, boxShadow: `0 0 6px ${s.color}, 0 0 12px ${s.color}` }" />
-                  <span class="fc-tag" :style="{ color: s.color, textShadow: `0 0 6px ${s.color}66` }">STAGE · {{ s.idx + 1 }}</span>
-                </div>
-                <div class="fc-title">{{ s.label }}</div>
-                <div class="fc-meta">{{ s.meta }}</div>
-              </div>
-            </div>
-          </div>
-          <div class="lp2-pane lp2-right">
-            <Transition name="card-flip" mode="out-in">
-              <div
-                :key="selectedStageIdx"
-                class="level-card"
-              :style="{ '--stage-color': currentStage.color }"
-            >
-            <span class="level-corner corner-tl" :style="{ borderColor: currentStage.color }" />
-            <span class="level-corner corner-tr" :style="{ borderColor: currentStage.color }" />
-            <span class="level-corner corner-bl" :style="{ borderColor: currentStage.color }" />
-            <span class="level-corner corner-br" :style="{ borderColor: currentStage.color }" />
-
-            <div class="level-card-header">
-              <span class="level-card-tag" :style="{ color: currentStage.color, textShadow: `0 0 8px ${currentStage.color}80` }">✦ {{ currentStage.label.toUpperCase() }}</span>
-              <span class="level-card-id">PHASE · 0{{ selectedStageIdx + 1 }} / 05</span>
-            </div>
-
-            <h3 class="level-card-title">{{ currentLevelTitle }}</h3>
-
-            <div class="level-card-info">
-              <div class="info-row">
-                <span class="info-label">所属领域</span>
-                <span class="info-value">{{ selectedDomain ? selectedDomain.name : '—' }}</span>
-              </div>
-              <div class="info-row">
-                <span class="info-label">掌握度</span>
-                <span class="info-value">
-                  <span class="difficulty-dot" :style="{ background: currentStage.color, boxShadow: `0 0 6px ${currentStage.color}` }" />
-                  {{ selectedTopic ? Math.round(selectedTopic.mastery * 100) + '%' : '—' }}
-                </span>
-              </div>
-              <div class="info-row">
-                <span class="info-label">任务数</span>
-                <span class="info-value">{{ currentTaskCount }} 个</span>
-              </div>
-              <div class="info-row">
-                <span class="info-label">预计时长</span>
-                <span class="info-value">~ {{ currentTaskCount * 15 }} 分钟</span>
-              </div>
-              <div class="info-row">
-                <span class="info-label">阶段说明</span>
-                <span class="info-value">{{ currentStage.label }} · 第 {{ selectedStageIdx + 1 }} 阶段</span>
-              </div>
-
-              <!-- 任务清单 -->
-              <div v-if="currentStageContent.length > 0" class="task-list">
-                <div class="task-list-title">任务清单</div>
-                <div
-                  v-for="(t, ti) in currentStageContent"
-                  :key="ti"
-                  class="task-item"
-                >
-                  <div class="task-connector" />
-                  <span class="task-num">{{ String(ti + 1).padStart(2, '0') }}</span>
-                  <div class="task-content">
-                    <span class="task-title">{{ t.title }}</span>
-                    <span v-if="t.isRemedial" class="remedial-badge">评估后新增</span>
-                  </div>
-                  <div class="task-actions">
-                    <button class="res-btn res-btn--doc" @click.stop="goToResource(t, 'doc')">
-                      <span>文档</span>
-                    </button>
-                    <button class="res-btn res-btn--video" @click.stop="goToResource(t, 'video')">
-                      <span>视频</span>
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div class="level-card-footer">
-              <div class="footer-progress">
-                <div class="progress-track"><div class="progress-fill" :style="{ width: ((selectedStageIdx + 1) / 5 * 100) + '%', background: `linear-gradient(90deg, ${currentStage.color}, ${currentStage.color}aa)`, boxShadow: `0 0 8px ${currentStage.color}80` }" /></div>
-                <span class="progress-text">进度 · Phase {{ selectedStageIdx + 1 }}/5</span>
-              </div>
-              <button class="start-btn" :style="{ background: `linear-gradient(135deg, ${currentStage.color}, ${currentStage.color}99)`, boxShadow: `0 0 16px ${currentStage.color}66` }">{{ selectedStageIdx === 4 ? '期末通关 →' : '开始本阶段 →' }}</button>
-            </div>
-          </div>
-          </Transition>
+    <section class="lp-section lp-section--path">
+      <div class="lp-section-header lp-path-header">
+        <div>
+          <div class="lp-section-badge">LEARNING PATH</div>
+          <h2 class="lp-section-title">{{ currentTopicLabel }} 学习路径</h2>
+          <p class="lp-section-desc">
+            以闯关图片作为主路径，把课前、课中、课后、测评和期末辅导串成可点击的学习任务。
+          </p>
         </div>
+        <div class="path-header-actions">
+          <button type="button" class="quiet-btn" @click="selectRecommendedTopic">
+            <Target :size="16" />
+            推荐知识点
+          </button>
+          <button type="button" class="quiet-btn" @click="cycleChallengeMap">
+            <RotateCcw :size="16" />
+            {{ currentChallengeMap.name }} {{ selectedMapIdx + 1 }}/{{ CHALLENGE_MAPS.length }}
+          </button>
+          <button type="button" class="quiet-btn" @click="openTopicResources">
+            <BookOpen :size="16" />
+            查看全部资源
+          </button>
+        </div>
+      </div>
+
+      <div class="path-shell">
+        <div
+          class="path-map"
+          :style="{ backgroundImage: challengeMapBackground }"
+          aria-label="学习路径闯关图"
+        >
+          <button
+            v-for="stage in STAGE_CARDS"
+            :key="stage.id"
+            type="button"
+            :class="['stage-card', stage.className, { active: selectedStageIdx === stage.index }]"
+            :style="stageCardStyle(stage.index, stage.color)"
+            @click="onSelectStage(stage.index)"
+          >
+            <span class="stage-card__kicker">STAGE {{ stage.index + 1 }}</span>
+            <span class="stage-card__title">{{ stage.label }}</span>
+            <span class="stage-card__meta">{{ stage.meta }}</span>
+          </button>
+        </div>
+
+        <aside class="path-panel" :style="{ '--stage-color': currentStageCard.color }">
+          <div class="panel-ambient"></div>
+          <div class="panel-topline">
+            <span>{{ currentStageCard.label }}</span>
+            <span>PHASE 0{{ selectedStageIdx + 1 }} / 05</span>
+          </div>
+
+          <div class="panel-title-row">
+            <div>
+              <h3>{{ currentLevelTitle }}</h3>
+              <p>{{ currentStageCard.description }}</p>
+            </div>
+            <div class="mastery-orb">
+              <span>{{ topicMasteryPercent }}</span>
+              <small>掌握度</small>
+            </div>
+          </div>
+
+          <div class="panel-metrics">
+            <div>
+              <span>所属领域</span>
+              <strong>{{ currentDomainLabel }}</strong>
+            </div>
+            <div>
+              <span>学习任务</span>
+              <strong>{{ currentStageContent.length }} 个</strong>
+            </div>
+            <div>
+              <span>预计时长</span>
+              <strong>{{ estimatedMinutes }} 分钟</strong>
+            </div>
+          </div>
+
+          <div class="stage-roadmap">
+            <button
+              v-for="stage in STAGE_CARDS"
+              :key="stage.id"
+              type="button"
+              :class="['roadmap-dot', { active: selectedStageIdx === stage.index }]"
+              :style="{ '--stage-color': stage.color }"
+              @click="onSelectStage(stage.index)"
+              :aria-label="`切换到${stage.label}`"
+            >
+              <span>{{ stage.index + 1 }}</span>
+            </button>
+          </div>
+
+          <div class="task-list">
+            <div class="task-list__header">
+              <span>本阶段资源</span>
+              <button type="button" @click="startCurrentStage">
+                <Rocket :size="15" />
+                开始本阶段
+              </button>
+            </div>
+
+            <div
+              v-for="(task, index) in currentStageContent"
+              :key="`${task.title}-${index}`"
+              class="task-item"
+            >
+              <div class="task-index">{{ String(index + 1).padStart(2, '0') }}</div>
+              <div class="task-main">
+                <div class="task-title">{{ task.title }}</div>
+                <div class="task-meta">
+                  <span>{{ resourceTypeLabel(task.type) }}</span>
+                  <span v-if="task.isRemedial">评估后补强</span>
+                </div>
+              </div>
+              <div class="task-actions">
+                <button type="button" class="icon-btn" @click="goToResource(task, 'doc')" aria-label="查看文档资源">
+                  <BookOpen :size="15" />
+                </button>
+                <button type="button" class="icon-btn" @click="goToResource(task, 'video')" aria-label="查看视频资源">
+                  <PlayCircle :size="15" />
+                </button>
+              </div>
+            </div>
+          </div>
+        </aside>
       </div>
     </section>
 
-    <section class="lp-section">
+    <section class="lp-section lp-section--matrix">
       <div class="lp-section-header">
-        <div class="lp-section-badge">◇ KNOWLEDGE MATRIX</div>
+        <div class="lp-section-badge">KNOWLEDGE MATRIX</div>
         <h2 class="lp-section-title">知识点矩阵</h2>
-        <p class="lp-section-desc">认知层级 × 学科领域的掌握度全景</p>
+        <p class="lp-section-desc">
+          把领域掌握度、知识点数量、推荐补强点和认知层级合在一张矩阵里，点击单元格即可切换学习路径。
+        </p>
       </div>
-      <ResourceMatrixView @select-node="onSelectNode" />
+      <ResourceMatrixView
+        @select-node="onSelectNode"
+      />
     </section>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
+import { BookOpen, PlayCircle, Rocket, RotateCcw, Target } from 'lucide-vue-next'
 import { useKnowledgeGraphData } from '../composables/useKnowledgeGraphData'
-import { LEARNING_STAGES, getStageContent } from '../components/resources/mapTransforms'
+import type { KnowledgeDomain, KnowledgeTopic } from '../composables/useKnowledgeGraphData'
+import { getStageContent } from '../components/resources/mapTransforms'
+import type { StageResource, StageResourceType } from '../components/resources/mapTypes'
 import ResourceConstellationView from '../components/resources/ResourceConstellationView.vue'
 import ResourceMatrixView from '../components/resources/ResourceMatrixView.vue'
 
+const STAGE_CARDS = [
+  {
+    id: 'preview',
+    index: 0,
+    label: '课前预习',
+    meta: '前置知识 / 建立入口',
+    description: '先补齐概念入口和先修关系，降低进入正课时的理解阻力。',
+    color: '#00d4ff',
+    className: 'stage-card--one',
+  },
+  {
+    id: 'classroom',
+    index: 1,
+    label: '课中答疑',
+    meta: '互动讲解 / 即时反馈',
+    description: '围绕当前知识点的疑问展开讲解，把容易卡住的推导拆开。',
+    color: '#22d3ee',
+    className: 'stage-card--two',
+  },
+  {
+    id: 'practice',
+    index: 2,
+    label: '课后巩固',
+    meta: '练习强化 / 薄弱回补',
+    description: '通过练习、代码和例题把知识点从理解推进到可操作。',
+    color: '#a78bfa',
+    className: 'stage-card--three',
+  },
+  {
+    id: 'assessment',
+    index: 3,
+    label: '阶段测评',
+    meta: '诊断考核 / 画像更新',
+    description: '用阶段测评验证是否真正掌握，并把结果回写到学习画像。',
+    color: '#f59e0b',
+    className: 'stage-card--four',
+  },
+  {
+    id: 'final',
+    index: 4,
+    label: '期末辅导',
+    meta: '综合复盘 / 迁移通关',
+    description: '面向综合应用和迁移题，把零散知识整理成可复用能力。',
+    color: '#facc15',
+    className: 'stage-card--five',
+  },
+] as const
+
+const CHALLENGE_MAPS = [
+  {
+    name: '星河光轨',
+    image: '/learning-path/chaungguan1.png',
+    positions: [
+      { left: '9%', top: '62%' },
+      { left: '37%', top: '52%' },
+      { left: '72%', top: '34%' },
+      { left: '38%', top: '22%' },
+      { left: '7%', top: '24%' },
+    ],
+  },
+  {
+    name: '数据平台',
+    image: '/learning-path/challenge-map-2.png',
+    positions: [
+      { left: '10%', top: '58%' },
+      { left: '9%', top: '22%' },
+      { left: '40%', top: '43%' },
+      { left: '68%', top: '20%' },
+      { left: '70%', top: '62%' },
+    ],
+  },
+  {
+    name: '浮岛闯关',
+    image: '/learning-path/challenge-map-3.png',
+    positions: [
+      { left: '9%', top: '60%' },
+      { left: '12%', top: '26%' },
+      { left: '42%', top: '18%' },
+      { left: '69%', top: '28%' },
+      { left: '68%', top: '62%' },
+    ],
+  },
+  {
+    name: '峡谷浮台',
+    image: '/learning-path/challenge-map-4.png',
+    positions: [
+      { left: '10%', top: '62%' },
+      { left: '31%', top: '43%' },
+      { left: '58%', top: '36%' },
+      { left: '30%', top: '17%' },
+      { left: '64%', top: '16%' },
+    ],
+  },
+  {
+    name: '螺旋星轨',
+    image: '/learning-path/challenge-map-5.png',
+    positions: [
+      { left: '9%', top: '62%' },
+      { left: '23%', top: '34%' },
+      { left: '45%', top: '48%' },
+      { left: '52%', top: '20%' },
+      { left: '66%', top: '14%' },
+    ],
+  },
+] as const
+
 const router = useRouter()
-const { domains, edges, loading, loadFromBackend } = useKnowledgeGraphData()
+const { domains, loadFromBackend } = useKnowledgeGraphData()
 const selectedNodeId = ref<string | null>(null)
-const selectedStageIdx = ref(0) // 默认第 1 阶段
+const selectedStageIdx = ref(0)
+const selectedMapIdx = ref(0)
 
-// 找到被点击的 domain
-const selectedDomain = computed(() => {
+const allTopics = computed(() =>
+  domains.value.flatMap(domain =>
+    domain.topics.map(topic => ({ domain, topic })),
+  ),
+)
+
+const recommendedTopicPair = computed(() => {
+  return [...allTopics.value].sort((a, b) => {
+    const aScore = (a.topic.recommended ? -1 : 0) + a.topic.mastery
+    const bScore = (b.topic.recommended ? -1 : 0) + b.topic.mastery
+    return aScore - bScore
+  })[0] ?? null
+})
+
+const selectedPair = computed(() => {
   if (!selectedNodeId.value) return null
-  for (const d of domains.value) {
-    if (d.topics.some(t => t.id === selectedNodeId.value)) return d
-  }
-  return null
+  return allTopics.value.find(({ topic }) => topic.id === selectedNodeId.value) ?? null
 })
 
-// 找到被点击的那颗星（单个知识点）
-const selectedTopic = computed(() => {
-  if (!selectedNodeId.value || !selectedDomain.value) return null
-  return selectedDomain.value.topics.find(t => t.id === selectedNodeId.value) || null
+const activePair = computed(() => selectedPair.value ?? recommendedTopicPair.value)
+const activeTopic = computed<KnowledgeTopic | null>(() => activePair.value?.topic ?? null)
+const activeDomain = computed<KnowledgeDomain | null>(() => activePair.value?.domain ?? null)
+
+const currentStageCard = computed(() => STAGE_CARDS[selectedStageIdx.value] ?? STAGE_CARDS[0])
+const currentChallengeMap = computed(() => CHALLENGE_MAPS[selectedMapIdx.value] ?? CHALLENGE_MAPS[0])
+const challengeMapBackground = computed(() =>
+  `linear-gradient(180deg, rgba(1, 4, 12, 0.05), rgba(1, 4, 12, 0.5)), url('${currentChallengeMap.value.image}')`,
+)
+const currentTopicLabel = computed(() => activeTopic.value?.label ?? '推荐知识点')
+const currentDomainLabel = computed(() => activeDomain.value?.name ?? '等待画像生成')
+const topicMasteryPercent = computed(() =>
+  activeTopic.value ? `${Math.round(activeTopic.value.mastery * 100)}%` : '--',
+)
+
+const currentStageContent = computed<StageResource[]>(() => {
+  if (!activeTopic.value) return []
+  const resources = getStageContent(activeTopic.value.id, selectedStageIdx.value)
+  return resources.length > 0 ? resources : buildFallbackResources(activeTopic.value, selectedStageIdx.value)
 })
 
-// 当前选中的阶段元数据（颜色/标签）
-const currentStage = computed(() => LEARNING_STAGES[selectedStageIdx.value] ?? LEARNING_STAGES[0])
-
-// 当前选中的阶段资源（基于 selectedTopic.id 和 selectedStageIdx）
-const currentStageContent = computed(() => {
-  if (!selectedTopic.value) return []
-  return getStageContent(selectedTopic.value.id, selectedStageIdx.value)
-})
-
-// 当前选中的关卡标题（知识点 + 阶段）
-const currentLevelTitle = computed(() => {
-  if (!selectedTopic.value) return '请先选择知识点'
-  return `${selectedTopic.value.label} · ${currentStage.value.label}`
-})
-
-// 任务数
-const currentTaskCount = computed(() => currentStageContent.value.length)
+const estimatedMinutes = computed(() => Math.max(20, currentStageContent.value.length * 15))
+const currentLevelTitle = computed(() => `${currentTopicLabel.value} / ${currentStageCard.value.label}`)
 
 function onSelectNode(nodeId: string) {
-  selectedNodeId.value = selectedNodeId.value === nodeId ? null : nodeId
-  // 切换知识点时重置回第 1 阶段
+  selectedNodeId.value = nodeId
   selectedStageIdx.value = 0
+  selectedMapIdx.value = mapIndexForTopic(nodeId)
 }
 
 function onSelectStage(stageIdx: number) {
   selectedStageIdx.value = stageIdx
 }
 
-/**
- * 跳转到资源中心, 带 query 参数让 EduMind 自动打开对应资源
- * - resourceTitle: 资源标题
- * - domain: 领域名
- * - topic: 主题名
- * - stage: 阶段名
- * - sourceType: 'doc' | 'video'
- */
-function goToResource(
-  res: { title: string; type: string },
-  sourceType: 'doc' | 'video',
-) {
+function selectRecommendedTopic() {
+  const next = recommendedTopicPair.value
+  if (!next) return
+  selectedNodeId.value = next.topic.id
+  selectedStageIdx.value = 0
+  selectedMapIdx.value = mapIndexForTopic(next.topic.id)
+}
+
+function cycleChallengeMap() {
+  selectedMapIdx.value = (selectedMapIdx.value + 1) % CHALLENGE_MAPS.length
+}
+
+function stageCardStyle(stageIndex: number, color: string) {
+  const position = currentChallengeMap.value.positions[stageIndex] ?? CHALLENGE_MAPS[0].positions[stageIndex]
+  return {
+    '--stage-color': color,
+    '--stage-left': position.left,
+    '--stage-top': position.top,
+  }
+}
+
+function openTopicResources() {
   router.push({
     path: '/resources',
     query: {
-      resourceTitle: res.title,
-      domain: selectedDomain.value?.name || '',
-      topic: selectedTopic.value?.label || '',
-      stage: currentStage.value.label,
+      topic: activeTopic.value?.label ?? '',
+      domain: activeDomain.value?.name ?? '',
+      sourceType: 'all',
+    },
+  })
+}
+
+function startCurrentStage() {
+  const firstTask = currentStageContent.value[0]
+  if (firstTask) {
+    goToResource(firstTask, firstTask.type === 'video' ? 'video' : 'doc')
+    return
+  }
+  openTopicResources()
+}
+
+function goToResource(resource: StageResource, sourceType: 'doc' | 'video') {
+  router.push({
+    path: '/resources',
+    query: {
+      resourceTitle: resource.title,
+      domain: activeDomain.value?.name ?? '',
+      topic: activeTopic.value?.label ?? '',
+      stage: currentStageCard.value.label,
       sourceType,
     },
   })
+}
+
+function resourceTypeLabel(type: StageResourceType) {
+  const labels: Record<StageResourceType, string> = {
+    doc: '文档',
+    video: '视频',
+    exercise: '练习',
+    code: '代码',
+  }
+  return labels[type]
+}
+
+function buildFallbackResources(topic: KnowledgeTopic, stageIdx: number): StageResource[] {
+  const templates: StageResource[][] = [
+    [
+      { title: `${topic.label} 概念速览`, type: 'doc' },
+      { title: `${topic.label} 先修知识检查`, type: 'exercise' },
+    ],
+    [
+      { title: `${topic.label} 关键推导讲解`, type: 'video' },
+      { title: `${topic.label} 常见误区问答`, type: 'doc' },
+    ],
+    [
+      { title: `${topic.label} 分层练习`, type: 'exercise' },
+      { title: `${topic.label} 实战代码任务`, type: 'code' },
+    ],
+    [
+      { title: `${topic.label} 阶段测评`, type: 'exercise', isRemedial: topic.mastery < 0.5 },
+      { title: `${topic.label} 错因复盘`, type: 'doc', isRemedial: true },
+    ],
+    [
+      { title: `${topic.label} 综合迁移专题`, type: 'video' },
+      { title: `${topic.label} 期末复盘清单`, type: 'doc' },
+    ],
+  ]
+  return templates[stageIdx] ?? templates[0]
+}
+
+function mapIndexForTopic(topicId: string) {
+  const hash = [...topicId].reduce((sum, char) => sum + char.charCodeAt(0), 0)
+  return hash % CHALLENGE_MAPS.length
 }
 
 onMounted(() => {
@@ -226,605 +434,517 @@ onMounted(() => {
 .lp-page {
   display: flex;
   flex-direction: column;
+  gap: 18px;
+  padding-bottom: 44px;
 }
-.lp-section { padding: 0 40px; max-width: 1500px; margin-left: auto; margin-right: auto; width: 100%; }
-.lp-section:first-child {
-  padding: 24px 200px 0;
+
+.lp-section {
+  width: 100%;
+  max-width: 1500px;
+  margin: 0 auto;
+  padding: 0 40px;
+}
+
+.lp-section--constellation,
+.lp-section--path {
   max-width: none;
+  padding: 0 clamp(28px, 8vw, 200px);
 }
+
 .lp-section-header {
-  padding: 0 0 16px;
-  margin: 0;
-  background: transparent;
-  border: none;
+  margin: 0 0 16px;
 }
-.lp-section:first-child .lp-section-header,
-.lp2-full .lp-section-header {
-  margin: 0;
-  padding: 0 0 16px;
-}
-.lp-section-badge {
-  font-size: 12px; font-weight: 700; letter-spacing: 0.16em;
-  color: rgba(0, 212, 255, 0.6);
-  font-family: 'JetBrains Mono', monospace; margin-bottom: 6px;
-}
-.lp-section-title {
-  font-size: 22px; font-weight: 700; color: #f0f2ff;
-  margin: 0 0 4px; letter-spacing: -0.01em;
-}
-.lp-section-desc { font-size: 15px; color: #6f7a9e; margin: 0; }
-.lp-section + .lp-section { margin-top: 12px; }
-.lp-section:last-child { padding-bottom: 40px; }
 
-.lp-empty-hint {
+.lp-path-header {
   display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-  padding: 32px;
-  border-radius: 14px;
-  background: rgba(12, 12, 30, 0.4);
-  border: 1px dashed rgba(255, 255, 255, 0.08);
-  color: #6f7a9e;
+  align-items: end;
+  justify-content: space-between;
+  gap: 18px;
+}
+
+.lp-section-badge {
+  margin-bottom: 6px;
+  color: rgba(0, 212, 255, 0.66);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+}
+
+.lp-section-title {
+  margin: 0 0 5px;
+  color: #f3f7ff;
+  font-size: 24px;
+  font-weight: 750;
+  letter-spacing: 0;
+}
+
+.lp-section-desc {
+  max-width: 820px;
+  margin: 0;
+  color: #8794b4;
   font-size: 15px;
+  line-height: 1.65;
 }
-.hint-icon { font-size: 20px; }
 
-/* Learning Path 2 — 两栏占位布局(60 / 40) */
-.lp2-full {
-  padding: 0 200px;
-  max-width: none;
+.path-header-actions {
+  display: flex;
+  gap: 10px;
+  flex-shrink: 0;
 }
-.lp2-grid {
+
+.quiet-btn,
+.task-list__header button,
+.icon-btn,
+.stage-card,
+.roadmap-dot {
+  font: inherit;
+}
+
+.quiet-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-height: 36px;
+  padding: 0 14px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  background: rgba(12, 18, 36, 0.72);
+  color: #dbeafe;
+  cursor: pointer;
+  transition: border-color 0.2s ease, transform 0.2s ease, background 0.2s ease;
+}
+
+.quiet-btn:hover {
+  transform: translateY(-1px);
+  border-color: rgba(0, 212, 255, 0.45);
+  background: rgba(13, 27, 50, 0.92);
+}
+
+.path-shell {
   display: grid;
-  grid-template-columns: 3fr 2fr;
-  gap: 16px;
-}
-.lp2-pane {
-  border: 1px dashed rgba(255, 255, 255, 0.08);
-  border-radius: 14px;
-  background: rgba(12, 12, 30, 0.4);
-}
-.lp2-left {
-  /* 图片原始尺寸 1568 × 1003,精确匹配以避免裁剪 */
-  position: relative;
-  aspect-ratio: 1568 / 1003;
-  background-image: url('/learning-path/chaungguan1.png');
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.04);
-  overflow: hidden;
+  grid-template-columns: minmax(0, 1.5fr) minmax(380px, 0.8fr);
+  gap: 18px;
+  align-items: stretch;
 }
 
-/* === 悬浮航点叠层 === */
-.lp2-overlay {
+.path-map {
+  position: relative;
+  min-height: 560px;
+  aspect-ratio: 1568 / 1003;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 14px;
+  overflow: hidden;
+  background-color: #020617;
+  background-position: center;
+  background-size: cover;
+  background-repeat: no-repeat;
+  box-shadow: 0 18px 54px rgba(0, 0, 0, 0.42), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+
+.path-map::after {
+  content: '';
   position: absolute;
   inset: 0;
   pointer-events: none;
+  background: radial-gradient(circle at 70% 20%, rgba(0, 212, 255, 0.12), transparent 34%);
 }
 
-.floating-card {
+.stage-card {
   position: absolute;
-  pointer-events: auto;
-  min-width: 200px;
-  padding: 16px 20px 14px;
-  background: linear-gradient(135deg, rgba(7, 11, 24, 0.82), rgba(7, 11, 24, 0.58));
-  backdrop-filter: blur(16px) saturate(1.2);
-  -webkit-backdrop-filter: blur(16px) saturate(1.2);
-  border: 1px solid rgba(0, 212, 255, 0.45);
-  border-radius: 12px;
-  box-shadow:
-    0 0 0 1px rgba(0, 212, 255, 0.1) inset,
-    0 0 20px rgba(0, 212, 255, 0.2),
-    0 8px 24px rgba(0, 0, 0, 0.5);
-  transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1),
-              box-shadow 0.35s ease,
-              border-color 0.35s ease;
-  animation: fc-float 5s ease-in-out infinite;
-  cursor: pointer;
-  --line-color: #00d4ff;
-  --line-glow: rgba(0, 212, 255, 0.6);
-}
-
-/* 卡片底部中间往下的连接线 */
-.floating-card::after {
-  content: '';
-  position: absolute;
-  bottom: -46px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 1.5px;
-  height: 46px;
-  background: linear-gradient(to bottom, var(--line-color) 0%, transparent 100%);
-  box-shadow: 0 0 6px var(--line-glow);
-  pointer-events: none;
-  opacity: 0.75;
-  animation: line-pulse 2.4s ease-in-out infinite;
-}
-/* 线条末端小节点 */
-.floating-card::before {
-  content: '';
-  position: absolute;
-  bottom: -52px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: var(--line-color);
-  box-shadow: 0 0 8px var(--line-color), 0 0 14px var(--line-glow);
-  pointer-events: none;
-  animation: line-dot 2.4s ease-in-out infinite;
-}
-
-@keyframes line-pulse {
-  0%, 100% { opacity: 0.55; }
-  50%      { opacity: 0.95; }
-}
-@keyframes line-dot {
-  0%, 100% { transform: translateX(-50%) scale(1);   opacity: 1;   }
-  50%      { transform: translateX(-50%) scale(1.6); opacity: 0.4; }
-}
-
-.floating-card:hover {
-  transform: translateY(-6px) scale(1.04);
-  border-color: rgba(0, 212, 255, 0.9);
-  box-shadow:
-    0 0 0 1px rgba(0, 212, 255, 0.3) inset,
-    0 0 32px rgba(0, 212, 255, 0.55),
-    0 12px 32px rgba(0, 0, 0, 0.6);
-  animation-play-state: paused;
-}
-
-/* 选中状态：放大 + 同色边框光晕 */
-.floating-card.active {
-  transform: translateY(-4px) scale(1.06);
-  border-color: var(--line-color);
-  box-shadow:
-    0 0 0 1px var(--line-glow) inset,
-    0 0 28px var(--line-glow),
-    0 12px 32px rgba(0, 0, 0, 0.6);
-  animation-play-state: paused;
   z-index: 2;
-}
-.floating-card.active::after,
-.floating-card.active::before {
-  animation-play-state: paused;
-}
-.floating-card:hover::after,
-.floating-card:hover::before {
-  animation-play-state: paused;
-}
-
-@keyframes fc-float {
-  0%, 100% { transform: translateY(0); }
-  50%      { transform: translateY(-4px); }
-}
-
-/* 4 个角的小括号 */
-.fc-corner {
-  position: absolute;
-  width: 10px;
-  height: 10px;
-  border: 1.5px solid #00d4ff;
-  filter: drop-shadow(0 0 3px rgba(0, 212, 255, 0.7));
-}
-.fc-tl { top: -1px;    left: -1px;    border-right: none;  border-bottom: none; border-top-left-radius: 12px; }
-.fc-tr { top: -1px;    right: -1px;   border-left: none;   border-bottom: none; border-top-right-radius: 12px; }
-.fc-bl { bottom: -1px; left: -1px;    border-right: none;  border-top: none;    border-bottom-left-radius: 12px; }
-.fc-br { bottom: -1px; right: -1px;   border-left: none;   border-top: none;    border-bottom-right-radius: 12px; }
-
-.fc-head {
-  display: flex;
-  align-items: center;
-  gap: 7px;
-  margin-bottom: 6px;
-}
-.fc-pulse {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: #00d4ff;
-  box-shadow: 0 0 6px #00d4ff, 0 0 12px #00d4ff;
-  animation: fc-pulse 1.6s ease-in-out infinite;
-  flex-shrink: 0;
-}
-.fc-pulse.mid   { background: #a78bfa; box-shadow: 0 0 6px #a78bfa, 0 0 12px #a78bfa; }
-.fc-pulse.cyan2 { background: #22d3ee; box-shadow: 0 0 6px #22d3ee, 0 0 12px #22d3ee; }
-.fc-pulse.amber { background: #f59e0b; box-shadow: 0 0 6px #f59e0b, 0 0 12px #f59e0b; }
-.fc-pulse.end   { background: #facc15; box-shadow: 0 0 6px #facc15, 0 0 12px #facc15; }
-
-@keyframes fc-pulse {
-  0%, 100% { transform: scale(1);   opacity: 1;   }
-  50%      { transform: scale(1.5); opacity: 0.4; }
+  left: var(--stage-left);
+  top: var(--stage-top);
+  width: min(220px, 24%);
+  min-width: 170px;
+  padding: 14px 16px 13px;
+  text-align: left;
+  color: #f8fbff;
+  cursor: pointer;
+  border: 1px solid color-mix(in srgb, var(--stage-color) 58%, transparent);
+  border-radius: 8px;
+  background: linear-gradient(135deg, rgba(5, 10, 24, 0.88), rgba(7, 13, 30, 0.64));
+  box-shadow: 0 14px 26px rgba(0, 0, 0, 0.35), 0 0 22px color-mix(in srgb, var(--stage-color) 22%, transparent);
+  backdrop-filter: blur(14px);
+  transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
-.fc-tag {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 9.5px;
-  font-weight: 700;
-  letter-spacing: 0.18em;
-  color: #00d4ff;
-  text-shadow: 0 0 6px rgba(0, 212, 255, 0.4);
-}
-.card-2 .fc-tag { color: #22d3ee; text-shadow: 0 0 6px rgba(34, 211, 238, 0.4); }
-.card-3 .fc-tag { color: #a78bfa; text-shadow: 0 0 6px rgba(167, 139, 250, 0.4); }
-.card-4 .fc-tag { color: #f59e0b; text-shadow: 0 0 6px rgba(245, 158, 11, 0.4); }
-.card-5 .fc-tag { color: #facc15; text-shadow: 0 0 6px rgba(250, 204, 21, 0.4); }
-
-.fc-title {
-  font-family: 'Outfit', 'PingFang SC', sans-serif;
-  font-size: 17px;
-  font-weight: 700;
-  color: #ffffff;
-  line-height: 1.1;
-  margin-bottom: 6px;
-  text-shadow: 0 0 10px rgba(0, 212, 255, 0.3);
-}
-.fc-meta {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 13px;
-  color: #8da3c8;
-  letter-spacing: 0.06em;
-}
-
-/* 5 个航点位置(沿星轨曲线均匀分布) */
-.card-1 { top: calc(24% + 250px); left: 10%;   animation-delay: 0s;   --line-color: #00d4ff; --line-glow: rgba(0, 212, 255, 0.6);   }
-.card-2 { top: calc(14% + 250px);  left: 40%;  animation-delay: 0.5s; --line-color: #22d3ee; --line-glow: rgba(34, 211, 238, 0.6); }
-.card-3 { top: 32%;  left: 72%;  animation-delay: 1.0s; --line-color: #a78bfa; --line-glow: rgba(167, 139, 250, 0.6); }
-.card-4 { top: 23%;  left: 38%;  animation-delay: 1.5s; --line-color: #f59e0b; --line-glow: rgba(245, 158, 11, 0.6);  }
-.card-5 { top: 19%;  right: 82%;  animation-delay: 2.0s; --line-color: #facc15; --line-glow: rgba(250, 204, 21, 0.6);  }
-.lp2-right {
-  /* 与左栏等高 — grid row 自动拉伸，内部卡片填充 */
-  background: transparent;
-  border: none;
-  display: flex;
-  align-items: stretch;
-  justify-content: center;
-  padding: 12px;
-}
-
-/* === Sci-Fi Level Card === */
-.level-card {
-  position: relative;
-  width: 100%;
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  padding: 32px 36px 26px;
-  border-radius: 16px;
-  background:
-    linear-gradient(135deg, rgba(0, 212, 255, 0.06) 0%, rgba(0, 212, 255, 0.02) 50%, rgba(124, 58, 237, 0.05) 100%);
-  border: 1px solid rgba(0, 212, 255, 0.35);
-  backdrop-filter: blur(18px) saturate(1.2);
-  -webkit-backdrop-filter: blur(18px) saturate(1.2);
-  box-shadow:
-    0 0 0 1px rgba(0, 212, 255, 0.08) inset,
-    0 0 32px rgba(0, 212, 255, 0.18),
-    0 12px 40px rgba(0, 0, 0, 0.4);
-  overflow: hidden;
-  transform-style: preserve-3d;
-  backface-visibility: hidden;
-  transition:
-    border-color 0.5s ease,
-    box-shadow 0.5s ease;
-}
-
-/* === 3D 翻转切换 (左栏点 stage 时右栏翻牌) === */
-.lp2-right {
-  perspective: 1200px;
-}
-.card-flip-enter-active,
-.card-flip-leave-active {
-  transition:
-    transform 0.55s cubic-bezier(0.4, 0, 0.2, 1),
-    opacity 0.4s ease;
-  transform-style: preserve-3d;
-  backface-visibility: hidden;
-}
-/* 旧卡片：0° → 90°(侧面) → 隐藏 */
-.card-flip-leave-active {
-  transform-origin: left center;
-}
-.card-flip-leave-to {
-  transform: rotateY(-90deg);
-  opacity: 0;
-}
-/* 新卡片：-90° → 0° 翻入 */
-.card-flip-enter-active {
-  transform-origin: right center;
-}
-.card-flip-enter-from {
-  transform: rotateY(90deg);
-  opacity: 0;
-}
-
-/* 角落装饰括号 */
-.level-corner {
-  position: absolute;
-  width: 18px;
-  height: 18px;
-  border: 2px solid #00d4ff;
-  filter: drop-shadow(0 0 4px rgba(0, 212, 255, 0.6));
-}
-.corner-tl { top: -1px;    left: -1px;    border-right: none; border-bottom: none; border-top-left-radius: 16px; }
-.corner-tr { top: -1px;    right: -1px;   border-left: none;  border-bottom: none; border-top-right-radius: 16px; }
-.corner-bl { bottom: -1px; left: -1px;    border-right: none; border-top: none;    border-bottom-left-radius: 16px; }
-.corner-br { bottom: -1px; right: -1px;   border-left: none;  border-top: none;    border-bottom-right-radius: 16px; }
-
-/* 卡片顶部装饰光线 */
-.level-card::before {
+.stage-card::before {
   content: '';
   position: absolute;
-  top: 0; left: 16px; right: 16px;
-  height: 1px;
-  background: linear-gradient(90deg, transparent, #00d4ff 50%, transparent);
-  opacity: 0.6;
+  left: 50%;
+  bottom: -42px;
+  width: 1px;
+  height: 42px;
+  background: linear-gradient(180deg, var(--stage-color), transparent);
+  box-shadow: 0 0 10px var(--stage-color);
 }
 
-.level-card-header {
+.stage-card::after {
+  content: '';
+  position: absolute;
+  left: calc(50% - 4px);
+  bottom: -49px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--stage-color);
+  box-shadow: 0 0 16px var(--stage-color);
+}
+
+.stage-card:hover,
+.stage-card.active {
+  transform: translateY(-4px) scale(1.02);
+  border-color: var(--stage-color);
+  box-shadow: 0 18px 34px rgba(0, 0, 0, 0.45), 0 0 30px color-mix(in srgb, var(--stage-color) 44%, transparent);
+}
+
+.stage-card__kicker,
+.stage-card__meta {
+  display: block;
+  font-family: 'JetBrains Mono', monospace;
+  letter-spacing: 0.09em;
+}
+
+.stage-card__kicker {
+  color: var(--stage-color);
+  font-size: 10px;
+  font-weight: 800;
+}
+
+.stage-card__title {
+  display: block;
+  margin: 5px 0;
+  font-size: 18px;
+  font-weight: 760;
+}
+
+.stage-card__meta {
+  color: #9caed0;
+  font-size: 11px;
+}
+
+.path-panel {
+  position: relative;
+  display: flex;
+  min-height: 560px;
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--stage-color) 42%, rgba(255, 255, 255, 0.08));
+  border-radius: 14px;
+  padding: 26px;
+  background:
+    linear-gradient(145deg, rgba(4, 10, 24, 0.9), rgba(11, 14, 32, 0.82)),
+    url('/learning-path/knowledge-panel-bg.png') center / cover no-repeat;
+  box-shadow: 0 18px 54px rgba(0, 0, 0, 0.44), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+.panel-ambient {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(circle at 80% 8%, color-mix(in srgb, var(--stage-color) 24%, transparent), transparent 34%);
+  opacity: 0.8;
+}
+
+.panel-topline,
+.panel-title-row,
+.panel-metrics,
+.stage-roadmap,
+.task-list {
+  position: relative;
+  z-index: 1;
+}
+
+.panel-topline {
+  display: flex;
+  justify-content: space-between;
+  gap: 14px;
+  color: var(--stage-color);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  font-weight: 750;
+  letter-spacing: 0.12em;
+}
+
+.panel-title-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 88px;
+  gap: 18px;
+  align-items: start;
+  margin-top: 24px;
+}
+
+.panel-title-row h3 {
+  margin: 0 0 8px;
+  color: #ffffff;
+  font-size: 30px;
+  line-height: 1.15;
+  letter-spacing: 0;
+}
+
+.panel-title-row p {
+  margin: 0;
+  color: #9fb0cf;
+  font-size: 14px;
+  line-height: 1.7;
+}
+
+.mastery-orb {
+  display: grid;
+  place-items: center;
+  width: 88px;
+  height: 88px;
+  border: 1px solid color-mix(in srgb, var(--stage-color) 50%, transparent);
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.28);
+  box-shadow: inset 0 0 24px color-mix(in srgb, var(--stage-color) 20%, transparent);
+}
+
+.mastery-orb span {
+  color: #ffffff;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 22px;
+  font-weight: 800;
+}
+
+.mastery-orb small {
+  margin-top: -18px;
+  color: #8ea0c0;
+  font-size: 11px;
+}
+
+.panel-metrics {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  margin: 22px 0;
+}
+
+.panel-metrics div {
+  min-width: 0;
+  padding: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.045);
+}
+
+.panel-metrics span {
+  display: block;
+  color: #8090ad;
+  font-size: 12px;
+}
+
+.panel-metrics strong {
+  display: block;
+  margin-top: 6px;
+  overflow: hidden;
+  color: #eef4ff;
+  font-size: 15px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.stage-roadmap {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 14px;
-  padding-bottom: 10px;
-  border-bottom: 1px solid rgba(0, 212, 255, 0.15);
-}
-.level-card-tag {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 12px;
-  font-weight: 700;
-  letter-spacing: 0.2em;
-  color: #00d4ff;
-  text-shadow: 0 0 8px rgba(0, 212, 255, 0.5);
-}
-.level-card-id {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 12px;
-  font-weight: 600;
-  letter-spacing: 0.1em;
-  color: #facc15;
-  padding: 3px 8px;
-  border: 1px solid rgba(250, 204, 21, 0.4);
-  border-radius: 4px;
-  background: rgba(250, 204, 21, 0.06);
+  margin-bottom: 22px;
+  padding: 0 6px;
 }
 
-.level-card-title {
-  font-family: 'Outfit', 'PingFang SC', sans-serif;
-  font-size: 28px;
-  font-weight: 700;
-  color: #ffffff;
-  margin: 0 0 18px;
-  letter-spacing: 0.02em;
-  text-shadow: 0 0 16px rgba(0, 212, 255, 0.4);
+.stage-roadmap::before {
+  content: '';
+  position: absolute;
+  left: 22px;
+  right: 22px;
+  top: 50%;
+  height: 1px;
+  background: linear-gradient(90deg, #00d4ff, #a78bfa, #facc15);
+  opacity: 0.35;
 }
 
-.level-card-info {
-  flex: 1;
+.roadmap-dot {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border: 1px solid color-mix(in srgb, var(--stage-color) 48%, transparent);
+  border-radius: 50%;
+  background: #091120;
+  color: #dbeafe;
+  cursor: pointer;
+}
+
+.roadmap-dot.active {
+  background: var(--stage-color);
+  color: #020617;
+  box-shadow: 0 0 22px color-mix(in srgb, var(--stage-color) 72%, transparent);
+}
+
+.task-list {
   display: flex;
+  flex: 1;
+  min-height: 0;
   flex-direction: column;
-  gap: 10px;
+  gap: 8px;
 }
-.info-row {
-  display: flex;
-  align-items: baseline;
-  gap: 14px;
-  font-size: 15px;
-  line-height: 1.5;
-}
-.info-label {
-  flex-shrink: 0;
-  width: 84px;
-  color: #8da3c8;
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 13px;
-  letter-spacing: 0.06em;
-}
-.info-value {
-  flex: 1;
-  color: #eaf2ff;
-  font-weight: 500;
+
+.task-list__header {
   display: flex;
   align-items: center;
-  gap: 6px;
-}
-.difficulty-dot {
-  display: inline-block;
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: #06d6a0;
-  box-shadow: 0 0 6px #06d6a0;
-}
-.info-value.reward {
-  color: #facc15;
-  font-weight: 600;
-  text-shadow: 0 0 6px rgba(250, 204, 21, 0.3);
+  justify-content: space-between;
+  margin-bottom: 4px;
+  color: #f8fbff;
+  font-weight: 750;
 }
 
-/* 任务清单 */
-.task-list {
-  margin-top: 16px;
-  padding-top: 14px;
-  border-top: 1px dashed rgba(0, 212, 255, 0.15);
+.task-list__header button {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-height: 34px;
+  padding: 0 13px;
+  border: none;
+  border-radius: 8px;
+  background: linear-gradient(135deg, var(--stage-color), color-mix(in srgb, var(--stage-color) 62%, #111827));
+  color: #04111f;
+  font-size: 13px;
+  font-weight: 800;
+  cursor: pointer;
 }
-.task-list-title {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 12px;
-  font-weight: 700;
-  letter-spacing: 0.2em;
-  color: var(--stage-color, #00d4ff);
-  text-shadow: 0 0 6px color-mix(in srgb, var(--stage-color, #00d4ff) 40%, transparent);
-  margin-bottom: 10px;
-}
+
 .task-item {
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 9px 12px;
+  gap: 12px;
+  padding: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.07);
   border-radius: 8px;
-  background: rgba(0, 0, 0, 0.18);
-  border: 1px solid rgba(255, 255, 255, 0.04);
-  margin-bottom: 6px;
-  transition: all 0.2s ease;
+  background: rgba(0, 0, 0, 0.24);
 }
-.task-item:hover {
-  background: rgba(0, 0, 0, 0.32);
-  border-color: color-mix(in srgb, var(--stage-color, #00d4ff) 30%, transparent);
-}
-/* 圆点连接器 */
-.task-connector {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: var(--stage-color, #00d4ff);
-  box-shadow: 0 0 6px color-mix(in srgb, var(--stage-color, #00d4ff) 60%, transparent);
-  flex-shrink: 0;
-  opacity: 0.85;
-}
-.task-num {
+
+.task-index {
+  color: var(--stage-color);
   font-family: 'JetBrains Mono', monospace;
-  font-size: 12px;
-  color: var(--stage-color, #00d4ff);
-  text-shadow: 0 0 4px color-mix(in srgb, var(--stage-color, #00d4ff) 50%, transparent);
-  flex-shrink: 0;
-  width: 20px;
+  font-size: 13px;
+  font-weight: 800;
 }
-.task-content {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
+
+.task-main {
   min-width: 0;
+  flex: 1;
 }
+
 .task-title {
-  font-size: 12.5px;
-  color: #eaf2ff;
   overflow: hidden;
+  color: #edf4ff;
+  font-size: 13px;
+  font-weight: 650;
   text-overflow: ellipsis;
   white-space: nowrap;
-  line-height: 1.3;
 }
-/* 评估后新增标识 */
-.remedial-badge {
-  display: inline-block;
-  font-size: 9px;
-  font-weight: 600;
-  padding: 1px 7px;
-  border-radius: 5px;
-  background: rgba(6, 214, 160, 0.12);
-  color: rgba(123, 255, 200, 0.9);
-  white-space: nowrap;
-  letter-spacing: 0.04em;
+
+.task-meta {
+  display: flex;
+  gap: 8px;
+  margin-top: 4px;
+  color: #7f8da8;
   font-family: 'JetBrains Mono', monospace;
-  width: fit-content;
+  font-size: 10px;
 }
-/* 文档/视频按钮（一直显示） */
+
 .task-actions {
   display: flex;
-  gap: 4px;
-  flex-shrink: 0;
-}
-.res-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 3px;
-  padding: 3px 8px;
-  border-radius: 5px;
-  font-size: 12px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  border: 1px solid transparent;
-  font-family: 'JetBrains Mono', monospace;
-  letter-spacing: 0.04em;
-}
-.res-btn--doc {
-  background: rgba(59, 130, 246, 0.08);
-  color: #60a5fa;
-  border-color: rgba(59, 130, 246, 0.18);
-}
-.res-btn--doc:hover {
-  background: rgba(59, 130, 246, 0.18);
-  border-color: rgba(59, 130, 246, 0.35);
-  box-shadow: 0 0 8px rgba(59, 130, 246, 0.2);
-}
-.res-btn--video {
-  background: rgba(139, 92, 246, 0.08);
-  color: #a78bfa;
-  border-color: rgba(139, 92, 246, 0.18);
-}
-.res-btn--video:hover {
-  background: rgba(139, 92, 246, 0.18);
-  border-color: rgba(139, 92, 246, 0.35);
-  box-shadow: 0 0 8px rgba(139, 92, 246, 0.2);
-}
-
-/* 卡片底部 */
-.level-card-footer {
-  margin-top: 18px;
-  padding-top: 14px;
-  border-top: 1px solid rgba(0, 212, 255, 0.15);
-  display: flex;
-  align-items: center;
-  gap: 14px;
-}
-.footer-progress {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
   gap: 6px;
 }
-.progress-track {
-  height: 4px;
-  background: rgba(0, 212, 255, 0.08);
-  border-radius: 2px;
-  overflow: hidden;
-}
-.progress-fill {
-  width: 0%;
-  height: 100%;
-  background: linear-gradient(90deg, #00d4ff, #7c3aed);
-  box-shadow: 0 0 8px rgba(0, 212, 255, 0.5);
-  border-radius: 2px;
-  transition: width 0.6s ease;
-}
-.progress-text {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 12px;
-  color: #6f7a9e;
-  letter-spacing: 0.08em;
-}
-.start-btn {
-  flex-shrink: 0;
-  padding: 8px 16px;
-  background: linear-gradient(135deg, #00d4ff, #7c3aed);
-  color: #fff;
-  font-size: 14px;
-  font-weight: 600;
-  font-family: 'JetBrains Mono', monospace;
-  letter-spacing: 0.06em;
-  border: none;
-  border-radius: 8px;
+
+.icon-btn {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  border-radius: 7px;
+  background: rgba(255, 255, 255, 0.055);
+  color: #cfe8ff;
   cursor: pointer;
-  box-shadow: 0 0 16px rgba(0, 212, 255, 0.4);
-  transition: all 0.2s ease;
-}
-.start-btn:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 4px 20px rgba(0, 212, 255, 0.55);
 }
 
-@media (max-width: 900px) {
-  .lp-section { padding: 0 16px; }
-  .lp2-full { padding: 0 16px; }
-  .lp2-grid { grid-template-columns: 1fr; min-height: auto; }
-  .lp2-pane { min-height: 240px; }
-  .level-card { padding: 20px 18px 16px; }
-  .level-card-title { font-size: 18px; }
-  .info-label { width: 70px; font-size: 12px; }
+.icon-btn:hover {
+  border-color: var(--stage-color);
+  color: #ffffff;
+}
+
+@media (max-width: 1100px) {
+  .lp-section--constellation,
+  .lp-section--path,
+  .lp-section {
+    padding: 0 18px;
+  }
+
+  .lp-path-header,
+  .path-shell {
+    grid-template-columns: 1fr;
+  }
+
+  .lp-path-header {
+    display: grid;
+    align-items: start;
+  }
+
+  .path-map,
+  .path-panel {
+    min-height: auto;
+  }
+
+  .path-shell {
+    display: grid;
+  }
+}
+
+@media (max-width: 760px) {
+  .path-header-actions {
+    flex-wrap: wrap;
+  }
+
+  .path-map {
+    aspect-ratio: auto;
+    min-height: 680px;
+  }
+
+  .stage-card {
+    width: calc(100% - 32px);
+    min-width: 0;
+    left: 16px;
+    right: 16px;
+  }
+
+  .stage-card::before,
+  .stage-card::after {
+    display: none;
+  }
+
+  .stage-card--one { top: 22px; }
+  .stage-card--two { top: 148px; }
+  .stage-card--three { top: 274px; }
+  .stage-card--four { top: 400px; }
+  .stage-card--five { top: 526px; }
+
+  .path-panel {
+    padding: 18px;
+  }
+
+  .panel-title-row,
+  .panel-metrics {
+    grid-template-columns: 1fr;
+  }
+
+  .mastery-orb {
+    width: 76px;
+    height: 76px;
+  }
 }
 </style>

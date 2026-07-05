@@ -91,6 +91,9 @@ watch(() => route.query.tab, (tab) => {
 
 <style scoped>
 .dialogue-navbar {
-  border-right: 2px solid rgba(59, 130, 246, 0.55) !important;
+  border-right: 1px solid var(--border-subtle) !important;
+  background: rgba(8, 6, 14, 0.6);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
 }
 </style>

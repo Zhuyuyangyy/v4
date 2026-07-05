@@ -130,8 +130,8 @@ onBeforeUnmount(() => {
   position: relative;
   min-height: 100vh;
   overflow: hidden;
-  color: #e8f7ff;
-  background: #02040f;
+  color: #f0f6ff;
+  background: transparent;
   font-family: 'Avenir Next', 'Avenir', 'Microsoft YaHei UI', 'PingFang SC', sans-serif;
   isolation: isolate;
 }
@@ -147,9 +147,10 @@ onBeforeUnmount(() => {
 .ink-veil {
   z-index: 1;
   background:
-    linear-gradient(90deg, rgba(1, 5, 17, 0.66), rgba(2, 8, 23, 0.08) 42%, rgba(2, 8, 23, 0.54)),
-    radial-gradient(circle at 51% 49%, transparent 0 30%, rgba(2, 6, 23, 0.16) 54%, rgba(1, 5, 17, 0.76) 100%),
-    linear-gradient(180deg, rgba(2, 4, 15, 0.62), transparent 18%, transparent 72%, rgba(2, 4, 15, 0.78));
+    linear-gradient(90deg, rgba(10, 20, 45, 0.15), rgba(15, 40, 80, 0.02) 42%, rgba(10, 25, 55, 0.1)),
+    radial-gradient(circle at 51% 49%, transparent 0 36%, rgba(15, 35, 70, 0.03) 58%, rgba(10, 20, 45, 0.12) 100%),
+    linear-gradient(180deg, rgba(10, 16, 35, 0.12), transparent 25%, transparent 75%, rgba(150, 190, 235, 0.05));
+  opacity: 0.5;
 }
 
 .grain-layer {

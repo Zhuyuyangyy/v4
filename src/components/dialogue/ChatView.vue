@@ -1,7 +1,7 @@
 <template>
   <section class="flex-1 flex flex-col xl:flex-row h-full overflow-hidden bg-transparent relative animate-fade-in">
     <!-- COLUMN 1: Chat Pane -->
-    <div class="flex-1 flex flex-col h-full bg-transparent" style="border-right: 2px solid var(--border-card)">
+    <div class="flex-1 flex flex-col h-full bg-transparent" style="border-right: 1px solid var(--border-subtle)">
       <!-- Header -->
       <header class="px-6 py-4 flex items-center justify-between bg-transparent shrink-0" style="border-bottom: 1px solid var(--border-card)">
         <div class="flex items-center gap-3">
@@ -80,6 +80,35 @@
                 ? { background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.25), rgba(37, 99, 235, 0.2))', border: '1px solid rgba(59, 130, 246, 0.2)' }
                 : { background: 'rgba(22, 18, 32, 0.5)', border: '1px solid var(--border-card)', backdropFilter: 'blur(8px)' }">
               {{ chat.text }}
+            </div>
+
+            <!-- Recommended Course Cards -->
+            <div v-if="chat.recommendedCourses?.length" class="mt-3 space-y-2.5">
+              <div v-for="course in chat.recommendedCourses" :key="course.id"
+                @click="navigateToCourse(course.id)"
+                class="group flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-all duration-200 hover:scale-[1.02]"
+                :style="{
+                  background: `linear-gradient(135deg, ${course.color}18, ${course.color}08)`,
+                  border: `1px solid ${course.color}30`,
+                }"
+              >
+                <div class="w-10 h-10 rounded-lg flex items-center justify-center shrink-0 text-white font-bold text-sm"
+                  :style="{ background: `linear-gradient(135deg, ${course.color}, ${course.color}99)` }">
+                  {{ course.name.slice(0, 1) }}
+                </div>
+                <div class="flex-1 min-w-0">
+                  <div class="flex items-center gap-2">
+                    <span class="font-semibold text-sm text-white truncate">{{ course.name }}</span>
+                    <span class="text-[10px] px-1.5 py-0.5 rounded-full shrink-0"
+                      :class="course.difficulty === '入门' ? 'bg-emerald-500/15 text-emerald-400' : course.difficulty === '进阶' ? 'bg-blue-500/15 text-blue-400' : 'bg-rose-500/15 text-rose-400'">
+                      {{ course.difficulty }}
+                    </span>
+                  </div>
+                  <p class="text-xs mt-0.5 truncate" style="color: var(--text-muted)">{{ course.reason }}</p>
+                </div>
+                <ExternalLink class="w-4 h-4 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity" :style="{ color: course.color }" />
+              </div>
+              <p class="text-[11px] pt-1" style="color: var(--text-dim)">💡 点击课程卡片跳转到资源页面开始学习</p>
             </div>
 
             <div v-if="chat.sender === 'user' && chat.capturedTags?.length" class="flex flex-wrap items-center gap-1.5 justify-end pt-1">
@@ -163,7 +192,7 @@
     <MetricPanel />
 
     <!-- Separator -->
-    <div class="hidden xl:flex flex-col items-center justify-center w-[2px] relative z-30 shrink-0" style="background: var(--border-card)">
+    <div class="hidden xl:flex flex-col items-center justify-center w-[1px] relative z-30 shrink-0" style="background: var(--border-subtle)">
       <button
         @click="isRightSidebarCollapsed = !isRightSidebarCollapsed"
         class="absolute flex items-center justify-center rounded-full w-5.5 h-12 shadow-md hover:shadow-lg focus:outline-none cursor-pointer transition-all group"
@@ -185,13 +214,14 @@
 
 <script setup lang="ts">
 import { ref, watch, nextTick, computed } from 'vue'
-import { Paperclip, Smile, Code, Image, Send, ChevronRight, Mic, Tv, Sparkles, Brain } from 'lucide-vue-next'
+import { Paperclip, Smile, Code, Image, Send, ChevronRight, Mic, Tv, Sparkles, Brain, ExternalLink } from 'lucide-vue-next'
 import StarfieldScanner from './StarfieldScanner.vue'
 import MetricPanel from './MetricPanel.vue'
 import ProfileReportPanel from './ProfileReportPanel.vue'
 import {
   chats, inputText, isAiLoading, isSidebarCollapsed, isRightSidebarCollapsed,
   isXunfeiSidebarOpen, dimensions, canUnlockReport, handleChipClick, selectNodeDetail,
+  navigateToCourse,
 } from '@/composables/dialogue/useAppState'
 import { sendMessage, triggerReport } from '@/composables/dialogue/useChatApi'
 
