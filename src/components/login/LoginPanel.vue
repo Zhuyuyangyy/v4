@@ -25,7 +25,7 @@ function handleSubmit() {
       account: account.value || 'admin',
       loginAt: new Date().toISOString(),
     })
-    router.push('/home')
+    router.push('/admin')
   }, 900)
 }
 </script>
