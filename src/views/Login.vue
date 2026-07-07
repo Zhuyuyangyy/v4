@@ -94,35 +94,33 @@ onBeforeUnmount(() => {
 .bg-image {
   position: absolute;
   inset: 0;
-  background:
-    radial-gradient(ellipse 1200px 800px at 25% 45%, rgba(0, 120, 255, 0.12) 0%, transparent 55%),
-    radial-gradient(ellipse 800px 600px at 35% 50%, rgba(0, 80, 180, 0.15) 0%, transparent 60%),
-    linear-gradient(135deg,
-      #01040d 0%,
-      #030a1c 20%,
-      #06122e 45%,
-      #081a42 70%,
-      #050f25 100%
-    );
+  background-image: url('/bg.png');
+  background-size: cover;
+  background-position: center center;
+  background-repeat: no-repeat;
 }
 
 .bg-overlay-dark {
   position: absolute;
   inset: 0;
   background:
-    linear-gradient(90deg, transparent 0%, rgba(0, 5, 15, 0.3) 60%, rgba(0, 5, 15, 0.5) 100%);
+    linear-gradient(100deg,
+      rgba(0, 5, 15, 0.12) 0%,
+      rgba(0, 8, 20, 0.22) 40%,
+      rgba(2, 10, 25, 0.5) 58%,
+      rgba(2, 10, 26, 0.68) 72%,
+      rgba(2, 10, 26, 0.78) 100%
+    );
 }
 
 .bg-grid-fine {
   position: absolute;
   inset: 0;
-  opacity: 0.06;
+  opacity: 0.04;
   background-image:
-    linear-gradient(rgba(0, 180, 255, 0.1) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(0, 180, 255, 0.1) 1px, transparent 1px);
-  background-size: 50px 50px;
-  mask-image: radial-gradient(ellipse at 30% 50%, black 20%, transparent 75%);
-  -webkit-mask-image: radial-gradient(ellipse at 30% 50%, black 20%, transparent 75%);
+    linear-gradient(rgba(0, 180, 255, 0.12) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 180, 255, 0.12) 1px, transparent 1px);
+  background-size: 60px 60px;
 }
 
 .bg-glow-orb {
@@ -137,7 +135,7 @@ onBeforeUnmount(() => {
   height: 500px;
   top: 15%;
   left: 10%;
-  background: radial-gradient(circle, rgba(0, 120, 255, 0.2), transparent 70%);
+  background: radial-gradient(circle, rgba(0, 120, 255, 0.18), transparent 70%);
   animation-delay: 0s;
 }
 
@@ -146,7 +144,7 @@ onBeforeUnmount(() => {
   height: 400px;
   top: 50%;
   left: 25%;
-  background: radial-gradient(circle, rgba(0, 180, 255, 0.15), transparent 70%);
+  background: radial-gradient(circle, rgba(0, 180, 255, 0.12), transparent 70%);
   animation-delay: -2.5s;
 }
 
@@ -154,8 +152,8 @@ onBeforeUnmount(() => {
   width: 350px;
   height: 350px;
   bottom: 10%;
-  left: 20%;
-  background: radial-gradient(circle, rgba(50, 150, 255, 0.12), transparent 70%);
+  right: 15%;
+  background: radial-gradient(circle, rgba(50, 150, 255, 0.1), transparent 70%);
   animation-delay: -5s;
 }
 
@@ -174,7 +172,7 @@ onBeforeUnmount(() => {
   position: absolute;
   inset: 0;
   background:
-    radial-gradient(ellipse at center, transparent 30%, rgba(0, 0, 0, 0.5) 100%);
+    radial-gradient(ellipse at center, transparent 30%, rgba(0, 0, 0, 0.4) 100%);
 }
 
 .bg-particles {
@@ -211,35 +209,25 @@ onBeforeUnmount(() => {
 .split-layout {
   position: relative;
   z-index: 1;
-  display: flex;
   min-height: 100vh;
 }
 
 .visual-pane {
-  position: relative;
-  flex: 0 0 60%;
-  min-width: 0;
-  overflow: hidden;
-}
-
-.visual-bg-image {
   position: absolute;
   inset: 0;
-  background-image: url('/login-bg.jpg');
-  background-size: cover;
-  background-position: center left;
-  background-repeat: no-repeat;
+  overflow: hidden;
+  pointer-events: none;
 }
 
 .visual-overlay-gradient {
   position: absolute;
   inset: 0;
   background:
-    linear-gradient(90deg,
-      rgba(0, 10, 30, 0.15) 0%,
-      rgba(0, 10, 30, 0.3) 50%,
-      rgba(2, 8, 20, 0.75) 85%,
-      #02060f 100%
+    linear-gradient(100deg,
+      rgba(0, 8, 22, 0.08) 0%,
+      rgba(0, 8, 22, 0.18) 45%,
+      rgba(2, 10, 26, 0.42) 62%,
+      rgba(2, 10, 26, 0.58) 100%
     );
 }
 
@@ -250,8 +238,8 @@ onBeforeUnmount(() => {
     linear-gradient(rgba(0, 180, 255, 0.04) 1px, transparent 1px),
     linear-gradient(90deg, rgba(0, 180, 255, 0.04) 1px, transparent 1px);
   background-size: 40px 40px;
-  mask-image: linear-gradient(90deg, rgba(0,0,0,0.3) 0%, transparent 70%);
-  -webkit-mask-image: linear-gradient(90deg, rgba(0,0,0,0.3) 0%, transparent 70%);
+  mask-image: linear-gradient(90deg, rgba(0,0,0,0.2) 0%, transparent 70%);
+  -webkit-mask-image: linear-gradient(90deg, rgba(0,0,0,0.2) 0%, transparent 70%);
 }
 
 .visual-particles {
@@ -288,88 +276,70 @@ onBeforeUnmount(() => {
 
 .auth-pane {
   position: relative;
-  flex: 1;
+  z-index: 2;
+  min-height: 100vh;
   display: flex;
   align-items: center;
-  justify-content: center;
-  padding: 40px 56px;
-  background: #02060f;
-}
-
-.auth-pane::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  bottom: 0;
-  width: 1px;
-  background: linear-gradient(180deg,
-    transparent,
-    rgba(0, 180, 255, 0.25) 20%,
-    rgba(0, 200, 255, 0.4) 50%,
-    rgba(0, 180, 255, 0.25) 80%,
-    transparent
-  );
-  z-index: 2;
+  justify-content: flex-end;
+  padding: 40px 72px 40px 40px;
+  pointer-events: none;
 }
 
 .auth-panel-wrapper {
   position: relative;
-  z-index: 1;
+  z-index: 3;
   width: 100%;
-  max-width: 480px;
+  max-width: 460px;
+  pointer-events: auto;
   animation: wrapper-breath 4s ease-in-out infinite;
 }
 
 @keyframes wrapper-breath {
   0%, 100% {
-    filter: drop-shadow(0 20px 50px rgba(0, 80, 180, 0.2));
+    filter: drop-shadow(0 20px 60px rgba(0, 80, 180, 0.25));
   }
   50% {
-    filter: drop-shadow(0 30px 80px rgba(0, 130, 230, 0.4));
+    filter: drop-shadow(0 30px 90px rgba(0, 130, 230, 0.45));
   }
 }
 
 @media (max-width: 1200px) {
-  .visual-pane {
-    flex: 0 0 55%;
-  }
-  .auth-pane { padding: 32px 40px; }
+  .auth-pane { padding: 32px 48px 32px 32px; }
+  .auth-panel-wrapper { max-width: 420px; }
 }
 
 @media (max-width: 900px) {
-  .split-layout { flex-direction: column; }
-  .visual-pane {
-    min-height: 35vh;
-    flex: 0 0 35vh;
+  .auth-pane {
+    min-height: auto;
+    justify-content: center;
+    padding: 24px;
+    padding-top: 34vh;
   }
-  .visual-bg-image {
+  .auth-panel-wrapper { max-width: 520px; }
+  .bg-image {
     background-position: center top;
+  }
+  .bg-overlay-dark {
+    background:
+      linear-gradient(180deg,
+        rgba(0, 5, 15, 0.15) 0%,
+        rgba(0, 8, 20, 0.35) 40%,
+        rgba(2, 10, 26, 0.88) 65%,
+        rgba(2, 10, 26, 0.98) 100%
+      );
   }
   .visual-overlay-gradient {
     background:
       linear-gradient(180deg,
-        rgba(0, 10, 30, 0.1) 0%,
-        rgba(0, 10, 30, 0.4) 60%,
-        #02060f 100%
+        rgba(0, 8, 22, 0.1) 0%,
+        rgba(0, 8, 22, 0.25) 50%,
+        rgba(2, 10, 26, 0.7) 100%
       );
   }
-  .auth-pane {
-    flex: 1;
-    padding: 24px;
-  }
-  .auth-pane::before {
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: auto;
-    width: auto;
-    height: 1px;
-    background: linear-gradient(90deg,
-      transparent,
-      rgba(0, 180, 255, 0.3) 50%,
-      transparent
-    );
-  }
+}
+
+@media (max-width: 540px) {
+  .auth-pane { padding: 20px; padding-top: 30vh; }
+  .auth-panel-wrapper { max-width: 100%; }
 }
 </style>

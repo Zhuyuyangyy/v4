@@ -230,17 +230,17 @@ function handleSubmit() {
   color: #e8f7ff;
   background:
     linear-gradient(145deg,
-      rgba(15, 35, 70, 0.45) 0%,
-      rgba(8, 20, 45, 0.55) 40%,
-      rgba(5, 12, 30, 0.65) 100%
+      rgba(8, 22, 48, 0.42) 0%,
+      rgba(5, 15, 36, 0.52) 45%,
+      rgba(3, 10, 26, 0.62) 100%
     );
-  border: 1px solid rgba(0, 180, 255, 0.2);
+  border: 1px solid rgba(0, 180, 255, 0.22);
   box-shadow:
-    0 32px 80px rgba(0, 0, 0, 0.5),
-    inset 0 1px 0 rgba(100, 200, 255, 0.15),
-    0 0 60px rgba(0, 100, 200, 0.1),
-    0 0 0 1px rgba(255, 255, 255, 0.04);
-  backdrop-filter: blur(48px) saturate(1.5);
+    0 32px 80px rgba(0, 0, 0, 0.45),
+    inset 0 1px 0 rgba(100, 200, 255, 0.12),
+    0 0 80px rgba(0, 100, 200, 0.15),
+    0 0 0 1px rgba(255, 255, 255, 0.03);
+  backdrop-filter: blur(36px) saturate(1.3);
   animation: panel-enter 800ms cubic-bezier(0.19, 1, 0.22, 1) both, panel-breathe 5s ease-in-out infinite;
 }
 
