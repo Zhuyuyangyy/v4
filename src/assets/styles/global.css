@@ -175,3 +175,8 @@ input:focus:not(:focus-visible) {
   font-size: 11px;
   margin-left: 6px;
 }
+
+body.login-page-active {
+  background: #02060f !important;
+  background-attachment: fixed !important;
+}

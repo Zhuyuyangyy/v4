@@ -1,561 +1,375 @@
 <script setup lang="ts">
 import { onBeforeUnmount, onMounted, ref } from 'vue'
-import { useRouter } from 'vue-router'
-import AgentGeometryScene from '@/components/login/AgentGeometryScene.vue'
-import InkFieldBackground from '@/components/login/InkFieldBackground.vue'
 import LoginPanel from '@/components/login/LoginPanel.vue'
-import { setAuthSession, type AuthRole } from '@/lib/auth'
 
-const router = useRouter()
 const rootRef = ref<HTMLElement | null>(null)
-const compactScene = ref(false)
-const authOpen = ref(false)
 let mediaQuery: MediaQueryList | null = null
-let loginTimer = 0
+const isMobile = ref(false)
 
 function updateCompact(event?: MediaQueryListEvent | MediaQueryList) {
-  compactScene.value = Boolean(event?.matches ?? mediaQuery?.matches)
-}
-
-function resolveLoginRole(payload: { account: string, role: AuthRole }) {
-  const normalizedAccount = payload.account.trim().toLowerCase()
-  return payload.role === 'admin' || normalizedAccount === 'admin' ? 'admin' : 'student'
-}
-
-function handleLogin(payload: { account: string, password: string, remember: boolean, role: AuthRole }) {
-  window.clearTimeout(loginTimer)
-
-  loginTimer = window.setTimeout(() => {
-    const role = resolveLoginRole(payload)
-    setAuthSession({
-      role,
-      name: role === 'admin' ? '管理员' : (payload.account || '学习用户'),
-      account: payload.account || (role === 'admin' ? 'admin' : 'student'),
-      loginAt: new Date().toISOString(),
-    })
-    router.replace(role === 'admin' ? '/admin' : '/home')
-  }, 1000)
-}
-
-function openAuth() {
-  authOpen.value = true
-}
-
-function closeAuth() {
-  authOpen.value = false
-}
-
-function handlePointerMove(event: PointerEvent) {
-  rootRef.value?.style.setProperty('--cursor-x', `${event.clientX}px`)
-  rootRef.value?.style.setProperty('--cursor-y', `${event.clientY}px`)
+  isMobile.value = Boolean(event?.matches ?? mediaQuery?.matches)
 }
 
 onMounted(() => {
   mediaQuery = window.matchMedia('(max-width: 900px)')
   updateCompact(mediaQuery)
   mediaQuery.addEventListener('change', updateCompact)
+  document.body.classList.add('login-page-active')
 })
 
 onBeforeUnmount(() => {
-  window.clearTimeout(loginTimer)
   mediaQuery?.removeEventListener('change', updateCompact)
+  document.body.classList.remove('login-page-active')
 })
 </script>
 
 <template>
-  <main ref="rootRef" class="login-view" @pointermove="handlePointerMove">
-    <InkFieldBackground :compact="compactScene" />
-    <div class="ink-veil" aria-hidden="true" />
-    <div class="grain-layer" aria-hidden="true" />
-    <div class="login-grid" aria-hidden="true" />
-    <div class="cursor-core" aria-hidden="true" />
-    <div class="cursor-ring" aria-hidden="true" />
-
-    <section class="visual-pane" aria-label="EduMind 系统入口主页">
-      <AgentGeometryScene :compact="compactScene" :show-copy="false" />
-
-      <header class="landing-topbar">
-        <div class="brand-block">
-          <strong>EduMind</strong>
-          <span>A3-TRACE Learning Intelligence</span>
-        </div>
-        <div class="connection-pill">
-          <i />
-          Agent Orchestrator Online
-        </div>
-      </header>
-
-      <section class="landing-copy">
-        <p>Multi-Agent Personalized Learning OS</p>
-        <h1>
-          <span>进入</span>
-          <span>AI 学习宇宙</span>
-        </h1>
-        <span>
-          学习画像、资源生成、路径规划、智能辅导、效果评估与反馈重规划在同一个智能体核心中持续协作。
-        </span>
-      </section>
-
-      <button class="enter-system" type="button" @click="openAuth">
-        <span>进入系统</span>
-        <i />
-      </button>
-
-      <div class="landing-metrics" aria-hidden="true">
-        <span>ProfileAgent</span>
-        <span>ResourceAgent</span>
-        <span>PathAgent</span>
-        <span>TutorAgent</span>
-        <span>EvaluationAgent</span>
-        <span>ReflectionAgent</span>
+  <main ref="rootRef" class="login-view">
+    <div class="login-bg" aria-hidden="true">
+      <div class="bg-image" />
+      <div class="bg-overlay-dark" />
+      <div class="bg-grid-fine" />
+      <div class="bg-glow-orb orb-1" />
+      <div class="bg-glow-orb orb-2" />
+      <div class="bg-glow-orb orb-3" />
+      <div class="bg-vignette" />
+      <div class="bg-particles">
+        <span v-for="i in 40" :key="i" class="particle" :style="{
+          left: `${Math.random() * 100}%`,
+          top: `${Math.random() * 100}%`,
+          animationDelay: `${Math.random() * 6}s`,
+          animationDuration: `${4 + Math.random() * 4}s`,
+          opacity: 0.2 + Math.random() * 0.5,
+          width: `${1 + Math.random() * 2}px`,
+          height: `${1 + Math.random() * 2}px`
+        }" />
       </div>
-    </section>
+    </div>
 
-    <Transition name="auth-modal">
-      <section v-if="authOpen" class="auth-layer" aria-label="登录窗口">
-        <button class="auth-backdrop" type="button" aria-label="关闭登录窗口" @click="closeAuth" />
-        <div class="auth-dialog">
-          <button class="auth-close" type="button" aria-label="关闭登录窗口" @click="closeAuth">×</button>
-          <LoginPanel @submit="handleLogin" />
+    <div class="split-layout">
+      <section class="visual-pane" aria-label="多智能体学习中枢展示">
+        <div class="visual-bg-image" aria-hidden="true"></div>
+        <div class="visual-overlay-gradient" aria-hidden="true"></div>
+        <div class="visual-overlay-grid" aria-hidden="true"></div>
+        <div class="visual-particles" aria-hidden="true">
+          <span v-for="i in 25" :key="i" class="particle" :style="{
+            left: `${Math.random() * 70}%`,
+            top: `${Math.random() * 100}%`,
+            animationDelay: `${Math.random() * 6}s`,
+            animationDuration: `${4 + Math.random() * 5}s`,
+            opacity: 0.3 + Math.random() * 0.5,
+            width: `${1.5 + Math.random() * 2}px`,
+            height: `${1.5 + Math.random() * 2}px`
+          }" />
         </div>
       </section>
-    </Transition>
+
+      <section class="auth-pane" aria-label="登录面板">
+        <div class="auth-panel-wrapper">
+          <LoginPanel />
+        </div>
+      </section>
+    </div>
   </main>
 </template>
 
 <style scoped>
 .login-view {
-  --cursor-x: 50vw;
-  --cursor-y: 50vh;
   position: relative;
   min-height: 100vh;
   overflow: hidden;
   color: #f0f6ff;
-  background: transparent;
-  font-family: 'Avenir Next', 'Avenir', 'Microsoft YaHei UI', 'PingFang SC', sans-serif;
+  background: #02060f;
+  font-family: 'Segoe UI', 'PingFang SC', 'Microsoft YaHei UI', sans-serif;
   isolation: isolate;
 }
 
-.ink-veil,
-.grain-layer,
-.login-grid {
+.login-bg {
   position: fixed;
   inset: 0;
+  z-index: 0;
   pointer-events: none;
 }
 
-.ink-veil {
-  z-index: 1;
+.bg-image {
+  position: absolute;
+  inset: 0;
   background:
-    linear-gradient(90deg, rgba(10, 20, 45, 0.15), rgba(15, 40, 80, 0.02) 42%, rgba(10, 25, 55, 0.1)),
-    radial-gradient(circle at 51% 49%, transparent 0 36%, rgba(15, 35, 70, 0.03) 58%, rgba(10, 20, 45, 0.12) 100%),
-    linear-gradient(180deg, rgba(10, 16, 35, 0.12), transparent 25%, transparent 75%, rgba(150, 190, 235, 0.05));
-  opacity: 0.5;
+    radial-gradient(ellipse 1200px 800px at 25% 45%, rgba(0, 120, 255, 0.12) 0%, transparent 55%),
+    radial-gradient(ellipse 800px 600px at 35% 50%, rgba(0, 80, 180, 0.15) 0%, transparent 60%),
+    linear-gradient(135deg,
+      #01040d 0%,
+      #030a1c 20%,
+      #06122e 45%,
+      #081a42 70%,
+      #050f25 100%
+    );
 }
 
-.grain-layer {
-  z-index: 3;
-  inset: -45%;
-  opacity: 0.26;
-  mix-blend-mode: screen;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.82' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.5'/%3E%3C/svg%3E");
-  animation: grain-shift 7s steps(6) infinite;
+.bg-overlay-dark {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(90deg, transparent 0%, rgba(0, 5, 15, 0.3) 60%, rgba(0, 5, 15, 0.5) 100%);
 }
 
-.login-grid {
-  z-index: 2;
-  opacity: 0.2;
+.bg-grid-fine {
+  position: absolute;
+  inset: 0;
+  opacity: 0.06;
   background-image:
-    linear-gradient(rgba(125, 211, 252, 0.08) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(125, 211, 252, 0.07) 1px, transparent 1px),
-    repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.035) 0 1px, transparent 1px 4px);
-  background-size: 96px 96px, 96px 96px, 100% 4px;
-  mask-image: radial-gradient(circle at 50% 50%, #000 0 42%, transparent 79%);
+    linear-gradient(rgba(0, 180, 255, 0.1) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 180, 255, 0.1) 1px, transparent 1px);
+  background-size: 50px 50px;
+  mask-image: radial-gradient(ellipse at 30% 50%, black 20%, transparent 75%);
+  -webkit-mask-image: radial-gradient(ellipse at 30% 50%, black 20%, transparent 75%);
 }
 
-.cursor-core,
-.cursor-ring {
-  position: fixed;
-  top: var(--cursor-y);
-  left: var(--cursor-x);
-  z-index: 25;
-  border-radius: 999px;
-  pointer-events: none;
-  transform: translate(-50%, -50%);
-  mix-blend-mode: screen;
+.bg-glow-orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(80px);
+  animation: orb-breathe 8s ease-in-out infinite;
 }
 
-.cursor-core {
-  width: 6px;
-  height: 6px;
-  background: rgba(226, 245, 255, 0.96);
-  box-shadow: 0 0 18px rgba(34, 211, 238, 0.9);
+.orb-1 {
+  width: 500px;
+  height: 500px;
+  top: 15%;
+  left: 10%;
+  background: radial-gradient(circle, rgba(0, 120, 255, 0.2), transparent 70%);
+  animation-delay: 0s;
 }
 
-.cursor-ring {
-  width: 46px;
-  height: 46px;
-  border: 1px solid rgba(180, 240, 255, 0.42);
-  background: rgba(34, 211, 238, 0.035);
-  transition:
-    width 420ms cubic-bezier(0.16, 1, 0.3, 1),
-    height 420ms cubic-bezier(0.16, 1, 0.3, 1),
-    background 420ms cubic-bezier(0.16, 1, 0.3, 1);
+.orb-2 {
+  width: 400px;
+  height: 400px;
+  top: 50%;
+  left: 25%;
+  background: radial-gradient(circle, rgba(0, 180, 255, 0.15), transparent 70%);
+  animation-delay: -2.5s;
 }
 
-.visual-pane,
-.auth-layer {
+.orb-3 {
+  width: 350px;
+  height: 350px;
+  bottom: 10%;
+  left: 20%;
+  background: radial-gradient(circle, rgba(50, 150, 255, 0.12), transparent 70%);
+  animation-delay: -5s;
+}
+
+@keyframes orb-breathe {
+  0%, 100% {
+    opacity: 0.5;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.9;
+    transform: scale(1.15);
+  }
+}
+
+.bg-vignette {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse at center, transparent 30%, rgba(0, 0, 0, 0.5) 100%);
+}
+
+.bg-particles {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+}
+
+.particle {
+  position: absolute;
+  background: rgba(100, 200, 255, 0.8);
+  border-radius: 50%;
+  animation: particle-float linear infinite;
+  box-shadow: 0 0 6px rgba(100, 200, 255, 0.6);
+}
+
+@keyframes particle-float {
+  0% {
+    transform: translateY(0) translateX(0);
+    opacity: 0;
+  }
+  10% {
+    opacity: 0.6;
+  }
+  90% {
+    opacity: 0.6;
+  }
+  100% {
+    transform: translateY(-100vh) translateX(20px);
+    opacity: 0;
+  }
+}
+
+.split-layout {
   position: relative;
-  z-index: 4;
-  min-width: 0;
-}
-
-.visual-pane {
+  z-index: 1;
+  display: flex;
   min-height: 100vh;
 }
 
-.landing-topbar {
-  position: fixed;
-  top: clamp(24px, 4vw, 48px);
-  left: clamp(24px, 5vw, 72px);
-  right: clamp(24px, 5vw, 72px);
-  z-index: 7;
+.visual-pane {
+  position: relative;
+  flex: 0 0 60%;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.visual-bg-image {
+  position: absolute;
+  inset: 0;
+  background-image: url('/login-bg.jpg');
+  background-size: cover;
+  background-position: center left;
+  background-repeat: no-repeat;
+}
+
+.visual-overlay-gradient {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(90deg,
+      rgba(0, 10, 30, 0.15) 0%,
+      rgba(0, 10, 30, 0.3) 50%,
+      rgba(2, 8, 20, 0.75) 85%,
+      #02060f 100%
+    );
+}
+
+.visual-overlay-grid {
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(0, 180, 255, 0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 180, 255, 0.04) 1px, transparent 1px);
+  background-size: 40px 40px;
+  mask-image: linear-gradient(90deg, rgba(0,0,0,0.3) 0%, transparent 70%);
+  -webkit-mask-image: linear-gradient(90deg, rgba(0,0,0,0.3) 0%, transparent 70%);
+}
+
+.visual-particles {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.visual-particles .particle {
+  position: absolute;
+  background: rgba(100, 220, 255, 0.9);
+  border-radius: 50%;
+  animation: particle-float linear infinite;
+  box-shadow: 0 0 8px rgba(100, 220, 255, 0.7);
+}
+
+@keyframes particle-float {
+  0% {
+    transform: translateY(0) translateX(0);
+    opacity: 0;
+  }
+  10% {
+    opacity: 0.8;
+  }
+  90% {
+    opacity: 0.8;
+  }
+  100% {
+    transform: translateY(-100vh) translateX(30px);
+    opacity: 0;
+  }
+}
+
+.auth-pane {
+  position: relative;
+  flex: 1;
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 24px;
-  pointer-events: none;
-  animation: text-reveal 1100ms cubic-bezier(0.16, 1, 0.3, 1) 180ms both;
-}
-
-.brand-block {
-  display: grid;
-  gap: 6px;
-}
-
-.brand-block strong {
-  color: #f7fbff;
-  font-size: clamp(28px, 4vw, 52px);
-  line-height: 0.9;
-  letter-spacing: 0.08em;
-  text-shadow: 0 0 28px rgba(103, 232, 249, 0.16);
-}
-
-.brand-block span,
-.connection-pill,
-.landing-copy p,
-.landing-metrics,
-.enter-system {
-  font-family: 'Microsoft YaHei UI', 'PingFang SC', sans-serif;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-}
-
-.brand-block span {
-  color: rgba(125, 211, 252, 0.72);
-  font-size: 11px;
-}
-
-.connection-pill {
-  display: inline-flex;
-  align-items: center;
-  gap: 10px;
-  min-height: 42px;
-  border: 1px solid rgba(125, 211, 252, 0.26);
-  border-radius: 999px;
-  padding: 0 16px;
-  color: rgba(226, 245, 255, 0.8);
-  background: rgba(2, 8, 23, 0.24);
-  font-size: 10px;
-  backdrop-filter: blur(16px);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
-}
-
-.connection-pill i {
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  background: #2dd4bf;
-  box-shadow: 0 0 18px rgba(45, 212, 191, 0.9);
-}
-
-.landing-copy {
-  position: fixed;
-  left: clamp(24px, 5vw, 72px);
-  bottom: clamp(142px, 18vh, 210px);
-  z-index: 7;
-  max-width: min(620px, calc(100vw - 48px));
-  pointer-events: none;
-}
-
-.landing-copy p {
-  margin: 0 0 16px;
-  color: #67e8f9;
-  font-size: 11px;
-  animation: text-reveal 1000ms cubic-bezier(0.16, 1, 0.3, 1) 360ms both;
-}
-
-.landing-copy h1 {
-  margin: 0;
-  color: #f8fbff;
-  font-size: clamp(46px, 6.2vw, 92px);
-  line-height: 0.96;
-  letter-spacing: 0;
-  text-shadow: 0 10px 55px rgba(0, 0, 0, 0.48), 0 0 35px rgba(34, 211, 238, 0.14);
-}
-
-.landing-copy h1 span {
-  display: block;
-  overflow: hidden;
-  animation: text-reveal 1100ms cubic-bezier(0.16, 1, 0.3, 1) both;
-}
-
-.landing-copy h1 span:nth-child(2) {
-  background: linear-gradient(94deg, #f8fbff 0%, #9cecff 42%, #7c8cff 78%, #f8fbff 100%);
-  background-clip: text;
-  color: transparent;
-  animation-delay: 120ms;
-}
-
-.landing-copy > span {
-  display: block;
-  max-width: 460px;
-  margin-top: 20px;
-  color: rgba(201, 222, 237, 0.74);
-  font-size: 15px;
-  line-height: 1.9;
-  animation: text-reveal 1100ms cubic-bezier(0.16, 1, 0.3, 1) 520ms both;
-}
-
-.enter-system {
-  position: fixed;
-  left: clamp(24px, 5vw, 72px);
-  bottom: clamp(48px, 8vh, 86px);
-  z-index: 8;
-  display: inline-flex;
-  align-items: center;
   justify-content: center;
-  gap: 16px;
-  width: min(260px, calc(100vw - 48px));
-  min-height: 58px;
-  overflow: hidden;
-  border: 1px solid rgba(190, 241, 255, 0.72);
-  color: #f8fbff;
-  background:
-    linear-gradient(120deg, rgba(255, 255, 255, 0.08), rgba(14, 165, 233, 0.04) 44%, rgba(139, 92, 246, 0.08)),
-    rgba(2, 8, 23, 0.24);
-  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.42), inset 0 1px 0 rgba(255, 255, 255, 0.12);
-  font-size: 13px;
-  font-weight: 800;
-  cursor: pointer;
-  backdrop-filter: blur(16px);
-  animation: text-reveal 1100ms cubic-bezier(0.16, 1, 0.3, 1) 720ms both;
-  transition: transform 520ms cubic-bezier(0.16, 1, 0.3, 1), border-color 520ms cubic-bezier(0.16, 1, 0.3, 1), box-shadow 520ms cubic-bezier(0.16, 1, 0.3, 1);
+  padding: 40px 56px;
+  background: #02060f;
 }
 
-.enter-system::before {
+.auth-pane::before {
   content: '';
   position: absolute;
-  top: -80px;
-  left: -90px;
-  width: 58px;
-  height: 220px;
-  transform: rotate(34deg);
-  background: rgba(255, 255, 255, 0.45);
-  transition: left 760ms cubic-bezier(0.16, 1, 0.3, 1);
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: 1px;
+  background: linear-gradient(180deg,
+    transparent,
+    rgba(0, 180, 255, 0.25) 20%,
+    rgba(0, 200, 255, 0.4) 50%,
+    rgba(0, 180, 255, 0.25) 80%,
+    transparent
+  );
+  z-index: 2;
 }
 
-.enter-system:hover {
-  transform: translateY(-3px);
-  border-color: rgba(103, 232, 249, 0.9);
-  box-shadow: 0 24px 78px rgba(14, 165, 233, 0.18), inset 0 1px 0 rgba(255, 255, 255, 0.14);
-}
-
-.enter-system:hover ~ .cursor-ring,
-.login-view:has(.enter-system:hover) .cursor-ring,
-.login-view:has(.auth-close:hover) .cursor-ring {
-  width: 68px;
-  height: 68px;
-  background: rgba(125, 211, 252, 0.08);
-}
-
-.enter-system:hover::before {
-  left: 120%;
-}
-
-.enter-system span,
-.enter-system i {
+.auth-panel-wrapper {
   position: relative;
   z-index: 1;
+  width: 100%;
+  max-width: 480px;
+  animation: wrapper-breath 4s ease-in-out infinite;
 }
 
-.enter-system i {
-  width: 34px;
-  height: 1px;
-  background: currentColor;
-}
-
-.enter-system i::after {
-  content: '';
-  position: absolute;
-  right: -1px;
-  top: -4px;
-  width: 9px;
-  height: 9px;
-  border-top: 1px solid currentColor;
-  border-right: 1px solid currentColor;
-  transform: rotate(45deg);
-}
-
-.landing-metrics {
-  position: fixed;
-  right: clamp(24px, 5vw, 72px);
-  bottom: clamp(48px, 8vh, 86px);
-  z-index: 7;
-  display: grid;
-  gap: 10px;
-  color: rgba(226, 245, 255, 0.48);
-  font-size: 10px;
-  text-align: right;
-  pointer-events: none;
-}
-
-.auth-layer {
-  position: fixed;
-  inset: 0;
-  z-index: 30;
-  display: grid;
-  place-items: center;
-  padding: 24px;
-}
-
-.auth-backdrop {
-  position: absolute;
-  inset: 0;
-  border: 0;
-  background:
-    radial-gradient(circle at var(--cursor-x) var(--cursor-y), rgba(34, 211, 238, 0.12), transparent 24%),
-    rgba(1, 5, 16, 0.42);
-  backdrop-filter: blur(18px) saturate(1.14);
-  cursor: pointer;
-}
-
-.auth-dialog {
-  position: relative;
-  z-index: 1;
-  width: min(450px, 100%);
-}
-
-.auth-close {
-  position: absolute;
-  top: -14px;
-  right: -14px;
-  z-index: 3;
-  display: grid;
-  place-items: center;
-  width: 38px;
-  height: 38px;
-  border: 1px solid rgba(125, 211, 252, 0.28);
-  border-radius: 50%;
-  color: #e8f7ff;
-  background: rgba(2, 8, 23, 0.76);
-  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.4);
-  font-size: 25px;
-  line-height: 1;
-  cursor: pointer;
-  backdrop-filter: blur(12px);
-}
-
-.auth-modal-enter-active,
-.auth-modal-leave-active {
-  transition: opacity 420ms cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-.auth-modal-enter-active .auth-dialog,
-.auth-modal-leave-active .auth-dialog {
-  transition: transform 620ms cubic-bezier(0.16, 1, 0.3, 1), filter 620ms cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-.auth-modal-enter-from,
-.auth-modal-leave-to {
-  opacity: 0;
-}
-
-.auth-modal-enter-from .auth-dialog,
-.auth-modal-leave-to .auth-dialog {
-  transform: translateY(24px) scale(0.96);
-  filter: blur(10px);
-}
-
-@keyframes text-reveal {
-  from {
-    opacity: 0;
-    transform: translateY(28px);
-    filter: blur(12px);
-  }
-
-  to {
-    opacity: 1;
-    transform: translateY(0);
-    filter: blur(0);
-  }
-}
-
-@keyframes grain-shift {
+@keyframes wrapper-breath {
   0%, 100% {
-    transform: translate(0, 0);
+    filter: drop-shadow(0 20px 50px rgba(0, 80, 180, 0.2));
   }
-
-  25% {
-    transform: translate(-3%, 2%);
-  }
-
   50% {
-    transform: translate(2%, -3%);
+    filter: drop-shadow(0 30px 80px rgba(0, 130, 230, 0.4));
   }
+}
 
-  75% {
-    transform: translate(-2%, 2%);
+@media (max-width: 1200px) {
+  .visual-pane {
+    flex: 0 0 55%;
   }
+  .auth-pane { padding: 32px 40px; }
 }
 
 @media (max-width: 900px) {
-  .login-view {
-    min-height: 100svh;
-  }
-
+  .split-layout { flex-direction: column; }
   .visual-pane {
-    min-height: 100svh;
+    min-height: 35vh;
+    flex: 0 0 35vh;
   }
-
-  .landing-topbar {
-    align-items: flex-start;
-    flex-direction: column;
-    gap: 14px;
+  .visual-bg-image {
+    background-position: center top;
   }
-
-  .landing-copy {
-    right: 24px;
-    bottom: 154px;
+  .visual-overlay-gradient {
+    background:
+      linear-gradient(180deg,
+        rgba(0, 10, 30, 0.1) 0%,
+        rgba(0, 10, 30, 0.4) 60%,
+        #02060f 100%
+      );
   }
-
-  .landing-copy h1 {
-    font-size: clamp(40px, 12vw, 54px);
+  .auth-pane {
+    flex: 1;
+    padding: 24px;
   }
-
-  .landing-metrics {
-    display: none;
-  }
-
-  .enter-system {
-    right: 24px;
-  }
-}
-
-@media (pointer: coarse) {
-  .cursor-core,
-  .cursor-ring {
-    display: none;
+  .auth-pane::before {
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: auto;
+    width: auto;
+    height: 1px;
+    background: linear-gradient(90deg,
+      transparent,
+      rgba(0, 180, 255, 0.3) 50%,
+      transparent
+    );
   }
 }
 </style>

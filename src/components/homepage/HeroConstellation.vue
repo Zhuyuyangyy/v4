@@ -311,14 +311,14 @@ function initStarfield() {
         <svg :viewBox="`0 0 ${VIZ_W} ${VIZ_H}`" class="hero-svg">
           <defs>
             <radialGradient id="hp-sphere-outer" cx="50%" cy="50%" r="50%">
-              <stop offset="0%" :stop-color="T.cyan" stop-opacity="0.25" />
-              <stop offset="45%" :stop-color="T.purple" stop-opacity="0.12" />
+              <stop offset="0%" :stop-color="T.cyan" stop-opacity="0.4" />
+              <stop offset="45%" :stop-color="T.purple" stop-opacity="0.18" />
               <stop offset="100%" :stop-color="T.purple" stop-opacity="0" />
             </radialGradient>
             <radialGradient id="hp-sphere-body" cx="35%" cy="35%" r="65%">
-              <stop offset="0%" stop-color="#ffffff" stop-opacity="0.18" />
-              <stop offset="40%" stop-color="#a0c8ff" stop-opacity="0.10" />
-              <stop offset="100%" stop-color="#70a8e8" stop-opacity="0.06" />
+              <stop offset="0%" stop-color="#3a8fff" stop-opacity="0.4" />
+              <stop offset="40%" stop-color="#1e3a8a" stop-opacity="0.65" />
+              <stop offset="100%" stop-color="#0a1230" stop-opacity="0.95" />
             </radialGradient>
             <radialGradient id="hp-sphere-hi" cx="50%" cy="50%" r="50%">
               <stop offset="0%" stop-color="#fff" stop-opacity="0.3" />
