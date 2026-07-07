@@ -3,12 +3,50 @@ import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { setAuthSession } from '@/lib/auth'
 
+type LoginRole = 'student' | 'admin'
+
 const router = useRouter()
 const loading = ref(false)
-const account = ref('admin')
-const password = ref('admin123')
+const activeRole = ref<LoginRole>('student')
+const account = ref('')
+const password = ref('')
 const remember = ref(true)
 const showPassword = ref(false)
+
+const roleConfigs = {
+  student: {
+    label: '学习者登录',
+    sublabel: '用户',
+    placeholderAccount: '请输入学号/账号',
+    placeholderPassword: '请输入密码',
+    buttonText: '进入学习平台',
+    defaultAccount: 'student',
+    defaultPassword: 'student123',
+    icon: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+      <path d="M22 10v6M2 10l10-5 10 5-10 5z"/>
+      <path d="M6 12v5c3 3 9 3 12 0v-5"/>
+    </svg>`,
+  },
+  admin: {
+    label: '管理员登录',
+    sublabel: '后台管理',
+    placeholderAccount: '请输入管理员账号',
+    placeholderPassword: '请输入密码',
+    buttonText: '进入管理后台',
+    defaultAccount: 'admin',
+    defaultPassword: 'admin123',
+    icon: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+      <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+      <path d="m9 12 2 2 4-4"/>
+    </svg>`,
+  },
+}
+
+function switchRole(role: LoginRole) {
+  activeRole.value = role
+  account.value = roleConfigs[role].defaultAccount
+  password.value = roleConfigs[role].defaultPassword
+}
 
 function handleSubmit() {
   if (!account.value || !password.value) {
@@ -19,13 +57,23 @@ function handleSubmit() {
   loading.value = true
   setTimeout(() => {
     loading.value = false
-    setAuthSession({
-      role: 'admin',
-      name: '管理员',
-      account: account.value || 'admin',
-      loginAt: new Date().toISOString(),
-    })
-    router.push('/admin')
+    if (activeRole.value === 'admin') {
+      setAuthSession({
+        role: 'admin',
+        name: '管理员',
+        account: account.value || 'admin',
+        loginAt: new Date().toISOString(),
+      })
+      router.push('/admin')
+    } else {
+      setAuthSession({
+        role: 'student',
+        name: '学习者',
+        account: account.value || 'student',
+        loginAt: new Date().toISOString(),
+      })
+      router.push('/home')
+    }
   }, 900)
 }
 </script>
@@ -73,6 +121,23 @@ function handleSubmit() {
       </div>
     </header>
 
+    <div class="role-switcher">
+      <button
+        v-for="(config, role) in roleConfigs"
+        :key="role"
+        type="button"
+        class="role-tab"
+        :class="{ active: activeRole === role }"
+        @click="switchRole(role as LoginRole)"
+      >
+        <span class="role-icon" v-html="config.icon" />
+        <span class="role-text">
+          <span class="role-label">{{ config.label }}</span>
+          <span class="role-sublabel">{{ config.sublabel }}</span>
+        </span>
+      </button>
+    </div>
+
     <header class="panel-header">
       <h1 class="panel-title">多智能体智慧学习平台</h1>
       <p class="panel-subtitle">—— Software Cup · 智能教育赛道 ——</p>
@@ -86,7 +151,11 @@ function handleSubmit() {
             <circle cx="12" cy="7" r="4"/>
           </svg>
         </span>
-        <input v-model="account" autocomplete="username" placeholder="请输入管理员账号" />
+        <input
+          v-model="account"
+          autocomplete="username"
+          :placeholder="roleConfigs[activeRole].placeholderAccount"
+        />
       </label>
 
       <label class="input-field">
@@ -100,7 +169,7 @@ function handleSubmit() {
           v-model="password"
           :type="showPassword ? 'text' : 'password'"
           autocomplete="current-password"
-          placeholder="请输入密码"
+          :placeholder="roleConfigs[activeRole].placeholderPassword"
         />
         <button type="button" class="input-eye" @click="showPassword = !showPassword" :aria-label="showPassword ? '隐藏密码' : '显示密码'">
           <svg v-if="!showPassword" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
@@ -130,7 +199,7 @@ function handleSubmit() {
       <button class="login-button" type="submit" :disabled="loading">
         <span class="btn-shine"></span>
         <span class="btn-text">
-          {{ loading ? '登录中...' : '登录管理员端' }}
+          {{ loading ? '登录中...' : roleConfigs[activeRole].buttonText }}
         </span>
       </button>
     </form>
@@ -226,21 +295,21 @@ function handleSubmit() {
   width: 100%;
   overflow: hidden;
   border-radius: 24px;
-  padding: 40px 36px;
+  padding: 32px 32px;
   color: #e8f7ff;
   background:
     linear-gradient(145deg,
-      rgba(8, 22, 48, 0.42) 0%,
-      rgba(5, 15, 36, 0.52) 45%,
-      rgba(3, 10, 26, 0.62) 100%
+      rgba(8, 22, 48, 0.5) 0%,
+      rgba(5, 15, 36, 0.6) 45%,
+      rgba(3, 10, 26, 0.7) 100%
     );
   border: 1px solid rgba(0, 180, 255, 0.22);
   box-shadow:
-    0 32px 80px rgba(0, 0, 0, 0.45),
+    0 32px 80px rgba(0, 0, 0, 0.5),
     inset 0 1px 0 rgba(100, 200, 255, 0.12),
-    0 0 80px rgba(0, 100, 200, 0.15),
+    0 0 80px rgba(0, 100, 200, 0.18),
     0 0 0 1px rgba(255, 255, 255, 0.03);
-  backdrop-filter: blur(36px) saturate(1.3);
+  backdrop-filter: blur(40px) saturate(1.3);
   animation: panel-enter 800ms cubic-bezier(0.19, 1, 0.22, 1) both, panel-breathe 5s ease-in-out infinite;
 }
 
@@ -287,9 +356,83 @@ function handleSubmit() {
   100% { transform: translateX(100%); opacity: 0; }
 }
 
+.role-switcher {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-bottom: 24px;
+  padding: 6px;
+  border-radius: 14px;
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px solid rgba(0, 160, 255, 0.1);
+}
+
+.role-tab {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  background: transparent;
+  color: rgba(150, 200, 240, 0.7);
+  cursor: pointer;
+  transition: all 250ms cubic-bezier(0.4, 0, 0.2, 1);
+  text-align: left;
+}
+
+.role-tab:hover {
+  color: rgba(180, 220, 255, 0.9);
+  background: rgba(0, 120, 200, 0.08);
+}
+
+.role-tab.active {
+  color: #fff;
+  background: linear-gradient(135deg, rgba(0, 120, 255, 0.25), rgba(0, 80, 180, 0.15));
+  border-color: rgba(0, 180, 255, 0.35);
+  box-shadow: 0 4px 20px rgba(0, 120, 255, 0.2), inset 0 1px 0 rgba(100, 200, 255, 0.2);
+}
+
+.role-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: rgba(0, 100, 200, 0.15);
+  flex-shrink: 0;
+  color: #00d4ff;
+  transition: all 250ms ease;
+}
+
+.role-tab.active .role-icon {
+  background: linear-gradient(135deg, rgba(0, 150, 255, 0.3), rgba(0, 100, 200, 0.2));
+  box-shadow: 0 0 20px rgba(0, 180, 255, 0.25);
+}
+
+.role-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.role-label {
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1;
+}
+
+.role-sublabel {
+  font-size: 10px;
+  color: rgba(130, 180, 220, 0.6);
+  letter-spacing: 0.05em;
+}
+
 .panel-header {
   position: relative;
-  margin-bottom: 32px;
+  margin-bottom: 24px;
   text-align: center;
 }
 
@@ -297,8 +440,8 @@ function handleSubmit() {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 32px;
-  padding-bottom: 20px;
+  margin-bottom: 20px;
+  padding-bottom: 16px;
   border-bottom: 1px solid rgba(0, 160, 255, 0.1);
 }
 
@@ -394,7 +537,7 @@ function handleSubmit() {
 
 .panel-title {
   margin: 0;
-  font-size: 32px;
+  font-size: 26px;
   font-weight: 800;
   line-height: 1.2;
   color: #fff;
@@ -403,8 +546,8 @@ function handleSubmit() {
 }
 
 .panel-subtitle {
-  margin: 12px 0 0;
-  font-size: 14px;
+  margin: 10px 0 0;
+  font-size: 13px;
   color: rgba(150, 210, 255, 0.6);
   letter-spacing: 0.08em;
 }
@@ -412,7 +555,7 @@ function handleSubmit() {
 .login-form {
   position: relative;
   display: grid;
-  gap: 16px;
+  gap: 14px;
 }
 
 .input-field {
@@ -420,10 +563,10 @@ function handleSubmit() {
   display: flex;
   align-items: center;
   gap: 12px;
-  height: 52px;
+  height: 50px;
   border: 1px solid rgba(0, 160, 255, 0.15);
   border-radius: 12px;
-  padding: 0 18px;
+  padding: 0 16px;
   background: rgba(255, 255, 255, 0.03);
   transition: all 250ms cubic-bezier(0.4, 0, 0.2, 1);
 }
@@ -462,7 +605,7 @@ function handleSubmit() {
   color: #f5fbff;
   background: transparent;
   outline: none;
-  font-size: 15px;
+  font-size: 14px;
 }
 
 .input-field input::placeholder {
@@ -492,7 +635,7 @@ function handleSubmit() {
   align-items: center;
   justify-content: space-between;
   gap: 14px;
-  padding: 4px 2px;
+  padding: 2px 2px;
 }
 
 .remember {
@@ -542,7 +685,7 @@ function handleSubmit() {
   display: flex;
   align-items: center;
   justify-content: center;
-  min-height: 52px;
+  min-height: 50px;
   overflow: hidden;
   border: 0;
   border-radius: 12px;
@@ -552,12 +695,12 @@ function handleSubmit() {
     0 8px 32px rgba(0, 120, 255, 0.4),
     0 0 20px rgba(0, 150, 255, 0.2),
     inset 0 1px 0 rgba(255, 255, 255, 0.2);
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 700;
-  letter-spacing: 0.1em;
+  letter-spacing: 0.08em;
   cursor: pointer;
   transition: all 250ms cubic-bezier(0.4, 0, 0.2, 1);
-  margin-top: 8px;
+  margin-top: 4px;
 }
 
 .btn-shine {
@@ -598,8 +741,8 @@ function handleSubmit() {
 .panel-divider {
   display: flex;
   align-items: center;
-  gap: 16px;
-  margin: 28px 0 20px;
+  gap: 14px;
+  margin: 22px 0 18px;
 }
 
 .divider-line {
@@ -609,7 +752,7 @@ function handleSubmit() {
 }
 
 .divider-text {
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 600;
   color: rgba(150, 210, 255, 0.7);
   letter-spacing: 0.05em;
@@ -619,14 +762,14 @@ function handleSubmit() {
 .features-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 10px;
+  gap: 8px;
 }
 
 .feature-item {
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 12px 14px;
+  padding: 10px 12px;
   border-radius: 12px;
   background: rgba(255, 255, 255, 0.025);
   border: 1px solid rgba(255, 255, 255, 0.04);
@@ -644,8 +787,8 @@ function handleSubmit() {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 38px;
-  height: 38px;
+  width: 36px;
+  height: 36px;
   border-radius: 10px;
   color: #00d4ff;
   background: linear-gradient(135deg, rgba(0, 180, 255, 0.15), rgba(0, 120, 255, 0.08));
@@ -656,12 +799,12 @@ function handleSubmit() {
 .feature-text {
   display: flex;
   flex-direction: column;
-  gap: 3px;
+  gap: 2px;
   min-width: 0;
 }
 
 .feature-title {
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 600;
   color: rgba(255, 255, 255, 0.9);
 }
@@ -678,8 +821,8 @@ function handleSubmit() {
   display: flex;
   align-items: center;
   justify-content: space-around;
-  margin-top: 24px;
-  padding-top: 20px;
+  margin-top: 20px;
+  padding-top: 16px;
   border-top: 1px solid rgba(0, 150, 255, 0.1);
 }
 
@@ -688,11 +831,11 @@ function handleSubmit() {
   flex-direction: column;
   align-items: center;
   text-align: center;
-  gap: 4px;
+  gap: 3px;
 }
 
 .stat-num {
-  font-size: 18px;
+  font-size: 16px;
   font-weight: 700;
   color: #00d4ff;
   letter-spacing: 0.01em;
@@ -709,7 +852,7 @@ function handleSubmit() {
 }
 
 .stat-desc {
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 600;
   color: rgba(200, 230, 255, 0.75);
 }
@@ -722,7 +865,7 @@ function handleSubmit() {
 
 .stat-divider {
   width: 1px;
-  height: 36px;
+  height: 32px;
   background: linear-gradient(180deg, transparent, rgba(0, 160, 255, 0.2), transparent);
 }
 
@@ -744,7 +887,7 @@ function handleSubmit() {
     box-shadow:
       0 32px 80px rgba(0, 0, 0, 0.5),
       inset 0 1px 0 rgba(100, 200, 255, 0.15),
-      0 0 60px rgba(0, 100, 200, 0.15),
+      0 0 60px rgba(0, 100, 200, 0.18),
       0 0 0 1px rgba(255, 255, 255, 0.04);
     border-color: rgba(0, 180, 255, 0.2);
     transform: scale(1);
@@ -756,27 +899,25 @@ function handleSubmit() {
       0 0 120px rgba(0, 140, 240, 0.35),
       0 0 0 1px rgba(255, 255, 255, 0.06);
     border-color: rgba(0, 210, 255, 0.45);
-    transform: scale(1.01);
+    transform: scale(1.005);
   }
-}
-
-@keyframes panel-scan {
-  0%, 45% { transform: translateX(-100%); opacity: 0; }
-  55% { opacity: 1; }
-  100% { transform: translateX(100%); opacity: 0; }
 }
 
 @media (max-width: 500px) {
   .login-panel {
-    padding: 28px 24px;
+    padding: 24px 20px;
     border-radius: 20px;
   }
 
   .panel-title {
-    font-size: 26px;
+    font-size: 22px;
   }
 
   .features-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .role-switcher {
     grid-template-columns: 1fr;
   }
 }
