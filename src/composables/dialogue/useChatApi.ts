@@ -1,8 +1,8 @@
 import {
   chats, dimensions, inputText, isAiLoading, report, showReport, activeMenu, canUnlockReport,
   recommendQaInput, recommendQaMessages, isRecommendQaLoading,
-  isXunfeiConnecting, isXunfeiListening, isXunfeiSpeaking,
-  xunfeiSubtitle, isVirtualMuted, xunfeiLanguage, xunfeiVolume, syncToMainChat,
+  isAiConnecting, isAiListening, isAiSpeaking,
+  aiSubtitle, isVirtualMuted, aiLanguage, aiVolume, syncToMainChat,
   hasGeneratedReport, saveProfileToHistory, matchRecommendedCourses,
 } from './useAppState'
 import { avatarStatus, avatarWriteText, setAvatarNlpHandler, setAvatarAsrHandler, getAvatarInstance } from './useAvatarSdk'
@@ -221,16 +221,16 @@ setAvatarNlpHandler((data: any) => {
   if (!syncToMainChat.value) return
   const text = data?.payload?.choices?.text?.[0]?.content || data?.text || ''
   if (!text) return
-  isXunfeiSpeaking.value = true
+  isAiSpeaking.value = true
 
   const last = chats.value[chats.value.length - 1]
   if (last?.sender === 'ai' && last?.source === 'chat' && last.text === text) return
-  if (last?.source === 'xunfei' && last?.sender === 'ai') {
+  if (last?.source === 'ai' && last?.sender === 'ai') {
     chats.value = [...chats.value.slice(0, -1), { ...last, text }]
   } else {
     chats.value = [
       ...chats.value,
-      { id: `xf-ai-${Date.now()}`, sender: 'ai', text, time: getTime(), source: 'xunfei' },
+      { id: `ai-${Date.now()}`, sender: 'ai', text, time: getTime(), source: 'ai' },
     ]
   }
 })
@@ -311,7 +311,7 @@ export async function sendMessage() {
 
     if (syncToMainChat.value && avatarStatus.value === 'connected') {
       avatarWriteText(cleanText, false)
-      isXunfeiSpeaking.value = true
+      isAiSpeaking.value = true
     }
   } catch (err) {
     console.error('DeepSeek API error:', err)
@@ -421,14 +421,14 @@ export function handleSendRecommendQa(customText?: string) {
 
   if (avatarStatus.value === 'connected') {
     avatarWriteText(textToSend, true)
-    isXunfeiSpeaking.value = true
+    isAiSpeaking.value = true
 
     const nlpHandler = (data: any) => {
       const response = data?.payload?.choices?.text?.[0]?.content || data?.text || ''
       if (response) {
         recommendQaMessages.value = [...recommendQaMessages.value, { sender: 'ai', text: response }]
         isRecommendQaLoading.value = false
-        isXunfeiSpeaking.value = false
+        isAiSpeaking.value = false
       }
       const instance = getAvatarInstance()
       if (instance) instance.off('nlp', nlpHandler)
@@ -455,27 +455,27 @@ export function handleSendRecommendQa(customText?: string) {
   }
 }
 
-export function runXunfeiSimulation(customQuestion?: string) {
-  if (isXunfeiConnecting.value || isXunfeiListening.value) return
-  if (isXunfeiSpeaking.value) {
+export function runAiSimulation(customQuestion?: string) {
+  if (isAiConnecting.value || isAiListening.value) return
+  if (isAiSpeaking.value) {
     try { if ('speechSynthesis' in window) window.speechSynthesis.cancel() } catch { /* ignore */ }
-    isXunfeiSpeaking.value = false
-    xunfeiSubtitle.value = '你好！已为您停止播报。点击下方问题，随时开启新轮次的高阶对讲！'
+    isAiSpeaking.value = false
+    aiSubtitle.value = '你好！已为您停止播报。点击下方问题，随时开启新轮次的高阶对讲！'
     return
   }
 
   const targetQuestion = customQuestion || '我该如何科学地规划自己的日常AI学习道路呢？'
-  isXunfeiListening.value = true
-  xunfeiSubtitle.value = `🎙️ [实时收音中...] \n"${targetQuestion}"`
+  isAiListening.value = true
+  aiSubtitle.value = `🎙️ [实时收音中...] \n"${targetQuestion}"`
 
   setTimeout(() => {
-    isXunfeiListening.value = false
-    isXunfeiConnecting.value = true
-    xunfeiSubtitle.value = '⚡「科大讯飞星火模型」深度大语言引擎多维语义分析中...'
+    isAiListening.value = false
+    isAiConnecting.value = true
+    aiSubtitle.value = '⚡「多智能体大语言模型」深度语义分析中...'
 
     setTimeout(() => {
-      isXunfeiConnecting.value = false
-      isXunfeiSpeaking.value = true
+      isAiConnecting.value = false
+      isAiSpeaking.value = true
 
       let responseText = ''
       if (targetQuestion.includes('Python程序设计') || targetQuestion.includes('C语言') || targetQuestion.includes('数据结构') || (targetQuestion.includes('介绍') && (targetQuestion.includes('课程') || targetQuestion.includes('门')))) {
@@ -490,35 +490,35 @@ export function runXunfeiSimulation(customQuestion?: string) {
         responseText = '收到您对课程的咨询！EduMind 课程体系涵盖 5 大方向共 24 门课程，从编程基础到人工智能前沿均有覆盖。您可以在课程页面浏览所有课程，点击课程卡片展开查看核心知识点、代码示例和预设问答。如需深入了解某门具体课程，我也很乐意为您详细讲解！'
       }
 
-      xunfeiSubtitle.value = `"${responseText}"`
+      aiSubtitle.value = `"${responseText}"`
 
       if (!isVirtualMuted.value) {
         try {
           if ('speechSynthesis' in window) {
             window.speechSynthesis.cancel()
             const utterance = new SpeechSynthesisUtterance(responseText)
-            utterance.lang = xunfeiLanguage.value
-            utterance.volume = xunfeiVolume.value / 100
+            utterance.lang = aiLanguage.value
+            utterance.volume = aiVolume.value / 100
             utterance.rate = 1.05
-            utterance.onend = () => { isXunfeiSpeaking.value = false }
-            utterance.onerror = () => { isXunfeiSpeaking.value = false }
+            utterance.onend = () => { isAiSpeaking.value = false }
+            utterance.onerror = () => { isAiSpeaking.value = false }
             window.speechSynthesis.speak(utterance)
           } else {
-            setTimeout(() => { isXunfeiSpeaking.value = false }, 8000)
+            setTimeout(() => { isAiSpeaking.value = false }, 8000)
           }
         } catch {
-          setTimeout(() => { isXunfeiSpeaking.value = false }, 8000)
+          setTimeout(() => { isAiSpeaking.value = false }, 8000)
         }
       } else {
-        setTimeout(() => { isXunfeiSpeaking.value = false }, 8000)
+        setTimeout(() => { isAiSpeaking.value = false }, 8000)
       }
 
       if (syncToMainChat.value) {
         const currentTime = new Date().toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit', hour12: false })
         chats.value = [
           ...chats.value,
-          { id: `xf-user-${Date.now()}`, sender: 'user', text: targetQuestion, time: currentTime, source: 'xunfei' },
-          { id: `xf-ai-${Date.now()}`, sender: 'ai', text: responseText, time: currentTime, source: 'xunfei' },
+          { id: `ai-user-${Date.now()}`, sender: 'user', text: targetQuestion, time: currentTime, source: 'ai' },
+          { id: `ai-ai-${Date.now()}`, sender: 'ai', text: responseText, time: currentTime, source: 'ai' },
         ]
       }
     }, 1200)

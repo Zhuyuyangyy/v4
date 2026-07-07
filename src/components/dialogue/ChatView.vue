@@ -17,8 +17,8 @@
           <button @click="isSidebarCollapsed = !isSidebarCollapsed" class="text-sm font-semibold px-3 py-2 rounded-xl transition-all cursor-pointer flex items-center gap-1 shrink-0" style="color: var(--gold-400); border: 1px solid var(--border-card); background: rgba(59, 130, 246, 0.06)">
             <span>{{ isSidebarCollapsed ? '展开 ➔' : '⮨ 收入' }}</span>
           </button>
-          <button @click="isXunfeiSidebarOpen = !isXunfeiSidebarOpen" class="text-sm font-semibold px-3 py-2 rounded-xl transition-all cursor-pointer flex items-center gap-1 shrink-0" style="color: var(--teal-400); border: 1px solid rgba(45, 212, 184, 0.2); background: rgba(45, 212, 184, 0.06)">
-            <span>{{ isXunfeiSidebarOpen ? '收起虚拟人' : '展开虚拟人' }}</span>
+          <button @click="isAiSidebarOpen = !isAiSidebarOpen" class="text-sm font-semibold px-3 py-2 rounded-xl transition-all cursor-pointer flex items-center gap-1 shrink-0" style="color: var(--teal-400); border: 1px solid rgba(45, 212, 184, 0.2); background: rgba(45, 212, 184, 0.06)">
+            <span>{{ isAiSidebarOpen ? '收起虚拟人' : '展开虚拟人' }}</span>
           </button>
           <button @click="isRightSidebarCollapsed = !isRightSidebarCollapsed" class="text-sm font-semibold px-3 py-2 rounded-xl transition-all cursor-pointer flex items-center gap-1 shrink-0" style="color: #d64a7a; border: 1px solid rgba(214, 74, 122, 0.2); background: rgba(214, 74, 122, 0.06)">
             <span>{{ isRightSidebarCollapsed ? '展开报告 ➔' : '⮨ 收起报告' }}</span>
@@ -32,7 +32,7 @@
           <!-- AI Avatar (only for AI messages) -->
           <div v-if="chat.sender === 'ai'" class="shrink-0">
             <!-- 虚拟导师 -->
-            <div v-if="chat.source === 'xunfei'" class="w-10 h-10 relative">
+            <div v-if="chat.source === 'ai'" class="w-10 h-10 relative">
               <div class="absolute inset-0 rounded-xl bg-gradient-to-br from-teal-400 to-emerald-600 opacity-20 blur-sm" />
               <div class="relative w-full h-full rounded-xl flex items-center justify-center text-white shadow-lg" style="background: linear-gradient(135deg, #0d9488, #065f46); box-shadow: 0 2px 12px rgba(13, 148, 136, 0.3)">
                 <Sparkles class="w-5 h-5" />
@@ -58,7 +58,7 @@
           <div class="max-w-[76%] space-y-1.5" :class="{ 'text-right': chat.sender === 'user' }">
             <div class="flex items-center gap-2 px-1">
               <span class="text-xs font-medium" style="color: var(--text-muted)">{{ chat.time || '10:25' }}</span>
-              <span v-if="chat.source === 'xunfei' && chat.sender === 'ai'"
+              <span v-if="chat.source === 'ai' && chat.sender === 'ai'"
                 class="text-[11px] px-2 py-0.5 rounded-full flex items-center gap-1" style="color: var(--teal-400); background: rgba(45, 212, 184, 0.1); border: 1px solid rgba(45, 212, 184, 0.2)">
                 <Tv class="w-3 h-3" /> 虚拟导师
               </span>
@@ -66,7 +66,7 @@
                 class="text-[11px] px-2 py-0.5 rounded-full flex items-center gap-1" style="color: var(--gold-400); background: rgba(59, 130, 246, 0.1); border: 1px solid rgba(59, 130, 246, 0.2)">
                 <Mic class="w-3 h-3" /> 语音输入
               </span>
-              <span v-else-if="chat.source === 'xunfei' && chat.sender === 'user'"
+              <span v-else-if="chat.source === 'ai' && chat.sender === 'user'"
                 class="text-[11px] px-2 py-0.5 rounded-full flex items-center gap-1" style="color: var(--teal-400); background: rgba(45, 212, 184, 0.1); border: 1px solid rgba(45, 212, 184, 0.2)">
                 <Tv class="w-3 h-3" /> 虚拟人
               </span>
@@ -220,7 +220,7 @@ import MetricPanel from './MetricPanel.vue'
 import ProfileReportPanel from './ProfileReportPanel.vue'
 import {
   chats, inputText, isAiLoading, isSidebarCollapsed, isRightSidebarCollapsed,
-  isXunfeiSidebarOpen, dimensions, canUnlockReport, handleChipClick, selectNodeDetail,
+  isAiSidebarOpen, dimensions, canUnlockReport, handleChipClick, selectNodeDetail,
   navigateToCourse,
 } from '@/composables/dialogue/useAppState'
 import { sendMessage, triggerReport } from '@/composables/dialogue/useChatApi'

@@ -55,8 +55,8 @@ function handleSubmit() {
           </svg>
         </div>
         <div class="brand-texts">
-          <span class="brand-cn">科大讯飞</span>
-          <span class="brand-en">iFLYTEK</span>
+          <span class="brand-cn">智学云</span>
+          <span class="brand-en">SMART LEARN</span>
         </div>
         <span class="brand-divider" />
         <span class="ai-badge">
@@ -75,7 +75,7 @@ function handleSubmit() {
 
     <header class="panel-header">
       <h1 class="panel-title">多智能体智慧学习平台</h1>
-      <p class="panel-subtitle">—— Software Cup · 科大讯飞赛题 ——</p>
+      <p class="panel-subtitle">—— Software Cup · 智能教育赛道 ——</p>
     </header>
 
     <form class="login-form" @submit.prevent="handleSubmit">

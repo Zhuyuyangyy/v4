@@ -26,7 +26,7 @@ export interface ChatMessage {
   time?: string
   capturedTags?: string[]
   suggestChips?: string[]
-  source?: 'chat' | 'xunfei' | 'asr'
+  source?: 'chat' | 'ai' | 'asr'
   recommendedCourses?: RecommendedCourse[]
 }
 

@@ -3,7 +3,7 @@ import { watch } from 'vue'
 import { useRoute } from 'vue-router'
 import CosmicBackground from '@/components/dialogue/CosmicBackground.vue'
 import ChatView from '@/components/dialogue/ChatView.vue'
-import XunfeiSidebar from '@/components/dialogue/XunfeiSidebar.vue'
+import AiSidebar from '@/components/dialogue/AiSidebar.vue'
 import DashboardView from '@/components/dialogue/DashboardView.vue'
 import HistoryView from '@/components/dialogue/HistoryView.vue'
 import RecommendView from '@/components/dialogue/RecommendView.vue'
@@ -80,7 +80,7 @@ watch(() => route.query.tab, (tab) => {
     <!-- Main Content Area -->
     <main class="flex-1 flex overflow-hidden relative"
       :class="activeMenu === 'recommend' ? 'flex-row-reverse' : 'flex-row'">
-      <XunfeiSidebar v-if="activeMenu === 'chat' || activeMenu === 'recommend'" :side="activeMenu === 'recommend' ? 'right' : 'left'" />
+      <AiSidebar v-if="activeMenu === 'chat' || activeMenu === 'recommend'" :side="activeMenu === 'recommend' ? 'right' : 'left'" />
       <ChatView v-if="activeMenu === 'chat'" />
       <DashboardView v-if="activeMenu === 'portrait-report'" />
       <HistoryView v-if="activeMenu === 'history'" />

@@ -44,21 +44,21 @@ export const recommendQaInput = ref('')
 export const recommendQaMessages = ref<Array<{ sender: 'user' | 'ai'; text: string }>>([
   {
     sender: 'ai',
-    text: '👋 您好！我是您的自适应学情推荐专属答疑助理。在此您可以获得由科大讯飞星火大模型为您提供的自学规划及推荐资源解惑。\n\n您可以选择下方的快速预置问题，或者手动输入您想了解的疑虑（例如："这三个推荐我应该按什么顺序学？"、"Gradio项目零基础可以自学吗？"），我会根据您的学业画像为您量身解答！',
+    text: '👋 您好！我是您的自适应学情推荐专属答疑助理。在此您可以获得由多智能体大语言模型为您提供的自学规划及推荐资源解惑。\n\n您可以选择下方的快速预置问题，或者手动输入您想了解的疑虑（例如："这三个推荐我应该按什么顺序学？"、"Gradio项目零基础可以自学吗？"），我会根据您的学业画像为您量身解答！',
   },
 ])
 export const isRecommendQaLoading = ref(false)
 
-export const isXunfeiSidebarOpen = ref(true)
+export const isAiSidebarOpen = ref(true)
 export const isVirtualMuted = ref(false)
 export const virtualStyle = ref<VirtualStyle>('hologram')
-export const isXunfeiConnecting = ref(false)
-export const isXunfeiSpeaking = ref(false)
-export const isXunfeiListening = ref(false)
-export const showXunfeiHint = ref(false)
-export const xunfeiSubtitle = ref('你好！我是科大讯飞智能虚拟导师。点击下方连麦，开启高阶语音会话。')
-export const xunfeiVolume = ref(80)
-export const xunfeiLanguage = ref('zh-CN')
+export const isAiConnecting = ref(false)
+export const isAiSpeaking = ref(false)
+export const isAiListening = ref(false)
+export const showAiHint = ref(false)
+export const aiSubtitle = ref('你好！我是 EduMind 智能虚拟导师。点击下方连麦，开启高阶语音会话。')
+export const aiVolume = ref(80)
+export const aiLanguage = ref('zh-CN')
 export const syncToMainChat = ref(true)
 export const textInput = ref('')
 export const useNlp = ref(true)

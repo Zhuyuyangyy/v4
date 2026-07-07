@@ -2,7 +2,7 @@
   <aside
     class="bg-transparent flex flex-col h-full transition-all duration-300 overflow-hidden shrink-0"
     :class="[
-      isXunfeiSidebarOpen ? 'w-[440px] opacity-100' : 'w-0 p-0 opacity-0 pointer-events-none'
+      isAiSidebarOpen ? 'w-[440px] opacity-100' : 'w-0 p-0 opacity-0 pointer-events-none'
     ]"
     :style="{
       borderRight: side === 'left' ? '1px solid var(--border-subtle)' : undefined,
@@ -22,11 +22,11 @@
           </span>
         </div>
         <div>
-          <h3 class="text-xs font-bold text-white leading-tight">讯飞虚拟互动舱</h3>
-          <div class="text-[10px]" style="color: var(--text-muted)">Xunfei Virtual Human Pro</div>
+          <h3 class="text-xs font-bold text-white leading-tight">AI 虚拟互动舱</h3>
+          <div class="text-[10px]" style="color: var(--text-muted)">AI Virtual Human Pro</div>
         </div>
       </div>
-      <button @click="isXunfeiSidebarOpen = false" class="p-0.5 rounded transition-colors cursor-pointer" style="color: var(--text-muted); hover: color: var(--text-secondary)" title="隐藏互动舱">
+      <button @click="isAiSidebarOpen = false" class="p-0.5 rounded transition-colors cursor-pointer" style="color: var(--text-muted); hover: color: var(--text-secondary)" title="隐藏互动舱">
         <X class="w-3.5 h-3.5" />
       </button>
     </div>
@@ -78,7 +78,7 @@
           <div v-if="avatarStatus === 'loading'" class="absolute inset-0 bg-slate-950/30 rounded-xl flex flex-col items-center justify-center z-30">
             <Tv class="w-8 h-8 mb-2 animate-bounce" style="color: var(--gold-400)" />
             <span class="text-xs text-white font-bold">正在连接虚拟人服务...</span>
-            <span class="text-[10px] mt-1" style="color: var(--text-muted)">初始化星火大模型引擎</span>
+            <span class="text-[10px] mt-1" style="color: var(--text-muted)">初始化大语言模型引擎</span>
           </div>
 
           <!-- Play not allowed overlay -->
@@ -117,7 +117,7 @@
         </div>
         <div class="h-7 rounded-lg border p-1.5 flex items-center justify-between overflow-hidden" style="background: rgba(22, 18, 32, 0.4); border-color: var(--border-card)">
           <div class="flex items-center gap-1">
-            <Mic class="w-3 h-3" :class="isRecording ? 'text-rose-500 animate-pulse' : ''" style="color: isRecording ? undefined : 'var(--gold-400')" />
+            <Mic class="w-3 h-3" :class="isRecording ? 'text-rose-500 animate-pulse' : ''" style="color: isRecording ? undefined : 'var(--gold-400)'" />
             <span class="text-[9px] font-medium" style="color: var(--text-muted)">
               {{ isRecording ? '正在聆听...' : (avatarStatus === 'connected' ? '等待语音交互' : '虚拟人未连接') }}
             </span>
@@ -132,7 +132,8 @@
           <button @click="handleFullDuplex" :disabled="avatarStatus !== 'connected'"
             class="py-2 rounded-xl text-[10px] font-bold text-white transition-all cursor-pointer border-none flex items-center justify-center gap-1 disabled:opacity-30"
             :class="isRecording ? 'bg-rose-600 hover:bg-rose-500' : ''"
-            :style="!isRecording ? { background: 'linear-gradient(135deg, var(--gold-500), var(--gold-600))' } : {}">
+            :style="!isRecording ? { background: 'linear-gradient(135deg, var(--gold-500), var(--gold-600))' } : {}"
+          >
             <Mic class="w-3 h-3" :class="isRecording && 'animate-pulse'" />
             {{ isRecording ? '停止聆听' : '全双工对话' }}
           </button>
@@ -166,7 +167,8 @@
             style="background: rgba(22, 18, 32, 0.5); border: 1px solid var(--border-input); color: var(--text-secondary)" />
           <button @click="handleSendText" :disabled="avatarStatus !== 'connected' || !textInput.trim()"
             class="px-3 py-2 rounded-lg text-[10px] font-bold text-white transition-all cursor-pointer border-none shrink-0 disabled:opacity-30"
-            :style="avatarStatus === 'connected' && textInput.trim() ? { background: 'linear-gradient(135deg, var(--gold-500), var(--gold-600))' } : { background: 'rgba(22, 18, 32, 0.8)' }">
+            :style="avatarStatus === 'connected' && textInput.trim() ? { background: 'linear-gradient(135deg, var(--gold-500), var(--gold-600))' } : { background: 'rgba(22, 18, 32, 0.8)' }"
+          >
             发送
           </button>
         </div>
@@ -196,13 +198,13 @@
           <div class="flex items-center justify-between">
             <span class="flex items-center gap-1.5 text-[9px] font-medium" style="color: var(--text-muted)">
               <Volume1 class="w-3 h-3" style="color: var(--text-dim)" />
-              音量 {{ xunfeiVolume }}%
+              音量 {{ aiVolume }}%
             </span>
             <button @click="toggleMute" class="text-[8px] cursor-pointer bg-transparent border-none" style="color: var(--gold-400)">
               {{ isVirtualMuted ? '取消静音' : '静音' }}
             </button>
           </div>
-          <input type="range" min="0" max="100" :value="xunfeiVolume" @input="handleVolumeChange"
+          <input type="range" min="0" max="100" :value="aiVolume" @input="handleVolumeChange"
             class="w-full h-1 rounded-lg appearance-none cursor-pointer accent-blue-500" style="background: rgba(22, 18, 32, 0.8)" />
         </div>
         <div class="flex items-center justify-between pt-1" style="border-top: 1px solid var(--border-card)">
@@ -245,7 +247,8 @@
           </span>
           <span class="text-[8px] px-1.5 py-0.5 rounded-full border font-mono"
             :class="avatarStatus === 'connected' ? 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30' : avatarStatus === 'loading' ? 'bg-blue-500/15 text-blue-400 border-blue-500/30 animate-pulse' : ''"
-            :style="avatarStatus !== 'connected' && avatarStatus !== 'loading' ? { background: 'rgba(74, 70, 60, 0.15)', color: 'var(--text-muted)', borderColor: 'rgba(74, 70, 60, 0.3)' } : {}">
+            :style="avatarStatus !== 'connected' && avatarStatus !== 'loading' ? { background: 'rgba(74, 70, 60, 0.15)', color: 'var(--text-muted)', borderColor: 'rgba(74, 70, 60, 0.3)' } : {}"
+          >
             {{ avatarStatus === 'connected' ? 'LIVE' : avatarStatus === 'loading' ? 'CONNECTING' : avatarStatus === 'error' ? 'ERROR' : 'STANDBY' }}
           </span>
         </div>
@@ -253,7 +256,8 @@
           <button @click="avatarStatus === 'connected' ? handleDisconnect() : startAvatar()" :disabled="avatarStatus === 'loading'"
             class="py-2 rounded-xl text-[10px] font-bold text-white transition-all cursor-pointer border-none flex items-center justify-center gap-1 disabled:opacity-30"
             :class="avatarStatus === 'connected' ? 'bg-rose-600/80 hover:bg-rose-500' : ''"
-            :style="avatarStatus !== 'connected' ? { background: 'linear-gradient(135deg, var(--gold-500), var(--gold-600))' } : {}">
+            :style="avatarStatus !== 'connected' ? { background: 'linear-gradient(135deg, var(--gold-500), var(--gold-600))' } : {}"
+          >
             {{ avatarStatus === 'connected' ? '断开连接' : '启动虚拟人' }}
           </button>
           <button @click="handleViewReport"
@@ -274,8 +278,8 @@
 import { ref, computed, onUnmounted } from 'vue'
 import { Tv, X, Mic, MessageSquare, Volume1, SlidersHorizontal, PersonStanding, AudioLines, Wifi } from 'lucide-vue-next'
 import {
-  isXunfeiSidebarOpen, isVirtualMuted, isXunfeiSpeaking,
-  xunfeiSubtitle, xunfeiVolume, syncToMainChat,
+  isAiSidebarOpen, isVirtualMuted, isAiSpeaking,
+  aiSubtitle, aiVolume, syncToMainChat,
   canUnlockReport, activeMenu, showReport, chats,
   textInput, useNlp,
 } from '@/composables/dialogue/useAppState'
@@ -333,7 +337,7 @@ const statusText = computed(() => {
 
 const currentSubtitle = computed(() => {
   if (avatarStatus.value === 'connected' && avatarSubtitle.value) return avatarSubtitle.value
-  return xunfeiSubtitle.value
+  return aiSubtitle.value
 })
 
 // ---- Avatar lifecycle ----
@@ -352,10 +356,10 @@ function handleSendText() {
   const text = textInput.value.trim()
   if (!text || avatarStatus.value !== 'connected') return
   avatarWriteText(text, useNlp.value)
-  isXunfeiSpeaking.value = true
+  isAiSpeaking.value = true
   if (syncToMainChat.value) {
     const currentTime = new Date().toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit', hour12: false })
-    chats.value = [...chats.value, { id: `xf-user-${Date.now()}`, sender: 'user', text, time: currentTime, source: 'xunfei' }]
+    chats.value = [...chats.value, { id: `ai-user-${Date.now()}`, sender: 'user', text, time: currentTime, source: 'ai' }]
   }
   textInput.value = ''
 }
@@ -371,7 +375,7 @@ function handleShortVoice() {
   avatarStartRecord(10 * 1000)
 }
 
-function handleInterrupt() { avatarInterrupt(); isXunfeiSpeaking.value = false }
+function handleInterrupt() { avatarInterrupt(); isAiSpeaking.value = false }
 function handleAction(actionId: string) { avatarWriteCmd(actionId) }
 function handleDisconnect() { avatarStop() }
 
@@ -382,7 +386,7 @@ function toggleMute() {
 
 function handleVolumeChange(e: Event) {
   const v = Number((e.target as HTMLInputElement).value)
-  xunfeiVolume.value = v
+  aiVolume.value = v
   setAvatarVolume(v)
 }
 

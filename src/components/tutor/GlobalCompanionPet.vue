@@ -22,8 +22,8 @@ let dragOffsetY = 0
 let pointerStartX = 0
 let pointerStartY = 0
 let draggedDistance = 0
-let interactionTimer: ReturnType<typeof setTimeout> | null = null
-let snapTimer: ReturnType<typeof setTimeout> | null = null
+let interactionTimer: number | null = null
+let snapTimer: number | null = null
 let lookAnimationId: number | null = null
 
 const PET_POSITION_KEY = 'global-companion-pet-position'

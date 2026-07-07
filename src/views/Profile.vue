@@ -5,6 +5,7 @@ import {
   RefreshCw,
 } from 'lucide-vue-next'
 import { useProfileSurvey, roleOptions, fieldOptions, levelOptions, experienceOptions, goalOptions, longTermGoalOptions, motivationOptions, timeOptions, resourceOptions, weeklyHourOptions, paceOptions, stepLabels } from '@/composables/useProfileSurvey'
+import InkMouseBackground from '@/components/homepage/InkMouseBackground.vue'
 
 const {
   phase, currentStep, answers, result,
@@ -56,6 +57,7 @@ function setSlider(key: string, val: number) {
 
 <template>
   <div class="profile">
+    <InkMouseBackground />
     <!-- ============================================================ -->
     <!-- SURVEY PHASE                                                   -->
     <!-- ============================================================ -->
@@ -731,9 +733,6 @@ function setSlider(key: string, val: number) {
   position: relative;
   padding: 48px 56px 72px;
   animation: fadeInUp 0.5s var(--ease-out);
-  background:
-    radial-gradient(ellipse 800px 350px at 15% 8%, rgba(0,212,255,0.025), transparent),
-    radial-gradient(ellipse 500px 500px at 85% 15%, rgba(124,58,237,0.02), transparent);
 }
 
 /* Background constellation dots */
