@@ -19,10 +19,9 @@ html {
 body {
   font-family: var(--font-body);
   background:
-    radial-gradient(ellipse 1100px 760px at 72% 20%, rgba(120, 190, 255, 0.25), transparent 58%),
-    radial-gradient(ellipse 800px 600px at 28% 70%, rgba(200, 225, 255, 0.35), transparent 66%),
-    radial-gradient(ellipse 600px 500px at 50% 100%, rgba(180, 210, 255, 0.2), transparent 60%),
-    linear-gradient(180deg, #e8f0fc 0%, #d4e4f7 20%, #c5daf2 45%, #b8d0ec 65%, #a8c6e6 80%, #94b8dd 92%, #c8dcf0 100%);
+    radial-gradient(ellipse 1100px 760px at 72% 32%, rgba(120, 190, 255, 0.15), transparent 58%),
+    radial-gradient(ellipse 800px 600px at 28% 82%, rgba(200, 225, 255, 0.22), transparent 66%),
+    linear-gradient(180deg, #0a0f1a 0%, #0d1f38 20%, #16345e 45%, #2b5588 65%, #5a89bc 80%, #94b8dd 92%, #c8dcf0 100%);
   background-attachment: fixed;
   color: var(--color-text-primary);
   line-height: 1.6;
@@ -174,9 +173,4 @@ input:focus:not(:focus-visible) {
   font-family: var(--font-mono);
   font-size: 11px;
   margin-left: 6px;
-}
-
-body.login-page-active {
-  background: #02060f !important;
-  background-attachment: fixed !important;
 }
