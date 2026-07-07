@@ -162,7 +162,7 @@ onBeforeUnmount(() => {
 .bg-image {
   position: absolute;
   inset: 0;
-  background-image: url('/login-bg.png');
+  background-image: url('/login.png');
   background-size: cover;
   background-position: center center;
   background-repeat: no-repeat;
