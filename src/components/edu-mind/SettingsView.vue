@@ -97,7 +97,7 @@ const handleResetAll = () => {
 
 const handleLogout = () => {
   clearAuthSession()
-  router.replace('/login')
+  window.location.href = '/login'
 }
 
 const sections = [

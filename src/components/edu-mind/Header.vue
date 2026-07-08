@@ -208,7 +208,7 @@ function clearAllNotifications() {
 
 function handleLogout() {
   clearAuthSession()
-  router.replace('/login')
+  window.location.href = '/login'
 }
 </script>
 

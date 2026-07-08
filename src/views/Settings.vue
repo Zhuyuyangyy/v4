@@ -48,7 +48,7 @@ function saveSettings() {
 function handleLogout() {
   if (confirm('确定要退出登录吗？')) {
     clearAuthSession()
-    router.replace('/login')
+    window.location.href = '/login'
   }
 }
 </script>
