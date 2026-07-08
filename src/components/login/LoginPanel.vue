@@ -170,7 +170,7 @@ function handleRegister() {
       <p class="panel-subtitle">—— Software Cup · 智能教育赛道 ——</p>
     </header>
 
-    <form class="login-form" @submit.prevent="handleSubmit">
+    <form v-if="!showRegister" class="login-form" @submit.prevent="handleSubmit">
       <label class="input-field">
         <span class="input-icon">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
@@ -230,7 +230,7 @@ function handleRegister() {
         </span>
       </button>
 
-      <button v-if="activeRole === 'student' && !showRegister" type="button" class="register-link" @click="showRegister = true">
+      <button v-if="activeRole === 'student'" type="button" class="register-link" @click="showRegister = true">
         还没有账号？<span>立即注册</span>
       </button>
     </form>

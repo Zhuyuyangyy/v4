@@ -68,24 +68,31 @@ const filteredUsers = computed(() => {
   return userList.value.filter(u => u.name.includes(q) || u.account.includes(q) || u.role.includes(q))
 })
 
-const roleList = ref([
-  {
-    name: '管理员',
-    desc: '系统最高权限，可管理所有模块',
-    auth: ['数据大屏', '用户管理', '角色管理', '系统设置', '数据导出', '日志审计'],
-    count: 3,
-    tone: '#3e9eff',
-    icon: ShieldCheck,
-  },
-  {
-    name: '用户',
-    desc: '学习者，使用核心学习功能',
-    auth: ['画像生成', '学习路径', '资源中心', '智能评估', '对话练习'],
-    count: 4,
-    tone: '#23d18b',
-    icon: BrainCircuit,
-  },
-])
+const roleList = computed(() => {
+  const adminCount = userList.value.filter(u => u.role === '管理员').length
+  const userCount = userList.value.filter(u => u.role === '用户').length
+  return [
+    {
+      name: '管理员',
+      desc: '系统最高权限，可管理所有模块',
+      auth: roleAdminPerms.value,
+      count: adminCount,
+      tone: '#3e9eff',
+      icon: ShieldCheck,
+    },
+    {
+      name: '用户',
+      desc: '学习者，使用核心学习功能',
+      auth: roleUserPerms.value,
+      count: userCount,
+      tone: '#23d18b',
+      icon: BrainCircuit,
+    },
+  ]
+})
+
+const roleAdminPerms = ref(['数据大屏', '用户管理', '角色管理', '系统设置', '数据导出', '日志审计'])
+const roleUserPerms = ref(['画像生成', '学习路径', '资源中心', '智能评估', '对话练习'])
 
 const adminKpis = computed(() => {
   const total = userList.value.length
@@ -154,7 +161,14 @@ function closeDialog() {
 }
 
 function confirmAdd() {
-  if (!formName.value || !formAccount.value) return
+  if (!formName.value || !formAccount.value) {
+    alert('请填写姓名和账号')
+    return
+  }
+  if (userList.value.some(u => u.account === formAccount.value)) {
+    alert('该账号已存在，请使用其他账号')
+    return
+  }
   const maxId = userList.value.reduce((m, u) => Math.max(m, u.id), 0)
   userList.value.push({
     id: maxId + 1,
@@ -197,7 +211,7 @@ function confirmResetPwd() {
 
 // Edit role permissions
 const editingPermissions = ref<string[]>([])
-function openEditRoleDialogWithPerms(role: typeof roleList.value[0]) {
+function openEditRoleDialogWithPerms(role: { name: string; auth: string[] }) {
   dialogMode.value = 'edit-role'
   formRole.value = role.name
   editingPermissions.value = [...role.auth]
@@ -210,9 +224,10 @@ function togglePermission(perm: string) {
 }
 const allPermissions = ['数据大屏', '用户管理', '角色管理', '系统设置', '数据导出', '日志审计', '学习数据', '错题报表', '资源审核', '学生画像', '学习路径', '画像生成', '资源中心', '智能评估', '对话练习', '班级学情', '作业管理', '资源查看', '学生反馈']
 function confirmEditRole() {
-  const idx = roleList.value.findIndex(r => r.name === formRole.value)
-  if (idx >= 0) {
-    roleList.value[idx] = { ...roleList.value[idx], auth: [...editingPermissions.value] }
+  if (formRole.value === '管理员') {
+    roleAdminPerms.value = [...editingPermissions.value]
+  } else if (formRole.value === '用户') {
+    roleUserPerms.value = [...editingPermissions.value]
   }
   closeDialog()
 }
