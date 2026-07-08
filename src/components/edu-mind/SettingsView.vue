@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { ref, reactive } from 'vue'
+import { useRouter } from 'vue-router'
 import { useTheme } from '../../composables/useEduMindTheme'
+import { clearAuthSession } from '@/lib/auth'
 import {
   User,
   Bell,
@@ -25,6 +27,7 @@ import {
 } from 'lucide-vue-next'
 
 const activeSection = ref<string>('profile')
+const router = useRouter()
 const { themeMode, isDark, setTheme } = useTheme()
 
 const profileForm = reactive({
@@ -93,7 +96,8 @@ const handleResetAll = () => {
 }
 
 const handleLogout = () => {
-  window.alert('此复刻页面仅为展示模式，当前用户保持登录。')
+  clearAuthSession()
+  router.replace('/login')
 }
 
 const sections = [

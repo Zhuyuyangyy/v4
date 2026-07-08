@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref } from 'vue'
+import { useRouter } from 'vue-router'
 import {
   User,
   Palette,
@@ -19,9 +20,12 @@ import {
   Trash2,
   Download,
   Check,
+  LogOut,
 } from 'lucide-vue-next'
 import { useAppStore } from '@/store'
+import { clearAuthSession } from '@/lib/auth'
 
+const router = useRouter()
 const appStore = useAppStore()
 const theme = ref('dark')
 const language = ref('zh')
@@ -39,6 +43,13 @@ const saved = ref(false)
 function saveSettings() {
   saved.value = true
   setTimeout(() => { saved.value = false }, 2000)
+}
+
+function handleLogout() {
+  if (confirm('确定要退出登录吗？')) {
+    clearAuthSession()
+    router.replace('/login')
+  }
 }
 </script>
 
@@ -62,7 +73,7 @@ function saveSettings() {
           </div>
           <h2 class="group-title">个人资料</h2>
         </div>
-        <div class="group-card">
+        <div class="group-card breathe-subtle">
           <!-- Avatar Row -->
           <div class="profile-row">
             <div class="avatar-section">
@@ -109,7 +120,7 @@ function saveSettings() {
           </div>
           <h2 class="group-title">个人偏好</h2>
         </div>
-        <div class="group-card">
+        <div class="group-card breathe-subtle">
           <div class="field-row">
             <div class="field-info">
               <span class="field-label">界面主题</span>
@@ -181,7 +192,7 @@ function saveSettings() {
           </div>
           <h2 class="group-title">学习偏好</h2>
         </div>
-        <div class="group-card">
+        <div class="group-card breathe-subtle">
           <div class="field-row">
             <div class="field-info">
               <span class="field-label">学习提醒</span>
@@ -232,7 +243,7 @@ function saveSettings() {
           </div>
           <h2 class="group-title">隐私与数据</h2>
         </div>
-        <div class="group-card">
+        <div class="group-card breathe-subtle">
           <div class="field-row">
             <div class="field-info">
               <span class="field-label">数据共享</span>
@@ -265,47 +276,7 @@ function saveSettings() {
         </div>
       </section>
 
-      <!-- 5. Integrations -->
-      <section class="settings-group">
-        <div class="group-header">
-          <div class="group-icon api-icon">
-            <GitCompare :size="16" stroke-width="1.5" />
-          </div>
-          <h2 class="group-title">集成服务</h2>
-        </div>
-        <div class="group-card">
-          <div class="field-row">
-            <div class="field-info">
-              <span class="field-label">Notion</span>
-              <span class="field-desc">同步学习笔记到 Notion</span>
-            </div>
-            <button class="btn-outline">连接</button>
-          </div>
-          <div class="field-row">
-            <div class="field-info">
-              <span class="field-label">Anki</span>
-              <span class="field-desc">导入学习卡片到 Anki</span>
-            </div>
-            <button class="btn-outline">连接</button>
-          </div>
-          <div class="field-row">
-            <div class="field-info">
-              <span class="field-label">API 密钥</span>
-              <span class="field-desc">管理个人 API 访问密钥</span>
-            </div>
-            <button class="btn-outline">管理</button>
-          </div>
-          <div class="field-row">
-            <div class="field-info">
-              <span class="field-label">Webhook</span>
-              <span class="field-desc">配置学习事件回调</span>
-            </div>
-            <button class="btn-outline">配置</button>
-          </div>
-        </div>
-      </section>
-
-      <!-- 6. About -->
+      <!-- 5. About -->
       <section class="settings-group">
         <div class="group-header">
           <div class="group-icon about-icon">
@@ -313,7 +284,7 @@ function saveSettings() {
           </div>
           <h2 class="group-title">关于</h2>
         </div>
-        <div class="group-card">
+        <div class="group-card breathe-subtle">
           <div class="about-row">
             <span class="about-key">版本</span>
             <span class="about-value">v1.0.0</span>
@@ -329,6 +300,28 @@ function saveSettings() {
           <div class="about-row">
             <span class="about-key">最近更新</span>
             <span class="about-value">2026-05-11</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- 6. Account -->
+      <section class="settings-group">
+        <div class="group-header">
+          <div class="group-icon account-icon">
+            <Key :size="16" stroke-width="1.5" />
+          </div>
+          <h2 class="group-title">账户</h2>
+        </div>
+        <div class="group-card breathe-subtle">
+          <div class="field-row danger-row">
+            <div class="field-info">
+              <span class="field-label danger-label">退出登录</span>
+              <span class="field-desc">安全退出当前账号，返回登录页面</span>
+            </div>
+            <button class="btn-danger logout-btn" @click="handleLogout">
+              <LogOut :size="14" stroke-width="1.5" />
+              退出登录
+            </button>
           </div>
         </div>
       </section>
@@ -433,6 +426,7 @@ function saveSettings() {
 .privacy-icon { background: rgba(6, 214, 160, 0.1); color: #06d6a0; }
 .api-icon { background: rgba(245, 158, 11, 0.1); color: #f59e0b; }
 .about-icon { background: rgba(244, 63, 94, 0.1); color: #f43f5e; }
+.account-icon { background: rgba(244, 63, 94, 0.1); color: #f43f5e; }
 
 .group-title {
   font-family: var(--font-display);
