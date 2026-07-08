@@ -37,7 +37,7 @@ import {
 } from './agents/orchestrator.js'
 import { getTraces, getTraceSummary, buildTrace, recordTrace, setTraceRecordedHook } from './evidence/recorder.js'
 import { validateResourceGenerateInput } from './schemas.js'
-import { isLlmAvailable } from './llm/provider.js'
+import { isLlmAvailable, getLlmConfig } from './llm/provider.js'
 import { getKnowledgeBaseStats, searchKnowledgeBase } from './knowledge-base/vector-store.js'
 import {
   getCollaborationByDay,
@@ -154,6 +154,24 @@ const server = http.createServer(async (req, res) => {
         version: '2.0.0',
         features: ['multi-agent', 'llm-provider', 'evidence-recorder'],
         llmConfigured: !!(process.env.LLM_API_KEY && process.env.LLM_BASE_URL && process.env.LLM_MODEL),
+      })
+      return
+    }
+
+    // 返回 LLM 配置状态（不暴露密钥），供设置页"关于"模块展示
+    if (req.method === 'GET' && pathname === '/api/llm/status') {
+      const cfg = getLlmConfig()
+      const configured = isLlmAvailable()
+      let apiHostHint = null
+      if (configured) {
+        try { apiHostHint = new URL(cfg.apiUrl).host } catch { apiHostHint = null }
+      }
+      sendJson(res, 200, {
+        configured,
+        provider: configured ? (cfg.apiUrl.includes('deepseek') ? 'deepseek' : 'openai-compatible') : 'none',
+        model: cfg.model || 'none',
+        // 不返回 apiKey 和完整 apiUrl，仅返回域名前缀以备诊断
+        apiHostHint,
       })
       return
     }

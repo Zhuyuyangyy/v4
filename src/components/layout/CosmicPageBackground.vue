@@ -1,16 +1,19 @@
 <script setup lang="ts">
 import ThreeParticleBackground from '@/components/homepage/ThreeParticleBackground.vue'
+import { useAppStore } from '@/store'
 
 withDefaults(defineProps<{
   variant?: 'cosmic' | 'genre'
 }>(), {
   variant: 'cosmic',
 })
+
+const appStore = useAppStore()
 </script>
 
 <template>
   <div class="cosmos-bg" :class="`variant-${variant}`" aria-hidden="true">
-    <ThreeParticleBackground :variant="variant" />
+    <ThreeParticleBackground v-if="appStore.particleBgEnabled" :variant="variant" />
     <div class="cosmos-vignette" />
   </div>
 </template>

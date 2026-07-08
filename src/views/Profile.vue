@@ -75,28 +75,28 @@ function setSlider(key: string, val: number) {
             帮助你更清晰地认识自己的学习特征与成长方向。
           </p>
           <div class="welcome-steps">
-            <div class="welcome-step-item">
+            <div class="welcome-step-item breathe-subtle">
               <div class="wstep-num">1</div>
               <div class="wstep-info">
                 <span class="wstep-title">学习背景</span>
                 <span class="wstep-desc">你的经历与基础</span>
               </div>
             </div>
-            <div class="welcome-step-item">
+            <div class="welcome-step-item breathe-subtle">
               <div class="wstep-num">2</div>
               <div class="wstep-info">
                 <span class="wstep-title">学习目标</span>
                 <span class="wstep-desc">你前行的方向</span>
               </div>
             </div>
-            <div class="welcome-step-item">
+            <div class="welcome-step-item breathe-subtle">
               <div class="wstep-num">3</div>
               <div class="wstep-info">
                 <span class="wstep-title">技能自评</span>
                 <span class="wstep-desc">了解你的能力分布</span>
               </div>
             </div>
-            <div class="welcome-step-item">
+            <div class="welcome-step-item breathe-subtle">
               <div class="wstep-num">4</div>
               <div class="wstep-info">
                 <span class="wstep-title">学习偏好</span>

@@ -230,17 +230,17 @@ onBeforeUnmount(() => {
   inset: 0;
   overflow: hidden;
   background:
-    radial-gradient(ellipse 1100px 760px at 72% 32%, rgba(120, 190, 255, 0.15), transparent 58%),
-    radial-gradient(ellipse 800px 600px at 28% 82%, rgba(200, 225, 255, 0.22), transparent 66%),
-    linear-gradient(180deg, #0a0f1a 0%, #0d1f38 20%, #16345e 45%, #2b5588 65%, #5a89bc 80%, #94b8dd 92%, #c8dcf0 100%);
+    radial-gradient(ellipse 1100px 760px at 72% 32%, rgba(120, 190, 255, 0.12), transparent 58%),
+    radial-gradient(ellipse 800px 600px at 28% 82%, rgba(80, 140, 220, 0.12), transparent 66%),
+    linear-gradient(180deg, #0a0f1a 0%, #0d1f38 25%, #153055 50%, #254878 70%, #3a6298 85%, #4e78b0 100%);
 }
 
 .three-particle-bg.variant-genre {
   background:
     radial-gradient(ellipse 880px 420px at 20% 14%, rgba(50, 80, 130, 0.15), transparent 64%),
     radial-gradient(ellipse 720px 520px at 73% 44%, rgba(90, 160, 230, 0.2), transparent 62%),
-    radial-gradient(ellipse 900px 460px at 36% 88%, rgba(200, 225, 255, 0.3), transparent 68%),
-    linear-gradient(180deg, #120a18 0%, #121a2e 15%, #152b50 35%, #284a78 55%, #507cb5 72%, #88b0dc 86%, #bed6ee 100%);
+    radial-gradient(ellipse 900px 460px at 36% 88%, rgba(80, 140, 220, 0.12), transparent 68%),
+    linear-gradient(180deg, #120a18 0%, #121a2e 15%, #152b50 35%, #284a78 55%, #3a6298 75%, #4e78b0 100%);
 }
 
 .three-particle-bg canvas {

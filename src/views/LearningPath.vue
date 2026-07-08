@@ -1,5 +1,17 @@
 <template>
   <div class="lp-page">
+    <section v-if="homeGalaxyContext" class="lp-section lp-home-bridge">
+      <div>
+        <span>来自首页星图路径</span>
+        <strong>{{ homeGalaxyContext.courseName }}</strong>
+        <em>{{ homeGalaxyContext.pathName }} · 已承接到「{{ currentTopicLabel }}」学习路径</em>
+      </div>
+      <button type="button" class="quiet-btn" @click="selectRecommendedTopic">
+        <Target :size="16" />
+        切回推荐路径
+      </button>
+    </section>
+
     <section class="lp-section lp-section--constellation">
       <div class="lp-section-header">
         <div class="lp-section-badge">KNOWLEDGE CONSTELLATION</div>
@@ -39,9 +51,19 @@
       <div class="path-shell">
         <div
           class="path-map"
-          :style="{ backgroundImage: challengeMapBackground }"
+          :class="{ 'path-map--video': currentChallengeMap.type === 'video' }"
+          :style="{ backgroundImage: currentChallengeMap.type === 'video' ? 'none' : challengeMapBackground }"
           aria-label="学习路径闯关图"
         >
+          <video
+            v-if="currentChallengeMap.type === 'video'"
+            class="path-map__video"
+            :src="currentChallengeMap.video"
+            autoplay
+            loop
+            muted
+            playsinline
+          />
           <button
             v-for="stage in STAGE_CARDS"
             :key="stage.id"
@@ -156,7 +178,7 @@
 
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { BookOpen, PlayCircle, Rocket, RotateCcw, Target } from 'lucide-vue-next'
 import { useKnowledgeGraphData } from '../composables/useKnowledgeGraphData'
 import type { KnowledgeDomain, KnowledgeTopic } from '../composables/useKnowledgeGraphData'
@@ -217,6 +239,8 @@ const CHALLENGE_MAPS = [
   {
     name: '星河光轨',
     image: '/learning-path/chaungguan1.png',
+    video: '/learning-path/视频去水印_爱给网_aigei_com.mp4',
+    type: 'video',
     positions: [
       { left: '9%', top: '62%' },
       { left: '37%', top: '52%' },
@@ -228,6 +252,7 @@ const CHALLENGE_MAPS = [
   {
     name: '数据平台',
     image: '/learning-path/challenge-map-2.png',
+    type: 'image',
     positions: [
       { left: '10%', top: '58%' },
       { left: '9%', top: '22%' },
@@ -239,6 +264,7 @@ const CHALLENGE_MAPS = [
   {
     name: '浮岛闯关',
     image: '/learning-path/challenge-map-3.png',
+    type: 'image',
     positions: [
       { left: '9%', top: '60%' },
       { left: '12%', top: '26%' },
@@ -250,6 +276,7 @@ const CHALLENGE_MAPS = [
   {
     name: '峡谷浮台',
     image: '/learning-path/challenge-map-4.png',
+    type: 'image',
     positions: [
       { left: '10%', top: '62%' },
       { left: '31%', top: '43%' },
@@ -261,6 +288,7 @@ const CHALLENGE_MAPS = [
   {
     name: '螺旋星轨',
     image: '/learning-path/challenge-map-5.png',
+    type: 'image',
     positions: [
       { left: '9%', top: '62%' },
       { left: '23%', top: '34%' },
@@ -271,11 +299,19 @@ const CHALLENGE_MAPS = [
   },
 ] as const
 
+const route = useRoute()
 const router = useRouter()
 const { domains, loadFromBackend } = useKnowledgeGraphData()
 const selectedNodeId = ref<string | null>(null)
 const selectedStageIdx = ref(0)
 const selectedMapIdx = ref(0)
+
+const HOME_PATH_LABELS: Record<string, string> = {
+  'ai-fast': 'AI工程师快车道',
+  'fullstack': '全栈开发者路线',
+  'systems-eng': '系统工程师路线',
+  'data-scientist': '数据科学家路线',
+}
 
 const allTopics = computed(() =>
   domains.value.flatMap(domain =>
@@ -319,6 +355,47 @@ const currentStageContent = computed<StageResource[]>(() => {
 
 const estimatedMinutes = computed(() => Math.max(20, currentStageContent.value.length * 15))
 const currentLevelTitle = computed(() => `${currentTopicLabel.value} / ${currentStageCard.value.label}`)
+const homeGalaxyContext = computed(() => {
+  if (route.query.source !== 'home-universe-path') return null
+  const courseName = String(route.query.courseName || route.query.topic || '首页星图节点')
+  const pathId = String(route.query.path || '')
+  return {
+    courseName,
+    pathName: HOME_PATH_LABELS[pathId] ?? '个性化星图路径',
+  }
+})
+
+function normalizeTopicText(value: unknown) {
+  return String(value ?? '').trim().toLowerCase()
+}
+
+function findTopicFromHomeQuery() {
+  const queryTopic = normalizeTopicText(route.query.topic)
+  const queryCourse = normalizeTopicText(route.query.courseName)
+  if (!queryTopic && !queryCourse) return null
+
+  const topics = allTopics.value
+  return (
+    topics.find(({ topic }) => normalizeTopicText(topic.label) === queryTopic)
+    ?? topics.find(({ topic }) => normalizeTopicText(topic.label).includes(queryTopic) || queryTopic.includes(normalizeTopicText(topic.label)))
+    ?? topics.find(({ topic }) => normalizeTopicText(topic.label) === queryCourse)
+    ?? topics.find(({ topic }) => normalizeTopicText(topic.label).includes(queryCourse) || queryCourse.includes(normalizeTopicText(topic.label)))
+    ?? topics.find(({ topic }) => topic.concepts?.some(concept => {
+      const normalizedConcept = normalizeTopicText(concept)
+      return normalizedConcept.includes(queryTopic) || normalizedConcept.includes(queryCourse)
+    }))
+    ?? null
+  )
+}
+
+function applyHomeGalaxyContext() {
+  if (route.query.source !== 'home-universe-path') return
+  const match = findTopicFromHomeQuery()
+  if (!match) return
+  selectedNodeId.value = match.topic.id
+  selectedStageIdx.value = 0
+  selectedMapIdx.value = mapIndexForTopic(match.topic.id)
+}
 
 function onSelectNode(nodeId: string) {
   selectedNodeId.value = nodeId
@@ -425,8 +502,9 @@ function mapIndexForTopic(topicId: string) {
   return hash % CHALLENGE_MAPS.length
 }
 
-onMounted(() => {
-  loadFromBackend(true).catch(() => {})
+onMounted(async () => {
+  await loadFromBackend(true).catch(() => {})
+  applyHomeGalaxyContext()
 })
 </script>
 
@@ -548,6 +626,19 @@ onMounted(() => {
   inset: 0;
   pointer-events: none;
   background: radial-gradient(circle at 70% 20%, rgba(0, 212, 255, 0.12), transparent 34%);
+}
+
+.path-map--video {
+  background-color: #020617;
+}
+
+.path-map__video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  z-index: 0;
 }
 
 .stage-card {

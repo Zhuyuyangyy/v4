@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import {
   Activity,
@@ -68,6 +68,13 @@ const filteredUsers = computed(() => {
   return userList.value.filter(u => u.name.includes(q) || u.account.includes(q) || u.role.includes(q))
 })
 
+const pageSize = 5
+const totalPages = computed(() => Math.max(1, Math.ceil(filteredUsers.value.length / pageSize)))
+const pagedUsers = computed(() => {
+  const start = (currentPage.value - 1) * pageSize
+  return filteredUsers.value.slice(start, start + pageSize)
+})
+
 const roleList = computed(() => {
   const adminCount = userList.value.filter(u => u.role === '管理员').length
   const userCount = userList.value.filter(u => u.role === '用户').length
@@ -108,7 +115,7 @@ const adminKpis = computed(() => {
 
 function logout() {
   clearAuthSession()
-  router.replace('/login')
+  window.location.href = '/login'
 }
 
 // ---- CRUD Dialogs ----
@@ -232,17 +239,41 @@ function confirmEditRole() {
   closeDialog()
 }
 
+// ---- Profile form ----
+const profileForm = ref({
+  name: '管理员',
+  phone: '138****2026',
+  email: 'admin@edumind.cn',
+  oldPassword: '',
+  newPassword: '',
+  confirmPassword: '',
+})
+const profileSaved = ref(false)
+
 function handleSaveProfile() {
-  alert('个人信息保存成功！')
+  if (profileForm.value.newPassword && profileForm.value.newPassword !== profileForm.value.confirmPassword) {
+    alert('两次输入的新密码不一致')
+    return
+  }
+  profileSaved.value = true
+  setTimeout(() => { profileSaved.value = false }, 2000)
 }
 
 function handleCancelProfile() {
-  alert('已取消修改')
+  profileForm.value = {
+    name: '管理员',
+    phone: '138****2026',
+    email: 'admin@edumind.cn',
+    oldPassword: '',
+    newPassword: '',
+    confirmPassword: '',
+  }
 }
 
 const currentPage = ref(1)
+watch(searchQuery, () => { currentPage.value = 1 })
 function goToPage(page: number) {
-  if (page < 1 || page > 3) return
+  if (page < 1 || page > totalPages.value) return
   currentPage.value = page
 }
 </script>
@@ -381,7 +412,7 @@ function goToPage(page: number) {
                   </tr>
                 </thead>
                 <tbody>
-                  <tr v-for="user in filteredUsers" :key="user.id">
+                  <tr v-for="user in pagedUsers" :key="user.id">
                     <td class="mono">{{ String(user.id).padStart(4, '0') }}</td>
                     <td>
                       <div class="user-cell">
@@ -414,13 +445,11 @@ function goToPage(page: number) {
             </div>
 
             <div class="table-footer">
-              <span>共 <b>{{ filteredUsers.length }}</b> 条记录</span>
+              <span>共 <b>{{ filteredUsers.length }}</b> 条记录，第 <b>{{ currentPage }}</b>/<b>{{ totalPages }}</b> 页</span>
               <div class="pagination">
                 <button class="page-btn" :disabled="currentPage <= 1" @click="goToPage(currentPage - 1)">‹</button>
-                <button class="page-btn" :class="{ active: currentPage === 1 }" @click="goToPage(1)">1</button>
-                <button class="page-btn" :class="{ active: currentPage === 2 }" @click="goToPage(2)">2</button>
-                <button class="page-btn" :class="{ active: currentPage === 3 }" @click="goToPage(3)">3</button>
-                <button class="page-btn" :disabled="currentPage >= 3" @click="goToPage(currentPage + 1)">›</button>
+                <button v-for="p in totalPages" :key="p" class="page-btn" :class="{ active: currentPage === p }" @click="goToPage(p)">{{ p }}</button>
+                <button class="page-btn" :disabled="currentPage >= totalPages" @click="goToPage(currentPage + 1)">›</button>
               </div>
             </div>
           </article>
@@ -468,7 +497,7 @@ function goToPage(page: number) {
                 <div class="big-avatar">
                   <ShieldCheck :size="36" />
                 </div>
-                <h2>管理员</h2>
+                <h2>{{ profileForm.name }}</h2>
                 <p>管理员 · 系统最高权限</p>
                 <div class="profile-meta">
                   <div><span>账号</span><b>admin</b></div>
@@ -489,7 +518,7 @@ function goToPage(page: number) {
               <div class="profile-form">
                 <div class="form-item">
                   <label>姓名</label>
-                  <input type="text" value="管理员" />
+                  <input type="text" v-model="profileForm.name" />
                 </div>
                 <div class="form-item">
                   <label>账号</label>
@@ -497,11 +526,11 @@ function goToPage(page: number) {
                 </div>
                 <div class="form-item">
                   <label>手机号</label>
-                  <input type="text" value="138****2026" />
+                  <input type="text" v-model="profileForm.phone" />
                 </div>
                 <div class="form-item">
                   <label>邮箱</label>
-                  <input type="email" value="admin@edumind.cn" />
+                  <input type="email" v-model="profileForm.email" />
                 </div>
                 <div class="form-item full-width">
                   <label>权限组</label>
@@ -512,16 +541,18 @@ function goToPage(page: number) {
 
                 <div class="form-item">
                   <label>原密码</label>
-                  <input type="password" placeholder="请输入原密码" />
+                  <input type="password" v-model="profileForm.oldPassword" placeholder="请输入原密码" />
                 </div>
                 <div class="form-item">
                   <label>新密码</label>
-                  <input type="password" placeholder="请输入新密码" />
+                  <input type="password" v-model="profileForm.newPassword" placeholder="请输入新密码" />
                 </div>
                 <div class="form-item">
                   <label>确认新密码</label>
-                  <input type="password" placeholder="请再次输入新密码" />
+                  <input type="password" v-model="profileForm.confirmPassword" placeholder="请再次输入新密码" />
                 </div>
+
+                <div v-if="profileSaved" class="save-success full-width">保存成功</div>
 
                 <div class="form-actions full-width">
                   <button class="secondary-btn" @click="handleCancelProfile">取消</button>
@@ -1525,6 +1556,22 @@ function goToPage(page: number) {
 }
 .form-actions .primary-btn { height: 38px; padding: 0 24px; }
 .form-actions .secondary-btn { min-width: 90px; }
+
+.save-success {
+  text-align: center;
+  padding: 10px;
+  border-radius: 7px;
+  background: rgba(35, 209, 139, 0.12);
+  border: 1px solid rgba(35, 209, 139, 0.35);
+  color: #23d18b;
+  font-size: 13px;
+  font-weight: 600;
+  animation: success-in 300ms ease both;
+}
+@keyframes success-in {
+  from { opacity: 0; transform: translateY(-6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
 
 /* ========== 响应式 ========== */
 @media (max-width: 1200px) {

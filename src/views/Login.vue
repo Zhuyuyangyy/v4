@@ -30,6 +30,8 @@ let height = 0
 let dpr = 1
 const particles: Particle[] = []
 const maxParticles = 80
+const bgImage = new Image()
+bgImage.src = '/login.png'
 
 function resizeCanvas() {
   const canvas = canvasRef.value
@@ -66,6 +68,13 @@ function spawnParticle() {
 function drawParticles() {
   if (!ctx) return
   ctx.clearRect(0, 0, width, height)
+
+  if (bgImage.complete && bgImage.naturalWidth > 0) {
+    const scale = Math.max(width / bgImage.naturalWidth, height / bgImage.naturalHeight)
+    const x = (width - bgImage.naturalWidth * scale) / 2
+    const y = (height - bgImage.naturalHeight * scale) / 2
+    ctx.drawImage(bgImage, x, y, bgImage.naturalWidth * scale, bgImage.naturalHeight * scale)
+  }
 
   if (particles.length < maxParticles && Math.random() < 0.25) {
     spawnParticle()
@@ -121,13 +130,6 @@ onBeforeUnmount(() => {
 
 <template>
   <main ref="rootRef" class="login-view">
-    <div class="bg-layer" aria-hidden="true">
-      <div class="bg-image" />
-      <div class="bg-overlay" />
-      <div class="bg-vignette" />
-      <div class="bg-grid" />
-    </div>
-
     <canvas ref="canvasRef" class="particle-canvas" aria-hidden="true" />
 
     <div class="login-layout">
@@ -152,55 +154,10 @@ onBeforeUnmount(() => {
   isolation: isolate;
 }
 
-.bg-layer {
-  position: fixed;
-  inset: 0;
-  z-index: 0;
-  pointer-events: none;
-}
-
-.bg-image {
-  position: absolute;
-  inset: 0;
-  background-image: url('/login.png');
-  background-size: cover;
-  background-position: center center;
-  background-repeat: no-repeat;
-}
-
-.bg-overlay {
-  position: absolute;
-  inset: 0;
-  background:
-    linear-gradient(95deg,
-      rgba(2, 6, 15, 0.15) 0%,
-      rgba(2, 6, 15, 0.35) 45%,
-      rgba(2, 6, 15, 0.72) 70%,
-      rgba(2, 6, 15, 0.9) 100%
-    );
-}
-
-.bg-vignette {
-  position: absolute;
-  inset: 0;
-  background:
-    radial-gradient(ellipse at center, transparent 20%, rgba(0, 0, 0, 0.45) 100%);
-}
-
-.bg-grid {
-  position: absolute;
-  inset: 0;
-  opacity: 0.03;
-  background-image:
-    linear-gradient(rgba(0, 180, 255, 0.12) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(0, 180, 255, 0.12) 1px, transparent 1px);
-  background-size: 60px 60px;
-}
-
 .particle-canvas {
   position: fixed;
   inset: 0;
-  z-index: 1;
+  z-index: 0;
   pointer-events: none;
   touch-action: none;
 }
@@ -226,13 +183,7 @@ onBeforeUnmount(() => {
   align-items: center;
   justify-content: center;
   padding: 40px 56px;
-  background:
-    linear-gradient(95deg,
-      rgba(2, 6, 15, 0.1) 0%,
-      rgba(2, 6, 15, 0.55) 40%,
-      rgba(2, 8, 20, 0.82) 100%
-    );
-  backdrop-filter: blur(2px);
+  background: transparent;
 }
 
 .panel-wrapper {
@@ -243,10 +194,10 @@ onBeforeUnmount(() => {
 
 @keyframes panel-breathe {
   0%, 100% {
-    filter: drop-shadow(0 20px 60px rgba(0, 80, 180, 0.25));
+    filter: drop-shadow(0 8px 24px rgba(0, 80, 180, 0.08));
   }
   50% {
-    filter: drop-shadow(0 30px 90px rgba(0, 130, 230, 0.45));
+    filter: drop-shadow(0 10px 30px rgba(0, 130, 230, 0.12));
   }
 }
 
@@ -273,12 +224,7 @@ onBeforeUnmount(() => {
     min-height: auto;
     flex: 1;
     padding: 24px;
-    background:
-      linear-gradient(180deg,
-        rgba(2, 6, 15, 0.85) 0%,
-        rgba(2, 8, 20, 0.96) 30%,
-        rgba(2, 8, 20, 1) 100%
-      );
+    background: transparent;
     justify-content: flex-start;
   }
   .panel-wrapper {

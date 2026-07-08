@@ -439,7 +439,7 @@ function openPrimaryAction() {
 <template>
   <div class="evaluation-page" :class="{ 'reduced-motion': reducedMotion }">
     <main class="cockpit-shell">
-      <header class="cockpit-header">
+      <header class="cockpit-header breathe-subtle">
         <div>
           <p class="eyebrow">EVALUATION COCKPIT</p>
           <h1>学习分析</h1>
@@ -461,8 +461,8 @@ function openPrimaryAction() {
         </div>
       </header>
 
-      <div v-if="loading && !data" class="state-card">评估数据加载中...</div>
-      <div v-else-if="error && !data" class="state-card error">
+      <div v-if="loading && !data" class="state-card breathe-subtle">评估数据加载中...</div>
+      <div v-else-if="error && !data" class="state-card error breathe-subtle">
         数据加载失败：{{ error }}
         <button type="button" @click="onReload">重试</button>
       </div>
@@ -470,7 +470,7 @@ function openPrimaryAction() {
       <section
         v-if="selectedTreePoint"
         :key="`point-detail-${detailRefreshKey}`"
-        class="selected-point-panel panel"
+        class="selected-point-panel panel breathe"
         :style="{ '--refresh-strength': `${detailRefreshStrength}%` }"
       >
         <div class="selected-point-head">
@@ -522,7 +522,7 @@ function openPrimaryAction() {
         </article>
       </section>
 
-      <section class="tree-panel panel">
+      <section class="tree-panel panel breathe-glow">
         <div class="tree-panel-head">
           <div>
             <h2>知识树状态</h2>
@@ -551,7 +551,7 @@ function openPrimaryAction() {
       </section>
 
       <section class="main-grid" :key="`main-${analysisPanelKey}`">
-        <article class="panel trend-panel">
+        <article class="panel trend-panel breathe">
           <div class="panel-title">
             <h2>掌握度变化趋势</h2>
             <Info :size="17" />
@@ -607,7 +607,7 @@ function openPrimaryAction() {
           </div>
         </article>
 
-        <article class="panel radar-panel">
+        <article class="panel radar-panel breathe">
           <div class="panel-title">
             <h2>能力诊断</h2>
             <Info :size="17" />
@@ -645,7 +645,7 @@ function openPrimaryAction() {
         </article>
       </section>
 
-      <section class="panel distribution-panel" :key="`distribution-${analysisPanelKey}`">
+      <section class="panel distribution-panel breathe" :key="`distribution-${analysisPanelKey}`">
         <div class="panel-title">
           <h2>知识点掌握度分布</h2>
           <Info :size="17" />
@@ -664,7 +664,7 @@ function openPrimaryAction() {
         </div>
       </section>
 
-      <section class="panel topic-panel" :key="`topic-${analysisPanelKey}`">
+      <section class="panel topic-panel breathe" :key="`topic-${analysisPanelKey}`">
         <div class="topic-head">
           <h2>Top 5 待提升知识点</h2>
           <span>按掌握度升序</span>

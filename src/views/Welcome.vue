@@ -3,7 +3,7 @@ import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import HeroConstellation from '@/components/homepage/HeroConstellation.vue'
 import AgentLiveTicker from '@/components/homepage/AgentLiveTicker.vue'
 import SectionTelemetry from '@/components/homepage/SectionTelemetry.vue'
-import SectionSkyline from '@/components/homepage/SectionSkyline.vue'
+import SectionGalaxyPath from '@/components/homepage/SectionGalaxyPath.vue'
 import SectionMissions from '@/components/homepage/SectionMissions.vue'
 import AgentHub from '@/components/homepage/AgentHub.vue'
 import TrainFlow from '@/views/TrainFlow.vue'
@@ -68,9 +68,9 @@ onBeforeUnmount(() => {
       <img class="home-art home-art-profile" src="/homepage/profile-evidence-orb.png" alt="">
     </div>
 
-    <HeroConstellation />
+    <HeroConstellation class="home-breathe-surface home-breathe-hero" />
 
-    <section class="hub-workbench">
+    <section class="hub-workbench home-breathe-surface home-breathe-hub">
       <aside class="hub-context-card" :style="{ '--stage-color': currentHubStage.color }">
         <div class="hub-context-topline">
           <span class="hub-context-kicker">6 MODULES · 12 AGENTS</span>
@@ -126,20 +126,20 @@ onBeforeUnmount(() => {
       </aside>
 
       <div class="hub-workbench-main">
-        <AgentHub :control-beat-id="controlBeatId" :control-nonce="controlNonce" />
-        <TrainFlow embedded-stage-only :active-beat-id="currentHubStage.visualId" />
+        <AgentHub class="home-breathe-surface home-breathe-agenthub" :control-beat-id="controlBeatId" :control-nonce="controlNonce" />
+        <TrainFlow class="home-breathe-surface home-breathe-trainflow" embedded-stage-only :active-beat-id="currentHubStage.visualId" />
       </div>
     </section>
 
     <!-- Agent live ticker -->
-    <AgentLiveTicker />
+    <AgentLiveTicker class="home-breathe-surface home-breathe-ticker" />
 
-    <!-- Knowledge map & next step learning -->
-    <SectionSkyline />
-    <SectionMissions />
+    <!-- Galaxy path & next step learning -->
+    <SectionGalaxyPath class="home-breathe-surface home-breathe-galaxy" />
+    <SectionMissions class="home-breathe-surface home-breathe-missions" />
 
     <!-- Collaboration telemetry -->
-    <SectionTelemetry />
+    <SectionTelemetry class="home-breathe-surface home-breathe-telemetry" />
 
     <footer class="footer" aria-hidden="true" />
   </div>
@@ -256,6 +256,64 @@ onBeforeUnmount(() => {
   mask-image: radial-gradient(ellipse at 50% 50%, #000 0%, rgba(0, 0, 0, 0.82) 58%, transparent 88%);
 }
 
+.home-breathe-surface {
+  --home-breathe-duration: 8.6s;
+  --home-breathe-delay: 0s;
+  animation: home-component-breathe var(--home-breathe-duration) ease-in-out var(--home-breathe-delay) infinite;
+  transform-origin: center;
+  will-change: filter;
+}
+
+.home-breathe-hero { --home-breathe-delay: 0.2s; }
+.home-breathe-hub { --home-breathe-delay: 0.9s; --home-breathe-duration: 9.2s; }
+.home-breathe-agenthub { --home-breathe-delay: 1.4s; --home-breathe-duration: 8.8s; }
+.home-breathe-trainflow { --home-breathe-delay: 2.0s; --home-breathe-duration: 9.6s; }
+.home-breathe-ticker { --home-breathe-delay: 2.8s; --home-breathe-duration: 8.4s; }
+.home-breathe-galaxy { --home-breathe-delay: 1.2s; --home-breathe-duration: 9.8s; }
+.home-breathe-missions { --home-breathe-delay: 2.2s; --home-breathe-duration: 8.9s; }
+.home-breathe-telemetry { --home-breathe-delay: 3.0s; --home-breathe-duration: 10.2s; }
+
+@keyframes home-component-breathe {
+  0%,
+  100% {
+    filter: brightness(1) saturate(1);
+  }
+
+  50% {
+    filter: brightness(1.01) saturate(1.012);
+  }
+}
+
+@keyframes home-card-breathe {
+  0%,
+  100% {
+    border-color: color-mix(in srgb, var(--home-breathe-color, #67e8f9) 18%, rgba(125, 171, 236, 0.12));
+    outline-color: color-mix(in srgb, var(--home-breathe-color, #67e8f9) 0%, transparent);
+    filter: brightness(1);
+  }
+
+  50% {
+    border-color: color-mix(in srgb, var(--home-breathe-color, #67e8f9) 42%, rgba(125, 211, 252, 0.18));
+    outline-color: color-mix(in srgb, var(--home-breathe-color, #67e8f9) 20%, transparent);
+    filter: brightness(1.018) drop-shadow(0 0 8px rgba(103, 232, 249, 0.12));
+  }
+}
+
+@keyframes home-active-breathe {
+  0%,
+  100% {
+    border-color: color-mix(in srgb, var(--home-breathe-color, #67e8f9) 24%, rgba(125, 171, 236, 0.12));
+    outline-color: color-mix(in srgb, var(--home-breathe-color, #67e8f9) 0%, transparent);
+    filter: brightness(1);
+  }
+
+  50% {
+    border-color: color-mix(in srgb, var(--home-breathe-color, #67e8f9) 58%, rgba(125, 211, 252, 0.18));
+    outline-color: color-mix(in srgb, var(--home-breathe-color, #67e8f9) 24%, transparent);
+    filter: brightness(1.026) drop-shadow(0 0 9px rgba(103, 232, 249, 0.14));
+  }
+}
+
 /* Home section transparency */
 :deep(.hero-constellation),
 :deep(.agent-hub-section),
@@ -348,6 +406,82 @@ onBeforeUnmount(() => {
   opacity: 0.045 !important;
 }
 
+:deep(.hero-metrics),
+:deep(.cap-tag),
+:deep(.sphere-label),
+:deep(.chip-card),
+:deep(.hub-frame-shell),
+:deep(.agent-stage),
+:deep(.stage-work-order),
+:deep(.course-chip),
+:deep(.handoff-strip),
+:deep(.log-container),
+:deep(.sky-score),
+:deep(.graph-panel),
+:deep(.node-detail),
+:deep(.map-action-panel),
+:deep(.distribution-card),
+:deep(.radar-card),
+:deep(.weak-card),
+:deep(.section-missions .glass-card),
+:deep(.quick-questions),
+:deep(.date-card),
+:deep(.section-telemetry .glass-card),
+:deep(.detail-popup),
+:deep(.module-chip) {
+  --home-breathe-color: #67e8f9;
+  outline: 1px solid transparent;
+  outline-offset: -1px;
+  border-style: solid;
+  animation:
+    home-card-breathe var(--home-inner-breathe-duration, 7.6s) ease-in-out var(--home-inner-breathe-delay, 0s) infinite !important;
+  will-change: filter, outline-color;
+}
+
+:deep(.hub-agent-item),
+:deep(.action-card),
+:deep(.question-chips button),
+:deep(.view-chip),
+:deep(.map-primary-action),
+:deep(.map-action-link),
+:deep(.agent-row),
+:deep(.clickable-card),
+:deep(.latest-item),
+:deep(.latest-route) {
+  --home-breathe-color: var(--stage-color, var(--tone, var(--agent-color, var(--module-color, #67e8f9))));
+  outline: 1px solid transparent;
+  outline-offset: -1px;
+  border-style: solid;
+  animation:
+    home-active-breathe var(--home-active-breathe-duration, 6.8s) ease-in-out var(--home-active-breathe-delay, 0s) infinite !important;
+  will-change: filter, outline-color;
+}
+
+:deep(.hub-agent-item:nth-child(2n)),
+:deep(.action-card:nth-child(2n)),
+:deep(.date-card:nth-child(2n)),
+:deep(.section-telemetry .glass-card:nth-child(2n)),
+:deep(.section-missions .glass-card:nth-child(2n)) {
+  --home-inner-breathe-delay: 1.1s;
+  --home-active-breathe-delay: 0.9s;
+}
+
+:deep(.hub-agent-item:nth-child(3n)),
+:deep(.action-card:nth-child(3n)),
+:deep(.date-card:nth-child(3n)),
+:deep(.module-chip:nth-child(3n)),
+:deep(.section-telemetry .glass-card:nth-child(3n)) {
+  --home-inner-breathe-delay: 2.0s;
+  --home-active-breathe-delay: 1.7s;
+}
+
+:deep(.hero-metrics),
+:deep(.log-container),
+:deep(.graph-panel),
+:deep(.timeline-card) {
+  --home-inner-breathe-duration: 8.8s;
+}
+
 .hub-workbench {
   position: relative;
   z-index: 1;
@@ -364,11 +498,11 @@ onBeforeUnmount(() => {
 .hub-context-card {
   --stage-color: #00d4ff;
   position: relative;
-  min-height: 740px;
+  min-height: 700px;
   display: flex;
   flex-direction: column;
-  gap: 16px;
-  padding: 24px;
+  gap: 12px;
+  padding: 22px;
   overflow: hidden;
   border: 1px solid color-mix(in srgb, var(--stage-color) 34%, rgba(116, 154, 210, 0.18));
   border-radius: 16px;
@@ -381,7 +515,9 @@ onBeforeUnmount(() => {
   box-shadow:
     0 26px 80px rgba(0, 0, 0, 0.42),
     inset 0 1px 0 rgba(255, 255, 255, 0.08);
-  animation: welcome-border-breathe 4.8s ease-in-out infinite;
+  animation:
+    welcome-border-breathe 4.8s ease-in-out infinite,
+    home-card-breathe 8.6s ease-in-out 0.6s infinite !important;
 }
 
 .hub-context-card::before,
@@ -475,7 +611,7 @@ onBeforeUnmount(() => {
   z-index: 1;
   display: grid;
   gap: 5px;
-  padding: 14px;
+  padding: 12px;
   border: 1px solid color-mix(in srgb, var(--stage-color) 30%, rgba(116, 154, 210, 0.13));
   border-radius: 12px;
   background:
@@ -525,7 +661,7 @@ onBeforeUnmount(() => {
   position: relative;
   z-index: 1;
   display: grid;
-  gap: 10px;
+  gap: 8px;
   margin-top: 0;
 }
 
@@ -539,7 +675,7 @@ onBeforeUnmount(() => {
   appearance: none;
   text-align: left;
   cursor: pointer;
-  padding: 12px;
+  padding: 10px 11px;
   border: 1px solid color-mix(in srgb, var(--stage-color) 20%, rgba(116, 154, 210, 0.14));
   border-radius: 12px;
   background:
@@ -551,7 +687,9 @@ onBeforeUnmount(() => {
     border-color 0.28s ease,
     background 0.28s ease,
     box-shadow 0.28s ease;
-  animation: welcome-soft-border-breathe 5.4s ease-in-out infinite;
+  animation:
+    welcome-soft-border-breathe 5.4s ease-in-out infinite,
+    home-active-breathe 7.2s ease-in-out calc(var(--stage-index) * 0.18s) infinite !important;
 }
 
 .hub-agent-item:hover {
@@ -675,7 +813,7 @@ onBeforeUnmount(() => {
 .hub-role-visual {
   position: relative;
   z-index: 1;
-  min-height: 132px;
+  min-height: 112px;
   margin-top: auto;
   overflow: hidden;
   border: 1px solid color-mix(in srgb, var(--stage-color) 22%, rgba(116, 154, 210, 0.12));
@@ -683,7 +821,9 @@ onBeforeUnmount(() => {
   background:
     radial-gradient(circle at 18% 18%, color-mix(in srgb, var(--stage-color) 14%, transparent), transparent 48%),
     rgba(7, 14, 28, 0.52);
-  animation: welcome-soft-border-breathe 5s ease-in-out infinite;
+  animation:
+    welcome-soft-border-breathe 5s ease-in-out infinite,
+    home-card-breathe 8s ease-in-out 1.4s infinite !important;
 }
 
 .hub-role-visual img {
@@ -806,18 +946,18 @@ onBeforeUnmount(() => {
 
 .hub-workbench-main :deep(.trainflow-page) {
   padding: 0;
-  margin-top: 14px;
+  margin-top: 18px;
 }
 
 .hub-workbench-main :deep(.agent-stage) {
-  min-height: 0;
+  min-height: clamp(500px, 34vw, 560px);
 }
 
 .hub-workbench-main :deep(.stage-grid-2) {
   grid-template-columns: 240px minmax(0, 1fr);
   gap: 18px;
-  padding: 18px;
-  height: auto;
+  padding: 24px;
+  height: 100%;
 }
 
 .hub-workbench-main :deep(.stage-agent-name) {
@@ -870,7 +1010,9 @@ onBeforeUnmount(() => {
 :deep(.course-chip),
 :deep(.handoff-strip),
 :deep(.log-container) {
-  animation: welcome-border-breathe 4.8s ease-in-out infinite;
+  animation:
+    welcome-border-breathe 4.8s ease-in-out infinite,
+    home-card-breathe 8.2s ease-in-out 0.9s infinite !important;
 }
 
 @keyframes welcome-border-breathe {
@@ -883,10 +1025,10 @@ onBeforeUnmount(() => {
   }
 
   50% {
-    border-color: rgba(0, 212, 255, 0.46);
+    border-color: rgba(0, 212, 255, 0.28);
     box-shadow:
-      inset 0 1px 0 rgba(255, 255, 255, 0.1),
-      0 0 34px rgba(0, 212, 255, 0.18);
+      inset 0 1px 0 rgba(255, 255, 255, 0.08),
+      0 0 8px rgba(0, 212, 255, 0.08);
   }
 }
 
@@ -900,8 +1042,8 @@ onBeforeUnmount(() => {
 
   50% {
     box-shadow:
-      inset 0 1px 0 rgba(255, 255, 255, 0.08),
-      0 0 24px color-mix(in srgb, var(--stage-color) 20%, transparent);
+      inset 0 1px 0 rgba(255, 255, 255, 0.06),
+      0 0 8px color-mix(in srgb, var(--stage-color) 10%, transparent);
   }
 }
 
@@ -967,6 +1109,49 @@ onBeforeUnmount(() => {
 }
 
 /* ── Responsive ── */
+@media (prefers-reduced-motion: reduce) {
+  .home-breathe-surface,
+  .hub-context-card,
+  .hub-agent-item,
+  .hub-role-visual,
+  :deep(.hero-metrics),
+  :deep(.cap-tag),
+  :deep(.sphere-label),
+  :deep(.chip-card),
+  :deep(.hub-frame-shell),
+  :deep(.agent-stage),
+  :deep(.stage-work-order),
+  :deep(.course-chip),
+  :deep(.handoff-strip),
+  :deep(.log-container),
+  :deep(.sky-score),
+  :deep(.graph-panel),
+  :deep(.node-detail),
+  :deep(.map-action-panel),
+  :deep(.distribution-card),
+  :deep(.radar-card),
+  :deep(.weak-card),
+  :deep(.section-missions .glass-card),
+  :deep(.quick-questions),
+  :deep(.date-card),
+  :deep(.section-telemetry .glass-card),
+  :deep(.detail-popup),
+  :deep(.module-chip),
+  :deep(.question-chips button),
+  :deep(.view-chip),
+  :deep(.map-primary-action),
+  :deep(.map-action-link),
+  :deep(.agent-row),
+  :deep(.clickable-card),
+  :deep(.latest-item),
+  :deep(.latest-route) {
+    animation: none !important;
+    transition: none !important;
+    filter: none !important;
+    scale: 1 !important;
+  }
+}
+
 @media (max-width: 900px) {
   .home-art-hero {
     top: 96px;
