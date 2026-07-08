@@ -40,7 +40,19 @@ function toggleFullscreen() {
   else rootRef.value?.requestFullscreen?.()
 }
 
-const userList = [
+interface UserItem {
+  id: number
+  name: string
+  account: string
+  role: string
+  status: string
+  hours: string
+  weak: string
+  lastLogin: string
+  tone: string
+}
+
+const userList = ref<UserItem[]>([
   { id: 1, name: '小明', account: 'xiaoming', role: '用户', status: '学习中', hours: '12.5h', weak: '图搜索', lastLogin: '10分钟前', tone: 'ok' },
   { id: 2, name: '李华', account: 'lihua', role: '用户', status: '待复盘', hours: '8.2h', weak: '指针', lastLogin: '2小时前', tone: 'wait' },
   { id: 3, name: '王芳', account: 'wangfang', role: '用户', status: '已完成', hours: '16.8h', weak: '动态规划', lastLogin: '昨天', tone: 'done' },
@@ -48,15 +60,15 @@ const userList = [
   { id: 5, name: '陈老师', account: 'chenlaoshi', role: '管理员', status: '在线', hours: '-', weak: '-', lastLogin: '刚刚', tone: 'ok' },
   { id: 6, name: '刘老师', account: 'liulaoshi', role: '管理员', status: '离线', hours: '-', weak: '-', lastLogin: '1天前', tone: 'off' },
   { id: 7, name: '管理员', account: 'admin', role: '管理员', status: '在线', hours: '-', weak: '-', lastLogin: '当前', tone: 'ok' },
-]
+])
 
 const filteredUsers = computed(() => {
-  if (!searchQuery.value) return userList
+  if (!searchQuery.value) return userList.value
   const q = searchQuery.value.toLowerCase()
-  return userList.filter(u => u.name.includes(q) || u.account.includes(q) || u.role.includes(q))
+  return userList.value.filter(u => u.name.includes(q) || u.account.includes(q) || u.role.includes(q))
 })
 
-const roleList = [
+const roleList = ref([
   {
     name: '管理员',
     desc: '系统最高权限，可管理所有模块',
@@ -73,18 +85,150 @@ const roleList = [
     tone: '#23d18b',
     icon: BrainCircuit,
   },
-]
+])
 
-const adminKpis = [
-  { label: '用户总数', value: '7', sub: '人', icon: Users, tone: '#3e9eff' },
-  { label: '在线用户', value: '3', sub: '人', icon: Activity, tone: '#23d18b' },
-  { label: '今日活跃', value: '6', sub: '人', icon: ListChecks, tone: '#35c7ff' },
-  { label: '预警用户', value: '1', sub: '人', icon: ShieldCheck, tone: '#ffb648' },
-]
+const adminKpis = computed(() => {
+  const total = userList.value.length
+  const online = userList.value.filter(u => u.status === '在线' || u.status === '学习中').length
+  const warn = userList.value.filter(u => u.tone === 'warn').length
+  return [
+    { label: '用户总数', value: String(total), sub: '人', icon: Users, tone: '#3e9eff' },
+    { label: '在线用户', value: String(online), sub: '人', icon: Activity, tone: '#23d18b' },
+    { label: '今日活跃', value: String(Math.min(total, total - 1)), sub: '人', icon: ListChecks, tone: '#35c7ff' },
+    { label: '预警用户', value: String(warn), sub: '人', icon: ShieldCheck, tone: '#ffb648' },
+  ]
+})
 
 function logout() {
   clearAuthSession()
   router.replace('/login')
+}
+
+// ---- CRUD Dialogs ----
+type DialogMode = 'add' | 'edit' | 'delete' | 'reset-pwd' | 'edit-role' | null
+const dialogMode = ref<DialogMode>(null)
+const dialogUser = ref<UserItem | null>(null)
+
+// Add / Edit form
+const formName = ref('')
+const formAccount = ref('')
+const formRole = ref('用户')
+const formPassword = ref('')
+
+function openAddDialog() {
+  dialogMode.value = 'add'
+  formName.value = ''
+  formAccount.value = ''
+  formRole.value = '用户'
+  formPassword.value = ''
+}
+
+function openEditDialog(user: UserItem) {
+  dialogMode.value = 'edit'
+  dialogUser.value = user
+  formName.value = user.name
+  formAccount.value = user.account
+  formRole.value = user.role
+  formPassword.value = ''
+}
+
+function openDeleteDialog(user: UserItem) {
+  dialogMode.value = 'delete'
+  dialogUser.value = user
+}
+
+function openResetPwdDialog(user: UserItem) {
+  dialogMode.value = 'reset-pwd'
+  dialogUser.value = user
+}
+
+function openEditRoleDialog(role: typeof roleList.value[0]) {
+  dialogMode.value = 'edit-role'
+  formRole.value = role.name
+  dialogUser.value = { id: 0, name: role.name, account: '', role: role.name, status: '', hours: '', weak: '', lastLogin: '', tone: '' }
+}
+
+function closeDialog() {
+  dialogMode.value = null
+  dialogUser.value = null
+}
+
+function confirmAdd() {
+  if (!formName.value || !formAccount.value) return
+  const maxId = userList.value.reduce((m, u) => Math.max(m, u.id), 0)
+  userList.value.push({
+    id: maxId + 1,
+    name: formName.value,
+    account: formAccount.value,
+    role: formRole.value,
+    status: '离线',
+    hours: '-',
+    weak: '-',
+    lastLogin: '从未',
+    tone: 'off',
+  })
+  closeDialog()
+}
+
+function confirmEdit() {
+  if (!dialogUser.value) return
+  const idx = userList.value.findIndex(u => u.id === dialogUser.value!.id)
+  if (idx < 0) return
+  userList.value[idx] = {
+    ...userList.value[idx],
+    name: formName.value,
+    account: formAccount.value,
+    role: formRole.value,
+  }
+  closeDialog()
+}
+
+function confirmDelete() {
+  if (!dialogUser.value) return
+  userList.value = userList.value.filter(u => u.id !== dialogUser.value!.id)
+  closeDialog()
+}
+
+function confirmResetPwd() {
+  if (!dialogUser.value) return
+  alert(`已重置用户 ${dialogUser.value.name} 的密码为默认密码`)
+  closeDialog()
+}
+
+// Edit role permissions
+const editingPermissions = ref<string[]>([])
+function openEditRoleDialogWithPerms(role: typeof roleList.value[0]) {
+  dialogMode.value = 'edit-role'
+  formRole.value = role.name
+  editingPermissions.value = [...role.auth]
+  dialogUser.value = { id: 0, name: role.name, account: '', role: role.name, status: '', hours: '', weak: '', lastLogin: '', tone: '' }
+}
+function togglePermission(perm: string) {
+  const idx = editingPermissions.value.indexOf(perm)
+  if (idx >= 0) editingPermissions.value.splice(idx, 1)
+  else editingPermissions.value.push(perm)
+}
+const allPermissions = ['数据大屏', '用户管理', '角色管理', '系统设置', '数据导出', '日志审计', '学习数据', '错题报表', '资源审核', '学生画像', '学习路径', '画像生成', '资源中心', '智能评估', '对话练习', '班级学情', '作业管理', '资源查看', '学生反馈']
+function confirmEditRole() {
+  const idx = roleList.value.findIndex(r => r.name === formRole.value)
+  if (idx >= 0) {
+    roleList.value[idx] = { ...roleList.value[idx], auth: [...editingPermissions.value] }
+  }
+  closeDialog()
+}
+
+function handleSaveProfile() {
+  alert('个人信息保存成功！')
+}
+
+function handleCancelProfile() {
+  alert('已取消修改')
+}
+
+const currentPage = ref(1)
+function goToPage(page: number) {
+  if (page < 1 || page > 3) return
+  currentPage.value = page
 }
 </script>
 
@@ -200,7 +344,7 @@ function logout() {
                   <Search :size="14" />
                   <input v-model="searchQuery" type="text" placeholder="搜索用户名、账号、角色..." />
                 </div>
-                <button class="primary-btn">
+                <button class="primary-btn" @click="openAddDialog">
                   <UserPlus :size="14" /> 新增用户
                 </button>
               </div>
@@ -244,9 +388,9 @@ function logout() {
                     <td class="mono dim">{{ user.lastLogin }}</td>
                     <td>
                       <div class="action-btns">
-                        <button class="table-btn primary">编辑</button>
-                        <button class="table-btn">重置密码</button>
-                        <button class="table-btn danger">禁用</button>
+                        <button class="table-btn primary" @click="openEditDialog(user)">编辑</button>
+                        <button class="table-btn" @click="openResetPwdDialog(user)">重置密码</button>
+                        <button class="table-btn danger" @click="openDeleteDialog(user)">删除</button>
                       </div>
                     </td>
                   </tr>
@@ -257,11 +401,11 @@ function logout() {
             <div class="table-footer">
               <span>共 <b>{{ filteredUsers.length }}</b> 条记录</span>
               <div class="pagination">
-                <button class="page-btn" disabled>‹</button>
-                <button class="page-btn active">1</button>
-                <button class="page-btn">2</button>
-                <button class="page-btn">3</button>
-                <button class="page-btn">›</button>
+                <button class="page-btn" :disabled="currentPage <= 1" @click="goToPage(currentPage - 1)">‹</button>
+                <button class="page-btn" :class="{ active: currentPage === 1 }" @click="goToPage(1)">1</button>
+                <button class="page-btn" :class="{ active: currentPage === 2 }" @click="goToPage(2)">2</button>
+                <button class="page-btn" :class="{ active: currentPage === 3 }" @click="goToPage(3)">3</button>
+                <button class="page-btn" :disabled="currentPage >= 3" @click="goToPage(currentPage + 1)">›</button>
               </div>
             </div>
           </article>
@@ -294,7 +438,7 @@ function logout() {
               </div>
 
               <div class="role-actions">
-                <button class="table-btn" style="width:100%">编辑权限</button>
+                <button class="table-btn" style="width:100%" @click="openEditRoleDialogWithPerms(role)">编辑权限</button>
               </div>
               <i class="card-glow" aria-hidden="true" />
             </article>
@@ -365,8 +509,8 @@ function logout() {
                 </div>
 
                 <div class="form-actions full-width">
-                  <button class="secondary-btn">取消</button>
-                  <button class="primary-btn">保存修改</button>
+                  <button class="secondary-btn" @click="handleCancelProfile">取消</button>
+                  <button class="primary-btn" @click="handleSaveProfile">保存修改</button>
                 </div>
               </div>
             </article>
@@ -374,6 +518,78 @@ function logout() {
         </template>
       </section>
     </template>
+
+    <!-- CRUD Dialog Overlay -->
+    <Teleport to="body">
+      <div v-if="dialogMode" class="dialog-overlay" @click.self="closeDialog">
+        <div class="dialog-box">
+          <!-- Add / Edit User -->
+          <template v-if="dialogMode === 'add' || dialogMode === 'edit'">
+            <h3 class="dialog-title">{{ dialogMode === 'add' ? '新增用户' : '编辑用户' }}</h3>
+            <div class="dialog-form">
+              <label class="dialog-field">
+                <span>姓名</span>
+                <input v-model="formName" type="text" placeholder="请输入姓名" />
+              </label>
+              <label class="dialog-field">
+                <span>账号</span>
+                <input v-model="formAccount" type="text" placeholder="请输入账号" :readonly="dialogMode === 'edit'" />
+              </label>
+              <label class="dialog-field">
+                <span>角色</span>
+                <select v-model="formRole">
+                  <option value="用户">用户</option>
+                  <option value="管理员">管理员</option>
+                </select>
+              </label>
+              <label v-if="dialogMode === 'add'" class="dialog-field">
+                <span>初始密码</span>
+                <input v-model="formPassword" type="password" placeholder="请输入初始密码" />
+              </label>
+            </div>
+            <div class="dialog-actions">
+              <button class="secondary-btn" @click="closeDialog">取消</button>
+              <button class="primary-btn" @click="dialogMode === 'add' ? confirmAdd() : confirmEdit()">确认</button>
+            </div>
+          </template>
+
+          <!-- Delete User -->
+          <template v-if="dialogMode === 'delete'">
+            <h3 class="dialog-title">删除用户</h3>
+            <p class="dialog-text">确定要删除用户 <b>{{ dialogUser?.name }}</b>（{{ dialogUser?.account }}）吗？此操作不可撤销。</p>
+            <div class="dialog-actions">
+              <button class="secondary-btn" @click="closeDialog">取消</button>
+              <button class="danger-btn" @click="confirmDelete">确认删除</button>
+            </div>
+          </template>
+
+          <!-- Reset Password -->
+          <template v-if="dialogMode === 'reset-pwd'">
+            <h3 class="dialog-title">重置密码</h3>
+            <p class="dialog-text">确定要重置用户 <b>{{ dialogUser?.name }}</b>（{{ dialogUser?.account }}）的密码为默认密码吗？</p>
+            <div class="dialog-actions">
+              <button class="secondary-btn" @click="closeDialog">取消</button>
+              <button class="primary-btn" @click="confirmResetPwd">确认重置</button>
+            </div>
+          </template>
+
+          <!-- Edit Role Permissions -->
+          <template v-if="dialogMode === 'edit-role'">
+            <h3 class="dialog-title">编辑角色权限 - {{ formRole }}</h3>
+            <div class="dialog-form perm-list">
+              <label v-for="perm in allPermissions" :key="perm" class="perm-checkbox">
+                <input type="checkbox" :checked="editingPermissions.includes(perm)" @change="togglePermission(perm)" />
+                <span>{{ perm }}</span>
+              </label>
+            </div>
+            <div class="dialog-actions">
+              <button class="secondary-btn" @click="closeDialog">取消</button>
+              <button class="primary-btn" @click="confirmEditRole">保存权限</button>
+            </div>
+          </template>
+        </div>
+      </div>
+    </Teleport>
   </main>
 </template>
 
@@ -725,7 +941,7 @@ function logout() {
 }
 @keyframes card-breathe {
   0%, 100% { border-color: var(--bs-line); box-shadow: 0 0 0 rgba(62, 158, 255, 0); }
-  50% { border-color: rgba(62, 158, 255, 0.42); box-shadow: 0 0 22px rgba(62, 158, 255, 0.1), inset 0 0 14px rgba(62, 158, 255, 0.04); }
+  50% { border-color: rgba(62, 158, 255, 0.22); box-shadow: 0 0 8px rgba(62, 158, 255, 0.06), inset 0 0 4px rgba(62, 158, 255, 0.03); }
 }
 
 .card-header {
@@ -1317,5 +1533,173 @@ function logout() {
   .nav-item.active::before { display: none; }
   .nav-arrow { display: none; }
   .kpi-row, .profile-form { grid-template-columns: 1fr; }
+}
+
+/* ========== Dialog Overlay ========== */
+.dialog-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(2, 6, 15, 0.7);
+  backdrop-filter: blur(6px);
+  animation: overlay-in 200ms ease both;
+}
+
+@keyframes overlay-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.dialog-box {
+  width: 440px;
+  max-width: 92vw;
+  max-height: 80vh;
+  overflow-y: auto;
+  padding: 28px;
+  border-radius: 16px;
+  background: linear-gradient(160deg, rgba(10, 20, 48, 0.97), rgba(6, 14, 36, 0.99));
+  border: 1px solid rgba(62, 158, 255, 0.3);
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.6), 0 0 40px rgba(62, 158, 255, 0.1);
+  animation: dialog-in 250ms cubic-bezier(0.19, 1, 0.22, 1) both;
+}
+
+@keyframes dialog-in {
+  from { opacity: 0; transform: translateY(20px) scale(0.96); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.dialog-title {
+  margin: 0 0 20px;
+  font-size: 18px;
+  font-weight: 700;
+  color: #fff;
+}
+
+.dialog-text {
+  margin: 0 0 20px;
+  font-size: 14px;
+  color: var(--bs-ink-2);
+  line-height: 1.6;
+}
+
+.dialog-text b {
+  color: #fff;
+}
+
+.dialog-form {
+  display: grid;
+  gap: 14px;
+}
+
+.dialog-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.dialog-field span {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--bs-ink-2);
+}
+
+.dialog-field input,
+.dialog-field select {
+  height: 40px;
+  padding: 0 12px;
+  border: 1px solid rgba(62, 158, 255, 0.2);
+  border-radius: 8px;
+  background: rgba(0, 20, 60, 0.5);
+  color: #f0f6ff;
+  font-size: 14px;
+  outline: none;
+  transition: border-color 200ms ease;
+}
+
+.dialog-field input:focus,
+.dialog-field select:focus {
+  border-color: rgba(62, 158, 255, 0.5);
+  box-shadow: 0 0 0 3px rgba(62, 158, 255, 0.1);
+}
+
+.dialog-field input[readonly] {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.dialog-field select {
+  cursor: pointer;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23a8c4e8' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  padding-right: 32px;
+}
+
+.dialog-field select option {
+  background: #0a1430;
+  color: #f0f6ff;
+}
+
+.dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.danger-btn {
+  padding: 8px 20px;
+  border: 0;
+  border-radius: 8px;
+  background: linear-gradient(135deg, #cc3333, #ff4444);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 200ms ease;
+}
+
+.danger-btn:hover {
+  filter: brightness(1.15);
+  box-shadow: 0 4px 16px rgba(255, 68, 68, 0.3);
+}
+
+.perm-list {
+  display: grid !important;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px !important;
+}
+
+.perm-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid rgba(62, 158, 255, 0.1);
+  background: rgba(0, 20, 60, 0.3);
+  cursor: pointer;
+  transition: all 200ms ease;
+}
+
+.perm-checkbox:hover {
+  border-color: rgba(62, 158, 255, 0.25);
+  background: rgba(0, 40, 80, 0.4);
+}
+
+.perm-checkbox input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--bs-blue);
+  cursor: pointer;
+}
+
+.perm-checkbox span {
+  font-size: 13px;
+  color: var(--bs-ink-1);
 }
 </style>

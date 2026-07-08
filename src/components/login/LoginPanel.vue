@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { setAuthSession } from '@/lib/auth'
 
@@ -12,6 +12,12 @@ const account = ref('')
 const password = ref('')
 const remember = ref(true)
 const showPassword = ref(false)
+
+const showRegister = ref(false)
+const regAccount = ref('')
+const regName = ref('')
+const regPassword = ref('')
+const regConfirm = ref('')
 
 const roleConfigs = {
   student: {
@@ -41,6 +47,10 @@ const roleConfigs = {
     </svg>`,
   },
 }
+
+onMounted(() => {
+  switchRole('student')
+})
 
 function switchRole(role: LoginRole) {
   activeRole.value = role
@@ -75,6 +85,23 @@ function handleSubmit() {
       router.push('/home')
     }
   }, 900)
+}
+
+function handleRegister() {
+  if (!regAccount.value || !regName.value || !regPassword.value) {
+    alert('请填写完整注册信息')
+    return
+  }
+  if (regPassword.value !== regConfirm.value) {
+    alert('两次输入的密码不一致')
+    return
+  }
+  alert(`注册成功！账号：${regAccount.value}，请返回登录`)
+  showRegister.value = false
+  regAccount.value = ''
+  regName.value = ''
+  regPassword.value = ''
+  regConfirm.value = ''
 }
 </script>
 
@@ -202,6 +229,58 @@ function handleSubmit() {
           {{ loading ? '登录中...' : roleConfigs[activeRole].buttonText }}
         </span>
       </button>
+
+      <button v-if="activeRole === 'student' && !showRegister" type="button" class="register-link" @click="showRegister = true">
+        还没有账号？<span>立即注册</span>
+      </button>
+    </form>
+
+    <!-- 注册表单 -->
+    <form v-if="showRegister" class="register-form" @submit.prevent="handleRegister">
+      <div class="register-header">
+        <h3>新用户注册</h3>
+        <button type="button" class="back-login" @click="showRegister = false">返回登录</button>
+      </div>
+      <label class="input-field">
+        <span class="input-icon">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+            <circle cx="12" cy="7" r="4"/>
+          </svg>
+        </span>
+        <input v-model="regName" placeholder="请输入姓名" />
+      </label>
+      <label class="input-field">
+        <span class="input-icon">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+            <rect x="2" y="5" width="20" height="14" rx="2"/>
+            <path d="M2 10h20"/>
+          </svg>
+        </span>
+        <input v-model="regAccount" placeholder="请输入学号/账号" />
+      </label>
+      <label class="input-field">
+        <span class="input-icon">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+            <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+          </svg>
+        </span>
+        <input v-model="regPassword" type="password" placeholder="请设置密码" />
+      </label>
+      <label class="input-field">
+        <span class="input-icon">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+            <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+            <path d="m9 16 2 2 4-4"/>
+          </svg>
+        </span>
+        <input v-model="regConfirm" type="password" placeholder="请确认密码" />
+      </label>
+      <button class="login-button" type="submit">
+        <span class="btn-text">注册账号</span>
+      </button>
     </form>
 
     <div class="panel-divider">
@@ -297,20 +376,13 @@ function handleSubmit() {
   border-radius: 24px;
   padding: 32px 32px;
   color: #e8f7ff;
-  background:
-    linear-gradient(145deg,
-      rgba(8, 22, 48, 0.5) 0%,
-      rgba(5, 15, 36, 0.6) 45%,
-      rgba(3, 10, 26, 0.7) 100%
-    );
+  background: transparent;
   border: 1px solid rgba(0, 180, 255, 0.22);
   box-shadow:
-    0 32px 80px rgba(0, 0, 0, 0.5),
     inset 0 1px 0 rgba(100, 200, 255, 0.12),
     0 0 80px rgba(0, 100, 200, 0.18),
     0 0 0 1px rgba(255, 255, 255, 0.03);
-  backdrop-filter: blur(40px) saturate(1.3);
-  animation: panel-enter 800ms cubic-bezier(0.19, 1, 0.22, 1) both, panel-breathe 5s ease-in-out infinite;
+  animation: panel-enter 800ms cubic-bezier(0.19, 1, 0.22, 1) both;
 }
 
 .panel-border-glow {
@@ -363,7 +435,7 @@ function handleSubmit() {
   margin-bottom: 24px;
   padding: 6px;
   border-radius: 14px;
-  background: rgba(0, 0, 0, 0.25);
+  background: transparent;
   border: 1px solid rgba(0, 160, 255, 0.1);
 }
 
@@ -530,9 +602,8 @@ function handleSubmit() {
   border-radius: 999px;
   font-size: 11px;
   color: rgba(150, 220, 255, 0.7);
-  background: rgba(255, 255, 255, 0.02);
+  background: transparent;
   border: 1px solid rgba(0, 160, 255, 0.12);
-  backdrop-filter: blur(10px);
 }
 
 .panel-title {
@@ -567,7 +638,7 @@ function handleSubmit() {
   border: 1px solid rgba(0, 160, 255, 0.15);
   border-radius: 12px;
   padding: 0 16px;
-  background: rgba(255, 255, 255, 0.03);
+  background: transparent;
   transition: all 250ms cubic-bezier(0.4, 0, 0.2, 1);
 }
 
@@ -656,7 +727,7 @@ function handleSubmit() {
   height: 18px;
   border-radius: 5px;
   border: 1.5px solid rgba(0, 160, 255, 0.3);
-  background: rgba(255, 255, 255, 0.03);
+  background: transparent;
   transition: all 200ms ease;
 }
 
@@ -733,6 +804,67 @@ function handleSubmit() {
   transform: none;
 }
 
+.register-link {
+  display: block;
+  width: 100%;
+  padding: 10px 0 0;
+  border: 0;
+  background: none;
+  color: rgba(180, 220, 255, 0.6);
+  font-size: 13px;
+  text-align: center;
+  cursor: pointer;
+  transition: color 200ms ease;
+}
+
+.register-link span {
+  color: #00b4ff;
+  font-weight: 600;
+}
+
+.register-link:hover span {
+  color: #00d4ff;
+  text-decoration: underline;
+}
+
+.register-form {
+  display: grid;
+  gap: 14px;
+  animation: form-slide 300ms ease both;
+}
+
+.register-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.register-header h3 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 700;
+  color: #fff;
+}
+
+.back-login {
+  border: 0;
+  background: none;
+  color: #00b4ff;
+  font-size: 12px;
+  cursor: pointer;
+  transition: color 200ms ease;
+}
+
+.back-login:hover {
+  color: #00d4ff;
+  text-decoration: underline;
+}
+
+@keyframes form-slide {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
 .btn-text {
   position: relative;
   z-index: 1;
@@ -771,7 +903,7 @@ function handleSubmit() {
   gap: 10px;
   padding: 10px 12px;
   border-radius: 12px;
-  background: rgba(255, 255, 255, 0.025);
+  background: transparent;
   border: 1px solid rgba(255, 255, 255, 0.04);
   transition: all 250ms ease;
 }
@@ -885,21 +1017,19 @@ function handleSubmit() {
 @keyframes panel-breathe {
   0%, 100% {
     box-shadow:
-      0 32px 80px rgba(0, 0, 0, 0.5),
-      inset 0 1px 0 rgba(100, 200, 255, 0.15),
-      0 0 60px rgba(0, 100, 200, 0.18),
-      0 0 0 1px rgba(255, 255, 255, 0.04);
-    border-color: rgba(0, 180, 255, 0.2);
-    transform: scale(1);
+      0 8px 32px rgba(0, 0, 0, 0.3),
+      inset 0 1px 0 rgba(100, 200, 255, 0.06),
+      0 0 20px rgba(0, 100, 200, 0.06),
+      0 0 0 1px rgba(255, 255, 255, 0.03);
+    border-color: rgba(0, 180, 255, 0.12);
   }
   50% {
     box-shadow:
-      0 40px 100px rgba(0, 0, 0, 0.6),
-      inset 0 1px 0 rgba(100, 200, 255, 0.25),
-      0 0 120px rgba(0, 140, 240, 0.35),
-      0 0 0 1px rgba(255, 255, 255, 0.06);
-    border-color: rgba(0, 210, 255, 0.45);
-    transform: scale(1.005);
+      0 10px 40px rgba(0, 0, 0, 0.35),
+      inset 0 1px 0 rgba(100, 200, 255, 0.1),
+      0 0 30px rgba(0, 140, 240, 0.1),
+      0 0 0 1px rgba(255, 255, 255, 0.04);
+    border-color: rgba(0, 210, 255, 0.2);
   }
 }
 
