@@ -45,12 +45,23 @@ _tailwind.css
 ez-tree-1.1.0/
 
 # Local browser/test artifacts
+.playwright-mcp/
 .tmp-*/
+/temp-*/
+/screenshots/
+/*.zip
 eval*.png
 learning_path*.png
 test*.png
 homepage-*-preview.png
 homepage-*.png
+/*-check.png
+/current-*.png
+/current-page-*.png
+/merged-*.png
+/restored-*.png
+/telemetry-*.png
+/homepage-*.md
 tree_fixed.png
 apples_check.png
 modify-file.*
