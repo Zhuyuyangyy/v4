@@ -4,8 +4,8 @@ import {
   ArrowLeft, ArrowRight, Check, Brain, Sparkles,
   RefreshCw,
 } from 'lucide-vue-next'
+import { useLearningProgressSync, type LearningAction } from '@/composables/useLearningProgressSync'
 import { useProfileSurvey, roleOptions, fieldOptions, levelOptions, experienceOptions, goalOptions, longTermGoalOptions, motivationOptions, timeOptions, resourceOptions, weeklyHourOptions, paceOptions, stepLabels } from '@/composables/useProfileSurvey'
-import InkMouseBackground from '@/components/homepage/InkMouseBackground.vue'
 
 const {
   phase, currentStep, answers, result,
@@ -14,6 +14,7 @@ const {
   canProceed, nextStep, prevStep, startAnalysis, toResults,
   reset, loadFromStorage, loadLatestSavedResult,
 } = useProfileSurvey()
+const { recentEvents } = useLearningProgressSync()
 
 const loaded = ref(false)
 
@@ -53,11 +54,34 @@ function skillLevelColor(val: number) {
 function setSlider(key: string, val: number) {
   (answers.value as any)[key] = val
 }
+
+function actionLabel(action: LearningAction) {
+  if (action === 'light-star') return '学习路径点亮知识点'
+  if (action === 'favorite-resource') return '资源收藏偏好更新'
+  if (action === 'complete-resource') return '资源学完并提升掌握度'
+  if (action === 'reverse-update') return '反向更新写回画像'
+  return '智能评估聚焦知识点'
+}
+
+const profileTimeline = computed(() => {
+  const synced = recentEvents.value.slice(0, 5).map((event) => ({
+    date: new Date(event.createdAt).toLocaleString('zh-CN', {
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false,
+    }),
+    event: `${actionLabel(event.action)}：${event.domainName} / ${event.label}`,
+    score: `${event.after - event.before >= 0 ? '+' : ''}${event.after - event.before}%`,
+    type: event.after >= event.before ? 'up' : 'down',
+  }))
+  return [...synced, ...(result.value?.timeline ?? [])]
+})
 </script>
 
 <template>
   <div class="profile">
-    <InkMouseBackground />
     <!-- ============================================================ -->
     <!-- SURVEY PHASE                                                   -->
     <!-- ============================================================ -->
@@ -543,7 +567,7 @@ function setSlider(key: string, val: number) {
           <div class="res-timeline">
             <h2 class="res-sec-title">画像演变</h2>
             <div class="tl-list">
-              <div v-for="(t, i) in result.timeline" :key="i" class="tl-item">
+              <div v-for="(t, i) in profileTimeline" :key="`${t.date}-${i}`" class="tl-item">
                 <div class="tl-marker">
                   <span :class="['tl-dot', { 'tl-dot--cur': i === 0 }]" />
                   <span v-if="i < result.timeline.length - 1" class="tl-line" />

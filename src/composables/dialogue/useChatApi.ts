@@ -11,7 +11,7 @@ import type { ChatMessage, StudyReport, DimensionMap } from '@/types/dialogue'
 /* ───────── DeepSeek API 配置 ───────── */
 const DEEPSEEK_API_URL = '/deepseek-api/chat/completions'
 const DEEPSEEK_API_KEY = import.meta.env.VITE_DEEPSEEK_API_KEY || ''
-const DEEPSEEK_MODEL = 'deepseek-chat'
+const DEEPSEEK_MODEL = 'deepseek-v4-flash'
 
 const SYSTEM_PROMPT = `你是 EduMind 智能学习助手，专注于帮助学生进行学习规划和课程咨询。你必须通过对话主动收集以下 9 个画像维度。
 

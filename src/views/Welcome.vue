@@ -134,7 +134,7 @@ onBeforeUnmount(() => {
     <!-- Agent live ticker -->
     <AgentLiveTicker class="home-breathe-surface home-breathe-ticker" />
 
-    <!-- Galaxy path & next step learning -->
+    <!-- Profile-derived path preview -->
     <SectionGalaxyPath class="home-breathe-surface home-breathe-galaxy" />
     <SectionMissions class="home-breathe-surface home-breathe-missions" />
 
@@ -406,9 +406,7 @@ onBeforeUnmount(() => {
   opacity: 0.045 !important;
 }
 
-:deep(.hero-metrics),
 :deep(.cap-tag),
-:deep(.sphere-label),
 :deep(.chip-card),
 :deep(.hub-frame-shell),
 :deep(.agent-stage),
@@ -1114,9 +1112,7 @@ onBeforeUnmount(() => {
   .hub-context-card,
   .hub-agent-item,
   .hub-role-visual,
-  :deep(.hero-metrics),
   :deep(.cap-tag),
-  :deep(.sphere-label),
   :deep(.chip-card),
   :deep(.hub-frame-shell),
   :deep(.agent-stage),

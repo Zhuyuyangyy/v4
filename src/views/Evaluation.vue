@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, nextTick, onMounted, ref } from 'vue'
+import { computed, nextTick, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import {
   AlertTriangle,
@@ -14,6 +14,10 @@ import {
 } from 'lucide-vue-next'
 import ThreeKnowledgeTree from '@/components/knowledge-tree/ThreeKnowledgeTree.vue'
 import { useEvaluationTreeData } from '@/composables/useEvaluationTreeData'
+import { useLearningProgressSync } from '@/composables/useLearningProgressSync'
+import { BASE_KNOWLEDGE_ITEMS } from '@/components/resources/mapTransforms'
+import { courses, galaxies } from '@/data/courses'
+import { DOMAINS } from '@/data/learning-resources'
 import type { KnowledgePoint } from '@/types/knowledge-tree'
 
 interface SummaryCard {
@@ -42,43 +46,279 @@ interface UpgradeTopic {
   risk: '高风险' | '中风险' | '低风险'
   action: string
   route: string
+  domainId?: string
+  domainName?: string
 }
 
 const route = useRoute()
 const router = useRouter()
+const {
+  applyProgressToMastery,
+  progressPoints,
+  progressRevision,
+  recordKnowledgeAction,
+  recentFocus,
+} = useLearningProgressSync()
 const learnerName = computed(() => (route.query.learner as string) || '学习者 A')
-const courseName = computed(() => (route.query.course as string) || '计算机科学基础')
+const courseName = computed(() => {
+  const namedCourse = getQueryText(route.query.courseName)
+  if (namedCourse) return resolveCourseNameAlias(namedCourse)
+
+  const courseIdOrName = getQueryText(route.query.course)
+  if (courseIdOrName) {
+    const numericCourseId = Number(courseIdOrName)
+    if (Number.isFinite(numericCourseId)) {
+      return courses.find((course) => course.id === numericCourseId)?.name || courseIdOrName
+    }
+    return resolveCourseNameAlias(courseIdOrName)
+  }
+
+  return resolveCourseNameAlias(getQueryText(route.query.topic)) || '计算机科学基础'
+})
 
 const { data, loading, error, load } = useEvaluationTreeData()
 const reducedMotion = ref(false)
 const timeRange = ref('7d')
 const selectedTreePoint = ref<KnowledgePoint | null>(null)
 const detailRefreshKey = ref(0)
+const appliedIncomingActionKey = ref('')
 const analysisPanelKey = computed(() => selectedTreePoint.value?.id ?? 'overview')
 
-onMounted(() => {
+onMounted(async () => {
   reducedMotion.value = window.matchMedia('(prefers-reduced-motion: reduce)').matches
-  load()
+  await load()
+  applyIncomingConstellationFocus()
 })
 
-function onReload() {
-  load()
+function getQueryText(value: unknown) {
+  const first = Array.isArray(value) ? value[0] : value
+  return typeof first === 'string' && first.trim() ? first.trim() : ''
+}
+
+function resolveCourseNameAlias(value: string) {
+  const normalized = normalizeKnowledgeKey(value)
+  if (!normalized) return ''
+
+  const exactCourse = courses.find((course) => normalizeKnowledgeKey(course.name) === normalized)
+  if (exactCourse) return exactCourse.name
+
+  const aliases: Record<string, number> = {
+    math: 15,
+    数学基础: 15,
+    微积分: 15,
+    概率论: 15,
+    概率统计: 15,
+    矩阵运算: 15,
+    特征值与分解: 15,
+    凸优化: 15,
+    算法与数据结构: 5,
+    数据结构: 5,
+    排序与查找: 5,
+    图算法: 5,
+    动态规划: 6,
+    机器学习: 17,
+    监督学习: 17,
+    无监督学习: 17,
+    集成学习: 17,
+    深度学习: 18,
+    神经网络: 18,
+    cnn: 18,
+    rnnlstm: 18,
+    transformer: 18,
+    attention: 18,
+    nlp应用: 19,
+    nlp与应用: 19,
+    llm: 19,
+    词向量: 19,
+    微调与对齐: 19,
+    检索增强: 19,
+    工程实践: 12,
+    python工程: 2,
+    版本控制: 12,
+    模型部署: 12,
+  }
+
+  const courseId = Object.entries(aliases).find(([key]) => normalized.includes(normalizeKnowledgeKey(key)))?.[1]
+  return courses.find((course) => course.id === courseId)?.name || value
+}
+
+function directionLabel(direction: string) {
+  return galaxies.find((galaxy) => galaxy.id === direction)?.name || '课程体系'
+}
+
+function courseProgress(courseId: number) {
+  if (typeof window !== 'undefined') {
+    try {
+      const raw = window.localStorage.getItem('universe-learning-progress')
+      const state = raw ? JSON.parse(raw)?.[courseId] : null
+      if (state === 'completed') return 96
+      if (state === 'locked') return 22
+    } catch {}
+  }
+
+  return Math.min(92, 38 + ((courseId * 13) % 55))
+}
+
+function masteryStatusFromProgress(progress: number): KnowledgePoint['status'] {
+  if (progress >= 90) return 'mastered'
+  if (progress >= 78) return 'proficient'
+  if (progress >= 60) return 'basic'
+  if (progress >= 45) return 'beginner'
+  if (progress > 0) return 'weak'
+  return 'none'
+}
+
+function createCourseTreePoint(course: (typeof courses)[number]): KnowledgePoint {
+  const mastery = courseProgress(course.id)
+  return {
+    id: `course-${course.id}`,
+    name: course.name,
+    module: directionLabel(course.direction),
+    unit: course.difficulty,
+    mastery,
+    previousMastery: Math.max(0, mastery - 8),
+    confidence: 82,
+    weight: 1,
+    status: masteryStatusFromProgress(mastery),
+    recentChange: 4,
+    agentEvidence: [],
+    evidenceCount: course.knowledgePoints.length,
+    prerequisiteIds: course.prerequisites.map((id) => `course-${id}`),
+    relatedIds: [],
+    lastEvaluatedAt: new Date().toISOString(),
+    recommendation: `${course.name} 下包含 ${course.knowledgePoints.length} 个核心知识点，可从课程页继续学习。`,
+    issue: mastery < 60 ? '该课程还有若干知识点需要继续巩固。' : undefined,
+  }
+}
+
+function domainMeta(domainId: string) {
+  return DOMAINS.find((domain) => domain.id === domainId)
+}
+
+function createGraphTreePoint(item: (typeof BASE_KNOWLEDGE_ITEMS)[number]): KnowledgePoint {
+  progressRevision.value
+  const mastery = applyProgressToMastery(item.id, item.mastery, item.label)
+  const syncedPoint = progressPoints.value.find((point) => point.id === item.id)
+  const meta = domainMeta(item.domain)
+  const sourceLabel = humanizeProgressSource(syncedPoint?.lastSource)
+
+  return {
+    id: item.id,
+    name: item.label,
+    module: meta?.name || item.domain,
+    unit: sourceLabel || meta?.short || 'knowledge',
+    mastery,
+    previousMastery: syncedPoint?.previousMastery ?? Math.max(0, mastery - 8),
+    confidence: syncedPoint ? 92 : 78,
+    weight: item.importance,
+    status: masteryStatusFromProgress(mastery),
+    recentChange: mastery - (syncedPoint?.previousMastery ?? Math.max(0, mastery - 8)),
+    agentEvidence: [],
+    evidenceCount: Math.max(1, item.relations.length + (syncedPoint?.completedResources.length ?? 0)),
+    prerequisiteIds: BASE_KNOWLEDGE_ITEMS
+      .filter((candidate) => candidate.relations.includes(item.id))
+      .map((candidate) => candidate.id),
+    relatedIds: item.relations,
+    lastEvaluatedAt: new Date(syncedPoint?.lastUpdatedAt ?? Date.now()).toISOString(),
+    recommendation: syncedPoint
+      ? `已接收来自${sourceLabel}的学习证据，建议继续查看同领域资源并完成阶段测评。`
+      : `建议围绕${item.label}完成一组讲解、练习和阶段测评，形成可回写画像的证据。`,
+    issue: mastery < 60 ? `${item.label}仍是${meta?.name || item.domain}中的待提升知识点。` : undefined,
+  }
+}
+
+function humanizeProgressSource(source?: string) {
+  if (!source) return ''
+  const labels: Record<string, string> = {
+    'evaluation-route': '智能评估',
+    'evaluation-cockpit': '智能评估',
+    'evaluation-tree': '知识树评估',
+    'resource-center-complete': '学习资源',
+    'resource-center-favorite': '学习资源',
+    'resource-constellation': '知识星图',
+    'reverse-update': '反向更新',
+  }
+  return labels[source] ?? '学习闭环'
+}
+
+async function onReload() {
+  await load()
+  applyIncomingConstellationFocus()
 }
 
 const allPoints = computed<KnowledgePoint[]>(() => {
-  if (!data.value?.modules) return []
-  return data.value.modules.flatMap((m) => m.units.flatMap((u) => u.points))
+  progressRevision.value
+  const graphPoints = BASE_KNOWLEDGE_ITEMS.map(createGraphTreePoint)
+  const backendPoints = data.value?.modules
+    ? data.value.modules.flatMap((m) => m.units.flatMap((u) => u.points)).map((point) => {
+      const mastery = applyProgressToMastery(point.id, point.mastery, point.name)
+      return {
+        ...point,
+        mastery,
+        status: masteryStatusFromProgress(mastery),
+        recentChange: mastery - point.previousMastery,
+      }
+    })
+    : []
+  const knownKeys = new Set(graphPoints.map((point) => normalizeKnowledgeKey(point.name)))
+  return [
+    ...graphPoints,
+    ...backendPoints.filter((point) => !knownKeys.has(normalizeKnowledgeKey(point.name))),
+  ]
+})
+
+const incomingKnowledgePointId = computed(() => getQueryText(route.query.knowledgePointId) || getQueryText(route.query.nodeId))
+const incomingTopicName = computed(() => getQueryText(route.query.topic) || getQueryText(route.query.knowledgePoint))
+const incomingCourseName = computed(() => courseName.value)
+const isConstellationLightAction = computed(() => (
+  getQueryText(route.query.constellationAction) === 'light' ||
+  getQueryText(route.query.light) === '1'
+))
+
+const courseTreePoints = computed<KnowledgePoint[]>(() => courses.map(createCourseTreePoint))
+
+const incomingEvaluationPoint = computed(() => (
+  allPoints.value.find((point) => matchesIncomingPoint(point)) ??
+  courseTreePoints.value.find((point) => matchesIncomingPoint(point)) ??
+  (
+    !incomingKnowledgePointId.value && !incomingTopicName.value && recentFocus.value
+      ? allPoints.value.find((point) => point.id === recentFocus.value?.pointId) ?? null
+      : null
+  )
+))
+
+const treeHighlightNames = computed(() => {
+  if (selectedTreePoint.value) return [selectedTreePoint.value.name]
+  return incomingEvaluationPoint.value ? [incomingEvaluationPoint.value.name] : []
 })
 
 const allKnowledgePoints = computed(() => {
-  return allPoints.value.map((pt) => ({
-    name: pt.name,
-    status: pt.status,
-    progress: Math.round(pt.mastery),
-    course: pt.module,
-    labelBadge: labelBadgeForPoint(pt),
-    labelTone: labelToneForPoint(pt),
-  }))
+  const treePoints = [
+    ...allPoints.value,
+    ...courseTreePoints.value,
+  ]
+  return treePoints.map((pt) => {
+    const activated = isActivatedIncomingPoint(pt)
+    const shouldLabel = activated || labeledPointIds.value.has(pt.id) || labeledCoursePointIds.value.has(pt.id)
+    return {
+      name: pt.name,
+      status: activated ? 'mastered' : pt.status,
+      progress: activated ? Math.max(95, Math.round(pt.mastery)) : Math.round(pt.mastery),
+      course: pt.module,
+      labelBadge: shouldLabel ? pt.name : undefined,
+      labelTone: activated ? 'success' : labelToneForPoint(pt),
+    }
+  })
+})
+
+const labeledCoursePointIds = computed(() => {
+  return new Set(
+    [...courseTreePoints.value]
+      .filter((pt) => isActivatedIncomingPoint(pt) || pt.mastery < 55 || pt.status === 'weak' || pt.status === 'none')
+      .sort((a, b) => a.mastery - b.mastery)
+      .slice(0, 7)
+      .map((pt) => pt.id),
+  )
 })
 
 const labeledPointIds = computed(() => {
@@ -104,6 +344,75 @@ function labelToneForPoint(pt: KnowledgePoint) {
   if (pt.mastery < 65) return 'warning'
   return 'info'
 }
+
+function normalizeKnowledgeKey(value: string) {
+  return value
+    .normalize('NFKC')
+    .toLowerCase()
+    .replace(/[\s/_\-·・（）()]+/g, '')
+}
+
+function matchesIncomingPoint(point: KnowledgePoint) {
+  const queryId = incomingKnowledgePointId.value
+  const queryCourse = getQueryText(route.query.course)
+  if (
+    (queryId && (point.id === queryId || point.id === `course-${queryId}` || String((point as any).knowledgePointId || '') === queryId)) ||
+    (queryCourse && (point.id === queryCourse || point.id === `course-${queryCourse}`))
+  ) {
+    return true
+  }
+
+  const queryTopic = incomingTopicName.value
+  const mappedTopic = queryTopic ? resolveCourseNameAlias(queryTopic) : ''
+  const mappedCourse = incomingCourseName.value ? resolveCourseNameAlias(incomingCourseName.value) : ''
+  return Boolean(
+    (queryTopic && normalizeKnowledgeKey(point.name) === normalizeKnowledgeKey(queryTopic)) ||
+    (mappedTopic && normalizeKnowledgeKey(point.name) === normalizeKnowledgeKey(mappedTopic)) ||
+    (mappedCourse && normalizeKnowledgeKey(point.name) === normalizeKnowledgeKey(mappedCourse)),
+  )
+}
+
+function isActivatedIncomingPoint(point: KnowledgePoint) {
+  return isConstellationLightAction.value && matchesIncomingPoint(point)
+}
+
+function applyIncomingConstellationFocus() {
+  const point = incomingEvaluationPoint.value
+  if (!point) return
+
+  let nextPoint = point
+  if (isConstellationLightAction.value) {
+    const targetMastery = Number(getQueryText(route.query.targetMastery) || 100)
+    const actionKey = `${point.id}-${targetMastery}`
+    if (appliedIncomingActionKey.value !== actionKey) {
+      appliedIncomingActionKey.value = actionKey
+      const synced = recordKnowledgeAction({
+        id: incomingKnowledgePointId.value || point.id,
+        label: incomingTopicName.value || point.name,
+        domainId: getQueryText(route.query.domain),
+        domainName: point.module,
+        baseMastery: point.mastery,
+        targetMastery,
+        action: 'light-star',
+        source: 'evaluation-route',
+      })
+      nextPoint = {
+        ...point,
+        mastery: synced.mastery,
+        previousMastery: synced.previousMastery,
+        status: masteryStatusFromProgress(synced.mastery),
+        recentChange: synced.mastery - synced.previousMastery,
+      }
+    }
+  }
+
+  if (selectedTreePoint.value?.id !== nextPoint.id || selectedTreePoint.value.mastery !== nextPoint.mastery) {
+    selectedTreePoint.value = nextPoint
+    detailRefreshKey.value += 1
+  }
+}
+
+watch([data, incomingKnowledgePointId, incomingTopicName, incomingCourseName, isConstellationLightAction, progressRevision], applyIncomingConstellationFocus)
 
 const totalStats = computed(() => {
   const points = allPoints.value
@@ -213,6 +522,18 @@ const weakPoints = computed(() => (
     .sort((a, b) => a.mastery - b.mastery)
 ))
 
+const focusedDomainTopics = computed(() => {
+  const selected = selectedTreePoint.value
+  if (!selected) return weakPoints.value
+  const sameModule = allPoints.value.filter((point) => point.module === selected.module)
+  return [
+    selected,
+    ...sameModule
+      .filter((point) => point.id !== selected.id)
+      .sort((a, b) => a.mastery - b.mastery),
+  ].slice(0, 5)
+})
+
 const summaryCards = computed<SummaryCard[]>(() => {
   if (selectedTreePoint.value) {
     return [
@@ -309,19 +630,22 @@ const radarMetrics = computed<RadarMetric[]>(() => {
   ]
 })
 
-const topUpgradeTopics = computed<UpgradeTopic[]>(() => (
-  (selectedTreePoint.value
-    ? [selectedTreePoint.value, ...weakPoints.value.filter((point) => point.id !== selectedTreePoint.value?.id)]
-    : weakPoints.value
-  ).slice(0, 5).map((point) => ({
-    id: point.id,
-    name: point.name,
-    mastery: Math.round(point.mastery),
-    risk: point.mastery < 30 ? '高风险' : point.mastery < 45 ? '中风险' : '低风险',
-    action: point.mastery < 30 ? '重点复习' : point.mastery < 45 ? '巩固练习' : '加强理解',
-    route: point.mastery < 30 ? '/learning-path' : '/resources',
-  }))
-))
+const topUpgradeTopics = computed<UpgradeTopic[]>(() => {
+  const source = selectedTreePoint.value ? focusedDomainTopics.value : weakPoints.value
+  return source.slice(0, 5).map((point) => {
+    const domain = DOMAINS.find((item) => item.name === point.module)
+    return {
+      id: point.id,
+      name: point.name,
+      mastery: Math.round(point.mastery),
+      risk: point.mastery < 30 ? '高风险' : point.mastery < 45 ? '中风险' : '低风险',
+      action: point.mastery < 30 ? '重点复习' : point.mastery < 45 ? '巩固练习' : '加强理解',
+      route: point.mastery < 30 ? '/learning-path' : '/resources',
+      domainId: domain?.id,
+      domainName: domain?.name,
+    }
+  })
+})
 
 const trendPolyline = computed(() => {
   const points = trend.value
@@ -402,13 +726,17 @@ function openTopic(topic: UpgradeTopic) {
     path: topic.route,
     query: {
       source: 'evaluation-cockpit',
+      knowledgePointId: topic.id,
       topic: topic.name,
+      domain: topic.domainName || topic.domainId || '',
     },
   })
 }
 
 function onTreeMarkerSelect(marker: any) {
-  const point = allPoints.value.find((item) => item.name === marker?.label)
+  const point =
+    courseTreePoints.value.find((item) => item.name === marker?.label) ||
+    allPoints.value.find((item) => item.name === marker?.label)
   selectedTreePoint.value = point ?? null
   if (point) detailRefreshKey.value += 1
   nextTick(() => {
@@ -422,7 +750,9 @@ function openSelectedTreePoint() {
     path: selectedTreePoint.value.mastery < 50 ? '/learning-path' : '/resources',
     query: {
       source: 'evaluation-tree',
+      knowledgePointId: selectedTreePoint.value.id,
       topic: selectedTreePoint.value.name,
+      domain: selectedTreePoint.value.module,
     },
   })
 }
@@ -443,6 +773,11 @@ function openPrimaryAction() {
         <div>
           <p class="eyebrow">EVALUATION COCKPIT</p>
           <h1>学习分析</h1>
+          <div class="course-badge" :title="courseName">
+            <BookOpen :size="16" />
+            <span>当前课程</span>
+            <strong>{{ courseName }}</strong>
+          </div>
           <div class="ai-note">
             <span class="bot-badge"><Bot :size="24" /></span>
             <strong>{{ aiDiagnosis }}</strong>
@@ -542,7 +877,7 @@ function openPrimaryAction() {
             fill
             :height="'100%'"
             :knowledge-points="(allKnowledgePoints as any)"
-            :highlight-names="selectedTreePoint ? [selectedTreePoint.name] : []"
+            :highlight-names="treeHighlightNames"
             :show-background-stage="true"
             background-stage-variant="diagnostic"
             @marker-select="onTreeMarkerSelect"
@@ -768,6 +1103,37 @@ function openPrimaryAction() {
   font-weight: 780;
   letter-spacing: 0;
   text-shadow: 0 16px 44px rgba(0, 0, 0, 0.55);
+}
+
+.course-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  max-width: 100%;
+  min-height: 32px;
+  margin-top: 10px;
+  padding: 6px 10px;
+  border: 1px solid rgba(45, 232, 255, 0.28);
+  border-radius: 999px;
+  background: rgba(8, 25, 47, 0.36);
+  color: #dff8ff;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.045);
+}
+
+.course-badge span {
+  flex: 0 0 auto;
+  color: rgba(174, 202, 232, 0.76);
+  font-size: 12px;
+}
+
+.course-badge strong {
+  overflow: hidden;
+  min-width: 0;
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 800;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .ai-note {

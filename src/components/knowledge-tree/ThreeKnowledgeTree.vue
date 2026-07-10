@@ -1271,7 +1271,7 @@ function createAppleLabel(text: string, appleSize: number, tone: NonNullable<Gra
   const fontSize = 22
   const paddingX = 18
   const paddingY = 9
-  const maxChars = 4
+  const maxChars = 6
   const displayText = text.length > maxChars ? text.slice(0, maxChars) + '…' : text
   const palette = {
     danger: { bg: 'rgba(55, 9, 18, 0.82)', border: 'rgba(255, 113, 133, 0.72)', text: '#ffe4e6', glow: 'rgba(244, 63, 94, 0.35)' },

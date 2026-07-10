@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
-import { BookOpen, Map, Route, Sparkles } from 'lucide-vue-next'
+import { Map, Route, Sparkles, UserRound } from 'lucide-vue-next'
 import UniverseCanvas from '@/learning-universe-3d/components/universe/UniverseCanvas.vue'
 import { courses, galaxies } from '@/learning-universe-3d/data/courses'
 import { learningPaths } from '@/learning-universe-3d/data/learningPaths'
@@ -47,22 +47,6 @@ const progressStats = computed(() => {
 
 const activeKnowledge = computed(() => activeCourse.value.knowledgePoints.slice(0, 4))
 
-const learningPathTopic = computed(() => {
-  const name = activeCourse.value.name
-  if (name.includes('数据结构')) return '数据结构'
-  if (name.includes('算法')) return '排序与查找'
-  if (name.includes('Python')) return 'Python工程'
-  if (name.includes('程序设计') || name.includes('软件工程')) return 'Python工程'
-  if (name.includes('机器学习')) return '监督学习'
-  if (name.includes('深度学习')) return '神经网络'
-  if (name.includes('自然语言')) return '词向量'
-  if (name.includes('Transformer')) return 'Transformer'
-  if (name.includes('检索')) return '检索增强'
-  if (name.includes('数据库') || name.includes('操作系统') || name.includes('计算机网络')) return '模型部署'
-  if (name.includes('概率')) return '概率论'
-  return activeCourse.value.knowledgePoints[0]?.name ?? name
-})
-
 function activatePath(pathId: string) {
   activePathId.value = pathId
   store.selectedPath = pathId
@@ -84,25 +68,19 @@ function handlePlanetSelect(courseId: number) {
 
 function openLearningPath() {
   router.push({
-    path: '/learning-path',
+    path: '/dialogue',
     query: {
-      source: 'home-universe-path',
-      path: activePath.value.id,
-      course: String(activeCourse.value.id),
-      courseName: activeCourse.value.name,
-      topic: learningPathTopic.value,
-      domain: activeGalaxy.value.name,
+      source: 'home-profile-first',
+      next: 'learning-path',
     },
   })
 }
 
 function openResources() {
   router.push({
-    path: '/resources',
+    path: '/learning-path',
     query: {
-      source: 'home-universe-path',
-      topic: activeCourse.value.name,
-      domain: activeGalaxy.value.name,
+      source: 'home-profile-preview',
     },
   })
 }
@@ -126,11 +104,11 @@ onMounted(() => {
   <section class="home-galaxy-path" aria-labelledby="home-galaxy-title">
     <div class="galaxy-copy">
       <div>
-        <span class="section-kicker">LEARNING UNIVERSE</span>
-        <h2 id="home-galaxy-title">把薄弱知识点迁移成一条星图路径</h2>
+        <span class="section-kicker">PROFILE-DRIVEN PATH</span>
+        <h2 id="home-galaxy-title">个性化学习路径星图</h2>
       </div>
       <p>
-        这里接入的是 3dkeshihua 分支的 3D 学习宇宙：星球代表课程节点，金色航线代表个性化学习路径，点击星球可以查看当前节点摘要。
+        学生完成画像诊断后，系统会把薄弱知识点、先修关系和学习目标编排成这张星图；资源学习、智能评估和反向更新会持续调整下一轮路径。
       </p>
     </div>
 
@@ -139,13 +117,13 @@ onMounted(() => {
         <UniverseCanvas ref="universeRef" @select-planet="handlePlanetSelect" />
 
         <div class="stage-overlay stage-overlay-top">
-          <span>当前路径</span>
+          <span>路径生成结果</span>
           <strong>{{ activePath.name }}</strong>
           <em>{{ progressStats.available }}/{{ progressStats.total }} 节点已解锁 · {{ progressStats.pct }}%</em>
         </div>
 
         <div class="stage-overlay stage-overlay-bottom">
-          <span>点击星球查看节点</span>
+          <span>当前知识节点</span>
           <strong>{{ activeCourse.name }}</strong>
         </div>
       </div>
@@ -173,7 +151,7 @@ onMounted(() => {
         <div class="node-list">
           <div class="panel-title">
             <Route :size="16" />
-            <span>路径节点</span>
+            <span>推荐路径节点</span>
           </div>
           <button
             v-for="course in pathCourses"
@@ -194,7 +172,7 @@ onMounted(() => {
         <div class="evidence-list">
           <div class="panel-title">
             <Sparkles :size="16" />
-            <span>当前节点</span>
+            <span>节点说明</span>
           </div>
           <p>{{ activeCourse.description }}</p>
           <div class="knowledge-tags">
@@ -204,12 +182,12 @@ onMounted(() => {
 
         <div class="detail-actions">
           <button type="button" class="primary-action" @click="openLearningPath">
-            <Map :size="17" />
-            进入星图路径
+            <UserRound :size="17" />
+            先生成学习画像
           </button>
           <button type="button" class="secondary-action" @click="openResources">
-            <BookOpen :size="17" />
-            匹配资源
+            <Map :size="17" />
+            查看学习路径
           </button>
         </div>
       </aside>

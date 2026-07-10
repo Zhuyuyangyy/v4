@@ -15,6 +15,9 @@ import {
   Zap,
 } from 'lucide-vue-next'
 import MultiAgentReverseUpdateMap from '@/components/evaluation/MultiAgentReverseUpdateMap.vue'
+import { saveProfile } from '@/lib/api'
+import { useLearningProgressSync, type LearningProgressEvent } from '@/composables/useLearningProgressSync'
+import type { ProfileResult } from '@/composables/useProfileSurvey'
 import {
   knowledgeMastery,
   loadReverseRun,
@@ -34,6 +37,12 @@ import {
 } from '@/composables/useReverseUpdate'
 
 const route = useRoute()
+const {
+  progressPoints,
+  recentEvents,
+  recentFocus,
+  recordKnowledgeAction,
+} = useLearningProgressSync()
 
 type ViewMode = 'board' | 'panorama'
 type RunState = 'idle' | 'running' | 'done'
@@ -44,6 +53,8 @@ const progress = ref(0)
 const newReportTime = ref('')
 const focusStep = ref<number | null>(null)
 const entryHint = ref('')
+const runNotice = ref('')
+const writebackState = ref<'idle' | 'written' | 'skipped'>('idle')
 
 let runTimer: number | null = null
 
@@ -65,6 +76,15 @@ const portraitRoute = { path: '/dialogue', query: { tab: 'portrait-report', from
 
 const isRunning = computed(() => runState.value === 'running')
 const isDone = computed(() => runState.value === 'done')
+const completedResourceEvents = computed(() => (
+  recentEvents.value.filter(event => event.action === 'complete-resource')
+))
+const hasCompletedResourceEvidence = computed(() => (
+  completedResourceEvents.value.length > 0 ||
+  progressPoints.value.some(point => point.completedResources.length > 0)
+))
+const isProfileWritten = computed(() => isDone.value && writebackState.value === 'written')
+const latestCompletedResource = computed(() => completedResourceEvents.value[0] ?? null)
 
 const currentStep = computed(() => {
   if (runState.value === 'idle') return 0
@@ -77,6 +97,7 @@ const currentStep = computed(() => {
 
 const engineStateLabel = computed(() => {
   if (isRunning.value) return '运行中'
+  if (isDone.value && writebackState.value === 'skipped') return '未回写画像'
   if (isDone.value) return '本轮完成'
   return '待命'
 })
@@ -86,7 +107,7 @@ const confidence = computed(() => {
   return Math.min(92, Math.round(((progress.value - 55) / 45) * 92))
 })
 
-const displayVersion = computed(() => (isDone.value ? 'V2' : 'V1'))
+const displayVersion = computed(() => (isProfileWritten.value ? 'V2' : 'V1'))
 
 /** 运行中的任务下标：驱动能力卡与"写入画像报告"箭头的联动点亮 */
 const currentTaskIndex = computed(() => {
@@ -97,11 +118,22 @@ const currentTaskIndex = computed(() => {
 })
 
 const historyList = computed(() => {
-  if (!isDone.value) return reverseHistoryReports
+  if (!isProfileWritten.value) return reverseHistoryReports
   return [
     { version: 'V2', time: newReportTime.value, note: '学习画像报告' },
     ...reverseHistoryReports,
   ]
+})
+
+const dynamicKnowledgeMastery = computed(() => {
+  if (!progressPoints.value.length) return knowledgeMastery
+  return [...progressPoints.value]
+    .sort((a, b) => b.lastUpdatedAt - a.lastUpdatedAt)
+    .slice(0, 5)
+    .map((point) => ({
+      name: point.label,
+      status: point.mastery >= 80 ? 'mastered' as const : point.mastery >= 60 ? 'improve' as const : 'weak' as const,
+    }))
 })
 
 const optimizeLinks = computed(() => {
@@ -138,7 +170,7 @@ function taskStatus(task: { from: number; to: number }) {
 }
 
 function summaryValue(item: { before: number; after: number }) {
-  return isDone.value ? item.after : item.before
+  return isProfileWritten.value ? item.after : item.before
 }
 
 function summaryRingPct(item: { before: number; after: number; unit: string }) {
@@ -187,6 +219,8 @@ function startRun() {
   runState.value = 'running'
   progress.value = 0
   focusStep.value = null
+  runNotice.value = ''
+  writebackState.value = 'idle'
   clearRunTimer()
   runTimer = window.setInterval(() => {
     progress.value = Math.min(100, progress.value + 0.9 + Math.random() * 1.7)
@@ -197,24 +231,144 @@ function startRun() {
   }, 90)
 }
 
+function formatProfileDate(date: Date) {
+  const pad = (n: number) => String(n).padStart(2, '0')
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())} ${pad(date.getHours())}:${pad(date.getMinutes())}`
+}
+
+function resourceEvidenceNames() {
+  const names: string[] = []
+  for (const event of completedResourceEvents.value) {
+    const name = event.resourceTitle || event.label
+    if (name) names.push(name)
+  }
+  for (const point of progressPoints.value) {
+    names.push(...point.completedResources)
+  }
+  return [...new Set(names)].slice(0, 6)
+}
+
+function buildReverseProfilePayload(focus: LearningProgressEvent | null): ProfileResult & { source: string } {
+  const dimensions = reverseDimensions.map(dim => ({
+    label: dim.name,
+    value: dim.after,
+    color: dim.tone,
+  }))
+  const totalScore = Math.round(dimensions.reduce((sum, dim) => sum + dim.value, 0) / dimensions.length)
+  const strongest = [...dimensions].sort((a, b) => b.value - a.value)[0]
+  const weakDims = reverseDimensions
+    .filter(dim => dim.weak || dim.after < 65)
+    .map(dim => ({ tag: `${dim.name}专项巩固`, count: Math.max(1, Math.round((72 - dim.after) / 8)) }))
+  const evidenceNames = resourceEvidenceNames()
+  const latestResource = evidenceNames[0] || focus?.resourceTitle || focus?.label || '已完成学习资源'
+  const delta = focus ? Math.max(1, focus.after - focus.before) : 6
+  const now = new Date()
+
+  return {
+    source: 'reverse-evaluation',
+    dimensions,
+    totalScore,
+    stats: [
+      { label: '综合评分', value: `${totalScore}`, icon: 'Brain', color: '#5fb5da' },
+      { label: '最强维度', value: strongest?.label || '知识掌握', icon: 'Zap', color: '#55b18e' },
+      { label: '待提升', value: `${weakDims.length} 项`, icon: 'BarChart3', color: '#d8b36c' },
+      { label: '学习阶段', value: '反向更新后', icon: 'BookOpen', color: '#8d84d6' },
+    ],
+    weaknesses: weakDims.length ? weakDims : [{ tag: `${focus?.label || '当前知识点'}复测巩固`, count: 1 }],
+    skillTree: [
+      {
+        category: '画像能力增量',
+        color: '#8d84d6',
+        skills: dimensions.slice(0, 3).map(dim => ({ name: dim.label, level: dim.value })),
+      },
+      {
+        category: '已完成资源证据',
+        color: '#55b18e',
+        skills: evidenceNames.slice(0, 3).map((name, index) => ({
+          name,
+          level: Math.min(98, (focus?.after ?? 78) + index * 2),
+        })),
+      },
+    ],
+    preferences: [
+      { label: '画像来源', value: '反向评估' },
+      { label: '完成资源', value: `${evidenceNames.length} 项` },
+      { label: '最近资源', value: latestResource },
+      { label: '回写策略', value: '已完成学习证据驱动' },
+    ],
+    timeline: [
+      {
+        date: formatProfileDate(now),
+        event: `反向评估完成，已将 ${evidenceNames.length} 项学习资源证据写入画像`,
+        score: `+${delta}%`,
+        type: 'up',
+      },
+      {
+        date: formatProfileDate(now),
+        event: `阶段完成：${latestResource}`,
+        score: focus ? `+${focus.after - focus.before}%` : '+6%',
+        type: 'up',
+      },
+    ],
+    recommendations: [
+      `已完成「${latestResource}」，画像已纳入现阶段完成证据。`,
+      '下一轮资源推荐会优先围绕仍低于 65% 的维度安排补弱练习。',
+      '建议完成一组阶段测评后再次执行反向评估，验证画像更新是否稳定。',
+      '路径与辅导模块已可读取新画像，后续讲解会更偏向已暴露的薄弱知识点。',
+    ],
+  }
+}
+
+async function persistReverseProfileUpdate(focus: LearningProgressEvent | null) {
+  const payload = buildReverseProfilePayload(focus)
+  await saveProfile(payload)
+}
+
 function completeRun() {
   runState.value = 'done'
   const now = new Date()
   const pad = (n: number) => String(n).padStart(2, '0')
   newReportTime.value = `${pad(now.getMonth() + 1)}-${pad(now.getDate())} ${pad(now.getHours())}:${pad(now.getMinutes())}`
+  const focus = latestCompletedResource.value
+  if (!hasCompletedResourceEvidence.value) {
+    writebackState.value = 'skipped'
+    runNotice.value = '本轮已完成反向检查，但没有检测到“已学完”的学习资源证据，因此不会生成新画像版本。请先到学习资源中完成并标记资源，再回来一键更新。'
+    return
+  }
+
+  writebackState.value = 'written'
+  runNotice.value = '已检测到学习资源完成记录，本轮反向评估已写入最新学习画像，并同步生成 V2 画像报告。'
   saveReverseRun({ version: 'V2', time: newReportTime.value, savedAt: Date.now() })
+  if (focus) {
+    recordKnowledgeAction({
+      id: focus.pointId,
+      label: focus.label,
+      domainId: focus.domainId,
+      domainName: focus.domainName,
+      baseMastery: focus.after,
+      masteryDelta: 6,
+      action: 'reverse-update',
+      source: 'reverse-evaluation',
+    })
+  }
+  persistReverseProfileUpdate(focus).catch((err) => {
+    runNotice.value = '本轮画像已在页面内更新，但同步到后端画像存储失败，请稍后重试。'
+    console.warn('Failed to persist reverse profile update:', err)
+  })
 }
 
 function restorePersistedRun() {
   const record = loadReverseRun()
   if (!record) return
   runState.value = 'done'
+  writebackState.value = 'written'
   progress.value = 100
   newReportTime.value = record.time
 }
 
 const ctaLabel = computed(() => {
   if (isRunning.value) return '反向评估进行中…'
+  if (isDone.value && writebackState.value === 'skipped') return '完成资源后重新评估'
   if (isDone.value) return '再次检查学习进度'
   return '一键检查当前学习进度'
 })
@@ -315,6 +469,10 @@ onBeforeUnmount(() => {
         <ShieldCheck :size="14" stroke-width="2" />
         {{ entryHint }}
       </p>
+      <p v-if="runNotice" class="entry-hint writeback-notice reveal" :class="writebackState" style="--d: 0.06s">
+        <ShieldCheck :size="14" stroke-width="2" />
+        {{ runNotice }}
+      </p>
 
       <ol class="flow-steps reveal" style="--d: 0.08s" aria-label="反向更新流程">
         <li
@@ -339,7 +497,7 @@ onBeforeUnmount(() => {
 
       <div class="rev-grid">
         <!-- 左：当前学习状态 -->
-        <section class="panel state-panel reveal" style="--d: 0.14s" aria-label="当前学习状态">
+        <section class="panel panel-breathe state-panel reveal" style="--d: 0.14s" aria-label="当前学习状态">
           <header class="panel-head">
             <h2><i class="accent" />当前学习状态</h2>
             <small><Clock :size="11" stroke-width="2" /> 数据更新：刚刚</small>
@@ -369,7 +527,7 @@ onBeforeUnmount(() => {
             </header>
             <div class="mastery-body">
               <ul class="mastery-list">
-                <li v-for="point in knowledgeMastery" :key="point.name">
+                <li v-for="point in dynamicKnowledgeMastery" :key="point.name">
                   <span>{{ point.name }}</span>
                   <em :class="point.status">
                     {{ point.status === 'mastered' ? '已掌握' : point.status === 'improve' ? '待提升' : '薄弱' }}
@@ -389,7 +547,7 @@ onBeforeUnmount(() => {
                     class="radar-axis"
                   />
                   <polygon :points="radarPolygon('before')" class="radar-before" />
-                  <polygon v-if="isDone" :points="radarPolygon('after')" class="radar-after" />
+                  <polygon v-if="isProfileWritten" :points="radarPolygon('after')" class="radar-after" />
                   <text
                     v-for="(dim, i) in reverseDimensions"
                     :key="`label-${dim.name}`"
@@ -402,7 +560,7 @@ onBeforeUnmount(() => {
                 </svg>
                 <figcaption>
                   <span><i class="dot before" />更新前</span>
-                  <span :class="{ dim: !isDone }"><i class="dot after" />更新后</span>
+                  <span :class="{ dim: !isProfileWritten }"><i class="dot after" />更新后</span>
                 </figcaption>
               </figure>
             </div>
@@ -425,10 +583,10 @@ onBeforeUnmount(() => {
         </section>
 
         <!-- 中：反向评估引擎 -->
-        <section class="panel engine-panel reveal" style="--d: 0.2s" :class="runState" aria-label="反向评估引擎" aria-live="polite">
+        <section class="panel panel-breathe engine-panel reveal" style="--d: 0.2s" :class="runState" aria-label="反向评估引擎" aria-live="polite">
           <header class="panel-head">
             <h2><i class="accent" />反向评估引擎</h2>
-            <em class="engine-state" :class="runState">{{ engineStateLabel }}</em>
+            <em class="engine-state" :class="[runState, writebackState]">{{ engineStateLabel }}</em>
           </header>
 
           <div class="intake-strip" :class="{ live: isRunning }" aria-label="证据汇入">
@@ -484,7 +642,7 @@ onBeforeUnmount(() => {
               <small>{{ engineCapabilities[3].desc }}</small>
             </div>
 
-            <div class="writeback-arrow" :class="{ on: isDone || currentTaskIndex === 4 }">
+            <div class="writeback-arrow" :class="{ on: isProfileWritten || currentTaskIndex === 4 }">
               <span>写入画像报告</span>
               <ArrowRight :size="15" stroke-width="2.4" />
             </div>
@@ -528,7 +686,7 @@ onBeforeUnmount(() => {
         </section>
 
         <!-- 右：画像生成 / 历史画像报告 -->
-        <section class="panel report-panel reveal" style="--d: 0.26s" aria-label="画像生成与历史画像报告">
+        <section class="panel panel-breathe report-panel reveal" style="--d: 0.26s" aria-label="画像生成与历史画像报告">
           <header class="panel-head">
             <h2><i class="accent violet" />画像生成 / 历史画像报告</h2>
             <RouterLink class="head-link" :to="portraitRoute">进入画像生成 <ChevronRight :size="12" stroke-width="2" /></RouterLink>
@@ -540,23 +698,23 @@ onBeforeUnmount(() => {
               <li
                 v-for="(item, index) in historyList"
                 :key="`${item.version}-${item.time}`"
-                :class="{ latest: index === 0 && isDone, fresh: index === 0 && isDone }"
+                :class="{ latest: index === 0 && isProfileWritten, fresh: index === 0 && isProfileWritten }"
               >
                 <i class="node" />
                 <div>
                   <strong>{{ item.time }}</strong>
                   <small>{{ item.note }}（{{ item.version }}）</small>
                 </div>
-                <em v-if="index === 0 && isDone">新版本</em>
+                <em v-if="index === 0 && isProfileWritten">新版本</em>
               </li>
             </ul>
           </div>
 
-          <article class="latest-report" :class="{ updated: isDone }">
+          <article class="latest-report" :class="{ updated: isProfileWritten }">
             <header>
               <FileText :size="15" stroke-width="1.8" />
               <strong>最新画像报告（{{ displayVersion }}）</strong>
-              <em v-if="isDone">新版本</em>
+              <em v-if="isProfileWritten">新版本</em>
               <em v-else class="wait">待更新</em>
             </header>
             <div class="report-rows">
@@ -568,18 +726,18 @@ onBeforeUnmount(() => {
               <div v-for="dim in reverseDimensions" :key="dim.name" class="report-row">
                 <span>{{ dim.name }}</span>
                 <small>{{ dim.before }}%</small>
-                <strong :class="{ pending: !isDone }">{{ isDone ? `${dim.after}%` : '—' }}</strong>
-                <b v-if="isDone" class="up">↑{{ dim.after - dim.before }}</b>
+                <strong :class="{ pending: !isProfileWritten }">{{ isProfileWritten ? `${dim.after}%` : '—' }}</strong>
+                <b v-if="isProfileWritten" class="up">↑{{ dim.after - dim.before }}</b>
               </div>
               <div v-for="row in reportExtraDeltas" :key="row.label" class="report-row">
                 <span>{{ row.label }}</span>
                 <small>{{ row.before }}</small>
-                <strong :class="{ pending: !isDone }">{{ isDone ? row.after : '—' }}</strong>
-                <b v-if="isDone" class="up">↑</b>
+                <strong :class="{ pending: !isProfileWritten }">{{ isProfileWritten ? row.after : '—' }}</strong>
+                <b v-if="isProfileWritten" class="up">↑</b>
               </div>
             </div>
             <p class="report-note">
-              {{ isDone ? '本次更新基于最新学习数据与反向评估结果，已同步至画像生成模块。' : '点击顶部按钮执行反向评估后，此处将生成新版本报告。' }}
+              {{ isProfileWritten ? '本次更新基于最新学习数据与反向评估结果，已同步至画像生成模块。' : writebackState === 'skipped' ? '本轮缺少已学完资源证据，画像保持旧版本；完成学习资源后再执行即可生成新报告。' : '点击顶部按钮执行反向评估后，此处将生成新版本报告。' }}
             </p>
             <RouterLink class="report-cta" :to="portraitRoute">
               查看全部报告
@@ -590,10 +748,10 @@ onBeforeUnmount(() => {
       </div>
 
       <!-- 本次画像更新结果 -->
-      <section class="summary-section reveal" style="--d: 0.32s" :class="{ on: isDone }" aria-label="本次画像更新结果">
+      <section class="summary-section reveal" style="--d: 0.32s" :class="{ on: isProfileWritten }" aria-label="本次画像更新结果">
         <header>
           <h2><i class="accent" />本次画像更新结果</h2>
-          <small>{{ isDone ? '更新前后对比' : '执行反向评估后展示更新前后对比' }}</small>
+          <small>{{ isProfileWritten ? '更新前后对比' : writebackState === 'skipped' ? '暂无可回写的学习资源完成证据' : '执行反向评估后展示更新前后对比' }}</small>
         </header>
         <div class="summary-grid">
           <article
@@ -610,10 +768,10 @@ onBeforeUnmount(() => {
               <ArrowRight :size="15" stroke-width="2.2" class="sum-arrow" />
               <div class="sum-ring" :style="{ '--val': `${summaryRingPct(item)}%` }">
                 <strong>{{ summaryValue(item) }}<i>{{ item.unit }}</i></strong>
-                <small>{{ isDone ? '更新后' : '待更新' }}</small>
+                <small>{{ isProfileWritten ? '更新后' : '待更新' }}</small>
               </div>
             </div>
-            <b class="sum-delta" :class="{ show: isDone }">↑ {{ (item.after - item.before).toFixed(item.unit === 'x' ? 1 : 0) }}{{ item.unit }}</b>
+            <b class="sum-delta" :class="{ show: isProfileWritten }">↑ {{ (item.after - item.before).toFixed(item.unit === 'x' ? 1 : 0) }}{{ item.unit }}</b>
           </article>
         </div>
       </section>
@@ -630,7 +788,7 @@ onBeforeUnmount(() => {
             :key="link.key"
             :to="link.to"
             class="optimize-card"
-            :class="{ pending: !isDone }"
+            :class="{ pending: !isProfileWritten }"
             :style="{ '--tone': link.tone, '--i': i }"
           >
             <i class="opt-dot" />
@@ -644,12 +802,12 @@ onBeforeUnmount(() => {
       </section>
 
       <footer class="meta-strip reveal" style="--d: 0.44s">
-        <span><Clock :size="12" stroke-width="2" /> 最近一次反向更新：{{ isDone ? newReportTime : reverseEngineMeta.lastRun }}</span>
+        <span><Clock :size="12" stroke-width="2" /> 最近一次反向更新：{{ isProfileWritten ? newReportTime : reverseEngineMeta.lastRun }}</span>
         <span><Database :size="12" stroke-width="2" /> 数据来源：{{ reverseEngineMeta.dataSource }}</span>
         <span><Zap :size="12" stroke-width="2" /> 评估引擎：{{ reverseEngineMeta.engine }}</span>
-        <span class="sync" :class="{ on: isDone }">
+        <span class="sync" :class="{ on: isProfileWritten }">
           <Check :size="12" stroke-width="2.6" />
-          {{ isDone ? `已写入画像历史报告（V2）` : '待同步' }}
+          {{ isProfileWritten ? `已写入画像历史报告（V2）` : writebackState === 'skipped' ? '无资源完成证据，未写入画像' : '待同步' }}
         </span>
         <span><Play :size="12" stroke-width="2" /> 下次建议更新：{{ reverseEngineMeta.nextSuggested }}</span>
       </footer>
@@ -946,6 +1104,22 @@ onBeforeUnmount(() => {
   background: rgba(95, 181, 218, 0.06);
   color: #9fdcf0;
   font-size: 12.5px;
+}
+
+.entry-hint.writeback-notice {
+  margin-top: -6px;
+}
+
+.entry-hint.writeback-notice.written {
+  border-color: rgba(85, 177, 142, 0.34);
+  background: rgba(85, 177, 142, 0.08);
+  color: #aee8d3;
+}
+
+.entry-hint.writeback-notice.skipped {
+  border-color: rgba(216, 179, 108, 0.4);
+  background: rgba(216, 179, 108, 0.08);
+  color: #ead4a8;
 }
 
 /* ============ 流程导轨 ============ */
@@ -1634,6 +1808,12 @@ onBeforeUnmount(() => {
 .engine-state.done {
   border-color: rgba(85, 177, 142, 0.55);
   color: var(--ok);
+}
+
+.engine-state.skipped {
+  border-color: rgba(216, 179, 108, 0.55);
+  background: rgba(216, 179, 108, 0.08);
+  color: #ead4a8;
 }
 
 @keyframes live-blink {

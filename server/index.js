@@ -243,6 +243,16 @@ const server = http.createServer(async (req, res) => {
     // 对话页直接保存画像数据（跳过 agent 分析）
     if (req.method === 'POST' && pathname === '/api/profile/save') {
       const body = await readJson(req)
+      if (Array.isArray(body.dimensions) && typeof body.totalScore === 'number') {
+        const profile = {
+          ...body,
+          source: body.source || 'profile-save',
+          savedAt: new Date().toISOString(),
+        }
+        saveProfileResult(profile)
+        sendJson(res, 200, profile)
+        return
+      }
       // 将对话页的 radarPoints 转为统一格式
       const profile = {
         dimensions: (body.radarPoints || []).map((p) => ({

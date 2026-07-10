@@ -10,7 +10,10 @@ const showScanLine = ref(true)
 const appStore = useAppStore()
 const route = useRoute()
 const isAuthShellPage = computed(() => route.path === '/login' || route.path === '/admin')
-const showCompanionPet = computed(() => appStore.desktopPetEnabled && route.path !== '/edu-mind' && !isAuthShellPage.value)
+const resourceShellPages = ['/edu-mind', '/resources']
+const showCompanionPet = computed(() =>
+  appStore.desktopPetEnabled && !resourceShellPages.includes(route.path) && !isAuthShellPage.value
+)
 
 // 将 blurStrength 同步为全局 CSS 变量，供所有毛玻璃样式使用
 watchEffect(() => {

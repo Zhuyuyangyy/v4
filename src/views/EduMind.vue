@@ -31,6 +31,7 @@ import {
   SHUFFLED_RECOMMENDATIONS_GROUPS
 } from '../data/edu-mind-data'
 import { fetchResources, fetchRecommendedResources } from '@/lib/api'
+import { normalizeLearningKey, resolveLearningPoint, useLearningProgressSync } from '@/composables/useLearningProgressSync'
 import { getAllLearningResources } from '@/data/learning-resources'
 
 import Sidebar from '../components/edu-mind/Sidebar.vue'
@@ -53,6 +54,7 @@ import PPTViewer from '../components/edu-mind/PPTViewer.vue'
 
 const { isDark } = useTheme()
 const route = useRoute()
+const { recordResourceAction } = useLearningProgressSync()
 
 const ITEMS_PER_PAGE = 9
 
@@ -124,6 +126,17 @@ const mobileSidebarOpen = ref<boolean>(false)
 
 const goalHours = 20
 
+function findResourceForProgress(idOrTitle: string) {
+  return resources.value.find(res => res.id === idOrTitle || res.title === idOrTitle)
+    ?? getAllLearningResources().find(res => res.id === idOrTitle || res.title === idOrTitle)
+}
+
+function syncSelectedResourceStar(id: string, starred: boolean) {
+  if (selectedResourceDetail.value?.id === id) {
+    selectedResourceDetail.value = { ...selectedResourceDetail.value, starred }
+  }
+}
+
 watch(resources, (val) => {
   localStorage.setItem('resource_center_list', JSON.stringify(val))
 }, { deep: true })
@@ -152,6 +165,7 @@ const handleToggleStar = (id: string) => {
     if (res.id === id) {
       const nextState = !res.starred
       if (nextState) {
+        recordResourceAction(res, 'favorite-resource')
         if (!collections.value.some(c => c.id === id)) {
           const newItem: CollectionItem = {
             id: res.id,
@@ -166,6 +180,7 @@ const handleToggleStar = (id: string) => {
         collections.value = collections.value.filter(item => item.id !== id)
         triggerToast(`已将《${res.title}》从您的收藏夹中移除`)
       }
+      syncSelectedResourceStar(id, nextState)
       return { ...res, starred: nextState }
     }
     return res
@@ -180,9 +195,11 @@ const handleToggleStar = (id: string) => {
 }
 
 const handleToggleRecommendStar = (id: string) => {
+  let shouldRecordFavorite = false
   recommendations.value = recommendations.value.map(rec => {
     if (rec.id === id) {
       const nextState = !rec.starred
+      shouldRecordFavorite = nextState
       if (nextState) {
         if (!collections.value.some(c => c.id === id)) {
           collections.value = [
@@ -203,6 +220,12 @@ const handleToggleRecommendStar = (id: string) => {
   const foundInResources = resources.value.find(r => r.id === id)
   if (foundInResources) {
     resources.value = resources.value.map(r => r.id === id ? { ...r, starred: !r.starred } : r)
+    syncSelectedResourceStar(id, !foundInResources.starred)
+  }
+
+  if (shouldRecordFavorite) {
+    const resourceForProgress = findResourceForProgress(id)
+    if (resourceForProgress) recordResourceAction(resourceForProgress, 'favorite-resource')
   }
 }
 
@@ -224,6 +247,10 @@ const handleRefreshRecommend = () => {
 const handleMarkAsCompleted = (hours: number, title: string) => {
   const updated = parseFloat((weeklyHours.value + hours).toFixed(1))
   weeklyHours.value = updated
+  const completedResource = findResourceForProgress(title)
+  if (completedResource) {
+    recordResourceAction(completedResource, 'complete-resource', hours)
+  }
   triggerToast(`恭喜！您完成学习了 《${title}》, 累计进度 +${hours} 小时！`)
 }
 
@@ -256,16 +283,36 @@ const handleAddResource = (newRes: Resource) => {
   triggerToast(`成功发布并入库全新资源：《${newRes.title}》！`)
 }
 
+const routeLearningFilter = computed(() => {
+  const q = route.query
+  const id = typeof q.knowledgePointId === 'string' ? q.knowledgePointId : ''
+  const topic = typeof q.topic === 'string' ? q.topic : ''
+  const domain = typeof q.domain === 'string' ? q.domain : ''
+  if (!id && !topic && !domain) return null
+  return resolveLearningPoint({ id, label: topic, domainName: domain })
+})
+
 const filteredResources = computed(() => {
   return resources.value.filter(res => {
     const matchesCategory = activeFilter.value === '全部' || res.category === activeFilter.value
     const matchesDifficulty = difficultyFilter.value === '全部难度' || res.difficulty === difficultyFilter.value
+    const pointFilter = routeLearningFilter.value
+    const matchesLearningPoint = !pointFilter || (
+      res.id.includes(`-${pointFilter.id}-`) ||
+      res.id.startsWith(`lr-${pointFilter.id}-`) ||
+      normalizeLearningKey(res.topic) === normalizeLearningKey(pointFilter.label) ||
+      res.tags.some(tag => normalizeLearningKey(tag) === normalizeLearningKey(pointFilter.label)) ||
+      (
+        normalizeLearningKey(res.domain) === normalizeLearningKey(pointFilter.domainName) &&
+        (!pointFilter.label || res.description.includes(pointFilter.label))
+      )
+    )
     const normalizedKeyword = searchValue.value.trim().toLowerCase()
     const matchesSearch = !normalizedKeyword ||
       res.title.toLowerCase().includes(normalizedKeyword) ||
       res.description.toLowerCase().includes(normalizedKeyword) ||
       res.tags.some(tag => tag.toLowerCase().includes(normalizedKeyword))
-    return matchesCategory && matchesDifficulty && matchesSearch
+    return matchesCategory && matchesDifficulty && matchesLearningPoint && matchesSearch
   })
 })
 
@@ -326,7 +373,7 @@ const paginatedResources = computed(() => {
   )
 })
 
-watch([activeFilter, difficultyFilter, sortType, searchValue], () => {
+watch([activeFilter, difficultyFilter, sortType, searchValue, routeLearningFilter], () => {
   currentPage.value = 1
 })
 

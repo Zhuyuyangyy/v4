@@ -91,7 +91,7 @@ function openHistory(h: HistoryPreset) {
 /* List */
 .history-list { display: flex; flex-direction: column; gap: 12px; }
 .history-card {
-  background: rgba(22, 18, 32, 0.5);
+  background: rgba(59, 130, 246, 0.06);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
   border: 1px solid var(--border-card);
@@ -102,7 +102,7 @@ function openHistory(h: HistoryPreset) {
 }
 .history-card:hover {
   border-color: rgba(59, 130, 246, 0.25);
-  background: rgba(30, 24, 44, 0.6);
+  background: rgba(59, 130, 246, 0.12);
   transform: translateY(-1px);
 }
 .hc-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }

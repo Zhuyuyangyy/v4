@@ -75,14 +75,14 @@
           </div>
 
           <!-- Loading overlay -->
-          <div v-if="avatarStatus === 'loading'" class="absolute inset-0 bg-slate-950/30 rounded-xl flex flex-col items-center justify-center z-30">
+          <div v-if="avatarStatus === 'loading'" class="absolute inset-0 rounded-xl flex flex-col items-center justify-center z-30" style="background: rgba(59, 130, 246, 0.08); backdrop-filter: blur(4px)">
             <Tv class="w-8 h-8 mb-2 animate-bounce" style="color: var(--gold-400)" />
             <span class="text-xs text-white font-bold">正在连接虚拟人服务...</span>
             <span class="text-[10px] mt-1" style="color: var(--text-muted)">初始化大语言模型引擎</span>
           </div>
 
           <!-- Play not allowed overlay -->
-          <div v-if="playNotAllowed" class="absolute inset-0 bg-slate-950/40 rounded-xl flex flex-col items-center justify-center z-30">
+          <div v-if="playNotAllowed" class="absolute inset-0 rounded-xl flex flex-col items-center justify-center z-30" style="background: rgba(59, 130, 246, 0.08); backdrop-filter: blur(4px)">
             <div class="text-center">
               <div class="text-3xl mb-2">&#128266;</div>
               <h4 class="text-xs font-bold text-white">点击恢复播放</h4>
@@ -97,7 +97,7 @@
 
         <!-- Subtitle -->
         <div class="relative z-10 border rounded-xl mx-3 mb-3 px-2.5 py-2 text-left max-h-[72px] overflow-y-auto"
-          style="background: rgba(22, 18, 32, 0.15); border-color: rgba(59, 130, 246, 0.05)">
+          style="background: rgba(59, 130, 246, 0.04); border-color: rgba(59, 130, 246, 0.05)">
           <p class="text-[10px] font-medium leading-relaxed animate-fade-in whitespace-pre-line" style="color: var(--gold-300)">
             {{ currentSubtitle }}
           </p>
@@ -115,7 +115,7 @@
             {{ isRecording ? '● REC' : (avatarStatus === 'connected' ? 'READY' : 'OFFLINE') }}
           </span>
         </div>
-        <div class="h-7 rounded-lg border p-1.5 flex items-center justify-between overflow-hidden" style="background: rgba(22, 18, 32, 0.4); border-color: var(--border-card)">
+        <div class="h-7 rounded-lg border p-1.5 flex items-center justify-between overflow-hidden" style="background: rgba(59, 130, 246, 0.06); border-color: var(--border-card)">
           <div class="flex items-center gap-1">
             <Mic class="w-3 h-3" :class="isRecording ? 'text-rose-500 animate-pulse' : ''" style="color: isRecording ? undefined : 'var(--gold-400)'" />
             <span class="text-[9px] font-medium" style="color: var(--text-muted)">
@@ -139,7 +139,7 @@
           </button>
           <button @click="handleShortVoice" :disabled="avatarStatus !== 'connected' || isRecording"
             class="py-2 rounded-xl text-[10px] font-bold text-white transition-all cursor-pointer border-none flex items-center justify-center gap-1 disabled:opacity-30"
-            style="background: rgba(22, 18, 32, 0.8)">
+            style="background: rgba(59, 130, 246, 0.15); border: 1px solid var(--border-card); color: var(--text-secondary)">
             <AudioLines class="w-3 h-3" />
             短语音 10s
           </button>
@@ -164,10 +164,10 @@
           <input v-model="textInput" @keyup.enter="handleSendText" :disabled="avatarStatus !== 'connected'"
             :placeholder="avatarStatus === 'connected' ? '输入文本让虚拟人播报...' : '请先连接虚拟人'"
             class="flex-1 text-[10px] rounded-lg px-2.5 py-2 outline-none transition-colors placeholder:font-medium disabled:opacity-40"
-            style="background: rgba(22, 18, 32, 0.5); border: 1px solid var(--border-input); color: var(--text-secondary)" />
+            style="background: rgba(59, 130, 246, 0.06); border: 1px solid var(--border-input); color: var(--text-secondary)" />
           <button @click="handleSendText" :disabled="avatarStatus !== 'connected' || !textInput.trim()"
             class="px-3 py-2 rounded-lg text-[10px] font-bold text-white transition-all cursor-pointer border-none shrink-0 disabled:opacity-30"
-            :style="avatarStatus === 'connected' && textInput.trim() ? { background: 'linear-gradient(135deg, var(--gold-500), var(--gold-600))' } : { background: 'rgba(22, 18, 32, 0.8)' }"
+            :style="avatarStatus === 'connected' && textInput.trim() ? { background: 'linear-gradient(135deg, var(--gold-500), var(--gold-600))' } : { background: 'rgba(59, 130, 246, 0.08)', color: 'var(--text-dim)', border: '1px solid var(--border-card)' }"
           >
             发送
           </button>
@@ -175,7 +175,7 @@
         <div class="flex flex-wrap gap-1.5">
           <button v-for="q in quickTexts" :key="q.label" @click="textInput = q.text" :disabled="avatarStatus !== 'connected'"
             class="text-[8px] px-2 py-1 rounded-md transition-all cursor-pointer disabled:opacity-30"
-            style="background: rgba(22, 18, 32, 0.4); border: 1px solid var(--border-card); color: var(--text-muted)">
+            style="background: rgba(59, 130, 246, 0.06); border: 1px solid var(--border-card); color: var(--text-muted)">
             {{ q.label }}
           </button>
         </div>
@@ -205,7 +205,7 @@
             </button>
           </div>
           <input type="range" min="0" max="100" :value="aiVolume" @input="handleVolumeChange"
-            class="w-full h-1 rounded-lg appearance-none cursor-pointer accent-blue-500" style="background: rgba(22, 18, 32, 0.8)" />
+            class="w-full h-1 rounded-lg appearance-none cursor-pointer accent-blue-500" style="background: rgba(59, 130, 246, 0.1)" />
         </div>
         <div class="flex items-center justify-between pt-1" style="border-top: 1px solid var(--border-card)">
           <div class="flex items-center gap-1.5">
@@ -231,7 +231,7 @@
         <div class="grid grid-cols-3 gap-1.5">
           <button v-for="action in avatarActions" :key="action.id" @click="handleAction(action.id)" :disabled="avatarStatus !== 'connected'"
             class="py-2 rounded-lg text-[9px] font-medium transition-all cursor-pointer disabled:opacity-30 flex flex-col items-center gap-1"
-            style="background: rgba(22, 18, 32, 0.4); border: 1px solid var(--border-card); color: var(--text-muted)">
+            style="background: rgba(59, 130, 246, 0.06); border: 1px solid var(--border-card); color: var(--text-muted)">
             <span class="text-sm">{{ action.emoji }}</span>
             <span>{{ action.label }}</span>
           </button>

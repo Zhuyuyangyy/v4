@@ -629,7 +629,7 @@ function initStarfield() {
   align-items: center;
   gap: 0;
   padding-top: 20px;
-  border-top: 1px solid rgba(120, 180, 255, 0.07);
+  border-top: none;
 }
 
 .metric-item {
@@ -695,6 +695,8 @@ function initStarfield() {
   pointer-events: none;
   text-align: center;
   z-index: 4;
+  border: none;
+  background: transparent;
 }
 
 .sphere-eyebrow {

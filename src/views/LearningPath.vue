@@ -2,13 +2,13 @@
   <div class="lp-page">
     <section v-if="homeGalaxyContext" class="lp-section lp-home-bridge">
       <div>
-        <span>来自首页星图路径</span>
+        <span>来自画像推荐结果</span>
         <strong>{{ homeGalaxyContext.courseName }}</strong>
-        <em>{{ homeGalaxyContext.pathName }} · 已承接到「{{ currentTopicLabel }}」学习路径</em>
+        <em>{{ homeGalaxyContext.pathName }} · 当前承接「{{ currentTopicLabel }}」学习路径</em>
       </div>
       <button type="button" class="quiet-btn" @click="selectRecommendedTopic">
         <Target :size="16" />
-        切回推荐路径
+        回到画像推荐
       </button>
     </section>
 
@@ -17,7 +17,7 @@
         <div class="lp-section-badge">KNOWLEDGE CONSTELLATION</div>
         <h2 class="lp-section-title">知识星座</h2>
         <p class="lp-section-desc">
-          对话分析后自动生成知识点画像，点击任意星点即可同步更新下方学习路径。
+          对话画像生成后呈现知识点关系，点击星点可聚焦当前节点，并联动下方阶段任务。
         </p>
       </div>
       <ResourceConstellationView @select-node="onSelectNode" />
@@ -29,7 +29,7 @@
           <div class="lp-section-badge">LEARNING PATH</div>
           <h2 class="lp-section-title">{{ currentTopicLabel }} 学习路径</h2>
           <p class="lp-section-desc">
-            以闯关图片作为主路径，把课前、课中、课后、测评和期末辅导串成可点击的学习任务。
+            路径由学习画像和掌握度共同决定，把课前、课中、课后、测评和反向更新串成可点击的学习任务。
           </p>
         </div>
         <div class="path-header-actions">
@@ -313,6 +313,8 @@ const HOME_PATH_LABELS: Record<string, string> = {
   'data-scientist': '数据科学家路线',
 }
 
+const HOME_PROFILE_PREVIEW_SOURCES = new Set(['home-profile-preview', 'home-universe-path'])
+
 const allTopics = computed(() =>
   domains.value.flatMap(domain =>
     domain.topics.map(topic => ({ domain, topic })),
@@ -356,12 +358,18 @@ const currentStageContent = computed<StageResource[]>(() => {
 const estimatedMinutes = computed(() => Math.max(20, currentStageContent.value.length * 15))
 const currentLevelTitle = computed(() => `${currentTopicLabel.value} / ${currentStageCard.value.label}`)
 const homeGalaxyContext = computed(() => {
-  if (route.query.source !== 'home-universe-path') return null
-  const courseName = String(route.query.courseName || route.query.topic || '首页星图节点')
+  const source = String(route.query.source ?? '')
+  if (!HOME_PROFILE_PREVIEW_SOURCES.has(source)) return null
+  const isProfilePreview = source === 'home-profile-preview'
+  const courseName = isProfilePreview
+    ? '画像推荐学习路径'
+    : String(route.query.courseName || route.query.topic || '画像推导节点')
   const pathId = String(route.query.path || '')
   return {
     courseName,
-    pathName: HOME_PATH_LABELS[pathId] ?? '个性化星图路径',
+    pathName: isProfilePreview
+      ? '画像 -> 路径 -> 资源 -> 评估熟度 -> 反向画像更新'
+      : HOME_PATH_LABELS[pathId] ?? '个性化画像路径',
   }
 })
 
@@ -527,6 +535,10 @@ onMounted(async () => {
 .lp-section--path {
   max-width: none;
   padding: 0 clamp(28px, 8vw, 200px);
+}
+
+.lp-section--constellation {
+  padding-top: 24px;
 }
 
 .lp-section-header {
@@ -974,6 +986,10 @@ onMounted(async () => {
   .lp-section--path,
   .lp-section {
     padding: 0 18px;
+  }
+
+  .lp-section--constellation {
+    padding-top: 22px;
   }
 
   .lp-path-header,

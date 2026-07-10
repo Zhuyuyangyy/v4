@@ -27,6 +27,7 @@ import type {
   KnowledgeContextResponse,
   KnowledgeStatusResponse,
 } from '@/types/api'
+import type { ProfileResult } from '@/composables/useProfileSurvey'
 import { useAppStore } from '@/store'
 
 async function requestJson<T>(input: string, init?: RequestInit): Promise<T> {
@@ -93,7 +94,7 @@ export async function fetchLatestProfile() {
   return data.result
 }
 
-export function saveProfile(report: { score: number; radarPoints: { dimension: string; score: number }[]; weaknesses: string[]; suggestions: string[] }) {
+export function saveProfile(report: { score: number; radarPoints: { dimension: string; score: number }[]; weaknesses: string[]; suggestions: string[] } | ProfileResult) {
   return requestJson<any>('/api/profile/save', {
     method: 'POST',
     body: JSON.stringify(report),
