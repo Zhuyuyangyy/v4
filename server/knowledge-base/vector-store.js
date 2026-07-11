@@ -229,7 +229,12 @@ export function searchKnowledgeBaseAdvanced({
     ? CHUNK_INDEX.filter(chunk => chunk.domain === detectedDomain || chunk.domain === 'general')
     : CHUNK_INDEX
 
-  const matches = filtered
+  let candidates = filtered
+  if (candidates.length === 0) {
+    candidates = CHUNK_INDEX
+  }
+
+  const matches = candidates
     .map(chunk => {
       const vector = cosineSimilarity(queryEmbedding, chunk.embedding)
       const tag = tagScore(profileTags, chunk.tags)
@@ -238,6 +243,7 @@ export function searchKnowledgeBaseAdvanced({
       return { chunk, scores: { vector, tag, keyword, final } }
     })
     .sort((left, right) => right.scores.final - left.scores.final)
+    .filter(({ scores }) => scores.final > 0.05)
     .slice(0, limit)
     .map(({ chunk, scores }) => buildMatchPayload(chunk, scores, queryTokens, profileTags))
 

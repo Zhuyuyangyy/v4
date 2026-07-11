@@ -25,6 +25,28 @@ test('detectDomain returns method or pedagogy for 番茄钟', () => {
   assert.ok(result === 'method' || result === 'pedagogy')
 })
 
+test('detectDomain identifies systems', () => {
+  assert.equal(detectDomain('虚拟内存 分页 TLB'), 'systems')
+  assert.equal(detectDomain('TCP 三次握手 HTTP'), 'systems')
+  assert.equal(detectDomain('线程 死锁 互斥锁'), 'systems')
+})
+
+test('detectDomain identifies ai', () => {
+  assert.equal(detectDomain('反向传播 梯度下降'), 'ai')
+  assert.equal(detectDomain('Transformer 注意力机制'), 'ai')
+})
+
+test('detectDomain identifies software-engineering', () => {
+  assert.equal(detectDomain('Git 分支 合并冲突'), 'software-engineering')
+  assert.equal(detectDomain('单元测试 TDD'), 'software-engineering')
+})
+
+test('detectDomain identifies creativity / discipline / debug as pedagogy', () => {
+  assert.equal(detectDomain('创造力 头脑风暴'), 'pedagogy')
+  assert.equal(detectDomain('拖延 习惯回路'), 'pedagogy')
+  assert.equal(detectDomain('debug 排查'), 'pedagogy')
+})
+
 test('detectDomain returns null for empty / unknown', () => {
   assert.equal(detectDomain(''), null)
   assert.equal(detectDomain('xxx yyy zzz'), null)
@@ -68,6 +90,37 @@ test('searchKnowledgeBaseAdvanced filters by domain', () => {
   }
 })
 
+test('searchKnowledgeBaseAdvanced skips near-zero scores (no fake hits)', () => {
+  const result = searchKnowledgeBaseAdvanced({
+    query: '完全不相关的内容 zzzxxx',
+    limit: 3,
+  })
+  for (const match of result.matches) {
+    assert.ok(match.score > 0.05, `score should be > 0.05, got ${match.score}`)
+  }
+})
+
+test('searchKnowledgeBaseAdvanced finds OS virtual memory chunk', () => {
+  const result = searchKnowledgeBaseAdvanced({
+    query: '虚拟内存 分页',
+    domain: 'systems',
+    limit: 3,
+  })
+  assert.equal(result.detectedDomain, 'systems')
+  assert.ok(result.matches.length >= 1)
+  assert.equal(result.matches[0].domain, 'systems')
+})
+
+test('searchKnowledgeBaseAdvanced finds Transformer chunk', () => {
+  const result = searchKnowledgeBaseAdvanced({
+    query: 'Transformer 注意力机制',
+    domain: 'ai',
+    limit: 3,
+  })
+  assert.equal(result.detectedDomain, 'ai')
+  assert.equal(result.matches[0].domain, 'ai')
+})
+
 test('searchKnowledgeBaseAdvanced tags boost match score', () => {
   const withTag = searchKnowledgeBaseAdvanced({
     query: '指针',
@@ -90,6 +143,9 @@ test('getKnowledgeBaseStats returns counts and domains', () => {
   assert.ok(stats.totalChunks >= 30, `expected >=30 chunks, got ${stats.totalChunks}`)
   assert.ok(stats.vectorDocuments >= 30)
   assert.ok(Object.keys(stats.domainCounts).length >= 4)
+  assert.ok(stats.domainCounts.systems >= 1, 'systems domain must exist')
+  assert.ok(stats.domainCounts.ai >= 1, 'ai domain must exist')
+  assert.ok(stats.domainCounts['software-engineering'] >= 1, 'software-engineering domain must exist')
 })
 
 test('retrieveKnowledgeContext returns metrics-tracked payload', () => {
