@@ -1,5 +1,7 @@
 import { callLlm, safeParseJson } from '../llm/provider.js'
 import { createAgentResult, AGENT_NAMES } from '../schemas.js'
+import { retrieveKnowledgeContext, buildKnowledgeEvidence, summarizeKnowledgeForPrompt } from '../knowledge-base/retrieval.js'
+import { detectDomain } from '../knowledge-base/detect-domain.js'
 
 const SYSTEM_PROMPT = `你是一个个性化学习资源生成专家。根据用户画像、薄弱点和主题，生成包含以下内容的资源包：
 1. concept: 概念讲解
@@ -11,16 +13,28 @@ const SYSTEM_PROMPT = `你是一个个性化学习资源生成专家。根据用
 
 请以 JSON 格式返回，包含以上六个字段。每个字段是字符串或对象。`
 
-export async function runResourceAgent({ profile, weaknesses, topic, resourceType }) {
+export async function runResourceAgent({ profile, weaknesses, topic, resourceType, knowledgeContext }) {
   const start = Date.now()
   const input = { profile, weaknesses, topic, resourceType }
+
+  const queryText = [topic, Array.isArray(weaknesses) ? weaknesses.map(w => w?.tag || w?.label || '').join(' ') : '', resourceType].filter(Boolean).join(' ')
+
+  const resolvedKb = knowledgeContext || retrieveKnowledgeContext({
+    agentName: AGENT_NAMES.RESOURCE,
+    query: queryText,
+    profile,
+    domain: detectDomain(queryText),
+    limit: 3,
+  })
 
   const userPrompt = `用户画像: ${JSON.stringify(profile?.dimensions || [])}
 薄弱点: ${JSON.stringify(weaknesses || [])}
 主题: ${topic}
 资源类型: ${resourceType || 'all'}
+知识参考:
+${summarizeKnowledgeForPrompt(resolvedKb.matches)}
 
-请生成个性化学习资源包。`
+请生成个性化学习资源包。如果知识参考里包含"错因诊断三步法"或"主动回忆补救"，请体现在 errorTip 和 recommendReason 中。`
 
   const llmResult = await callLlm(SYSTEM_PROMPT, userPrompt)
   let output
@@ -46,11 +60,24 @@ export async function runResourceAgent({ profile, weaknesses, topic, resourceTyp
 
   output = normalizeResourcePackage(output, { profile, weaknesses, topic })
 
+  evidence.push(...buildKnowledgeEvidence(resolvedKb, { summary: '资源生成知识库' }))
+
   const durationMs = Date.now() - start
   return createAgentResult({
     agentName: AGENT_NAMES.RESOURCE,
     input,
-    output,
+    output: {
+      ...output,
+      knowledgeContext: {
+        detectedDomain: resolvedKb.detectedDomain,
+        matches: resolvedKb.matches.map(m => ({
+          id: m.id,
+          title: m.title,
+          score: m.score,
+          agentHint: m.agentHint,
+        })),
+      },
+    },
     confidence: fallbackUsed ? 0.65 : 0.88,
     evidence,
     durationMs,

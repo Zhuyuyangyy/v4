@@ -36,7 +36,8 @@ import {
 } from './agents/orchestrator.js'
 import { getTraces, getTraceSummary, buildTrace, recordTrace, setTraceRecordedHook } from './evidence/recorder.js'
 import { isLlmAvailable, getLlmConfig } from './llm/provider.js'
-import { getKnowledgeBaseStats, searchKnowledgeBase } from './knowledge-base/vector-store.js'
+import { getKnowledgeBaseStats, searchKnowledgeBase, searchKnowledgeBaseAdvanced } from './knowledge-base/vector-store.js'
+import { getRetrievalMetrics, resetRetrievalMetrics, recordRetrieval } from './knowledge-base/metrics.js'
 import {
   getCollaborationByDay,
   saveCollaboration,
@@ -462,14 +463,35 @@ const server = http.createServer(async (req, res) => {
     if (req.method === 'POST' && pathname === '/api/knowledge/search') {
       const body = await readJson(req)
       const profile = body.profile || await getLatestProfileResult(getAccountContext(req, body).accountId) || {}
-      const result = searchKnowledgeBase({
+      const result = searchKnowledgeBaseAdvanced({
         query: body.query,
         profile,
         learningData: body.learningData,
         exerciseResults: body.exerciseResults,
+        domain: body.domain,
+        type: body.type,
         limit: body.limit,
+        weights: body.weights,
+        agentName: body.agentName || 'api-search',
+      })
+      recordRetrieval({
+        agentName: body.agentName || 'api-search',
+        query: result.query,
+        matches: result.matches,
+        durationMs: result.durationMs,
       })
       sendJson(res, 200, result)
+      return
+    }
+
+    if (req.method === 'GET' && pathname === '/api/knowledge/metrics') {
+      sendJson(res, 200, getRetrievalMetrics())
+      return
+    }
+
+    if (req.method === 'POST' && pathname === '/api/knowledge/metrics/reset') {
+      resetRetrievalMetrics()
+      sendJson(res, 200, { ok: true, snapshot: getRetrievalMetrics() })
       return
     }
 

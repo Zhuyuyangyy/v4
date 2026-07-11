@@ -338,24 +338,40 @@ export interface FullEvaluationResponse {
 
 export interface KnowledgeHit {
   id: string
-  source: 'local' | 'vector'
+  docId?: string
+  source?: string
   title: string
+  domain?: string
   type: string
   tags: string[]
   summary: string
   agentHint: string
+  text?: string
+  snippet?: string
   score: number
+  scoreBreakdown?: {
+    vector: number
+    tag: number
+    keyword: number
+  }
+  matchedQueryTokens?: string[]
+  matchedProfileTags?: string[]
 }
 
 export interface KnowledgeContextResponse {
   query: string
+  detectedDomain?: string | null
   matches: KnowledgeHit[]
   embedding: {
     model: string
     dimensions: number
     indexSize: number
+    candidatesScanned?: number
     generatedAt: string
   }
+  weights?: { vector: number; tag: number; keyword: number }
+  durationMs?: number
+  agentName?: string
 }
 
 export interface KnowledgeStatusResponse {
@@ -363,8 +379,35 @@ export interface KnowledgeStatusResponse {
   dimensions: number
   localDocuments: number
   vectorDocuments: number
+  totalChunks?: number
+  domainCounts?: Record<string, number>
   syncedAgents: string[]
   updatedAt: string
+}
+
+export interface RetrievalMetricsResponse {
+  totalSearches: number
+  totalHits: number
+  avgHitsPerSearch: number
+  byAgent: Record<string, {
+    searches: number
+    hits: number
+    totalScore: number
+    avgScore: number
+    durationMs: number
+    hitRate: number
+  }>
+  domainCounts: Record<string, number>
+  topDocs: Array<{ docId: string; hits: number }>
+  recent: Array<{
+    at: string
+    agentName: string
+    queryPreview: string
+    matchCount: number
+    topScore: number
+  }>
+  startedAt: string
+  snapshotAt: string
 }
 
 export interface ReviewQuestion {

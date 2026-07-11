@@ -1,74 +1,516 @@
+export const KNOWLEDGE_DOMAINS = ['algorithm', 'english', 'pedagogy', 'method', 'general']
+
 export const LOCAL_KNOWLEDGE_DOCUMENTS = [
   {
-    id: 'kb-eval-pointer-aliasing',
+    id: 'kb-algo-pointer-aliasing',
     source: 'local',
-    title: 'Pointer aliasing assessment rubric',
-    type: 'rubric',
-    tags: ['pointer', 'memory', 'c', 'weakness', 'assessment'],
-    summary: 'Use address diagrams and step tracing when students confuse pointer variable updates with pointee value updates.',
-    content:
-      'When a learner misses pointer aliasing questions, the evaluation agent should check whether the error came from pointer level confusion, address lifetime, or missing call-stack reasoning. Recommended remediation: a memory-grid diagram, swap/createNode comparison, and 4 to 6 trace exercises.',
-    agentHint:
-      'If pointer mastery is below 60, lower the related profile dimension slightly and insert a pointer trace remediation node into the next learning path.',
+    domain: 'algorithm',
+    type: 'misconception',
+    title: '指针别名混淆 — 学生常见误区',
+    tags: ['pointer', 'memory', 'c', 'misconception', 'tutor', 'algorithm'],
+    summary: '指针变量更新与指针所指对象的值更新是两个不同操作，初学者最常混淆。',
+    chunks: [
+      {
+        id: 'kb-algo-pointer-aliasing-ch1',
+        text: '指针变量保存的是"地址"，对指针变量赋值是改变它指向谁；对指针解引用赋值是改变它指向的那个对象的值。两层操作必须分开：p = &a 让 p 指向 a；*p = 5 改的是 a 的值，不是 p 的值。学生最常犯的错是把 *p++ 写成 (*p)++，或把传指针和传指针所指内容混为一谈。',
+      },
+      {
+        id: 'kb-algo-pointer-aliasing-ch2',
+        text: '诊断学生是否真正理解指针别名，可以让他画三步内存图：初始状态、p=&b 之后、*p=10 之后；只要其中一步画错就说明他对别名还没建立稳定模型。补救顺序：先画图，再做 swap 函数手写，再做链表节点插入，最后做树的双指针遍历。',
+      },
+    ],
+    agentHint: '当用户提问指针/内存/地址相关问题时优先匹配；TutorAgent 在 explain 模式可直接引用第一段做讲解。',
   },
   {
-    id: 'kb-eval-bfs-visited',
+    id: 'kb-algo-linked-list-boundary',
     source: 'local',
-    title: 'BFS visited marking diagnosis',
-    type: 'diagnosis',
-    tags: ['graph', 'bfs', 'visited', 'queue', 'assessment'],
-    summary: 'Repeated visits usually indicate that the learner marks visited too late or lacks a stable queue-state model.',
-    content:
-      'For BFS errors, compare the learner answer against the invariant: each node should be marked when enqueued in the standard traversal template. If the learner marks after dequeue, flag queue-state confusion and recommend animation snapshots plus targeted visited-timing exercises.',
-    agentHint:
-      'Use BFS visited timing as a high-priority weakness when graph search accuracy is below 65 or exerciseResults mention duplicate traversal.',
+    domain: 'algorithm',
+    type: 'misconception',
+    title: '链表边界条件 — 头节点 / 空链表 / 尾节点',
+    tags: ['linkedlist', 'boundary', 'pointer', 'algorithm'],
+    summary: '链表题 80% 的 bug 出在头节点处理、空链表和尾节点的 next 指针上。',
+    chunks: [
+      {
+        id: 'kb-algo-linked-list-boundary-ch1',
+        text: '处理链表题永远先想三种边界：(1) 链表为空 head=null；(2) 只有一个节点 head→next=null；(3) 操作涉及头节点或尾节点。是否需要 dummy 节点取决于是否会修改头节点。删除节点时一定要先保存 next 再断链，否则一旦丢掉就找不回来。',
+      },
+      {
+        id: 'kb-algo-linked-list-boundary-ch2',
+        text: '快慢指针追及问题一定要先想：快指针一次两步，慢指针一步，相遇 = 有环；入口 = 相遇后再走 head→入口 步数 = 相遇→入口 步数。如果 fast 一次三步，则不一定相遇，需要数学证明步数与环长互质。',
+      },
+    ],
+    agentHint: 'ResourceAgent 在生成链表相关练习时强制覆盖三种边界；TutorAgent 解释链表题应主动提及 dummy 节点选择。',
   },
   {
-    id: 'kb-eval-resource-completion',
+    id: 'kb-algo-bfs-visited-timing',
     source: 'local',
-    title: 'Resource completion evidence weighting',
-    type: 'policy',
-    tags: ['resource', 'completion', 'evidence', 'profile'],
-    summary: 'Resource completion should support, not replace, exercise evidence in mastery updates.',
-    content:
-      'Evaluation should weight exercise correctness first, then resource completion, then tutoring dialogue signals. High completion with low correctness indicates passive review and should trigger active-recall resources. Low completion with high correctness can be treated as efficient mastery.',
-    agentHint:
-      'Mention evidence source balance in profileUpdates.reason so the ReflectionAgent can explain why the profile changed.',
+    domain: 'algorithm',
+    type: 'misconception',
+    title: 'BFS visited 标记的时机 — 入队即标 vs 出队再标',
+    tags: ['bfs', 'graph', 'visited', 'queue', 'algorithm'],
+    summary: 'visited 在入队时标记才能保证每个节点只入队一次。',
+    chunks: [
+      {
+        id: 'kb-algo-bfs-visited-timing-ch1',
+        text: 'BFS 的不变量：每个节点最多入队一次。因此 visited 标记必须在节点入队时立即完成，而不是出队时才标。出队再标会导致同一节点被多次入队，队列状态不稳定，递归/迭代都错。',
+      },
+      {
+        id: 'kb-algo-bfs-visited-timing-ch2',
+        text: '诊断方式：让学生手画一个 5 节点的图，写出每步 queue 和 visited 集合。如果某个节点出现在 queue 里两次，就说明标记时机错了。补救策略：先看 4 节点的最小反例，再做"层序遍历 + visited 时机对比"两道练习。',
+      },
+    ],
+    agentHint: 'TutorAgent 在学生写 BFS 代码出错时，主动提示 visited 时机问题；可用 animation snapshot 辅助讲解。',
   },
   {
-    id: 'kb-eval-profile-backprop',
+    id: 'kb-algo-dp-subproblem',
     source: 'local',
-    title: 'Profile back-propagation rule',
-    type: 'rule',
-    tags: ['profile', 'backprop', 'mastery', 'reflection'],
-    summary: 'Profile updates should be small, evidence-bound, and reversible in later rounds.',
-    content:
-      'Update a profile dimension by -3 to -8 for repeated weak evidence, +2 to +6 for stable improvement, and avoid large jumps unless there are multiple independent signals. Include the dimension, delta, and plain-language reason for every adjustment.',
-    agentHint:
-      'Return profileUpdates.adjustDimensions with bounded deltas and evidence-aware reasons for downstream agents.',
+    domain: 'algorithm',
+    type: 'teaching-strategy',
+    title: '动态规划 — 子问题切分三步法',
+    tags: ['dp', 'dynamic-programming', 'subproblem', 'algorithm'],
+    summary: 'DP 题三步：定义状态、找转移方程、确定 base case。',
+    chunks: [
+      {
+        id: 'kb-algo-dp-subproblem-ch1',
+        text: '动态规划的本质是用"已经算过的更小问题的答案"推导"当前问题的答案"。第一步：明确定义 dp[i] 或 dp[i][j] 是什么，是"以 i 结尾的最长xxx"还是"前 i 个物品的最优解"——这一步错后面全错。',
+      },
+      {
+        id: 'kb-algo-dp-subproblem-ch2',
+        text: '第二步：转移方程，要把 dp[i] 拆成"取第 i 个"和"不取第 i 个"两种情况分别算什么。第三步：base case 决定 dp[0] / dp[1] 的初值，往往 base case 一错整道题错。诊断方法：让学生用最小例子手算 dp 数组，对照他写的转移方程。',
+      },
+    ],
+    agentHint: 'ResourceAgent 生成 DP 资源时优先按"三步法"组织文档结构；TutorAgent 讲解 DP 题时强制走三步。',
   },
   {
-    id: 'kb-eval-path-replan',
-    source: 'vector',
-    title: 'Evaluation to path replan handoff',
-    type: 'handoff',
-    tags: ['path', 'replan', 'agent', 'handoff'],
-    summary: 'The evaluation agent should emit weaknesses in a form the path agent can convert into remedial path nodes.',
-    content:
-      'For each weak concept, provide concept name, observed issue, root cause, resource preference, and path impact. The PathAgent can then insert a short remediation node before the next dependent concept and remove mastered review nodes.',
-    agentHint:
-      'Shape suggestions as actionable path changes, not only report text, so PathAgent and ReflectionAgent can coordinate.',
+    id: 'kb-algo-recursion-base',
+    source: 'local',
+    domain: 'algorithm',
+    type: 'misconception',
+    title: '递归终止条件 — 为什么无限递归',
+    tags: ['recursion', 'basecase', 'stack', 'algorithm'],
+    summary: '递归必须有两个东西：终止条件 + 递归式缩小问题规模。',
+    chunks: [
+      {
+        id: 'kb-algo-recursion-base-ch1',
+        text: '递归出错的两个最大原因：(1) 终止条件写错，比如应该 return 但忘记 return；(2) 递归调用没有让问题规模缩小，比如 fib(n) 写成 fib(n) 而不是 fib(n-1)。诊断时让学生用 n=0,1,2,3 四个最小例子逐步手算调用栈，定位是哪一层出问题。',
+      },
+    ],
+    agentHint: 'TutorAgent 解释递归题时建议学生用 n=0,1,2,3 手算；ResourceAgent 应生成"调用栈追踪"练习。',
   },
   {
-    id: 'kb-eval-active-recall',
-    source: 'vector',
-    title: 'Active recall remediation strategy',
-    type: 'strategy',
-    tags: ['exercise', 'active-recall', 'remediation', 'resource'],
-    summary: 'Weak concepts should map to short active-recall loops before long-form content review.',
-    content:
-      'When mastery is weak, recommend a 15 to 25 minute loop: quick concept card, one worked example, three retrieval questions, and one transfer task. This works better than only rereading notes for algorithm and programming topics.',
-    agentHint:
-      'Prefer exercise and trace resources for low-correctness weaknesses, and reserve documents for conceptual gaps.',
+    id: 'kb-algo-binary-search-edge',
+    source: 'local',
+    domain: 'algorithm',
+    type: 'misconception',
+    title: '二分查找边界 — left/right/mid 计算',
+    tags: ['binarysearch', 'boundary', 'algorithm'],
+    summary: '二分查找的 bug 几乎都来自边界条件：left + right 是否溢出、while 循环条件、mid ± 1。',
+    chunks: [
+      {
+        id: 'kb-algo-binary-search-edge-ch1',
+        text: '二分查找三个最常错的写法：(1) mid = (left + right) / 2 在 left+right 很大时会溢出，必须写成 left + Math.floor((right-left)/2)；(2) while(left <= right) 还是 while(left < right) 决定了搜索区间是闭还是开；(3) 命中后 left=mid 还是 left=mid+1 决定会不会死循环。',
+      },
+    ],
+    agentHint: 'TutorAgent 解释二分时应明确指出这三种边界；ResourceAgent 应给出闭区间/开区间两种模板。',
+  },
+  {
+    id: 'kb-algo-stack-queue-confuse',
+    source: 'local',
+    domain: 'algorithm',
+    type: 'concept',
+    title: '栈与队列的混淆点',
+    tags: ['stack', 'queue', 'data-structure', 'algorithm'],
+    summary: '栈是 LIFO 队列是 FIFO，题目描述里 "先进先出 / 后进先出" 一字之差就是不同数据结构。',
+    chunks: [
+      {
+        id: 'kb-algo-stack-queue-confuse-ch1',
+        text: '栈 (stack) LIFO 后进先出，类比一摞盘子；队列 (queue) FIFO 先进先出，类比排队买饭。Java/C++ 用 ArrayDeque 实现栈和队列性能都比 Stack/LinkedList 好。栈适合 DFS / 括号匹配 / 表达式求值；队列适合 BFS / 滑动窗口 / 任务调度。',
+      },
+    ],
+    agentHint: '当 profile 显示"数据结构"维度低于 60 时，ResourceAgent 应优先推荐用"生活类比"讲解的数据结构入门资源。',
+  },
+  {
+    id: 'kb-algo-hash-collision',
+    source: 'local',
+    domain: 'algorithm',
+    type: 'concept',
+    title: '哈希冲突 — 拉链法 vs 开放地址',
+    tags: ['hash', 'collision', 'algorithm'],
+    summary: '哈希冲突不可避免，工程上主要用拉链法和开放地址法两类策略。',
+    chunks: [
+      {
+        id: 'kb-algo-hash-collision-ch1',
+        text: '哈希冲突的两大解决思路：拉链法（同槽位用链表串起来，Java HashMap 早期版本用这个）和开放地址法（冲突了就往后找空槽位，Python dict 用这个）。负载因子是核心调优参数，超过 0.75 性能急剧下降，必须扩容。',
+      },
+    ],
+    agentHint: 'TutorAgent 讲解哈希时应主动提"负载因子"和"扩容时机"。',
+  },
+  {
+    id: 'kb-algo-tree-traversal',
+    source: 'local',
+    domain: 'algorithm',
+    type: 'concept',
+    title: '二叉树遍历 — 前中后序的递归与迭代转换',
+    tags: ['binary-tree', 'traversal', 'algorithm'],
+    summary: '前中后序的本质区别是"根节点在什么时候被访问"，和左右子树的递归顺序无关。',
+    chunks: [
+      {
+        id: 'kb-algo-tree-traversal-ch1',
+        text: '前序 = 根左右；中序 = 左根右；后序 = 左右根。三种遍历只是"根"的访问时机不同，左右子树的递归顺序永远不变。Morris 遍历能把空间复杂度降到 O(1)，原理是临时修改叶子节点的 right 指针指向祖先，遍历完再恢复。',
+      },
+    ],
+    agentHint: 'TutorAgent 讲解二叉树时推荐"根的位置"记忆法；ResourceAgent 应提供 Morris 遍历专题。',
+  },
+  {
+    id: 'kb-algo-shortest-path',
+    source: 'local',
+    domain: 'algorithm',
+    type: 'concept',
+    title: '最短路算法选型 — Dijkstra / Floyd / SPFA / Bellman-Ford',
+    tags: ['graph', 'shortest-path', 'algorithm'],
+    summary: '选算法看三个变量：边权是否为负、是否单源、是否稠密图。',
+    chunks: [
+      {
+        id: 'kb-algo-shortest-path-ch1',
+        text: '四个最短路算法的选型：Dijkstra 适合非负权单源稠密图（O(V²) 或 O(E+VlogV) 用堆优化）；Bellman-Ford 适合有负权但无负环；SPFA 是 Bellman-Ford 的队列优化，平均快但最坏 O(VE)；Floyd 适合多源稠密小图（O(V³)）。记住"非负+单源→Dijkstra；负权→Bellman；多源稠密小图→Floyd"。',
+      },
+    ],
+    agentHint: 'TutorAgent 收到最短路问题时优先引导算法选型再讲实现。',
+  },
+  {
+    id: 'kb-english-tense',
+    source: 'local',
+    domain: 'english',
+    type: 'misconception',
+    title: '英语时态选择 — 现在完成时 vs 一般过去时',
+    tags: ['english', 'tense', 'grammar'],
+    summary: '现在完成时强调"对现在有影响"，一般过去时只陈述过去事实。',
+    chunks: [
+      {
+        id: 'kb-english-tense-ch1',
+        text: '中国学生写作最容易混的两个时态：现在完成时 (have done) 和一般过去时 (did)。关键区别是"过去动作对现在的影响"——I have lived here for 5 years (我现在还住这里，影响仍在)；I lived here for 5 years (我现在不住这里，只是陈述过去)。',
+      },
+    ],
+    agentHint: 'TutorAgent 收到英语时态问题时优先给出"对现在有影响 vs 陈述过去"的判别框架。',
+  },
+  {
+    id: 'kb-english-subjunctive',
+    source: 'local',
+    domain: 'english',
+    type: 'concept',
+    title: '虚拟语气 — if I were / if I had been',
+    tags: ['english', 'subjunctive', 'grammar'],
+    summary: '虚拟语气表示与事实相反的假设，主句和从句都有固定时态搭配。',
+    chunks: [
+      {
+        id: 'kb-english-subjunctive-ch1',
+        text: '虚拟语气三套核心搭配：与现在事实相反 (If I were you, I would...)；与过去事实相反 (If I had known, I would have...)；与将来事实相反 (If I should / were to..., I would...)。be 动词在所有虚拟语气中都写成 were，不管主语是 he/she/it。',
+      },
+    ],
+    agentHint: 'ResourceAgent 应在虚拟语气练习题里同时给出"判断正误 + 改错"两类题型。',
+  },
+  {
+    id: 'kb-english-reading',
+    source: 'local',
+    domain: 'english',
+    type: 'teaching-strategy',
+    title: '英语阅读定位 — 关键词定位 vs 同义替换',
+    tags: ['english', 'reading', 'comprehension'],
+    summary: '阅读题答案往往不是原词重现，而是同义替换或反向表述。',
+    chunks: [
+      {
+        id: 'kb-english-reading-ch1',
+        text: '英语阅读题的答案在原文中的位置有两种：(1) 直接复现关键词，定位简单；(2) 同义替换或反向表述，定位需要理解语义。做题策略：先看题干定位词，回原文找同义复现；如果找不到就考虑"否定+反义词"组合。',
+      },
+    ],
+    agentHint: 'TutorAgent 讲阅读题应让学生标注"题干关键词 → 原文同义复现"的对应关系。',
+  },
+  {
+    id: 'kb-english-writing',
+    source: 'local',
+    domain: 'english',
+    type: 'teaching-strategy',
+    title: '英语写作结构 — 总分总 vs 问题解决',
+    tags: ['english', 'writing', 'structure'],
+    summary: '议论文和图表作文有不同的标准结构，混用会扣分。',
+    chunks: [
+      {
+        id: 'kb-english-writing-ch1',
+        text: '英语写作两类标准结构：(1) 议论文 总分总 (总观点 → 理由 1+例 → 理由 2+例 → 重申观点)；(2) 图表作文 问题解决 (描述图表 → 分析原因 → 影响 → 建议)。每段必须有 topic sentence，所有论点都要有具体例证支撑。',
+      },
+    ],
+    agentHint: 'ResourceAgent 生成写作资源时应根据 topic 类型自动选择结构模板。',
+  },
+  {
+    id: 'kb-english-vocab',
+    source: 'local',
+    domain: 'english',
+    type: 'teaching-strategy',
+    title: '词汇记忆 — 间隔重复 + 语境化',
+    tags: ['english', 'vocab', 'memory'],
+    summary: '背单词的死循环是只看不复，间隔重复 + 语境例句才能真正记住。',
+    chunks: [
+      {
+        id: 'kb-english-vocab-ch1',
+        text: '词汇记忆三原则：(1) 间隔重复——Anki 1/3/7/14/30 天复习曲线比"每天全背一遍"高效 5 倍；(2) 语境化——背"resign"必须记"resign from the position"，孤立背单词记得快忘得更快；(3) 输出检验——用新词造一个自己的句子，比抄 10 遍有效。',
+      },
+    ],
+    agentHint: 'ResourceAgent 收到词汇类请求时优先推荐"语境例句 + 复习间隔建议"。',
+  },
+  {
+    id: 'kb-pedagogy-error-diagnosis',
+    source: 'local',
+    domain: 'pedagogy',
+    type: 'teaching-strategy',
+    title: '错因诊断三步法',
+    tags: ['pedagogy', 'error-diagnosis', 'mistake', 'evaluation'],
+    summary: '错因诊断要走"现象 → 根因 → 补救"三步，缺一步就会变成只贴答案。',
+    chunks: [
+      {
+        id: 'kb-pedagogy-error-diagnosis-ch1',
+        text: '错题分析必须走三步：(1) 现象——错在第几步、错的结果是什么；(2) 根因——是概念不清、步骤遗漏、还是边界条件没考虑；(3) 补救——下次遇到同类题用什么策略。跳到第 3 步直接看答案是最常见的学习浪费。',
+      },
+    ],
+    agentHint: 'ReflectionAgent 生成"错因记录"时强制走三步；TutorAgent 收到错题时也要先问根因再讲正解。',
+  },
+  {
+    id: 'kb-pedagogy-active-recall',
+    source: 'local',
+    domain: 'pedagogy',
+    type: 'teaching-strategy',
+    title: '主动回忆补救 — 15-25 分钟闭环',
+    tags: ['pedagogy', 'active-recall', 'remediation'],
+    summary: '薄弱知识点应用短时主动回忆闭环，比单纯重读笔记效率高 3 倍。',
+    chunks: [
+      {
+        id: 'kb-pedagogy-active-recall-ch1',
+        text: '当学生某个知识点掌握度低于 60 时，最有效的补救不是再读一遍教材，而是 15-25 分钟的主动回忆闭环：5 分钟概念卡片自测 → 5 分钟一道典型例题手写 → 5 分钟三道变式题（不看书）→ 5 分钟复盘错因并写一句话总结。这个循环比 1 小时被动听课记忆留存率高 2-3 倍。',
+      },
+    ],
+    agentHint: 'PathAgent 在薄弱知识点前必须插入这个主动回忆节点，而不是简单的"再看一遍"。',
+  },
+  {
+    id: 'kb-pedagogy-socratic',
+    source: 'local',
+    domain: 'pedagogy',
+    type: 'teaching-strategy',
+    title: '苏格拉底式提问 — 不直接给答案',
+    tags: ['pedagogy', 'socratic', 'tutor'],
+    summary: '辅导时应通过连续提问引导学生自己找到答案，直接给答案会让学生形成依赖。',
+    chunks: [
+      {
+        id: 'kb-pedagogy-socratic-ch1',
+        text: '苏格拉底式提问的三层递进：(1) 你能用自己的话复述这个问题吗？(2) 你觉得哪一步最不确定？(3) 如果这一步错了，下一步会怎么变？学生卡住时不要直接给答案，而是给一个更小的子问题让他自己推出下一步。',
+      },
+    ],
+    agentHint: 'TutorAgent 在 qa/solve 模式应优先用提问引导；只在学生明确说"直接告诉我答案"时才给完整解答。',
+  },
+  {
+    id: 'kb-pedagogy-spaced-repetition',
+    source: 'local',
+    domain: 'pedagogy',
+    type: 'teaching-strategy',
+    title: '间隔重复 — 艾宾浩斯曲线的工程化',
+    tags: ['pedagogy', 'spaced-repetition', 'memory'],
+    summary: '间隔重复是把艾宾浩斯遗忘曲线变成可执行复习计划的方法。',
+    chunks: [
+      {
+        id: 'kb-pedagogy-spaced-repetition-ch1',
+        text: '间隔重复的核心：第一次学习后 1 天复习 → 3 天 → 7 天 → 14 天 → 30 天 → 90 天。每次复习不能只看"是否记得"，还要看"回忆速度"——回忆超过 10 秒就等于没记住，要缩短复习间隔。Anki、RemNote 都是成熟工具。',
+      },
+    ],
+    agentHint: 'PathAgent 在规划复习节点时按 1/3/7/14/30 间隔排；ResourceAgent 应在错题本上自动标注下次复习日期。',
+  },
+  {
+    id: 'kb-pedagogy-mindmap',
+    source: 'local',
+    domain: 'pedagogy',
+    type: 'teaching-strategy',
+    title: '概念图构建 — 把零散知识点串成网',
+    tags: ['pedagogy', 'mindmap', 'concept'],
+    summary: '学完一章后画概念图，比抄一遍笔记更能暴露知识盲区。',
+    chunks: [
+      {
+        id: 'kb-pedagogy-mindmap-ch1',
+        text: '概念图的核心是"节点 + 连线 + 关系标签"。节点是概念，连线是关系，标签必须写明是什么关系（"包含"、"导致"、"对比"、"前提"）。只画节点不写关系标签的思维导图毫无价值。',
+      },
+    ],
+    agentHint: 'ResourceAgent 在生成"章节总结"类资源时应主动建议概念图形式。',
+  },
+  {
+    id: 'kb-pedagogy-error-notebook',
+    source: 'local',
+    domain: 'pedagogy',
+    type: 'teaching-strategy',
+    title: '错题本使用 — 不抄题只抄根因',
+    tags: ['pedagogy', 'error-notebook', 'mistake'],
+    summary: '错题本的价值不在抄题而在归类根因和补救策略。',
+    chunks: [
+      {
+        id: 'kb-pedagogy-error-notebook-ch1',
+        text: '错题本三栏结构：错误题目简述（一行）→ 根因诊断（是哪类错误：概念/步骤/边界/计算）→ 下次遇到怎么办（一句话策略）。每两周回头分类统计，如果某一类错误反复出现，就回到对应知识点重学。',
+      },
+    ],
+    agentHint: 'ReflectionAgent 生成的"错因报告"应按这三栏输出；不应只列错题。',
+  },
+  {
+    id: 'kb-pedagogy-flow',
+    source: 'local',
+    domain: 'pedagogy',
+    type: 'concept',
+    title: '心流状态调节 — 学习效率的内在条件',
+    tags: ['pedagogy', 'flow', 'motivation'],
+    summary: '心流 = 挑战难度略高于当前能力 + 明确目标 + 即时反馈。',
+    chunks: [
+      {
+        id: 'kb-pedagogy-flow-ch1',
+        text: '心流三要素：(1) 挑战难度比当前能力高 10-20%——太简单无聊，太难焦虑；(2) 目标明确具体——"做完 5 道题"比"学会数据结构"更容易进入心流；(3) 即时反馈——每一步都能看到对错调整下一步。学习疲劳时切换"输入型"和"输出型"任务比硬撑更高效。',
+      },
+    ],
+    agentHint: 'PathAgent 排路径时不应连续安排 3 个高难度任务，中间要插入轻量巩固任务。',
+  },
+  {
+    id: 'kb-pedagogy-exam-prep',
+    source: 'local',
+    domain: 'pedagogy',
+    type: 'teaching-strategy',
+    title: '考前冲刺 — 错题复盘 > 刷新题',
+    tags: ['pedagogy', 'exam', 'review'],
+    summary: '考前一周刷新题的边际收益极低，复盘错题才是分数提升最快的方式。',
+    chunks: [
+      {
+        id: 'kb-pedagogy-exam-prep-ch1',
+        text: '考前一周的标准节奏：第 1-2 天只看错题本和概念图，不刷任何新题；第 3-4 天做两套完整模拟题（限时）训练时间分配；第 5 天回顾错题；第 6 天轻量浏览笔记；第 7 天休息。考前熬夜几乎必然降低 10-20 分的发挥。',
+      },
+    ],
+    agentHint: 'PathAgent 在考前阶段应切换为"复盘模式"，不应继续推送新概念。',
+  },
+  {
+    id: 'kb-method-feynman',
+    source: 'local',
+    domain: 'method',
+    type: 'teaching-strategy',
+    title: '费曼技巧 — 讲给小白听才算真懂',
+    tags: ['method', 'feynman', 'comprehension'],
+    summary: '费曼技巧四步：学 → 讲 → 卡 → 简。',
+    chunks: [
+      {
+        id: 'kb-method-feynman-ch1',
+        text: '费曼技巧四步：(1) 选择一个概念，写下来你想教给别人的内容；(2) 假装给一个完全不懂的人讲，用最简单的语言；(3) 卡住的地方就是你没真懂，回去重新学；(4) 简化语言，用类比替代术语。如果不能用大白话讲出来，就说明你对这个概念的理解是表面的。',
+      },
+    ],
+    agentHint: 'TutorAgent 在 explain 模式应主动鼓励学生"用自己的话再讲一遍"。',
+  },
+  {
+    id: 'kb-method-cornell',
+    source: 'local',
+    domain: 'method',
+    type: 'teaching-strategy',
+    title: '康奈尔笔记 — 三栏结构',
+    tags: ['method', 'cornell', 'note'],
+    summary: '康奈尔笔记把页面分成"笔记 / 关键词 / 总结"三栏，是听课和复习的最优结构。',
+    chunks: [
+      {
+        id: 'kb-method-cornell-ch1',
+        text: '康奈尔笔记页面分三栏：右侧大栏记课堂笔记（占 70%），左侧窄栏课后立刻提炼关键词和问题（占 20%），底部小栏课后 24 小时内写一段总结（占 10%）。只看左栏和底栏就能在不重读笔记的情况下完成复习。',
+      },
+    ],
+    agentHint: 'ResourceAgent 在生成"学习档案"类资源时推荐康奈尔模板。',
+  },
+  {
+    id: 'kb-method-pomodoro',
+    source: 'local',
+    domain: 'method',
+    type: 'teaching-strategy',
+    title: '番茄钟 — 25 分钟专注单元',
+    tags: ['method', 'pomodoro', 'focus'],
+    summary: '番茄钟的本质是"用结构化时间保护专注"，不是计时器。',
+    chunks: [
+      {
+        id: 'kb-method-pomodoro-ch1',
+        text: '番茄钟标准流程：25 分钟专注（不允许任何切换）→ 5 分钟休息（站起来、看远处、不刷手机）→ 每 4 个番茄后长休息 15-30 分钟。一个番茄必须做完一件事，不要"写到一半就停"。如果被打断，这个番茄作废，重新开始。',
+      },
+    ],
+    agentHint: 'PathAgent 在生成"每日学习计划"时可建议切分为番茄单元。',
+  },
+  {
+    id: 'kb-method-zettelkasten',
+    source: 'local',
+    domain: 'method',
+    type: 'teaching-strategy',
+    title: '双链笔记 — 用关联代替分类',
+    tags: ['method', 'zettelkasten', 'note', 'obsidian'],
+    summary: '双链笔记的核心是"一个想法只在一个地方写，其它地方用链接引用"。',
+    chunks: [
+      {
+        id: 'kb-method-zettelkasten-ch1',
+        text: '双链笔记 (Zettelkasten) 三个原则：(1) 原子化——一个笔记只写一个想法；(2) 自有语言——用自己的话重写而不是复制粘贴；(3) 主动链接——每写一条新笔记都要想它和已有哪几条相关并加链接。Obsidian、Logseq 是常用工具。',
+      },
+    ],
+    agentHint: 'ResourceAgent 生成"长期沉淀"类资源时推荐双链笔记模板。',
+  },
+  {
+    id: 'kb-method-project-driven',
+    source: 'local',
+    domain: 'method',
+    type: 'teaching-strategy',
+    title: '项目驱动学习 — 先用后学',
+    tags: ['method', 'project', 'learning'],
+    summary: '项目驱动学习的顺序是"先遇到问题 → 再去找答案"，比按章节顺序学更高效。',
+    chunks: [
+      {
+        id: 'kb-method-project-driven-ch1',
+        text: '项目驱动学习三步：(1) 选一个比当前能力高 20% 的小项目；(2) 边做边查，遇到问题再回去学对应知识点；(3) 完成后复盘哪些知识点是被动学到的、哪些是主动查到的。被动学到的记得最牢，因为有真实上下文。',
+      },
+    ],
+    agentHint: 'PathAgent 在综合阶段必须安排至少一个项目实践节点。',
+  },
+  {
+    id: 'kb-method-internalization',
+    source: 'local',
+    domain: 'method',
+    type: 'concept',
+    title: '知识内化四阶段 — 输入到输出',
+    tags: ['method', 'internalization', 'learning'],
+    summary: '知识从输入到真正内化要经过"理解 → 复述 → 应用 → 教学"四阶段。',
+    chunks: [
+      {
+        id: 'kb-method-internalization-ch1',
+        text: '知识内化四阶段：(1) 理解——能跟着讲解听懂；(2) 复述——能用自己的话讲出来；(3) 应用——能在新问题里用上；(4) 教学——能教别人。四阶段逐级提高，缺一个阶段知识就是"假懂"。能讲出来才算真懂，能教别人才算彻底掌握。',
+      },
+    ],
+    agentHint: 'ReflectionAgent 评估"掌握度"时应分阶段给分，而不是只看做题正确率。',
+  },
+  {
+    id: 'kb-general-time-estimate',
+    source: 'local',
+    domain: 'general',
+    type: 'teaching-strategy',
+    title: '时间估计 — 学习任务耗时评估',
+    tags: ['time', 'estimate', 'planning'],
+    summary: '学习任务实际耗时通常是估计的 2-3 倍，做计划时直接乘 2。',
+    chunks: [
+      {
+        id: 'kb-general-time-estimate-ch1',
+        text: '规划学习任务的经验法则：实际耗时 = 估计耗时 × 2。最容易低估的三类任务：(1) 阅读新概念材料（容易忘，要反复看）；(2) 写代码练习（编译调试占一半）；(3) 复习旧知识（要查错题本 + 重做错题）。计划阶段直接乘 2 比"留 buffer"更准确。',
+      },
+    ],
+    agentHint: 'PathAgent 在生成每日计划时应把所有 estimatedMinutes × 1.5 作为更现实的预期。',
+  },
+  {
+    id: 'kb-general-feedback-loop',
+    source: 'local',
+    domain: 'general',
+    type: 'concept',
+    title: '学习反馈环 — 计划→执行→评估→调整',
+    tags: ['feedback', 'loop', 'evaluation'],
+    summary: '学习闭环的最小单元是"计划→执行→评估→调整"四步，缺一步就是单向付出。',
+    chunks: [
+      {
+        id: 'kb-general-feedback-loop-ch1',
+        text: '学习闭环四步：(1) 计划——明确"今天做什么、做到什么程度"；(2) 执行——按计划做，不轻易切换；(3) 评估——做完对照预期看差异；(4) 调整——根据评估结果改下次计划。只执行不评估等于没学；只评估不调整等于浪费反馈。',
+      },
+    ],
+    agentHint: 'ReflectionAgent 应引导用户写"调整"步骤，而不是只输出评估结果。',
   },
 ]

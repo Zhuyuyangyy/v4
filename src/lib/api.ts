@@ -26,6 +26,7 @@ import type {
   FullRunResponse,
   KnowledgeContextResponse,
   KnowledgeStatusResponse,
+  RetrievalMetricsResponse,
   ReviewGenerateRequest,
   ReviewGenerateResponse,
   ReviewMistakesResponse,
@@ -239,7 +240,11 @@ export function fetchKnowledgeStatus() {
   return requestJson<KnowledgeStatusResponse>('/api/knowledge/status')
 }
 
-export function searchKnowledge(payload: { query?: string; profile?: unknown; learningData?: unknown; exerciseResults?: unknown; limit?: number }) {
+export function fetchRetrievalMetrics() {
+  return requestJson<RetrievalMetricsResponse>('/api/knowledge/metrics')
+}
+
+export function searchKnowledge(payload: { query?: string; profile?: unknown; learningData?: unknown; exerciseResults?: unknown; limit?: number; domain?: string; type?: string; agentName?: string; weights?: { vector: number; tag: number; keyword: number } }) {
   return requestJson<KnowledgeContextResponse>('/api/knowledge/search', {
     method: 'POST',
     body: JSON.stringify(payload),
