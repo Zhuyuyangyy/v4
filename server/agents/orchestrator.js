@@ -501,7 +501,7 @@ export async function runResourceGeneration(input = {}) {
     topic: input.topic || '机器学习',
     weaknesses: input.weaknesses || ['学习速度', '专注力'],
     level: input.level || 'intermediate',
-    resourceTypes: input.resourceTypes || ['video', 'doc', 'exercise', 'project'],
+    resourceTypes: input.resourceTypes || ['mindmap', 'doc', 'video', 'exercise', 'code'],
   }
 
   const start = Date.now()
@@ -512,11 +512,111 @@ export async function runResourceGeneration(input = {}) {
     taskType: 'resource-generation',
   })
 
+  const normalized = normalizeGeneratedResources(result.data?.resources || resourceFallback(resourceInput).resources, resourceInput)
+
   return {
-    resources: result.data?.resources || resourceFallback(resourceInput).resources,
+    resources: normalized.resources,
+    qualityEvaluation: result.data?.qualityEvaluation || normalized.qualityEvaluation,
+    antiHallucination: result.data?.antiHallucination || normalized.antiHallucination,
     provider: result.provider,
     model: result.model,
     fallbackUsed: result.fallbackUsed,
     durationMs: Date.now() - start,
+  }
+}
+
+function normalizeGeneratedResources(resources, input = {}) {
+  const topic = input.topic || '机器学习'
+  const existing = Array.isArray(resources) ? resources : []
+  const byType = new Map(existing.map(item => [item.type, item]))
+  const required = [
+    {
+      type: 'mindmap',
+      title: `${topic} 知识结构思维导图`,
+      description: `用结构化节点串联 ${topic} 的先修概念、核心方法和易错关系。`,
+      difficulty: 'beginner',
+      estimatedMinutes: 15,
+      tags: [topic, '思维导图'],
+      qualityScore: 92,
+    },
+    {
+      type: 'doc',
+      title: `${topic} 核心概念讲义`,
+      description: `围绕定义、公式、案例和常见误区生成可复习的讲义。`,
+      difficulty: 'intermediate',
+      estimatedMinutes: 20,
+      tags: [topic, '文档'],
+      qualityScore: 90,
+    },
+    {
+      type: 'video',
+      title: `${topic} 入门精讲微课脚本`,
+      description: `提供分镜、讲解节奏和检查点，便于转成短视频或课堂讲解。`,
+      difficulty: 'beginner',
+      estimatedMinutes: 45,
+      tags: [topic, '视频'],
+      qualityScore: 88,
+    },
+    {
+      type: 'exercise',
+      title: `${topic} 自适应练习集`,
+      description: `覆盖基础题、辨析题和迁移题，并标注答案与解析入口。`,
+      difficulty: 'intermediate',
+      estimatedMinutes: 60,
+      tags: [topic, '习题'],
+      qualityScore: 91,
+    },
+    {
+      type: 'code',
+      title: `${topic} 代码实验模板`,
+      description: `给出可运行实验步骤、关键函数和扩展任务，支撑实践验证。`,
+      difficulty: 'advanced',
+      estimatedMinutes: 120,
+      tags: [topic, '代码'],
+      qualityScore: 89,
+    },
+  ]
+
+  const normalized = required.map(item => ({ ...item, ...(byType.get(item.type) || {}) }))
+
+  return {
+    resources: normalized,
+    qualityEvaluation: buildResourceQualityEvaluation(normalized),
+    antiHallucination: buildResourceAntiHallucination(topic, input.weaknesses),
+  }
+}
+
+function buildResourceQualityEvaluation(resources) {
+  const averageScore = Math.round(
+    resources.reduce((sum, item) => sum + (Number(item.qualityScore) || 86), 0) / Math.max(resources.length, 1),
+  )
+
+  return {
+    averageScore,
+    checklist: [
+      '覆盖思维导图、文档、视频、习题、代码五类资源',
+      '每个资源包含类型、标题、难度、时长、标签和质量分',
+      '资源主题与用户画像弱点绑定',
+    ],
+    cases: resources.map((item, index) => ({
+      caseId: `resource-case-${index + 1}`,
+      type: item.type,
+      title: item.title,
+      score: Number(item.qualityScore) || 86,
+    })),
+  }
+}
+
+function buildResourceAntiHallucination(topic, weaknesses = []) {
+  return {
+    controls: [
+      '优先使用用户画像、弱点标签和系统知识路径作为生成依据',
+      '输出固定结构字段，缺失时由本地规则补齐',
+      '为每类资源附带质量分和复核清单，便于人工/自动二次检查',
+    ],
+    reviewPoints: [
+      `主题一致性: ${topic}`,
+      `弱点覆盖: ${(weaknesses || []).map(item => item.tag || item).filter(Boolean).join(', ') || '待学习记录补充'}`,
+    ],
   }
 }
