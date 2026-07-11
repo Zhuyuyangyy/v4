@@ -26,7 +26,6 @@ import {
 } from './data.js'
 import {
   orchestrateProfileAnalysis,
-  orchestrateResourceGeneration,
   orchestratePathReplan,
   orchestrateTutoring,
   orchestrateFullEvaluation,
@@ -36,7 +35,6 @@ import {
   runResourceGeneration,
 } from './agents/orchestrator.js'
 import { getTraces, getTraceSummary, buildTrace, recordTrace, setTraceRecordedHook } from './evidence/recorder.js'
-import { validateResourceGenerateInput } from './schemas.js'
 import { isLlmAvailable, getLlmConfig } from './llm/provider.js'
 import { getKnowledgeBaseStats, searchKnowledgeBase } from './knowledge-base/vector-store.js'
 import {
@@ -45,6 +43,15 @@ import {
   listDays,
   hasAnyCollaboration,
 } from './store/agent-collaboration.js'
+import {
+  applyReviewPatchToProfile,
+  evaluateReviewAnswers,
+  generateReviewQuestionSet,
+  getMistakeQuestions,
+  getReviewSessionQuestions,
+  saveReviewQuestionSet,
+  saveReviewResult,
+} from './store/review-question.js'
 import { generateDailyCollaboration, seedAllDays } from './collaboration-data.js'
 import { syncTracesToCollaboration, getCollaborationForDay } from './collaboration-sync.js'
 
@@ -117,6 +124,14 @@ function latestUserMessage(messages) {
   if (!Array.isArray(messages)) return ''
   const latest = [...messages].reverse().find(item => item?.sender === 'user' || item?.role === 'user')
   return String(latest?.text || latest?.content || '').trim()
+}
+
+function getAccountContext(req, body = {}) {
+  return {
+    accountId: req.headers['x-edumind-account'] || body.accountId || body.account || body.userAccount,
+    role: req.headers['x-edumind-role'] || body.accountRole || body.role,
+    name: req.headers['x-edumind-name'] || body.accountName || body.name,
+  }
 }
 
 function toDialogueChatReply(reply) {
@@ -229,27 +244,29 @@ const server = http.createServer(async (req, res) => {
 
     if (req.method === 'POST' && pathname === '/api/profile/analyze') {
       const body = await readJson(req)
+      const accountContext = getAccountContext(req, body)
       const agentResult = await orchestrateProfileAnalysis(body)
-      saveProfileResult(agentResult.profile)
+      await saveProfileResult(agentResult.profile, accountContext)
       sendJson(res, 200, agentResult.profile)
       return
     }
 
     if (req.method === 'GET' && pathname === '/api/profile/latest') {
-      sendJson(res, 200, { result: getLatestProfileResult() })
+      sendJson(res, 200, { result: await getLatestProfileResult(getAccountContext(req).accountId) })
       return
     }
 
     // 对话页直接保存画像数据（跳过 agent 分析）
     if (req.method === 'POST' && pathname === '/api/profile/save') {
       const body = await readJson(req)
+      const accountContext = getAccountContext(req, body)
       if (Array.isArray(body.dimensions) && typeof body.totalScore === 'number') {
         const profile = {
           ...body,
           source: body.source || 'profile-save',
           savedAt: new Date().toISOString(),
         }
-        saveProfileResult(profile)
+        await saveProfileResult(profile, accountContext)
         sendJson(res, 200, profile)
         return
       }
@@ -266,7 +283,7 @@ const server = http.createServer(async (req, res) => {
         source: 'dialogue',
         savedAt: new Date().toISOString(),
       }
-      saveProfileResult(profile)
+      await saveProfileResult(profile, accountContext)
       sendJson(res, 200, profile)
       return
     }
@@ -274,17 +291,83 @@ const server = http.createServer(async (req, res) => {
     // AI 智能体生成个性化知识路径
     if (req.method === 'POST' && pathname === '/api/knowledge-path/generate') {
       const body = await readJson(req)
-      const profile = body.profile || getLatestProfileResult() || {}
+      const accountContext = getAccountContext(req, body)
+      const profile = body.profile || await getLatestProfileResult(accountContext.accountId) || {}
       const result = await orchestrateKnowledgePath({ profile })
-      saveKnowledgePathResult(result.knowledgePath)
-      sendJson(res, 200, result.knowledgePath)
+      const savedPath = await saveKnowledgePathResult(result.knowledgePath, accountContext)
+      sendJson(res, 200, savedPath)
       return
     }
 
     // 获取已生成的知识路径
     if (req.method === 'GET' && pathname === '/api/knowledge-path/latest') {
-      const kp = getLatestKnowledgePath()
+      const kp = await getLatestKnowledgePath(getAccountContext(req).accountId)
       sendJson(res, 200, { result: kp })
+      return
+    }
+
+    if (req.method === 'POST' && pathname === '/api/review/generate') {
+      const body = await readJson(req)
+      const accountContext = getAccountContext(req, body)
+      const profile = body.profile || await getLatestProfileResult(accountContext.accountId) || {}
+      const generated = generateReviewQuestionSet({
+        accountId: accountContext.accountId,
+        profile,
+        knowledgePoint: body.knowledgePoint,
+        count: body.count,
+        source: body.source || 'evaluation-live2d',
+      })
+      await saveReviewQuestionSet(generated)
+      sendJson(res, 200, generated)
+      return
+    }
+
+    if (req.method === 'POST' && pathname === '/api/review/submit') {
+      const body = await readJson(req)
+      const accountContext = getAccountContext(req, body)
+      const questions = await getReviewSessionQuestions(accountContext.accountId, body.sessionId)
+      if (!questions.length) {
+        sendJson(res, 404, { error: 'Review session not found' })
+        return
+      }
+      const result = evaluateReviewAnswers(questions, body.answers || [])
+      await saveReviewResult({
+        accountId: accountContext.accountId,
+        sessionId: body.sessionId,
+        evaluatedQuestions: result.evaluatedQuestions,
+        mistakes: result.mistakes,
+        result,
+      })
+
+      const currentProfile = await getLatestProfileResult(accountContext.accountId)
+      const updatedProfile = applyReviewPatchToProfile(currentProfile, result.profilePatch)
+      let updatedKnowledgePath = null
+      if (updatedProfile) {
+        await saveProfileResult(updatedProfile, {
+          ...accountContext,
+          accountId: accountContext.accountId,
+        })
+        try {
+          const pathResult = await orchestrateKnowledgePath({ profile: updatedProfile })
+          updatedKnowledgePath = await saveKnowledgePathResult(pathResult.knowledgePath, accountContext)
+        } catch (error) {
+          console.warn('[review] knowledge path regeneration failed:', error.message)
+        }
+      }
+
+      sendJson(res, 200, {
+        ...result,
+        updatedProfile,
+        updatedKnowledgePath,
+        shouldReplanPath: true,
+      })
+      return
+    }
+
+    if (req.method === 'GET' && pathname === '/api/review/mistakes') {
+      const limit = Number(searchParams.get('limit') || 50)
+      const items = await getMistakeQuestions(getAccountContext(req).accountId, limit)
+      sendJson(res, 200, { items })
       return
     }
 
@@ -317,7 +400,7 @@ const server = http.createServer(async (req, res) => {
 
     if (req.method === 'POST' && pathname === '/api/tutoring/ask') {
       const body = await readJson(req)
-      const profile = getLatestProfileResult() || {}
+      const profile = await getLatestProfileResult(getAccountContext(req, body).accountId) || {}
       const agentResult = await orchestrateTutoring({
         question: body.question,
         mode: body.mode,
@@ -378,7 +461,7 @@ const server = http.createServer(async (req, res) => {
 
     if (req.method === 'POST' && pathname === '/api/knowledge/search') {
       const body = await readJson(req)
-      const profile = body.profile || getLatestProfileResult() || {}
+      const profile = body.profile || await getLatestProfileResult(getAccountContext(req, body).accountId) || {}
       const result = searchKnowledgeBase({
         query: body.query,
         profile,
@@ -390,36 +473,18 @@ const server = http.createServer(async (req, res) => {
       return
     }
 
-    if (req.method === 'POST' && pathname === '/api/resources/generate') {
-      const body = await readJson(req)
-      const validation = validateResourceGenerateInput(body)
-      if (!validation.valid) {
-        sendJson(res, 400, { error: 'Bad Request', details: validation.errors })
-        return
-      }
-      const profile = body.profile || getLatestProfileResult() || {}
-      const weaknesses = body.weaknesses || profile.weaknesses || []
-      const result = await orchestrateResourceGeneration({
-        profile,
-        weaknesses,
-        topic: body.topic,
-        resourceType: body.resourceType,
-      })
-      sendJson(res, 200, result)
-      return
-    }
-
     if (req.method === 'POST' && pathname === '/api/agents/profile') {
       const body = await readJson(req)
+      const accountContext = getAccountContext(req, body)
       const result = await orchestrateProfileAnalysis(body)
-      saveProfileResult(result.profile)
+      await saveProfileResult(result.profile, accountContext)
       sendJson(res, 200, result)
       return
     }
 
     if (req.method === 'POST' && pathname === '/api/agents/path-replan') {
       const body = await readJson(req)
-      const profile = body.profile || getLatestProfileResult() || {}
+      const profile = body.profile || await getLatestProfileResult(getAccountContext(req, body).accountId) || {}
       const result = await orchestratePathReplan({
         profile,
         evaluation: body.evaluation,
@@ -431,7 +496,7 @@ const server = http.createServer(async (req, res) => {
 
     if (req.method === 'POST' && pathname === '/api/agents/tutor') {
       const body = await readJson(req)
-      const profile = body.profile || getLatestProfileResult() || {}
+      const profile = body.profile || await getLatestProfileResult(getAccountContext(req, body).accountId) || {}
       const result = await orchestrateTutoring({
         question: body.question,
         mode: body.mode,
@@ -444,7 +509,7 @@ const server = http.createServer(async (req, res) => {
 
     if (req.method === 'POST' && pathname === '/api/agents/evaluate') {
       const body = await readJson(req)
-      const profile = body.profile || getLatestProfileResult() || {}
+      const profile = body.profile || await getLatestProfileResult(getAccountContext(req, body).accountId) || {}
       const result = await orchestrateFullEvaluation({
         profile,
         learningData: body.learningData,
@@ -457,6 +522,7 @@ const server = http.createServer(async (req, res) => {
 
     if (req.method === 'POST' && pathname === '/api/agents/run') {
       const body = await readJson(req)
+      const accountContext = getAccountContext(req, body)
       const result = await orchestrateFullRun({
         answers: body.answers,
         topic: body.topic,
@@ -465,7 +531,7 @@ const server = http.createServer(async (req, res) => {
         mode: body.mode,
       })
       if (result.profile) {
-        saveProfileResult(result.profile)
+        await saveProfileResult(result.profile, accountContext)
       }
       sendJson(res, 200, result)
       return

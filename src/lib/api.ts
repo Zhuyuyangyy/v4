@@ -26,9 +26,15 @@ import type {
   FullRunResponse,
   KnowledgeContextResponse,
   KnowledgeStatusResponse,
+  ReviewGenerateRequest,
+  ReviewGenerateResponse,
+  ReviewMistakesResponse,
+  ReviewSubmitRequest,
+  ReviewSubmitResponse,
 } from '@/types/api'
 import type { ProfileResult } from '@/composables/useProfileSurvey'
 import { useAppStore } from '@/store'
+import { getAuthSession } from '@/lib/auth'
 
 async function requestJson<T>(input: string, init?: RequestInit): Promise<T> {
   const appStore = useAppStore()
@@ -50,12 +56,19 @@ async function requestJson<T>(input: string, init?: RequestInit): Promise<T> {
   let aiRequestSettled = false
 
   try {
+    const headers = new Headers(init?.headers)
+    headers.set('Content-Type', 'application/json')
+
+    const session = getAuthSession()
+    if (session) {
+      headers.set('X-Edumind-Account', session.account)
+      headers.set('X-Edumind-Role', session.role)
+      headers.set('X-Edumind-Name', session.name)
+    }
+
     const response = await fetch(input, {
-      headers: {
-        'Content-Type': 'application/json',
-        ...(init?.headers || {}),
-      },
       ...init,
+      headers,
     })
 
     if (!response.ok) {
@@ -231,6 +244,25 @@ export function searchKnowledge(payload: { query?: string; profile?: unknown; le
     method: 'POST',
     body: JSON.stringify(payload),
   })
+}
+
+export function generateReviewQuestions(payload: ReviewGenerateRequest = {}) {
+  return requestJson<ReviewGenerateResponse>('/api/review/generate', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  })
+}
+
+export function submitReviewAnswers(payload: ReviewSubmitRequest) {
+  return requestJson<ReviewSubmitResponse>('/api/review/submit', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  })
+}
+
+export async function fetchReviewMistakes(limit = 50) {
+  const data = await requestJson<ReviewMistakesResponse>(`/api/review/mistakes?limit=${encodeURIComponent(String(limit))}`)
+  return data.items
 }
 
 export function agentFullRun(payload: FullRunRequest) {

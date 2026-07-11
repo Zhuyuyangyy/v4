@@ -72,22 +72,41 @@ async function handleGenerate() {
     const result = await generateResources() as any
     if (result.items && Array.isArray(result.items)) {
       resources.value = result.items
+    } else if (Array.isArray(result.resources) && result.resources.length) {
+      resources.value = result.resources.map((item: any) => mapGeneratedResource(item, result))
     } else if (result.resourcePackage) {
       const rp = result.resourcePackage
-      resources.value = [{
-        id: '1',
-        concept: rp.concept || '',
-        example: rp.example?.title ? `${rp.example.title}: ${rp.example.description}` : '',
-        exercise: rp.exercise?.title || '',
-        mistakeReminder: rp.errorTip || '',
-        recommendReason: rp.recommendReason || '',
-        evidence: {
-          profileSource: rp.profileEvidence || '',
-          evaluationReason: rp.recommendReason || '',
-          pathStage: '',
-          formatReason: '',
-        },
-      }]
+      if (Array.isArray(rp.generatedResources) && rp.generatedResources.length) {
+        resources.value = rp.generatedResources.map((item: any) => ({
+          id: item.id,
+          concept: item.title || item.type,
+          example: item.format || '',
+          exercise: item.type === 'exercise' ? JSON.stringify(item.content?.questions || []) : item.qualityReason || '',
+          mistakeReminder: item.type === 'exercise' ? rp.errorTip || '' : item.profileEvidence || '',
+          recommendReason: item.qualityReason || rp.recommendReason || '',
+          evidence: {
+            profileSource: item.profileEvidence || rp.profileEvidence || '',
+            evaluationReason: `质量评分 ${item.qualityScore ?? rp.qualityEvaluation?.averageScore ?? 0}`,
+            pathStage: rp.antiHallucination?.strategy || '',
+            formatReason: `${item.type} / ${item.format}`,
+          },
+        }))
+      } else {
+        resources.value = [{
+          id: '1',
+          concept: rp.concept || '',
+          example: rp.example?.title ? `${rp.example.title}: ${rp.example.description}` : '',
+          exercise: rp.exercise?.title || '',
+          mistakeReminder: rp.errorTip || '',
+          recommendReason: rp.recommendReason || '',
+          evidence: {
+            profileSource: rp.profileEvidence || '',
+            evaluationReason: rp.recommendReason || '',
+            pathStage: '',
+            formatReason: '',
+          },
+        }]
+      }
     } else {
       resources.value = FALLBACK_DATA
     }
@@ -98,6 +117,25 @@ async function handleGenerate() {
     generated.value = true
   } finally {
     loading.value = false
+  }
+}
+
+function mapGeneratedResource(item: any, source: any): GeneratedResource {
+  return {
+    id: item.id || `${item.type || 'resource'}-${item.title || Math.random().toString(36).slice(2)}`,
+    concept: item.title || item.concept || item.type || '',
+    example: item.description || item.format || item.example || '',
+    exercise: item.type === 'exercise'
+      ? JSON.stringify(item.content?.questions || item.questions || item.description || [])
+      : item.qualityReason || item.description || '',
+    mistakeReminder: item.mistakeReminder || item.errorTip || source.errorTip || item.profileEvidence || '',
+    recommendReason: item.qualityReason || item.recommendReason || source.recommendReason || item.description || '',
+    evidence: {
+      profileSource: item.profileEvidence || source.profileEvidence || '',
+      evaluationReason: `质量评分 ${item.qualityScore ?? source.qualityEvaluation?.averageScore ?? 0}`,
+      pathStage: source.antiHallucination?.strategy || source.antiHallucination?.controls?.[0] || '',
+      formatReason: `${item.type || 'resource'} / ${item.format || item.difficulty || ''}`,
+    },
   }
 }
 
