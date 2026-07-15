@@ -33,7 +33,7 @@ ${summarizeKnowledgeForPrompt(resolvedKb.matches)}
 
 请${replan ? '重新' : ''}规划学习路径。如果知识参考里有"主动回忆补救"或"考前冲刺"策略，请体现在薄弱点专项节点中。`
 
-  const llmResult = await callLlm(SYSTEM_PROMPT, userPrompt)
+  const llmResult = await callLlm(SYSTEM_PROMPT, userPrompt, { jsonMode: true })
   let output
   let fallbackUsed = false
   const evidence = []
@@ -83,6 +83,8 @@ ${summarizeKnowledgeForPrompt(resolvedKb.matches)}
 function fallbackPathPlan({ profile, evaluation, replan }) {
   const score = profile?.totalScore || 50
   const weakTags = (profile?.weaknesses || [])
+    .map(item => typeof item === 'string' ? item : item?.tag || item?.label || item?.name)
+    .filter(Boolean)
 
   const phases = [
     {

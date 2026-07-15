@@ -2,8 +2,12 @@
 import { onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { setAuthSession } from '@/lib/auth'
+import { fetchAccountSettings } from '@/lib/api'
 
 type LoginRole = 'student' | 'admin'
+
+const REMEMBERED_ACCOUNT_KEY = 'edumind-remembered-account'
+const REMEMBERED_ROLE_KEY = 'edumind-remembered-role'
 
 const router = useRouter()
 const loading = ref(false)
@@ -49,7 +53,23 @@ const roleConfigs = {
 }
 
 onMounted(() => {
+  // 默认填充 student 账号
   switchRole('student')
+
+  // 如果之前勾选过"记住我"，恢复上次的账号和角色，避免画像因账号不一致而丢失
+  try {
+    const rememberedRole = window.localStorage.getItem(REMEMBERED_ROLE_KEY) as LoginRole | null
+    const rememberedAccount = window.localStorage.getItem(REMEMBERED_ACCOUNT_KEY)
+    if (rememberedRole && (rememberedRole === 'student' || rememberedRole === 'admin')) {
+      activeRole.value = rememberedRole
+    }
+    if (rememberedAccount) {
+      account.value = rememberedAccount
+      remember.value = true
+    }
+  } catch {
+    // localStorage 不可用时静默忽略
+  }
 })
 
 function switchRole(role: LoginRole) {
@@ -65,13 +85,40 @@ function handleSubmit() {
   }
 
   loading.value = true
-  setTimeout(() => {
+  setTimeout(async () => {
     loading.value = false
+    const loginAccount = account.value || roleConfigs[activeRole.value].defaultAccount
+    let displayName = loginAccount
+    try {
+      displayName = (await fetchAccountSettings(loginAccount))?.displayName || loginAccount
+    } catch {
+      // A first-time login has no saved display name yet.
+    }
+
+    // 根据"记住我"勾选状态，持久化或清除账号，确保下次登录使用同一账号
+    try {
+      if (remember.value) {
+        window.localStorage.setItem(REMEMBERED_ACCOUNT_KEY, loginAccount)
+        window.localStorage.setItem(REMEMBERED_ROLE_KEY, activeRole.value)
+      } else {
+        window.localStorage.removeItem(REMEMBERED_ACCOUNT_KEY)
+        window.localStorage.removeItem(REMEMBERED_ROLE_KEY)
+      }
+    } catch {
+      // localStorage 不可用时静默忽略
+    }
+
     if (activeRole.value === 'admin') {
       setAuthSession({
         role: 'admin',
         name: '管理员',
         account: account.value || 'admin',
+        loginAt: new Date().toISOString(),
+      })
+      setAuthSession({
+        role: 'admin',
+        name: displayName,
+        account: loginAccount,
         loginAt: new Date().toISOString(),
       })
       router.push('/admin')
@@ -80,6 +127,12 @@ function handleSubmit() {
         role: 'student',
         name: '学习者',
         account: account.value || 'student',
+        loginAt: new Date().toISOString(),
+      })
+      setAuthSession({
+        role: 'student',
+        name: displayName,
+        account: loginAccount,
         loginAt: new Date().toISOString(),
       })
       router.push('/home')

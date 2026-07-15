@@ -76,6 +76,8 @@ ${summarizeKnowledgeForPrompt(resolvedKnowledgeContext.matches)}
 function fallbackEvaluation({ profile, exerciseResults, knowledgeContext }) {
   const score = profile?.totalScore || 50
   const weakTags = (profile?.weaknesses || [])
+    .map(item => typeof item === 'string' ? item : item?.tag || item?.label || item?.name)
+    .filter(Boolean)
   const correctRate = exerciseResults?.correctRate ?? (score > 60 ? 0.75 : 0.55)
   const knowledgeMatches = knowledgeContext?.matches || []
 

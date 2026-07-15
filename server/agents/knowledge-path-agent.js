@@ -135,7 +135,7 @@ ${summarizeKnowledgeForPrompt(resolvedKb.matches)}
 
 如果知识参考里提到"间隔重复"、"项目驱动学习"或"知识内化四阶段"，请体现在 topics 的 recommended 和 mastery 评估中。`
 
-  const llmResult = await callLlm(SYSTEM_PROMPT, userPrompt, { maxTokens: 3000 })
+  const llmResult = await callLlm(SYSTEM_PROMPT, userPrompt, { maxTokens: 3000, jsonMode: true })
   let output
   let fallbackUsed = false
   const evidence = []

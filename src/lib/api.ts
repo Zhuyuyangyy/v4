@@ -13,6 +13,7 @@ import type {
   AgentTrace,
   LearningWorkflowResponse,
   GeneratedResource,
+  GeneratedResourceItem,
   EvidenceTrace,
   EvidenceSummary,
   ResourceGenerateRequest,
@@ -36,6 +37,29 @@ import type {
 import type { ProfileResult } from '@/composables/useProfileSurvey'
 import { useAppStore } from '@/store'
 import { getAuthSession } from '@/lib/auth'
+
+function currentAccountId() {
+  return getAuthSession()?.account || 'default'
+}
+
+export interface AccountSettings {
+  accountId: string
+  displayName: string
+  updatedAt?: string
+}
+
+export async function fetchAccountSettings(accountId = currentAccountId()) {
+  const data = await requestJson<{ result: AccountSettings | null }>(`/api/account/settings?accountId=${encodeURIComponent(accountId)}`)
+  return data.result
+}
+
+export async function saveAccountSettings(displayName: string) {
+  const data = await requestJson<{ result: AccountSettings }>('/api/account/settings', {
+    method: 'POST',
+    body: JSON.stringify({ accountId: currentAccountId(), displayName }),
+  })
+  return data.result
+}
 
 async function requestJson<T>(input: string, init?: RequestInit): Promise<T> {
   const appStore = useAppStore()
@@ -99,19 +123,19 @@ async function requestJson<T>(input: string, init?: RequestInit): Promise<T> {
 export function analyzeProfile(payload: ProfileAnalyzeRequest) {
   return requestJson<ProfileAnalyzeResponse>('/api/profile/analyze', {
     method: 'POST',
-    body: JSON.stringify(payload),
+    body: JSON.stringify({ ...payload, accountId: currentAccountId() }),
   })
 }
 
 export async function fetchLatestProfile() {
-  const data = await requestJson<LatestProfileResponse>('/api/profile/latest')
+  const data = await requestJson<LatestProfileResponse>(`/api/profile/latest?accountId=${encodeURIComponent(currentAccountId())}`)
   return data.result
 }
 
 export function saveProfile(report: { score: number; radarPoints: { dimension: string; score: number }[]; weaknesses: string[]; suggestions: string[] } | ProfileResult) {
   return requestJson<any>('/api/profile/save', {
     method: 'POST',
-    body: JSON.stringify(report),
+    body: JSON.stringify({ ...report, accountId: currentAccountId() }),
   })
 }
 
@@ -177,7 +201,7 @@ export function fetchAgentWorkflow() {
 }
 
 export function generateResources(topic?: string, resourceType?: string) {
-  return requestJson<{ items: GeneratedResource[] }>('/api/resources/generate', {
+  return requestJson<{ resources: GeneratedResourceItem[] }>('/api/resources/generate', {
     method: 'POST',
     body: JSON.stringify({
       topic: topic || '综合学习',
@@ -207,7 +231,7 @@ export function fetchEvidenceSummary() {
 export function agentProfileAnalyze(payload: unknown) {
   return requestJson<{ profile: ProfileAnalyzeResponse; agentResults: unknown[]; trace: unknown }>('/api/agents/profile', {
     method: 'POST',
-    body: JSON.stringify(payload),
+    body: JSON.stringify({ ...(payload as Record<string, unknown>), accountId: currentAccountId() }),
   })
 }
 

@@ -154,7 +154,20 @@ export async function orchestrateFullRun({ answers, topic, resourceType, questio
 
   const tutorResult = await runTutorAgent({ question: question || '请帮我梳理学习重点', mode: mode || 'qa', profile, resources: [] })
 
-  const evalResult = await runEvaluationAgent({ profile, learningData: {}, exerciseResults: {} })
+  const evalResult = await runEvaluationAgent({
+    profile,
+    learningData: {
+      topic: topic || '核心概念',
+      resourceTypes: resourceResult.output?.resources?.map(resource => resource.type) || [],
+      resourceCount: resourceResult.output?.resources?.length || 0,
+      tutoringQuestion: question || '',
+    },
+    exerciseResults: {
+      correctRate: Math.max(0.35, Math.min(0.9, (profile?.totalScore || 50) / 100)),
+      attempted: 3,
+      completed: 3,
+    },
+  })
 
   const pathResult = await runPathAgent({ profile, evaluation: evalResult.output, replan: true })
 
@@ -279,6 +292,41 @@ function profileFallback(input) {
 }
 
 function resourceFallback(input) {
+  const topic = input.topic || '学习主题'
+  const rawWeakness = Array.isArray(input.weaknesses) && input.weaknesses.length ? input.weaknesses[0] : '基础概念'
+  const weakness = typeof rawWeakness === 'string' ? rawWeakness : rawWeakness?.tag || '基础概念'
+  const descriptors = {
+    video: ['微课脚本', '3 分钟微课分镜与讲解提纲，可用于录制或课堂讲解。', 3],
+    doc: ['核心概念速查卡', '一页式知识卡，梳理定义、关键步骤和边界条件。', 8],
+    mindmap: ['知识关系图', '用节点关系展示核心概念、前置知识与易混点。', 10],
+    exercise: ['自适应练习', '3 道由浅入深的练习与解析，用于即时检测掌握度。', 15],
+    code: ['可运行示例', '最小可运行代码或伪代码，配合逐行注释完成迁移练习。', 20],
+    audio: ['听读复盘', '适合通勤场景的 2 分钟听读稿，可由浏览器语音朗读。', 2],
+  }
+  const resources = Object.entries(descriptors).map(([type, [label, description, estimatedMinutes]]) => ({
+    type,
+    title: `${topic} ${label}`,
+    description,
+    difficulty: input.level || 'intermediate',
+    estimatedMinutes,
+    tags: [topic, weakness, '个性化推荐'],
+    formatReason: `针对“${weakness}”采用 ${type} 形式，支持短时反馈与巩固`,
+  }))
+  return {
+    confidence: 0.7,
+    evidence: [`基于主题“${topic}”与薄弱点“${weakness}”生成六类个性化资源`],
+    resources,
+  }
+}
+
+function ensureResourceTypes(resources, fallbackResources) {
+  const expectedTypes = ['video', 'doc', 'mindmap', 'exercise', 'code', 'audio']
+  const generated = Array.isArray(resources) ? resources.filter(item => item && typeof item.type === 'string' && typeof item.title === 'string') : []
+  const byType = new Map(generated.map(item => [item.type, item]))
+  return expectedTypes.map(type => ({ ...fallbackResources.find(item => item.type === type), ...byType.get(type) }))
+}
+
+function legacyResourceFallback(input) {
   const topic = input.topic || '机器学习'
   return {
     confidence: 0.7,
@@ -497,6 +545,29 @@ function extractData(agentResult) {
 }
 
 export async function runResourceGeneration(input = {}) {
+  const start = Date.now()
+  const profile = input.profile || {
+    totalScore: input.level === 'advanced' ? 80 : input.level === 'beginner' ? 45 : 60,
+    dimensions: [],
+    weaknesses: input.weaknesses || [],
+  }
+  const result = await runResourceAgent({
+    profile,
+    weaknesses: input.weaknesses || profile.weaknesses || [],
+    topic: input.topic || '学习主题',
+    resourceType: input.resourceType || 'all',
+  })
+  return {
+    resources: result.output?.resources || [],
+    provider: result.fallbackUsed ? 'fallback' : 'llm',
+    model: result.fallbackUsed ? 'fallback' : process.env.LLM_MODEL || 'configured-model',
+    fallbackUsed: result.fallbackUsed,
+    durationMs: Date.now() - start,
+    evidence: result.evidence,
+  }
+}
+
+async function legacyRunResourceGeneration(input = {}) {
   const resourceInput = {
     topic: input.topic || '机器学习',
     weaknesses: input.weaknesses || ['学习速度', '专注力'],

@@ -8,6 +8,7 @@ import {
   HelpCircle,
   BookOpen,
   AlertTriangle,
+  Volume2,
   ChevronRight,
   X
 } from 'lucide-vue-next'
@@ -70,7 +71,25 @@ async function handleGenerate() {
   error.value = null
   try {
     const result = await generateResources() as any
-    if (result.items && Array.isArray(result.items)) {
+    if (result.resources && Array.isArray(result.resources)) {
+      resources.value = result.resources.map((resource: any, index: number) => ({
+        id: String(index + 1),
+        concept: resource.title || '个性化学习资源',
+        example: resource.description || '',
+        exercise: `资源形式：${resource.type || 'doc'}；预计用时 ${resource.estimatedMinutes || 10} 分钟`,
+        mistakeReminder: resource.sourceResourceId !== undefined
+          ? `已绑定本地资源库 #${resource.sourceResourceId}，含 ${resource.slides?.length || 0} 页可展开学习内容`
+          : (resource.tags?.length ? `聚焦标签：${resource.tags.join('、')}` : ''),
+        recommendReason: resource.formatReason || '根据当前学习画像生成',
+        evidence: {
+          profileSource: '画像中的薄弱点与学习偏好',
+          evaluationReason: resource.formatReason || '按当前掌握度补强',
+          pathStage: '当前学习阶段',
+          formatReason: resource.type || 'doc',
+        },
+        audioText: resource.speechText,
+      }))
+    } else if (result.items && Array.isArray(result.items)) {
       resources.value = result.items
     } else if (Array.isArray(result.resources) && result.resources.length) {
       resources.value = result.resources.map((item: any) => mapGeneratedResource(item, result))
@@ -145,6 +164,14 @@ function openEvidence(resource: GeneratedResource) {
 
 function closeEvidence() {
   evidenceModalResource.value = null
+}
+
+function playAudio(item: GeneratedResource) {
+  if (!item.audioText || !('speechSynthesis' in window)) return
+  window.speechSynthesis.cancel()
+  const utterance = new SpeechSynthesisUtterance(item.audioText)
+  utterance.lang = 'zh-CN'
+  window.speechSynthesis.speak(utterance)
 }
 
 const EVIDENCE_FIELDS: { key: keyof GeneratedResource['evidence']; label: string }[] = [
@@ -224,6 +251,10 @@ const EVIDENCE_FIELDS: { key: keyof GeneratedResource['evidence']; label: string
             <HelpCircle :size="14" />
             <span>为什么推荐我？</span>
             <ChevronRight :size="14" />
+          </button>
+          <button v-if="item.audioText" class="rgp-evidence-btn" @click="playAudio(item)">
+            <Volume2 :size="14" />
+            <span>播放听读稿</span>
           </button>
         </div>
       </div>

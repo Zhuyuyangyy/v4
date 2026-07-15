@@ -31,13 +31,13 @@ import {
   orchestrateFullEvaluation,
   orchestrateFullRun,
   orchestrateKnowledgePath,
-  runLearningWorkflow,
   runResourceGeneration,
 } from './agents/orchestrator.js'
 import { getTraces, getTraceSummary, buildTrace, recordTrace, setTraceRecordedHook } from './evidence/recorder.js'
 import { isLlmAvailable, getLlmConfig } from './llm/provider.js'
 import { getKnowledgeBaseStats, searchKnowledgeBase, searchKnowledgeBaseAdvanced } from './knowledge-base/vector-store.js'
 import { getRetrievalMetrics, resetRetrievalMetrics, recordRetrieval } from './knowledge-base/metrics.js'
+import { getAccountSettings, getLatestLearningCycle, saveAccountSettings, saveLearningCycle } from './store/mysql.js'
 import {
   getCollaborationByDay,
   saveCollaboration,
@@ -58,6 +58,11 @@ import { syncTracesToCollaboration, getCollaborationForDay } from './collaborati
 
 const PORT = Number(process.env.PORT || 8788)
 const MAX_BODY_SIZE = 1024 * 1024
+
+function getAccountId(body = {}, searchParams) {
+  const value = body.accountId || body.userAccount || searchParams?.get('accountId') || 'default'
+  return String(value).trim() || 'default'
+}
 
 function sendJson(res, statusCode, payload) {
   res.writeHead(statusCode, {
@@ -169,7 +174,7 @@ const server = http.createServer(async (req, res) => {
         ok: true,
         version: '2.0.0',
         features: ['multi-agent', 'llm-provider', 'evidence-recorder'],
-        llmConfigured: !!(process.env.LLM_API_KEY && process.env.LLM_BASE_URL && process.env.LLM_MODEL),
+        llmConfigured: isLlmAvailable(),
       })
       return
     }
@@ -192,34 +197,34 @@ const server = http.createServer(async (req, res) => {
       return
     }
 
+    if (req.method === 'GET' && pathname === '/api/account/settings') {
+      sendJson(res, 200, { result: await getAccountSettings(getAccountId({}, searchParams)) })
+      return
+    }
+
+    if (req.method === 'POST' && pathname === '/api/account/settings') {
+      const body = await readJson(req)
+      const displayName = String(body.displayName || '').trim()
+      if (!displayName || displayName.length > 64) {
+        sendJson(res, 400, { error: 'Bad Request', message: '用户名长度应为 1 到 64 个字符。' })
+        return
+      }
+      sendJson(res, 200, { result: await saveAccountSettings(getAccountId(body), { displayName }) })
+      return
+    }
+
     if (req.method === 'POST' && pathname === '/api/agents/run') {
       const body = await readJson(req)
-      const result = await runLearningWorkflow(body)
-      const riskFlags = result.agents
-        .filter(a => a.fallbackUsed)
-        .map(a => `agent ${a.agentName} used fallback`)
-      recordTrace({
-        requestId: result.workflowId,
-        traceId: result.traceId,
-        timestamp: new Date().toISOString(),
-        workflowType: 'learning-workflow',
-        userProfileSummary: {
-          level: body.level || 'intermediate',
-          totalScore: body.totalScore || 63,
-        },
-        agents: result.agents.map(a => ({
-          agentId: a.agentId,
-          agentName: a.agentName,
-          status: a.status,
-          confidence: a.confidence,
-          fallbackUsed: a.fallbackUsed,
-          durationMs: a.durationMs,
-        })),
-        generatedResources: result.personalizedResources,
-        riskFlags,
-        fallbackUsed: result.fallbackUsed,
-        durationMs: result.durationMs,
+      const accountId = getAccountId(body)
+      const result = await orchestrateFullRun({
+        answers: body.answers || body,
+        topic: body.topic,
+        resourceType: body.resourceType,
+        question: body.question,
+        mode: body.mode,
       })
+      await saveProfileResult(result.profile, accountId)
+      await saveLearningCycle(accountId, result)
       sendJson(res, 200, result)
       return
     }
@@ -484,6 +489,25 @@ const server = http.createServer(async (req, res) => {
       return
     }
 
+    if (req.method === 'POST' && pathname === '/api/resources/generate') {
+      const body = await readJson(req)
+      const validation = validateResourceGenerateInput(body)
+      if (!validation.valid) {
+        sendJson(res, 400, { error: 'Bad Request', details: validation.errors })
+        return
+      }
+      const profile = body.profile || await getLatestProfileResult(getAccountContext(req, body).accountId) || {}
+      const weaknesses = body.weaknesses || profile.weaknesses || []
+      const result = await orchestrateResourceGeneration({
+        profile,
+        weaknesses,
+        topic: body.topic,
+        resourceType: body.resourceType,
+      })
+      sendJson(res, 200, result)
+      return
+    }
+
     if (req.method === 'GET' && pathname === '/api/knowledge/metrics') {
       sendJson(res, 200, getRetrievalMetrics())
       return
@@ -542,6 +566,11 @@ const server = http.createServer(async (req, res) => {
       return
     }
 
+    if (req.method === 'GET' && pathname === '/api/learning-cycles/latest') {
+      sendJson(res, 200, { result: await getLatestLearningCycle(getAccountId({}, searchParams)) })
+      return
+    }
+
     if (req.method === 'POST' && pathname === '/api/agents/run') {
       const body = await readJson(req)
       const accountContext = getAccountContext(req, body)
@@ -575,14 +604,14 @@ const server = http.createServer(async (req, res) => {
 
     if (req.method === 'GET' && pathname === '/api/agent-collaboration') {
       const day = searchParams.get('day') || 'monday'
-      let data = getCollaborationForDay(day)
+      let data = await getCollaborationForDay(day)
       if (!data) {
-        data = getCollaborationByDay(day)
+        data = await getCollaborationByDay(day)
       }
       if (!data) {
         const { index } = (await import('./store/agent-collaboration.js')).resolveDay(day)
         const payload = generateDailyCollaboration(index)
-        data = saveCollaboration(day, payload)
+        data = await saveCollaboration(day, payload)
       }
       sendJson(res, 200, data)
       return
@@ -594,7 +623,7 @@ const server = http.createServer(async (req, res) => {
     }
 
     if (req.method === 'POST' && pathname === '/api/agent-collaboration/seed') {
-      seedAllDays(saveCollaboration)
+      await seedAllDays(saveCollaboration)
       sendJson(res, 200, { ok: true, days: listDays() })
       return
     }
@@ -609,12 +638,17 @@ const server = http.createServer(async (req, res) => {
   }
 })
 
-server.listen(PORT, () => {
-  if (!hasAnyCollaboration()) {
-    seedAllDays(saveCollaboration)
-    console.log('[agent-collaboration] seeded 7 days into SQLite')
+server.listen(PORT, async () => {
+  try {
+    if (!(await hasAnyCollaboration())) {
+      await seedAllDays(saveCollaboration)
+      console.log('[agent-collaboration] seeded 7 days into MySQL')
+    }
+    await syncTracesToCollaboration()
+    setTraceRecordedHook(() => { void syncTracesToCollaboration() })
+    console.log(`API server listening on http://localhost:${PORT}`)
+  } catch (error) {
+    console.error('[mysql] initialization failed:', error)
+    server.close(() => process.exitCode = 1)
   }
-  syncTracesToCollaboration()
-  setTraceRecordedHook(() => syncTracesToCollaboration())
-  console.log(`API server listening on http://localhost:${PORT}`)
 })

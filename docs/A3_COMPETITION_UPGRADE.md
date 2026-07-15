@@ -106,7 +106,7 @@ LLM_API_URL=https://your-api/v1/chat/completions LLM_API_KEY=your-key npm run se
 ```
 
 说明：
-- 后端默认端口 `8787`，前端 Vite 已配置代理 `/api` → `http://localhost:8787`
+- 后端默认端口 `8788`，前端 Vite 已配置代理 `/api` → `http://localhost:8788`
 - 如果希望后端自动监听重启，可用 `npm run dev:server` 代替 `npm run server`
 
 ## 验收场景对照

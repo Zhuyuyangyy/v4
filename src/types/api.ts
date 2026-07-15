@@ -186,6 +186,29 @@ export interface GeneratedResource {
     pathStage: string
     formatReason: string
   }
+  audioText?: string
+}
+
+export interface GeneratedResourceItem {
+  type: 'video' | 'doc' | 'mindmap' | 'exercise' | 'code' | 'audio'
+  title: string
+  description: string
+  difficulty: string
+  estimatedMinutes: number
+  tags: string[]
+  formatReason: string
+  sourceResourceId?: number
+  source?: 'local-resource-library'
+  assetKind?: 'interactive-slides' | 'catalog-item' | 'browser-speech' | 'unavailable'
+  speechText?: string
+  slides?: Array<{
+    title: string
+    subtitle?: string
+    content: string
+    keyPoints?: string[]
+    example?: string
+    tip?: string
+  }>
 }
 
 export interface EvidenceTrace {

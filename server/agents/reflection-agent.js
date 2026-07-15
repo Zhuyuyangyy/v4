@@ -31,7 +31,7 @@ ${summarizeKnowledgeForPrompt(resolvedKb.matches)}
 
 请生成学习反思与反馈。如果知识参考里有"错因诊断三步法"或"心流调节"，请体现在 reflection 和 riskAssessment 中。`
 
-  const llmResult = await callLlm(SYSTEM_PROMPT, userPrompt)
+  const llmResult = await callLlm(SYSTEM_PROMPT, userPrompt, { jsonMode: true })
   let output
   let fallbackUsed = false
   const evidence = []

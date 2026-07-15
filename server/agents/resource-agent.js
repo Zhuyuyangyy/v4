@@ -1,5 +1,6 @@
 import { callLlm, safeParseJson } from '../llm/provider.js'
 import { createAgentResult, AGENT_NAMES } from '../schemas.js'
+import RESOURCE_LIBRARY from '../content/resources.json' with { type: 'json' }
 import { retrieveKnowledgeContext, buildKnowledgeEvidence, summarizeKnowledgeForPrompt } from '../knowledge-base/retrieval.js'
 import { detectDomain } from '../knowledge-base/detect-domain.js'
 
@@ -11,7 +12,9 @@ const SYSTEM_PROMPT = `你是一个个性化学习资源生成专家。根据用
 5. recommendReason: 推荐理由
 6. profileEvidence: 适配画像证据
 
-请以 JSON 格式返回，包含以上六个字段。每个字段是字符串或对象。`
+7. resources: 至少 6 条可直接交付的资源，类型必须覆盖 video、doc、mindmap、exercise、code、audio 六类；每条包含 type、title、description、difficulty、estimatedMinutes、tags、formatReason 字段。
+
+请以 JSON 格式返回，包含以上七个字段。每个字段是字符串、对象或数组。`
 
 export async function runResourceAgent({ profile, weaknesses, topic, resourceType, knowledgeContext }) {
   const start = Date.now()
@@ -36,7 +39,7 @@ ${summarizeKnowledgeForPrompt(resolvedKb.matches)}
 
 请生成个性化学习资源包。如果知识参考里包含"错因诊断三步法"或"主动回忆补救"，请体现在 errorTip 和 recommendReason 中。`
 
-  const llmResult = await callLlm(SYSTEM_PROMPT, userPrompt)
+  const llmResult = await callLlm(SYSTEM_PROMPT, userPrompt, { jsonMode: true })
   let output
   let fallbackUsed = false
   const evidence = []
@@ -44,7 +47,7 @@ ${summarizeKnowledgeForPrompt(resolvedKb.matches)}
   if (llmResult.content && !llmResult.fallbackUsed) {
     const parsed = safeParseJson(llmResult.content)
     if (parsed) {
-      output = parsed
+      output = normalizeResourcePackage(parsed, { profile, weaknesses, topic })
       evidence.push('LLM 生成个性化资源')
     } else {
       fallbackUsed = true
@@ -102,7 +105,8 @@ function normalizeResourcePackage(output, context) {
 }
 
 function fallbackResourcePackage({ profile, weaknesses, topic }) {
-  const weakest = weaknesses?.[0] || topic || '基础知识'
+  const rawWeakest = weaknesses?.[0] || topic || '基础知识'
+  const weakest = typeof rawWeakest === 'string' ? rawWeakest : rawWeakest?.tag || rawWeakest?.label || topic || '基础知识'
   const level = profile?.totalScore > 70 ? '进阶' : profile?.totalScore > 40 ? '中级' : '入门'
 
   return {
@@ -110,7 +114,7 @@ function fallbackResourcePackage({ profile, weaknesses, topic }) {
     example: {
       title: `${topic} — 典型例题`,
       description: `已知条件：与${topic}相关的标准问题场景。求解：运用${topic}的核心方法，逐步推导出结果。`,
-      steps: ['理解题意，识别关键信息', '选择合适的${topic}方法', '逐步计算并验证', '总结规律，举一反三'],
+      steps: ['理解题意，识别关键信息', `选择合适的${topic}方法`, '逐步计算并验证', '总结规律，举一反三'],
     },
     exercise: {
       title: `${topic} — 练习题`,
@@ -121,8 +125,85 @@ function fallbackResourcePackage({ profile, weaknesses, topic }) {
       ],
     },
     errorTip: `学习${topic}时常见错误：1) 概念混淆，把${topic}与相关概念混淆；2) 步骤遗漏，忽略中间验证环节；3) 边界条件处理不当。建议针对"${weakest}"做专项训练。`,
-    recommendReason: `该资源包针对你的薄弱点"${weakest}"定制，难度适配${level}水平，内容覆盖概念理解、例题演示和实战练习三个层次。`,
+    recommendReason: `该资源包针对你的薄弱点“${weakest}”定制，难度适配${level}水平，内容覆盖概念理解、例题演示和实战练习三个层次。`,
     profileEvidence: `画像分析显示你在${weakest}方面得分偏低，综合评分${profile?.totalScore || 50}分，推荐从基础概念开始巩固。`,
+    resources: createResourceItems({ topic, weakest, level }),
+  }
+}
+
+function isResourceItem(resource) {
+  return resource && typeof resource === 'object' && typeof resource.type === 'string' && typeof resource.title === 'string'
+}
+
+function ensureResourceCoverage(resources, fallbackResources) {
+  const supportedTypes = ['video', 'doc', 'mindmap', 'exercise', 'code', 'audio']
+  const byType = new Map(resources.map(item => [item.type, item]))
+  return supportedTypes.map(type => ({ ...fallbackResources.find(item => item.type === type), ...byType.get(type) }))
+}
+
+function createResourceItems({ topic, weakest, level }) {
+  const base = {
+    difficulty: level,
+    tags: [topic, weakest, '个性化推荐'],
+    formatReason: `围绕薄弱点“${weakest}”选择${level}难度与短时反馈形式`,
+  }
+
+  const localItems = selectLocalResources(topic)
+  const types = ['video', 'doc', 'mindmap', 'exercise', 'code']
+
+  return [
+    ...types.map(type => toGeneratedResource(localItems[type], type, base)),
+    {
+      ...base,
+      type: 'audio',
+      title: `${topic} 听读复盘`,
+      description: `根据“${weakest}”生成的 2 分钟听读稿，可使用浏览器语音朗读功能复盘本次学习重点。`,
+      estimatedMinutes: 2,
+      assetKind: 'browser-speech',
+      speechText: `请复盘${topic}。重点关注${weakest}，先说清概念，再完成一题练习，最后总结常见误区。`,
+    },
+  ]
+}
+
+function selectLocalResources(topic) {
+  const keywords = String(topic || '').toLowerCase().split(/[\s、，,。；;：:]+/).filter(word => word.length > 1)
+  const score = item => {
+    const haystack = `${item.title} ${(item.tags || []).join(' ')} ${item.desc || ''}`.toLowerCase()
+    return keywords.reduce((sum, keyword) => sum + (haystack.includes(keyword) ? 10 : 0), 0) + (item.reads || 0) / 1000
+  }
+  const byType = {}
+  for (const type of ['video', 'doc', 'mindmap', 'exercise', 'code']) {
+    byType[type] = RESOURCE_LIBRARY
+      .filter(item => item.type === type)
+      .sort((left, right) => score(right) - score(left))[0]
+  }
+  return byType
+}
+
+function toGeneratedResource(resource, type, base) {
+  if (!resource) {
+    return {
+      ...base,
+      type,
+      title: `${type} 学习资源`,
+      description: '资源库中暂未匹配到该类型资源。',
+      estimatedMinutes: 10,
+      assetKind: 'unavailable',
+    }
+  }
+  return {
+    ...base,
+    type,
+    title: resource.title,
+    description: resource.desc,
+    difficulty: resource.difficulty || base.difficulty,
+    estimatedMinutes: Number.parseInt(resource.estTime, 10) || 15,
+    tags: resource.tags || base.tags,
+    formatReason: resource.reason || base.formatReason,
+    sourceResourceId: resource.id,
+    source: 'local-resource-library',
+    assetKind: resource.slides?.length ? 'interactive-slides' : 'catalog-item',
+    slides: resource.slides || [],
   }
 }
 
